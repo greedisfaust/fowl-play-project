@@ -4,7 +4,7 @@ All game code is **GDScript 2.0 for Godot 4.7**. Not Python, not C#, not Godot 3
 
 If you are unsure whether a method, property or syntax exists in Godot 4.7, **say so and ask the user to check the in-editor help (F1 / search)** instead of guessing. Never invent API names.
 
-Exception: the existing PowerShell test runner (`tests/run_checks.ps1`) stays PowerShell. No other non-GDScript code.
+Exception: the existing PowerShell test runners (`fowl-play/tests/run_checks.ps1` and `fowl-play/tests/run_m0_checks.ps1`) stay PowerShell. Gameplay and Godot-side tests remain GDScript.
 
 ---
 

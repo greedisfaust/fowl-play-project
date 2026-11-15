@@ -1,6 +1,6 @@
 # Fowl Play — Project Overview (fresh start, v2)
 
-This document is self-contained. There is no prior code to read. Everything you need to know about intent, rules, numbers and decisions is here. Where this document marks something **OPEN**, ask the user before building it.
+This document defines intent, rules, numbers and decisions. The repository now contains implemented D0/M0 code: inspect it and read [PROJECT_STATE.md](PROJECT_STATE.md) and [the active session](sessions/_ACTIVE.md) before continuing. Where this document marks something **OPEN**, ask the user before building it.
 
 **Language of this document**
 - **must / must not** = hard rule, never break.
@@ -45,7 +45,7 @@ Fowl Play is a first-person party game for four players who share one bank accou
 - **Scene ownership protocol.** Never edit a scene the user has open (Godot can overwrite or fork it). Announce handoffs ("I'm editing X, stay out" / "all yours"). Never invent `uid://` values. Small mechanical `.tscn` text edits are allowed only on scenes the user has closed, and only after saying so.
 - **Ask whenever something is unclear.** Use short **Question Cards** (options, a recommendation, what it blocks).
 - **Debug Console:** every slice must satisfy the Debug Console rule in `CLAUDE.md` (logs, watches and commands for everything it adds) before it counts as done.
-- **Git:** local commits only, on a feature branch. No push, `reset --hard`, `checkout --`, force push, `clean`, or deleting `.godot`. **After every commit, say `COMMIT READY: please push` and list what the commit contains**; the user pushes. Commit messages end with `Co-Authored-By: Claude Code <noreply@anthropic.com>`.
+- **Git:** work on a feature branch. The user performs commits and pushes, as specified in [CLAUDE.md](../CLAUDE.md). Review the diff, report validation, and suggest a commit message. Do not commit/push, reset, discard changes, clean, or delete `.godot` without explicit authorization. Do not attribute work to an assistant that did not perform it.
 - **Decision gates:** stop and ask before: the movement authority approach and first networking slice (M3), the ragdoll sync approach (after the spike, M4), skeleton authoring method (M4), any Blender use, bird vs humanoid legs (**before M4**, because it shapes the skeleton), the camera approach (M9). After a gate, proceed slice by slice without asking for each change.
 - **Docs stay in sync with code** every slice. Single tuning source (see §15).
 - **No silent work:** say what you changed and why.

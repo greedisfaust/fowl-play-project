@@ -1,5 +1,7 @@
 # SESSION MEMORY RULES (binding)
 
+Applies to every coding assistant. Resolve the active branch session through [docs/sessions/_ACTIVE.md](docs/sessions/_ACTIVE.md). Current completion status lives in [docs/PROJECT_STATE.md](docs/PROJECT_STATE.md); session handoffs record the exact next action and uncommitted work.
+
 Long sessions make you forget. This file defines how you keep **written memory** so that you, a fresh session, or a different AI model can resume work with zero chat history.
 
 **Core principle:** chat memory is unreliable; files are reliable. If it matters, write it down. If a file and your memory disagree, the file and the code win.

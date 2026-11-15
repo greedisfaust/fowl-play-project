@@ -6,6 +6,8 @@
 authority is `docs/PROJECT_OVERVIEW.md`; this document must not override its
 current scope or decisions.
 
+For implementation progress and the next development slice, read [PROJECT_STATE.md](PROJECT_STATE.md) and [the active session index](sessions/_ACTIVE.md). The casino/economy layer remains outside the completed D0/M0 scope.
+
 ------------------------------------------------------------------------
 
 ## 1. Purpose

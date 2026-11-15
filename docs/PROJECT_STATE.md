@@ -1,17 +1,18 @@
 # Fowl Play — Project State
 
-**Status:** D0 verified; M0 arena, player capsule, movement, and debug console are working.
+**Status:** D0 and M0 foundation/spawning slices verified. Console overflow fix user-playtested. M0 changes await user commit; M1 has not started.
 
 ## Last verified (2026-11-15)
 
-- Current branch: `features/debug-console`.
+- Current branch: `features/m0-multiplayer-network-spawning`.
 - Godot 4.7 project: `fowl-play/`, using Jolt Physics, Forward+, and D3D12.
 - `fowl-play/project.godot` contains the project settings, input actions, and four autoload entries.
 - Foundation scripts exist in `fowl-play/core/`: `layers.gd`, `tuning.gd`, `network.gd`, and `debug_hub.gd`.
-- The worktree contains uncommitted documentation, foundation, arena, player, and debug-console changes; it is not clean.
+- Debug-console work is committed as `762c00f`. The new branch implements M0 network spawning with user-authored arena setup.
 - D0 headless checks pass with Godot 4.7.2.
-- Console command arguments are implemented and user-playtested. Player watch/command cleanup on scene-tree exit is headless verified, including rename, queued deletion, and replacement registration; network disconnect testing remains pending M0.
+- Console command arguments are implemented and user-playtested. Player watch/command cleanup is headless verified, including network disconnects; manual disconnect checks are user-verified.
 - Latest D0 rerun passes cleanly after removing an unused missing-script InputSetup autoload and fixing Windows process waiting/output capture in the test runner. Input actions remain defined in the project Input Map.
+- USER VERIFIED: console hosting/joining works, remote capsules appear, and player counts are visible. Default and explicit loopback connections plus both disconnect directions pass separate-process tests; manual disconnect cleanup is user-verified.
 - The arena, player capsule, local movement, mouse look, jump, mouse capture, and debug console have been manually playtested.
 
 ## Milestone progress
@@ -19,7 +20,7 @@
 | Milestone | Goal | Status |
 |---|---|---|
 | D0 Debug infrastructure | DebugHub, tuning debug values, local log buffer, watches, commands, D0 headless check | Verified: `fowl-play/tests/run_checks.ps1` passes |
-| M0 Foundation | Project settings, layers, tuning, input map, networking autoload, test runner, arena, capsule movement, camera, spawn/despawn | Partial: arena, capsule movement, camera, and D0 verified; network spawn/despawn remains |
+| M0 Foundation | Project settings, layers, tuning, input map, networking autoload, test runner, arena, capsule movement, camera, spawn/despawn | Verified: automated tests and user host/join/disconnect/rejoin playtests; console scrolling fix confirmed; awaiting user commit |
 | M1 Interaction + one prop | Interactable component, focus/highlight, one USE device, one GRAB prop | Not started |
 | M2 Hands | Scene-backed hand + finger scenes, first-person + world modes | Not started |
 | M3 Networking slice 1 | Movement authority gate, roster, remote smoothing, intent RPC, validation helper | Not started |
@@ -45,10 +46,12 @@ Late join is decided: allowed during the rest of a day, not during casino/elevat
 
 ## Known limitations
 
-- Network roster, player spawn/despawn, and two-instance playtesting remain unverified.
+- Automated M0 checks use the saved arena directly and verify offline spawn, host/client spawn and local camera/input selection, client departure, and host departure with debug cleanup. Saved-scene handoff/offline launch and rendered host/join are user-verified; manual disconnect checks are user-verified.
+- Movement replication remains M3; stationary remote capsules are expected. Actual timeout/refused-connection behavior and four-player capacity are not verified. Rejoining is user-verified; no automated reconnect loop exists yet.
+- Console scroll/resize fix is user-verified. Landing with the console open has no explicit playtest result; falling gravity and input blocking were verified.
 - The root and `docs/` debug references were previously inconsistent; `docs/DEBUG.md` is now the active reference.
 - The gameplay loop overview is background design material, not the current technical authority.
 
 ## Next action
 
-Implement and verify M0 network startup plus host/client player spawn and despawn; keep D0 as a prerequisite for every later slice.
+Review/preserve the uncommitted M0 branch for the user's commit, then begin M1 (interaction and one prop) on a new feature branch. Read [the handoff](sessions/features-m0-multiplayer-network-spawning.md) first. Do not repeat completed M0 setup or implement M3 movement sync early.

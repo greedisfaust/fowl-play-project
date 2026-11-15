@@ -5,7 +5,12 @@ extends CharacterBody3D
 
 const TUNING = preload("res://core/tuning.gd")
 
+# Input ownership only; replicated movement authority remains an M3 decision.
+var input_peer_id: int = 0
+var is_local_player: bool = true
+
 @onready var head: Node3D = $Head
+@onready var camera: Camera3D = $Head/Camera3D
 @onready var debug_hub: Node = get_node("/root/DebugHub")
 
 var _pitch_radians: float = 0.0
@@ -14,6 +19,10 @@ var _debug_speed_watch_name: StringName
 var _debug_floor_watch_name: StringName
 
 func _ready() -> void:
+	is_local_player = input_peer_id == 0 or input_peer_id == multiplayer.get_unique_id()
+	camera.current = is_local_player
+	set_process_unhandled_input(is_local_player)
+	set_physics_process(is_local_player)
 	_debug_command_name = StringName("player_status_%s" % name)
 	_debug_speed_watch_name = StringName("player/%s/speed_mps" % name)
 	_debug_floor_watch_name = StringName("player/%s/on_floor" % name)
@@ -37,7 +46,8 @@ func _ready() -> void:
 		false,
 		false
 	)
-	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	if is_local_player and not bool(debug_hub.call("is_console_open")):
+		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 func _exit_tree() -> void:
 	if not is_instance_valid(debug_hub):

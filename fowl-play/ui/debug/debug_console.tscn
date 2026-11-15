@@ -104,10 +104,16 @@ layout_mode = 2
 theme_override_colors/default_color = Color(0.9254902, 0.93333334, 0.9490196, 1)
 metadata/_tab_index = 1
 
-[node name="Commands" type="VBoxContainer" parent="Window/Layout/Tabs" unique_id=956688881]
+[node name="Commands" type="ScrollContainer" parent="Window/Layout/Tabs" unique_id=983072904]
 visible = false
 layout_mode = 2
+follow_focus = true
+horizontal_scroll_mode = 0
 metadata/_tab_index = 2
+
+[node name="CommandList" type="VBoxContainer" parent="Window/Layout/Tabs/Commands" unique_id=956688881]
+layout_mode = 2
+size_flags_horizontal = 3
 
 [node name="CommandRow" type="HBoxContainer" parent="Window/Layout" unique_id=1631087158]
 layout_mode = 2

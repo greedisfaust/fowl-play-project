@@ -6,7 +6,7 @@ extends Control
 @onready var window: Control = $Window
 @onready var logs_view: RichTextLabel = $Window/Layout/Tabs/Logs
 @onready var watches_view: RichTextLabel = $Window/Layout/Tabs/Watches
-@onready var commands_view: VBoxContainer = $Window/Layout/Tabs/Commands
+@onready var commands_view: VBoxContainer = $Window/Layout/Tabs/Commands/CommandList
 @onready var command_input: LineEdit = $Window/Layout/CommandRow/CommandInput
 @onready var run_button: Button = $Window/Layout/CommandRow/RunButton
 @onready var command_result: Label = $Window/Layout/CommandResult
@@ -55,6 +55,7 @@ func _refresh_watches() -> void:
 func _refresh_registry_views() -> void:
 	_refresh_watches()
 	for child: Node in commands_view.get_children():
+		commands_view.remove_child(child)
 		child.queue_free()
 	var command_names: Array[StringName] = debug_hub.call("get_command_names")
 	for command_name: StringName in command_names:

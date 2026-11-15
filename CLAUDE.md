@@ -293,7 +293,9 @@ Never document a feature as complete when it has only been implemented but not v
 
 Before starting development, follow the start-of-session procedure in:
 
-`docs/SESSION_MEMORY_RULES.md`
+[`SESSION_MEMORY_RULES.md`](SESSION_MEMORY_RULES.md)
+
+These project instructions apply to any coding assistant, including Codex and Copilot. Start with [the active session index](docs/sessions/_ACTIVE.md); do not assume a branch from previous chat history.
 
 At minimum:
 

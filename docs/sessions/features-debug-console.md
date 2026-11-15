@@ -2,13 +2,13 @@
 
 Branch: features/debug-console
 Goal: Establish the verified D0 foundation and the first playable M0 slice.
-Status: IN PROGRESS
+Status: READY TO RETIRE
 Last updated: 2026-11-15
 Base docs: PROJECT_OVERVIEW.md, PROJECT_STATE.md
 
 ## Current state
 
-- The active branch is features/debug-console.
+- Debug work was committed by the user as `762c00f`. Development continues on `features/m0-multiplayer-network-spawning`; see its session file. This file is retained for reference.
 - PROJECT_STATE.md now records the existing foundation scripts and project settings.
 - PROJECT_OVERVIEW.md remains the active technical authority.
 - PROJECT_GAMEPLAY_OVERVIEW.md is background/provisional design material.
@@ -20,7 +20,7 @@ Base docs: PROJECT_OVERVIEW.md, PROJECT_STATE.md
 
 ## Exact next step
 
-Implement and verify M0 network startup plus host/client player spawn/despawn, retaining D0 checks. Landing with the console open remains a pending playtest.
+This branch's work is committed as `762c00f`. Continue from [the M0 handoff](features-m0-multiplayer-network-spawning.md); do not repeat the completed debug or M0 implementation. Landing with the console open remains an explicitly unverified edge case.
 
 ## Latest verification — 2026-11-15
 
@@ -35,8 +35,7 @@ Implement and verify M0 network startup plus host/client player spawn/despawn, r
 
 ## Waiting on the user
 
-- Verify whether the user wants the existing pre-branch worktree changes included in a later commit.
-- Run the next host/client network playtest after spawn/despawn is implemented.
+- No outstanding editor task for this historical branch. M0 work and user commit are tracked in the current session.
 
 ## Decisions made
 
@@ -62,7 +61,7 @@ Implement and verify M0 network startup plus host/client player spawn/despawn, r
 ## Known bugs and gotchas
 
 - D0 is verified by `fowl-play/tests/run_checks.ps1`; local movement and console behavior are manually verified.
-- The current worktree had changes before this branch was created; do not discard them.
+- Historical pre-branch changes were preserved and included in the user's debug work. Always inspect the current worktree; do not discard subsequent M0 edits.
 
 ## Files touched
 
@@ -74,6 +73,6 @@ Implement and verify M0 network startup plus host/client player spawn/despawn, r
 - `fowl-play/tests/run_checks.ps1` — Godot test runner.
 - `fowl-play/player/player.gd` — local capsule movement and camera input.
 - `fowl-play/player/player.tscn` — editor-built player capsule scene.
-- `fowl-play/ui/debug_console.gd` — local console controller.
-- `fowl-play/ui/debug_console.tscn` — editor-built console UI scene.
+- `fowl-play/ui/debug/debug_console.gd` — local console controller (current path).
+- `fowl-play/ui/debug/debug_console.tscn` — editor-built console UI scene (current path).
 - `fowl-play/arena/test_arena.tscn` — editor-built test arena with player and console instances.

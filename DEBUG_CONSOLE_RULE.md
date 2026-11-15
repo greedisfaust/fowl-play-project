@@ -1,5 +1,7 @@
 # Debug Console rule
 
+**Current implementation:** D0 and M0 are implemented and verified as recorded in [project state](docs/PROJECT_STATE.md). Use [docs/DEBUG.md](docs/DEBUG.md) for current APIs, commands, paths, and playtests. The setup/kickoff instructions below are historical scaffolding; do not rebuild the existing console.
+
 > **How to use this file**
 > 1. Copy everything from "Debug Console rule (applies to every slice)" down to the end of "Definition of Done" into `CLAUDE.md`.
 > 2. Add one line to `PROJECT_OVERVIEW.md` §4 or §21: *"Every slice must satisfy the Debug Console rule in CLAUDE.md."*
