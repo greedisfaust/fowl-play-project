@@ -15,6 +15,7 @@ security secret.
 | hands | core/hands.gd | reach, hover, guard, shake, color changes |
 | legs | core/legs.gd | step, land, settle, air movement |
 | props | core/props.gd | spawn, grab, throw, interact, state |
+| interact | player/focus.gd and interaction/interactable.gd | focus changes, accepted/rejected interaction requests |
 | player | player/player.gd | movement state and local camera input |
 
 ## Watches
@@ -26,6 +27,9 @@ security secret.
 | `net/status` | core/network.gd | offline, hosting, connecting, connected, disconnected, or failed. |
 | `net/peers` | core/network.gd | Locally known connected peer IDs, including local ID once connected. |
 | `net/player_count` | arena/test_arena.gd | Spawned players in this arena instance. |
+| `interact/focused/<name>` | player/focus.gd | Prompt text for the local player's focused target, or blank. |
+| `interact/device/<name>/active` | interaction/debug_use_device.gd | Toggle state of the M1 test USE device. |
+| `props/<name>/pickup_allowed` | props/prop.gd | Whether the prop's assigned profile allows pickup. |
 
 ## Commands
 
@@ -46,6 +50,7 @@ Automated checks cover Enter/Run signal wiring, category toggles, feedback with 
 | `net_host` | none | no | no | Starts hosting from offline/disconnected state. Removes the offline player before spawning the host. |
 | `net_join` | optional IP | no | no | Joins an IP; defaults to 127.0.0.1. Example: `net_join 192.168.1.20`. |
 | `net_disconnect` | none | no | no | Disconnects this instance and clears its players. On the host, ends the session for clients. Use net_host/net_join afterward. |
+| `interact_use_<name>` | none | yes | no | Uses the local player's currently focused target through the normal validation path. |
 
 ## Playtest "what you should see" log
 
@@ -60,6 +65,9 @@ Automated checks cover Enter/Run signal wiring, category toggles, feedback with 
 | M0 | 5 | Both: `Spawning player <id> in slot <slot>`; player count becomes 2. |
 | M0 | 6 | Client leaves: host logs `Despawning player <id>`; player count becomes 1. |
 | M0 | 7 | Host leaves: client logs `Host disconnected`; player count becomes 0. |
+| M1 | 1 | Aim at the editor-authored device: `interact: Focused <prompt>` and the device receives a highlight overlay. |
+| M1 | 2 | Press E or run `interact_use_<name>`: `interact: Interaction accepted: <prompt> action=use`, then `<device> active=true/false`. |
+| M1 | 3 | Aim at the GRAB prop: `props/<name>/pickup_allowed=true`; press E and see `props: <name> grab accepted; carry is deferred to M6`. |
 
 M0 launch arguments go after Godot's `--` separator: `--host` or `--join=127.0.0.1`; optional `--port=7777`. No arguments starts offline. Movement is local-only at this milestone; remote capsules remain at their spawn positions until M3.
 

@@ -2,12 +2,19 @@
 
 [ext_resource type="Script" uid="uid://n6lbgq5xyb75" path="res://arena/test_arena.gd" id="1_555b8"]
 [ext_resource type="PackedScene" uid="uid://p4yueflmbgmy" path="res://ui/debug/debug_console.tscn" id="2_nr24g"]
+[ext_resource type="Script" uid="uid://46ghk5d3vk2r" path="res://interaction/debug_use_device.gd" id="3_6pj3w"]
+[ext_resource type="Script" uid="uid://dd5c04repreo1" path="res://interaction/interactable.gd" id="3_555b8"]
+[ext_resource type="PackedScene" uid="uid://330xhwqju48a" path="res://props/base_prop.tscn" id="5_5fshk"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_g4v7s"]
 size = Vector3(20, 1, 20)
 
 [sub_resource type="BoxMesh" id="BoxMesh_g4v7s"]
 size = Vector3(20, 1, 20)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_yf5fn"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_yf5fn"]
 
 [node name="TestArena" type="Node3D" unique_id=2059650083]
 script = ExtResource("1_555b8")
@@ -44,3 +51,22 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.6, 3)
 
 [node name="Spawn4" type="Marker3D" parent="SpawnPoints" unique_id=738784350]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.6, 3)
+
+[node name="TestUseDevice" type="StaticBody3D" parent="." unique_id=922168010]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 1, -6)
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("3_6pj3w")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TestUseDevice" unique_id=1470592253]
+shape = SubResource("BoxShape3D_yf5fn")
+
+[node name="BoxMesh" type="MeshInstance3D" parent="TestUseDevice" unique_id=455788368]
+mesh = SubResource("BoxMesh_yf5fn")
+
+[node name="Interactable" type="Node" parent="TestUseDevice" unique_id=1967087521]
+script = ExtResource("3_555b8")
+prompt_text = "Toggle Test Device"
+
+[node name="TestGrabProp" parent="." unique_id=1566184061 instance=ExtResource("5_5fshk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -6)

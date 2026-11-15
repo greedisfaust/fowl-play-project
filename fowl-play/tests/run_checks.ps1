@@ -13,12 +13,13 @@ if (-not (Test-Path -LiteralPath $godot)) {
 	throw "Godot executable not found. Set FOWL_PLAY_GODOT or add godot to PATH."
 }
 $project = Join-Path $PSScriptRoot ".."
-foreach ($stage in @("import", "d0")) {
+foreach ($stage in @("import", "d0", "m1")) {
 	$checkStdout = [System.IO.Path]::GetTempFileName()
 	$checkStderr = [System.IO.Path]::GetTempFileName()
 	$arguments = @("--headless", "--path", ('"{0}"' -f $project))
 	if ($stage -eq "import") { $arguments += @("--editor", "--import") }
-	else { $arguments += @("--script", "res://tests/d0_debug_hub_test.gd") }
+	elseif ($stage -eq "d0") { $arguments += @("--script", "res://tests/d0_debug_hub_test.gd") }
+	else { $arguments += @("--script", "res://tests/m1_interaction_test.gd") }
 	try {
 		$checkProcess = Start-Process -FilePath $godot -ArgumentList $arguments -WindowStyle Hidden -Wait -PassThru -RedirectStandardOutput $checkStdout -RedirectStandardError $checkStderr
 		$exitCode = $checkProcess.ExitCode

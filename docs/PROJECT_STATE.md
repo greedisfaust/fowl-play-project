@@ -1,15 +1,15 @@
 # Fowl Play — Project State
 
-**Status:** D0 and M0 foundation/spawning slices verified. Console overflow fix user-playtested. M0 changes await user commit; M1 has not started.
+**Status:** D0, M0, and M1 interaction/prop slices verified. Console overflow fix user-playtested. M2 hands has started with the scene-backed hand API.
 
-## Last verified (2026-11-15)
+## Last verified (2026-11-16)
 
-- Current branch: `features/m0-multiplayer-network-spawning`.
+- Current branch: `features/m1-interaction-one-prop`.
 - Godot 4.7 project: `fowl-play/`, using Jolt Physics, Forward+, and D3D12.
 - `fowl-play/project.godot` contains the project settings, input actions, and four autoload entries.
 - Foundation scripts exist in `fowl-play/core/`: `layers.gd`, `tuning.gd`, `network.gd`, and `debug_hub.gd`.
-- Debug-console work is committed as `762c00f`. The new branch implements M0 network spawning with user-authored arena setup.
-- D0 headless checks pass with Godot 4.7.2.
+- Debug-console work is committed as `762c00f`; M0 is committed as `017f1cb`.
+- D0, M1 interaction checks, and M0 network checks pass with Godot 4.7.2. Prop/profile scripts also import cleanly.
 - Console command arguments are implemented and user-playtested. Player watch/command cleanup is headless verified, including network disconnects; manual disconnect checks are user-verified.
 - Latest D0 rerun passes cleanly after removing an unused missing-script InputSetup autoload and fixing Windows process waiting/output capture in the test runner. Input actions remain defined in the project Input Map.
 - USER VERIFIED: console hosting/joining works, remote capsules appear, and player counts are visible. Default and explicit loopback connections plus both disconnect directions pass separate-process tests; manual disconnect cleanup is user-verified.
@@ -20,9 +20,9 @@
 | Milestone | Goal | Status |
 |---|---|---|
 | D0 Debug infrastructure | DebugHub, tuning debug values, local log buffer, watches, commands, D0 headless check | Verified: `fowl-play/tests/run_checks.ps1` passes |
-| M0 Foundation | Project settings, layers, tuning, input map, networking autoload, test runner, arena, capsule movement, camera, spawn/despawn | Verified: automated tests and user host/join/disconnect/rejoin playtests; console scrolling fix confirmed; awaiting user commit |
-| M1 Interaction + one prop | Interactable component, focus/highlight, one USE device, one GRAB prop | Not started |
-| M2 Hands | Scene-backed hand + finger scenes, first-person + world modes | Not started |
+| M0 Foundation | Project settings, layers, tuning, input map, networking autoload, test runner, arena, capsule movement, camera, spawn/despawn | Verified: automated tests and user host/join/disconnect/rejoin playtests; console scrolling fix confirmed; committed as `017f1cb` |
+| M1 Interaction + one prop | Interactable component, focus/highlight, one USE device, one GRAB prop | Verified: host/offline focus/use/grab playtest; reusable prop scene/profile saved |
+| M2 Hands | Scene-backed hand + finger scenes, first-person + world modes | In progress: hand API pending editor-authored scenes |
 | M3 Networking slice 1 | Movement authority gate, roster, remote smoothing, intent RPC, validation helper | Not started |
 | M4 Ragdoll spike | Skeleton, 11 physical bones, Jolt joints, sync measurements at 15/30/60 Hz | Not started |
 | M5 Limp lifecycle | Knockdown → ground → recovery (G1–G3, G8) | Not started |
@@ -54,4 +54,4 @@ Late join is decided: allowed during the rest of a day, not during casino/elevat
 
 ## Next action
 
-Review/preserve the uncommitted M0 branch for the user's commit, then begin M1 (interaction and one prop) on a new feature branch. Read [the handoff](sessions/features-m0-multiplayer-network-spawning.md) first. Do not repeat completed M0 setup or implement M3 movement sync early.
+Implement and editor-build the first scene-backed hand/finger pair for M2. Keep carry/throw deferred to M6 and movement/network cosmetics gated by M3.

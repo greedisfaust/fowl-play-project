@@ -11,6 +11,7 @@ var is_local_player: bool = true
 
 @onready var head: Node3D = $Head
 @onready var camera: Camera3D = $Head/Camera3D
+@onready var focus: Node = get_node_or_null("Head/Camera3D/Focus")
 @onready var debug_hub: Node = get_node("/root/DebugHub")
 
 var _pitch_radians: float = 0.0
@@ -23,6 +24,8 @@ func _ready() -> void:
 	camera.current = is_local_player
 	set_process_unhandled_input(is_local_player)
 	set_physics_process(is_local_player)
+	if focus != null:
+		focus.call("set_active", is_local_player)
 	_debug_command_name = StringName("player_status_%s" % name)
 	_debug_speed_watch_name = StringName("player/%s/speed_mps" % name)
 	_debug_floor_watch_name = StringName("player/%s/on_floor" % name)
