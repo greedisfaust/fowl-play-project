@@ -12,7 +12,10 @@ This document is self-contained. There is no prior code to read. Everything you 
 
 ## 1. Vision
 
-Fowl Play is a host-authoritative multiplayer physics brawler (1–4 players, local network). Players are bird characters in shared rooms. They fight with quick punches, charged lunges and parries. A player who takes a charged hit goes **limp**: the body becomes a physics ragdoll that tumbles, can be picked up and carried by another player, thrown, and after a few seconds gets back up.
+Fowl Play is a host-authoritative multiplayer party game (1–4 players, local network). In Fowl Play, one friend signs what he thinks is a free wings-for-life deal at a chicken-themed casino — but the contract's fine print binds anyone who eats the wings too, so sharing them with his three friends drags them all in without any of them signing a thing. Now bound to The House's endless "loyalty" contract, the four of them must gamble their way to enough winnings to void the cursed contract before The House claims them for good.
+
+Fowl Play is a first-person party game for four players who share one bank account and one very bad contract. One of you signed what looked like a free wings-for-life deal at a chicken-themed casino called The House — except the fine print means anyone who eats the wings is bound to the contract too, so sharing them with your friends dragged all four of you in without the rest of you ever signing anything. Now you've got a handful of in-game days to gamble your way to enough winnings to void the contract before it claims you for good. The catch: every bet comes out of the same shared wallet, so when a friend starts pushing their luck too far, you can grab them, punch them into a stunned heap, or drag them bodily away from the table — at your own risk, since hitting a friend costs the entire team too. It's built for small groups who want a short, loud, chaotic multiplayer session full of betrayal, bad decisions, and yelling at your friends to stop gambling. Players are characters in shared rooms. They are able to fight with quick punches, charged lunges and parries. A player who takes a charged hit goes **limp**: the body becomes a physics ragdoll that tumbles, can be picked up and carried by another player, thrown, and after a few seconds gets back up.
+
 
 **The feel (reference: Gamble With Your Friends, Half-Life 2 ragdolls):** physical and clumsy. Bodies have weight, limbs flail, carried players dangle from the carrier's grip, thrown bodies tumble freely (real rotation from the physics, never a scripted spin) until they hit something or settle. Reference only: copy nothing from those games.
 
@@ -102,19 +105,19 @@ Hips (root)
 | Neck | Chest → Head | Cone | ~45° swing, ~40° twist |
 | Waist | Hips → Chest | Cone | ~25° swing, ~20° twist |
 
-- **Meshes:** rigid primitive meshes on `BoneAttachment3D` nodes (no skin weights, no Blender). Blocky low-poly look. Whether the character has a beak or bird head is **OPEN** (cosmetic only; does not change the skeleton).
+- **Meshes:** rigid primitive meshes on `BoneAttachment3D` nodes (no skin weights, no Blender). Blocky low-poly look. The head has a **beak and eyes** as a rigid attachment (DECIDED, cosmetic only; does not change the skeleton).
 - **Skeleton authoring (OPEN, decide at the M4 gate):** (A) build the bones in the editor through the Skeleton3D inspector (RECOMMENDED to try first on a minimal skeleton); (B) if A is too painful, a **one-time `@tool` script** run in the editor that creates the bones, whose result is saved as a scene and the script then deleted (needs explicit approval); (C) Blender (non-goal unless approved).
 - **Self-collision (RECOMMENDED, verify in the spike):** bones of the **same** ragdoll never collide with each other (collision exceptions or Jolt collision groups); bones of **different** ragdolls do.
 - **Mass (OPEN):** per-bone masses are decided in the Jolt spike.
 - **Node paths (stable contract):** the player scene root is named by peer id (`Players/<id>`) and exposes `Head`, `Head/Camera3D`, `Rig/Skeleton3D`, `NamePlate`, plus script properties `hands`, `head`, `state`, `combat`, `carrier`. **A Player node is never reparented** (it breaks every RPC path).
-- **Owner view:** the owner's body mesh may be hidden in first person. **OPEN:** whether the owner's legs should be visible when looking down. Default: hidden (also saves their leg compute).
+- **Owner view:** the owner's body mesh may be hidden in first person. **DECIDED:** the owner's legs are hidden when looking down (pitch below horizontal); when looking forward again they fade from hidden to visible via a smooth opacity slide (no instant snap). Default: hidden when looking down (also saves their leg compute).
 
 ## 8. Movement and camera
 
 - WASD move, mouse look (pitch clamped ±85°), jump. Starting values are in §15.
 - Camera is on `Head`. The raycast for interaction is a child of the camera.
 - Escape releases the mouse (no pause); a click recaptures it.
-- While limp, the **owner's camera** follows the head bone, smoothed, with mouse look added on top. A carried player **can still look around**. **RECOMMENDED:** limit camera roll, push the camera out of walls (short ray, mask in §13), no snapping when the head clips geometry. **OPEN:** exact follow target (head bone vs smoothed hips).
+- While limp, the **owner's camera** follows the **smoothed hips** (owner's capsule position), smoothed, with mouse look added on top. A carried player **can still look around**. **RECOMMENDED:** limit camera roll, push the camera out of walls (short ray, mask in §13), no snapping when the head clips geometry. **DECIDED:** follow smoothed hips (owner's capsule position) rather than the head bone.
 
 ## 9. Combat
 
@@ -123,14 +126,14 @@ Inputs are InputMap actions only (never raw keycodes). The full action table is 
 | Action | Input | Behavior |
 |---|---|---|
 | Quick punch (jab) | tap `punch` (Q): released within `TAP_MAX_SECONDS` (0.25 s) | Fires on release. Range ~2.5 m, hitbox lives ~0.1 s, spam guard 0.35 s. **No limp.** The target recoils (visual only). |
-| Charged punch | hold `punch` while holding nothing | Wind-up, then **auto-fires the moment the hold reaches 1.0 s, even while still held**. **One fire per press:** `punch` must be released to re-arm, and `CHARGED_PUNCH_COOLDOWN_SECONDS` (2.0) must pass; the host enforces both. Releasing between the tap window and 1.0 s: the wind-up fizzles with a short recovery and no punch (RECOMMENDED default, OPEN-confirm). No charge meter UI: feedback is a wind-up pose and a rising sound. |
+| Charged punch | hold `punch` while holding nothing | **Wind-up animation plays to indicate the charge** (DECIDED). Auto-fires the moment the hold reaches 1.0 s, even while still held. **One fire per press:** `punch` must be released to re-arm, and `CHARGED_PUNCH_COOLDOWN_SECONDS` (2.0) must pass; the host enforces both. **No early-release fizzle:** releasing before 1.0 s simply cancels with no punch and no penalty (DECIDED). No charge meter UI: feedback is the wind-up pose and a rising sound. |
 | Lunge | on auto-fire | 12 m/s for 0.5 s, direction steered toward the camera look at ≤ 3 rad/s. The hitbox is parented to the puncher and moves with them. |
 | Lunge hit | hitbox overlaps a player | Target goes **limp**; the lunge stops immediately on the host and the puncher's client; hits all players inside the hitbox. |
 | Lunge miss | 0.5 s passes | Nothing happens. Input resumes. |
 | Parry | press `parry` (F) once | Guard (barrier) up for 1.5 s, then 1.5 s cooldown. Press-once, no hold-to-keep. A punch hitting the barrier is cancelled. **Attacker:** a parried **charged** punch makes the attacker go **limp** (`PARRY_LIMP_SECONDS`); a parried **jab** is **recoil only**. |
 
 - **Blocked states:** cannot punch/parry while limp, carrying something, or (for punch) parrying; cannot parry while on cooldown. **During the charged-punch state (wind-up, lunge, recovery) use, grab and parry are blocked** (this avoids state bugs); becoming limp ends it at once.
-- **OPEN:** movement during wind-up (full / slowed ~50% RECOMMENDED / rooted).
+- **OPEN:** movement during wind-up (full speed / slowed ~50% RECOMMENDED / rooted). **DECIDED:** full speed during charge; no slowdown.
 - **Jab recoil (RECOMMENDED):** a short additive spring on Spine/Chest, visual only, triggered on all machines from the replicated hit event. It is **not** a ragdoll and not limp.
 - A knockdown while lunging cancels the lunge with no hit.
 - **The host judges every hit. Clients send intent only.** Requests must come from the node's owner (sender check).
@@ -233,7 +236,7 @@ Focus-based: a ray from the camera finds the target, the target highlights, the 
 
 **Bone budget policy (DECIDED limits, to be proven in the spike):** one full ragdoll is **11 physical bodies**. `MAX_FULL_RAGDOLLS = 4` (44 bodies) within `MAX_AWAKE_BODIES = 70` (leaving about 26 for props). Bodies that are asleep do not count. If the spike on a weak laptop shows this is too heavy, propose a lower number, and a cheaper fallback for extra knockdowns (capsule body + canned flop pose). The host decides and replicates which mode each ragdoll uses.
 
-**Late join (OPEN):** the earlier prototype closed joins once a run started. Decide whether joining mid-play is allowed. If it is not, G6 only applies in the lobby; if it is, G6 is a must.
+**Late join (DECIDED):** joining mid-play is allowed only during rest of day (not during casino/elevator). If late join is allowed, G6 (full state on join) is a must.
 
 **Sync Guarantees (acceptance criteria, must hold):**
 - **G1** All peers start a ragdoll from the same start transform and launch, within one round trip.
@@ -426,19 +429,19 @@ res://
 - Budget: up to 4 full ragdolls, up to 70 awake bodies, to be proven by the spike.
 - A parried charged punch makes the attacker limp; a parried jab is recoil only.
 - Movement authority: owner-authoritative with host sanity checks (RECOMMENDED, confirm at the M3 gate).
+- Owner's legs are hidden when looking down (pitch below horizontal); when looking forward again they fade from hidden to visible via a smooth opacity slide (no instant snap).
+- Camera follow target while limp: **smoothed hips** (owner's capsule position) is the follow target.
+- Wind-up movement: **full speed** (no slowdown) during charge; **no early-release fizzle** (releasing before 1.0 s cancels with no punch and no penalty).
+- Beak and eyes are a rigid attachment on the head (cosmetic only; does not change the skeleton).
+- A player node is never reparented (it breaks every RPC path).
 
 **Open (ask before building):**
-1. Bird vs humanoid legs (before M4).
-2. Skeleton authoring: inspector vs a one-time tool script.
-3. Beak or bird head (cosmetic).
-4. Owner's legs visible in first person.
-5. Camera follow target while limp (head bone vs smoothed hips).
-6. Dangling limbs while carried (confirm).
-7. Wind-up movement (full / slowed / rooted) and whether an early charged-punch release fizzles.
-8. Whether punches affect already-limp bodies.
-9. Whether to include impact/wall-slam feedback.
-10. Late join during play (decides whether G6 applies).
-11. Final lobby, nickname and color flow.
-12. Fixed throw power (`THROW_SPEED_MPS`) vs a variable-power option later.
-13. Per-bone ragdoll masses (spike).
-14. Rebuilding the casino/economy layer, and when.
+1. Skeleton authoring: inspector vs a one-time tool script.
+2. Dangling limbs while carried (confirm).
+3. Whether punches affect already-limp bodies.
+4. Whether to include impact/wall-slam feedback.
+5. Late join during play (decides whether G6 applies).
+6. Final lobby, nickname and color flow.
+7. Fixed throw power (`THROW_SPEED_MPS`) vs a variable-power option later.
+8. Per-bone ragdoll masses (spike).
+9. Rebuilding the casino/economy layer, and when.
