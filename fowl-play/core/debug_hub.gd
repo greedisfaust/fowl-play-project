@@ -150,6 +150,10 @@ func execute_command(command_name: StringName, args: Array[Variant]) -> Variant:
 	var callable: Callable = command_data["callable"]
 	return callable.call(args)
 
+func unregister_command(command_name: StringName) -> void:
+	if _commands.erase(command_name):
+		registry_changed.emit()
+
 func get_log_lines() -> Array[String]:
 	return _log_lines.duplicate()
 

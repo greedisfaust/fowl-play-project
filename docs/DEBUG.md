@@ -26,6 +26,12 @@ security secret.
 
 ## Commands
 
+Enter a command plus whitespace-separated arguments in the command bar, then press Enter or Run. For example: `debug_disable net`, followed by `debug_enable net`. Quoted arguments are not supported yet.
+
+Results appear below the bar even when `net` logging is disabled. Unknown commands display an error; empty input displays a prompt. Existing command buttons also display results and copy their command name into the input field so arguments can be added.
+
+Automated checks cover Enter/Run signal wiring, category toggles, feedback with logging disabled, whitespace, missing arguments, and unknown/empty commands. USER VERIFIED: command entry works in-game after the Enter/Run playtest handoff.
+
 | Name | Args | Host only | Cheat | What it does |
 |---|---|---|---|---|
 | `debug_categories` | none | no | no | Lists registered categories and enabled state. |
@@ -50,6 +56,10 @@ security secret.
 
 ## Notes
 
+- Players unregister their two watches and status command on scene-tree exit, using their original registration names even if renamed. Other systems can remove commands with `DebugHub.unregister_command(name)` and watches with `DebugHub.unwatch(name)`. Registry changes refresh the console automatically.
+- D0 checks verify queued player deletion with the console present, another player's continued watch/command access, and registration of a replacement using the departed player's name. Network disconnect testing remains part of M0.
+- With the console open, player movement and jump input are blocked while gravity and collision movement continue. USER VERIFIED: movement/jump blocked and speed increases while falling off the arena with the console open. Landing with the console open remains untested.
+- Keep the unlock phrase and Escape controls; the user declined an F3 toggle.
 - The console is local only and never networked.
 - The unlock phrase overlaps gameplay letters; the console input layer must consume those keystrokes while recognizing the phrase.
 - The console is built by the user in the editor. Claude Code gives an **EDITOR TASK** for it and never builds the node tree in script.

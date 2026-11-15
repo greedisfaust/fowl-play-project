@@ -13,8 +13,18 @@ if (-not (Test-Path -LiteralPath $godot)) {
 	throw "Godot executable not found. Set FOWL_PLAY_GODOT or add godot to PATH."
 }
 $project = Join-Path $PSScriptRoot ".."
-$output = @(& $godot --headless --path $project --script res://tests/d0_debug_hub_test.gd 2>&1)
-$exitCode = $LASTEXITCODE
+$checkStdout = [System.IO.Path]::GetTempFileName()
+$checkStderr = [System.IO.Path]::GetTempFileName()
+try {
+	$checkProcess = Start-Process -FilePath $godot -ArgumentList @(
+		"--headless", "--path", ('"{0}"' -f $project),
+		"--script", "res://tests/d0_debug_hub_test.gd"
+	) -WindowStyle Hidden -Wait -PassThru -RedirectStandardOutput $checkStdout -RedirectStandardError $checkStderr
+	$exitCode = $checkProcess.ExitCode
+	$output = @(Get-Content -LiteralPath $checkStdout, $checkStderr)
+} finally {
+	Remove-Item -LiteralPath $checkStdout, $checkStderr -Force
+}
 $output | ForEach-Object { Write-Output $_ }
 
 if ($exitCode -ne 0) {

@@ -20,7 +20,18 @@ Base docs: PROJECT_OVERVIEW.md, PROJECT_STATE.md
 
 ## Exact next step
 
-Implement and verify M0 network startup plus host/client player spawn and despawn, while retaining D0 checks for every later slice.
+Implement and verify M0 network startup plus host/client player spawn/despawn, retaining D0 checks. Landing with the console open remains a pending playtest.
+
+## Latest verification — 2026-11-15
+
+- VERIFIED: player scene-tree exit removes both watches and its status command using stored registration names; DebugHub exposes `unregister_command`. D0 tests queued deletion with console present, cleanup after renaming, surviving player callbacks, and replacement registration with the departed player's name. Full runner passes on Godot 4.7.2 with exit 0 and no errors; editor diagnostics are clean. No scene edits. Actual network disconnect behavior awaits M0.
+- IMPLEMENTED AND HEADLESS VERIFIED: command bar executes whitespace-separated arguments through DebugHub; feedback remains visible when net logging is off. D0 now instantiates the actual console and exercises Enter/Run signals, toggles, missing arguments, unknown commands, and blank input. Checks pass with exit 0 and no errors. USER VERIFIED: command entry works in-game after the Enter/Run handoff. User-created scene controls were not modified.
+- USER VERIFIED: console panel and tab/button styling, plus resizing the running game window.
+- USER VERIFIED: speed increases while falling off the arena with the console open; movement/jump remain blocked. Gravity fix is playtested; landing with the console open remains untested. Editor diagnostics report no player-script errors.
+- DECIDED: retain the unlock phrase and Escape; do not add F3 (user preference).
+- VERIFIED: removed unused `InputSetup` autoload referencing missing `res://core/input.gd`; actions already exist in the project Input Map and no code references InputSetup.
+- VERIFIED: test runner now uses `Start-Process -Wait -PassThru` with redirected output to capture the Windows GUI executable's actual exit code. D0 checks pass cleanly on Godot 4.7.2, exit 0, no error output. Temporary output files are removed after each run.
+- User scene edits were preserved. Current scene location is `fowl-play/ui/debug/debug_console.tscn`.
 
 ## Waiting on the user
 

@@ -60,11 +60,16 @@ theme = ExtResource("1_tkld6")
 script = ExtResource("1_l2imt")
 
 [node name="Window" type="PanelContainer" parent="." unique_id=1466451666]
-layout_mode = 0
-offset_left = 40.0
-offset_top = 40.0
-offset_right = 940.0
-offset_bottom = 640.0
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_elpyl")
 
 [node name="Layout" type="VBoxContainer" parent="Window" unique_id=1882270153]
@@ -78,8 +83,8 @@ theme_override_font_sizes/font_size = 22
 text = "THE HOUSE · DEBUG"
 
 [node name="Tabs" type="TabContainer" parent="Window/Layout" unique_id=1339350790]
-custom_minimum_size = Vector2(0, 500)
 layout_mode = 2
+size_flags_vertical = 3
 theme_override_colors/font_selected_color = Color(1, 0.9529412, 0.8392157, 1)
 theme_override_colors/font_hovered_color = Color(1, 1, 1, 1)
 theme_override_colors/font_unselected_color = Color(0.8039216, 0.827451, 0.8666667, 1)
@@ -89,20 +94,39 @@ theme_override_styles/tab_selected = SubResource("StyleBoxFlat_57qmd")
 current_tab = 0
 
 [node name="Logs" type="RichTextLabel" parent="Window/Layout/Tabs" unique_id=172097162]
-custom_minimum_size = Vector2(0, 450)
 layout_mode = 2
 theme_override_colors/default_color = Color(0.9254902, 0.93333334, 0.9490196, 1)
 metadata/_tab_index = 0
 
 [node name="Watches" type="RichTextLabel" parent="Window/Layout/Tabs" unique_id=1031580627]
 visible = false
-custom_minimum_size = Vector2(0, 450)
 layout_mode = 2
 theme_override_colors/default_color = Color(0.9254902, 0.93333334, 0.9490196, 1)
 metadata/_tab_index = 1
 
 [node name="Commands" type="VBoxContainer" parent="Window/Layout/Tabs" unique_id=956688881]
 visible = false
-custom_minimum_size = Vector2(0, 450)
 layout_mode = 2
 metadata/_tab_index = 2
+
+[node name="CommandRow" type="HBoxContainer" parent="Window/Layout" unique_id=1631087158]
+layout_mode = 2
+
+[node name="CommandLabel" type="Label" parent="Window/Layout/CommandRow" unique_id=497505732]
+layout_mode = 2
+text = "Command"
+
+[node name="CommandInput" type="LineEdit" parent="Window/Layout/CommandRow" unique_id=1959074439]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "debug_disable net"
+
+[node name="RunButton" type="Button" parent="Window/Layout/CommandRow" unique_id=2081003488]
+layout_mode = 2
+tooltip_text = "Run the entered command"
+text = "Run"
+
+[node name="CommandResult" type="Label" parent="Window/Layout" unique_id=934726026]
+layout_mode = 2
+text = "Enter a command, then press Enter or Run."
+autowrap_mode = 3

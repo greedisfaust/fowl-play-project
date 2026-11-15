@@ -10,6 +10,8 @@
 - Foundation scripts exist in `fowl-play/core/`: `layers.gd`, `tuning.gd`, `network.gd`, and `debug_hub.gd`.
 - The worktree contains uncommitted documentation, foundation, arena, player, and debug-console changes; it is not clean.
 - D0 headless checks pass with Godot 4.7.2.
+- Console command arguments are implemented and user-playtested. Player watch/command cleanup on scene-tree exit is headless verified, including rename, queued deletion, and replacement registration; network disconnect testing remains pending M0.
+- Latest D0 rerun passes cleanly after removing an unused missing-script InputSetup autoload and fixing Windows process waiting/output capture in the test runner. Input actions remain defined in the project Input Map.
 - The arena, player capsule, local movement, mouse look, jump, mouse capture, and debug console have been manually playtested.
 
 ## Milestone progress

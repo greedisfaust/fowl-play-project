@@ -10,18 +10,22 @@ const TUNING = preload("res://core/tuning.gd")
 
 var _pitch_radians: float = 0.0
 var _debug_command_name: StringName
+var _debug_speed_watch_name: StringName
+var _debug_floor_watch_name: StringName
 
 func _ready() -> void:
 	_debug_command_name = StringName("player_status_%s" % name)
+	_debug_speed_watch_name = StringName("player/%s/speed_mps" % name)
+	_debug_floor_watch_name = StringName("player/%s/on_floor" % name)
 	debug_hub.call(
 		"watch",
-		StringName("player/%s/speed_mps" % name),
+		_debug_speed_watch_name,
 		func() -> float:
 			return velocity.length()
 	)
 	debug_hub.call(
 		"watch",
-		StringName("player/%s/on_floor" % name),
+		_debug_floor_watch_name,
 		func() -> bool:
 			return is_on_floor()
 	)
@@ -34,6 +38,14 @@ func _ready() -> void:
 		false
 	)
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+
+func _exit_tree() -> void:
+	if not is_instance_valid(debug_hub):
+		return
+	# Use the original registration names even if the node was renamed.
+	debug_hub.call("unregister_command", _debug_command_name)
+	debug_hub.call("unwatch", _debug_speed_watch_name)
+	debug_hub.call("unwatch", _debug_floor_watch_name)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if bool(debug_hub.call("is_console_open")):
@@ -49,13 +61,15 @@ func _unhandled_input(event: InputEvent) -> void:
 			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 func _physics_process(delta: float) -> void:
+	if not is_on_floor():
+		velocity.y -= TUNING.GRAVITY_MPS2 * delta
+
 	if bool(debug_hub.call("is_console_open")):
 		velocity.x = 0.0
 		velocity.z = 0.0
+		move_and_slide()
 		return
-	if not is_on_floor():
-		velocity.y -= TUNING.GRAVITY_MPS2 * delta
-	elif Input.is_action_just_pressed("jump"):
+	if is_on_floor() and Input.is_action_just_pressed("jump"):
 		velocity.y = TUNING.JUMP_SPEED_MPS
 
 	var input_vector: Vector2 = Input.get_vector(
