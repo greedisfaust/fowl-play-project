@@ -1,3 +1,3 @@
 # Active session files
 
-- docs/reconcile-project-docs → docs/sessions/docs-reconcile-project-docs.md (IN PROGRESS)
+- features/debug-console → docs/sessions/features-debug-console.md (IN PROGRESS)

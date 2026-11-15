@@ -1,22 +1,23 @@
 # Fowl Play — Project State
 
-**Status:** D0 debug infrastructure verified; M0 foundation is next.
+**Status:** D0 verified; M0 arena, player capsule, movement, and debug console are working.
 
 ## Last verified (2026-11-15)
 
-- Current branch: `docs/reconcile-project-docs`.
+- Current branch: `features/debug-console`.
 - Godot 4.7 project: `fowl-play/`, using Jolt Physics, Forward+, and D3D12.
 - `fowl-play/project.godot` contains the project settings, input actions, and four autoload entries.
 - Foundation scripts exist in `fowl-play/core/`: `layers.gd`, `tuning.gd`, `network.gd`, and `debug_hub.gd`.
-- The worktree contains pre-existing modifications plus the new uncommitted D0 files; it is not clean.
-- D0 headless checks pass with Godot 4.7.2; no gameplay scenes or in-game debug-console scene exist yet.
+- The worktree contains uncommitted documentation, foundation, arena, player, and debug-console changes; it is not clean.
+- D0 headless checks pass with Godot 4.7.2.
+- The arena, player capsule, local movement, mouse look, jump, mouse capture, and debug console have been manually playtested.
 
 ## Milestone progress
 
 | Milestone | Goal | Status |
 |---|---|---|
 | D0 Debug infrastructure | DebugHub, tuning debug values, local log buffer, watches, commands, D0 headless check | Verified: `fowl-play/tests/run_checks.ps1` passes |
-| M0 Foundation | Project settings, layers, tuning, input map, networking autoload, test runner, arena, capsule movement, camera, spawn/despawn | Partial: D0 and project settings verified; scenes and player systems not started |
+| M0 Foundation | Project settings, layers, tuning, input map, networking autoload, test runner, arena, capsule movement, camera, spawn/despawn | Partial: arena, capsule movement, camera, and D0 verified; network spawn/despawn remains |
 | M1 Interaction + one prop | Interactable component, focus/highlight, one USE device, one GRAB prop | Not started |
 | M2 Hands | Scene-backed hand + finger scenes, first-person + world modes | Not started |
 | M3 Networking slice 1 | Movement authority gate, roster, remote smoothing, intent RPC, validation helper | Not started |
@@ -42,10 +43,10 @@ Late join is decided: allowed during the rest of a day, not during casino/elevat
 
 ## Known limitations
 
-- No gameplay scenes or debug-console UI have been verified.
+- Network roster, player spawn/despawn, and two-instance playtesting remain unverified.
 - The root and `docs/` debug references were previously inconsistent; `docs/DEBUG.md` is now the active reference.
 - The gameplay loop overview is background design material, not the current technical authority.
 
 ## Next action
 
-Begin M0 with the editor-owned test arena and player capsule scene; keep D0 as a prerequisite for every later slice.
+Implement and verify M0 network startup plus host/client player spawn and despawn; keep D0 as a prerequisite for every later slice.

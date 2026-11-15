@@ -41,13 +41,12 @@ security secret.
 | D0 | 1 | Headless check registers the built-in commands and a temporary watch. |
 | D0 | 2 | Headless check records `net: D0 verification log` in the local ring buffer. |
 | M0 | 1 | `player_status_Player` reports position, velocity, and grounded state. |
-| M0 | 1 | `net: connect from peer 1` |
-| M0 | 2 | `net: player 1 spawned` |
-| M0 | 3 | `combat: jab request from peer 1 accepted` |
-| M0 | 4 | `combat: hit applied to peer 2` |
-| M0 | 5 | `limp: started on peer 2` |
-| M0 | 6 | `limp: recovery started on peer 2` |
-| M0 | 7 | `limp: recovery finished on peer 2` |
+| M0 | 2 | The console opens after typing `ilovedebugging`; mouse input is released. |
+| M0 | 3 | Escape closes the console and mouse capture returns. |
+| M0 | 4 | `net: connect from peer 1` |
+| M0 | 5 | `net: player 1 spawned` |
+| M0 | 6 | `combat: jab request from peer 1 accepted` |
+| M0 | 7 | `combat: hit applied to peer 2` |
 
 ## Notes
 

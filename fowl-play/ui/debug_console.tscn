@@ -1,0 +1,49 @@
+[gd_scene format=3 uid="uid://p4yueflmbgmy"]
+
+[ext_resource type="Script" uid="uid://dxnuinq8cjlsm" path="res://ui/debug_console.gd" id="1_l2imt"]
+
+[node name="DebugConsole" type="Control" unique_id=1236782275]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_l2imt")
+
+[node name="Window" type="PanelContainer" parent="." unique_id=1466451666]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 40.0
+offset_right = 940.0
+offset_bottom = 640.0
+
+[node name="Layout" type="VBoxContainer" parent="Window" unique_id=1882270153]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Window/Layout" unique_id=2011271279]
+layout_mode = 2
+text = "CONSOLE"
+
+[node name="Tabs" type="TabContainer" parent="Window/Layout" unique_id=1339350790]
+custom_minimum_size = Vector2(0, 500)
+layout_mode = 2
+current_tab = 0
+
+[node name="Logs" type="RichTextLabel" parent="Window/Layout/Tabs" unique_id=172097162]
+custom_minimum_size = Vector2(0, 450)
+layout_mode = 2
+metadata/_tab_index = 0
+
+[node name="Watches" type="RichTextLabel" parent="Window/Layout/Tabs" unique_id=1031580627]
+visible = false
+custom_minimum_size = Vector2(0, 450)
+layout_mode = 2
+metadata/_tab_index = 1
+
+[node name="Commands" type="VBoxContainer" parent="Window/Layout/Tabs" unique_id=956688881]
+visible = false
+custom_minimum_size = Vector2(0, 450)
+layout_mode = 2
+metadata/_tab_index = 2
