@@ -34,7 +34,7 @@ Fowl Play is a first-person party game for four players who share one bank accou
 - **Networking:** `ENetMultiplayerPeer`, UDP port 7777, host = peer 1, max 3 clients. Solo play uses `OfflineMultiplayerPeer`.
 - **Performance target:** 4 players on weak school laptops. Budget: **≤ 70 awake rigid bodies** total (props + ragdoll bones), **≤ 15 shadow-casting lights**, hot paths allocate nothing per frame.
 - **Machine:** Windows 11. Shells: Git Bash (use forward slashes) and PowerShell.
-- **Paths:** project `C:/Users/Faust/Desktop/fowl-play/dev-fowl-play` (`res://`); Godot exe `C:/Program Files (x86)/Steam/steamapps/common/Godot Engine/godot.windows.opt.tools.64.exe`.
+- **Paths:** the Godot project is the repository's `fowl-play/` directory (`res://`). Use repository-relative paths in documentation; the Godot executable is machine-specific and must be discovered locally.
 - **Claude Code can run Godot itself** (headless tests, import, smoke runs). The user runs the real playtests and does the editor work.
 - **Headless facts:** Godot output is buffered until the process exits; exit code 0 = pass; headless cannot simulate real input events (call component methods directly in tests); re-run the import step after adding scripts (`class_name` registration).
 
@@ -412,7 +412,7 @@ res://
 2. **M1 Interaction and one prop:** the Interactable component, focus/highlight, one USE device and one GRAB-able prop (local, host-validated), the base prop scene and profile.
 3. **M2 Hands (scene-backed, local):** hand and finger scenes, the API in §16, first-person and world modes.
 4. **M3 Networking slice 1 — GATE:** confirm the movement-authority approach; roster, connect, remote smoothing, the intent-RPC pattern and the shared validation helper; replicated hand cosmetics.
-5. **M4 Ragdoll spike — GATE:** (legs decision first.) Skeleton, 11 physical bones, joints under Jolt, self-collision policy, bandwidth and CPU measurements at 15/30/60 Hz; choose the sync approach.
+5. **M4 Ragdoll spike — GATE:** (legs decision first.) Skeleton, 11 physical bones, joints under Jolt, self-collision policy, bandwidth and CPU measurements at 15/30/60 Hz; validate the decided quantized bone-pose sync approach and only propose an alternative if measurements fail.
 6. **M5 Limp lifecycle:** knockdown → ground → recovery on host and clients (G1–G3, G8; G6 if late join is allowed).
 7. **M6 Carry and throw:** props and limp bodies, auto-fire throw, dangling limbs, carried player can look around (G4, G5).
 8. **M7 Combat:** jab and recoil, charged punch with auto-fire/cooldown/re-arm, lunge, parry with the attacker outcomes in §9.
@@ -428,7 +428,7 @@ res://
 - Limp lasts `LIMP_SECONDS` = 3.5 s (hard cap 6.0 s).
 - Budget: up to 4 full ragdolls, up to 70 awake bodies, to be proven by the spike.
 - A parried charged punch makes the attacker limp; a parried jab is recoil only.
-- Movement authority: owner-authoritative with host sanity checks (RECOMMENDED, confirm at the M3 gate).
+- Movement authority: owner-authoritative with host sanity checks remains the recommended M3 gate proposal; implementation requires confirmation at that gate.
 - Owner's legs are hidden when looking down (pitch below horizontal); when looking forward again they fade from hidden to visible via a smooth opacity slide (no instant snap).
 - Camera follow target while limp: **smoothed hips** (owner's capsule position) is the follow target.
 - Wind-up movement: **full speed** (no slowdown) during charge; **no early-release fizzle** (releasing before 1.0 s cancels with no punch and no penalty).
@@ -440,8 +440,6 @@ res://
 2. Dangling limbs while carried (confirm).
 3. Whether punches affect already-limp bodies.
 4. Whether to include impact/wall-slam feedback.
-5. Late join during play (decides whether G6 applies).
-6. Final lobby, nickname and color flow.
-7. Fixed throw power (`THROW_SPEED_MPS`) vs a variable-power option later.
-8. Per-bone ragdoll masses (spike).
-9. Rebuilding the casino/economy layer, and when.
+5. Final lobby, nickname and color flow.
+6. Per-bone ragdoll masses (spike).
+7. Rebuilding the casino/economy layer, and when.

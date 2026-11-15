@@ -1,9 +1,10 @@
 # Fowl Play --- Gameplay Loop Overview
 
-**Document type:** Gameplay Loop Project Overview\
+**Document type:** Background gameplay-loop overview\
 **Source basis:** Fowl Play Game Design Document (GDD), Version 3\
-**Status:** Foundational overview --- intended to remain adaptable
-during GDD revision
+**Status:** Historical/provisional design background. The active technical
+authority is `docs/PROJECT_OVERVIEW.md`; this document must not override its
+current scope or decisions.
 
 ------------------------------------------------------------------------
 

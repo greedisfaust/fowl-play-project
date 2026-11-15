@@ -44,8 +44,8 @@ This rule has no exceptions. It applies to every slice, every bug fix that touch
 - **Adding a feature must never require editing the console.** The feature registers itself with the hub and the console picks it up.
 
 **How it opens**
-- The user types a secret word on the keyboard. There is **no key label, no on-screen hint, no console prompt**.
-- The word is `DEBUG_CONSOLE_WORD` in the tuning file. Default: `cuckoo`. It must not contain letters used by gameplay actions (W, A, S, D, E, Q, F), so typing it never moves, punches or parries.
+- The user types a development unlock phrase on the keyboard. There is **no key label, no on-screen hint, no console prompt**.
+- The development unlock phrase is `DEBUG_CONSOLE_WORD` in the tuning file. The current phrase is `ilovedebugging`; it is not a security secret. Because it overlaps gameplay letters, the console input layer must consume its unlock keystrokes so they do not also trigger gameplay actions.
 - Detection: a rolling buffer of the last N typed letters, cleared after 1 second without a key. Ignored while any text field has focus (for example the nickname terminal).
 - Typing the word again, or pressing Escape while the console is open, closes it.
 - While open: the mouse is released and player input is locked. **The game keeps running** (no pause).
@@ -106,7 +106,7 @@ A slice is **not done** until all of these exist:
 ```
 ## Debug console reference
 
-Open: type the secret word (DEBUG_CONSOLE_WORD in the tuning file). Local only. **THE SECRET WORD IS: ilovedebugging**
+Open: type the development unlock phrase (DEBUG_CONSOLE_WORD in the tuning file). Local only. The current phrase is `ilovedebugging`; it is not a security secret.
 
 ## Categories
 | Category | Owner script | What it logs |
