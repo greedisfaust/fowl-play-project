@@ -104,9 +104,9 @@ A slice is **not done** until all of these exist:
 ## `docs/DEBUG.md` starter
 
 ```
-# Debug console reference
+## Debug console reference
 
-Open: type the secret word (DEBUG_CONSOLE_WORD in the tuning file). Local only.
+Open: type the secret word (DEBUG_CONSOLE_WORD in the tuning file). Local only. **THE SECRET WORD IS: ilovedebugging**
 
 ## Categories
 | Category | Owner script | What it logs |
