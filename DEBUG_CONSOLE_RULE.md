@@ -1,5 +1,7 @@
 # Debug Console rule
 
+**Current implementation:** D0 and M0 are implemented and verified as recorded in [project state](docs/PROJECT_STATE.md). Use [docs/DEBUG.md](docs/DEBUG.md) for current APIs, commands, paths, and playtests. The setup/kickoff instructions below are historical scaffolding; do not rebuild the existing console.
+
 > **How to use this file**
 > 1. Copy everything from "Debug Console rule (applies to every slice)" down to the end of "Definition of Done" into `CLAUDE.md`.
 > 2. Add one line to `PROJECT_OVERVIEW.md` §4 or §21: *"Every slice must satisfy the Debug Console rule in CLAUDE.md."*
@@ -44,8 +46,8 @@ This rule has no exceptions. It applies to every slice, every bug fix that touch
 - **Adding a feature must never require editing the console.** The feature registers itself with the hub and the console picks it up.
 
 **How it opens**
-- The user types a secret word on the keyboard. There is **no key label, no on-screen hint, no console prompt**.
-- The word is `DEBUG_CONSOLE_WORD` in the tuning file. Default: `cuckoo`. It must not contain letters used by gameplay actions (W, A, S, D, E, Q, F), so typing it never moves, punches or parries.
+- The user types a development unlock phrase on the keyboard. There is **no key label, no on-screen hint, no console prompt**.
+- The development unlock phrase is `DEBUG_CONSOLE_WORD` in the tuning file. The current phrase is `ilovedebugging`; it is not a security secret. Because it overlaps gameplay letters, the console input layer must consume its unlock keystrokes so they do not also trigger gameplay actions.
 - Detection: a rolling buffer of the last N typed letters, cleared after 1 second without a key. Ignored while any text field has focus (for example the nickname terminal).
 - Typing the word again, or pressing Escape while the console is open, closes it.
 - While open: the mouse is released and player input is locked. **The game keeps running** (no pause).
@@ -106,7 +108,7 @@ A slice is **not done** until all of these exist:
 ```
 ## Debug console reference
 
-Open: type the secret word (DEBUG_CONSOLE_WORD in the tuning file). Local only. **THE SECRET WORD IS: ilovedebugging**
+Open: type the development unlock phrase (DEBUG_CONSOLE_WORD in the tuning file). Local only. The current phrase is `ilovedebugging`; it is not a security secret.
 
 ## Categories
 | Category | Owner script | What it logs |

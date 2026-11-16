@@ -2,9 +2,9 @@
 
 ## 1. Project Identity
 
-Fowl Play is a host-authoritative, 1–4 player multiplayer physics brawler built with **Godot 4.7**, typed GDScript, Jolt Physics, and ENet.
+Fowl Play is a host-authoritative, 1–4 player multiplayer physics party game built with **Godot 4.7**, typed GDScript, Jolt Physics, and ENet.
 
-Players control bird characters in shared environments. Combat revolves around punches, charged lunges, and parries. Charged hits can knock players into a physics-driven ragdoll state, allowing them to be picked up, carried, thrown, and eventually recover.
+Fowl Play is a first-person party game for four players who share one bank account and one very bad contract. One of you signed what looked like a free wings-for-life deal at a chicken-themed casino called The House — except the fine print means anyone who eats the wings is bound to the contract too, so sharing them with your friends dragged all four of you in without the rest of you ever signing anything. Now you've got a handful of in-game days to gamble your way to enough winnings to void the contract before it claims you for good. The catch: every bet comes out of the same shared wallet, so when a friend starts pushing their luck too far, you can grab them, punch them into a stunned heap, or drag them bodily away from the table — at your own risk, since hitting a friend costs the entire team too. It's built for small groups who want a short, loud, chaotic multiplayer session full of betrayal, bad decisions, and yelling at your friends to stop gambling. Players are characters in shared rooms. They are able to fight with quick punches, charged lunges and parries. A player who takes a charged hit goes **limp**: the body becomes a physics ragdoll that tumbles, can be picked up and carried by another player, thrown, and after a few seconds gets back up.
 
 **Core objective:** Build a responsive multiplayer physics game where gameplay and ragdoll behavior remain consistent across the host and all connected clients.
 
@@ -293,7 +293,9 @@ Never document a feature as complete when it has only been implemented but not v
 
 Before starting development, follow the start-of-session procedure in:
 
-`docs/SESSION_MEMORY_RULES.md`
+[`SESSION_MEMORY_RULES.md`](SESSION_MEMORY_RULES.md)
+
+These project instructions apply to any coding assistant, including Codex and Copilot. Start with [the active session index](docs/sessions/_ACTIVE.md); do not assume a branch from previous chat history.
 
 At minimum:
 

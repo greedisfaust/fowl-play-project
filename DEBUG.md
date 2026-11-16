@@ -1,22 +1,7 @@
-```
-# Debug console reference
+# Debug documentation moved
 
-Open: type the secret word (DEBUG_CONSOLE_WORD in the tuning file). Local only.
+The active debug-console reference is [docs/DEBUG.md](docs/DEBUG.md).
+Update that file when a system adds categories, watches, commands, or
+playtest expectations.
 
-## Categories
-| Category | Owner script | What it logs |
-|---|---|---|
-| net | core/network.gd | connect, disconnect, rejected RPCs |
-
-## Watches
-| Name | Source | Meaning |
-|---|---|---|
-
-## Commands
-| Name | Args | Host only | Cheat | What it does |
-|---|---|---|---|---|
-
-## Playtest "what you should see" log
-| Slice | Step | Expected console output |
-|---|---|---|
-```
+For the current development handoff, see [docs/sessions/_ACTIVE.md](docs/sessions/_ACTIVE.md).

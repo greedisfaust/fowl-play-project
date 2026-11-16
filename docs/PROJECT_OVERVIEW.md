@@ -1,6 +1,6 @@
 # Fowl Play — Project Overview (fresh start, v2)
 
-This document is self-contained. There is no prior code to read. Everything you need to know about intent, rules, numbers and decisions is here. Where this document marks something **OPEN**, ask the user before building it.
+This document defines intent, rules, numbers and decisions. The repository now contains implemented D0/M0 code: inspect it and read [PROJECT_STATE.md](PROJECT_STATE.md) and [the active session](sessions/_ACTIVE.md) before continuing. Where this document marks something **OPEN**, ask the user before building it.
 
 **Language of this document**
 - **must / must not** = hard rule, never break.
@@ -34,7 +34,7 @@ Fowl Play is a first-person party game for four players who share one bank accou
 - **Networking:** `ENetMultiplayerPeer`, UDP port 7777, host = peer 1, max 3 clients. Solo play uses `OfflineMultiplayerPeer`.
 - **Performance target:** 4 players on weak school laptops. Budget: **≤ 70 awake rigid bodies** total (props + ragdoll bones), **≤ 15 shadow-casting lights**, hot paths allocate nothing per frame.
 - **Machine:** Windows 11. Shells: Git Bash (use forward slashes) and PowerShell.
-- **Paths:** project `C:/Users/Faust/Desktop/fowl-play/dev-fowl-play` (`res://`); Godot exe `C:/Program Files (x86)/Steam/steamapps/common/Godot Engine/godot.windows.opt.tools.64.exe`.
+- **Paths:** the Godot project is the repository's `fowl-play/` directory (`res://`). Use repository-relative paths in documentation; the Godot executable is machine-specific and must be discovered locally.
 - **Claude Code can run Godot itself** (headless tests, import, smoke runs). The user runs the real playtests and does the editor work.
 - **Headless facts:** Godot output is buffered until the process exits; exit code 0 = pass; headless cannot simulate real input events (call component methods directly in tests); re-run the import step after adding scripts (`class_name` registration).
 
@@ -45,7 +45,7 @@ Fowl Play is a first-person party game for four players who share one bank accou
 - **Scene ownership protocol.** Never edit a scene the user has open (Godot can overwrite or fork it). Announce handoffs ("I'm editing X, stay out" / "all yours"). Never invent `uid://` values. Small mechanical `.tscn` text edits are allowed only on scenes the user has closed, and only after saying so.
 - **Ask whenever something is unclear.** Use short **Question Cards** (options, a recommendation, what it blocks).
 - **Debug Console:** every slice must satisfy the Debug Console rule in `CLAUDE.md` (logs, watches and commands for everything it adds) before it counts as done.
-- **Git:** local commits only, on a feature branch. No push, `reset --hard`, `checkout --`, force push, `clean`, or deleting `.godot`. **After every commit, say `COMMIT READY: please push` and list what the commit contains**; the user pushes. Commit messages end with `Co-Authored-By: Claude Code <noreply@anthropic.com>`.
+- **Git:** work on a feature branch. The user performs commits and pushes, as specified in [CLAUDE.md](../CLAUDE.md). Review the diff, report validation, and suggest a commit message. Do not commit/push, reset, discard changes, clean, or delete `.godot` without explicit authorization. Do not attribute work to an assistant that did not perform it.
 - **Decision gates:** stop and ask before: the movement authority approach and first networking slice (M3), the ragdoll sync approach (after the spike, M4), skeleton authoring method (M4), any Blender use, bird vs humanoid legs (**before M4**, because it shapes the skeleton), the camera approach (M9). After a gate, proceed slice by slice without asking for each change.
 - **Docs stay in sync with code** every slice. Single tuning source (see §15).
 - **No silent work:** say what you changed and why.
@@ -69,7 +69,7 @@ Fowl Play is a first-person party game for four players who share one bank accou
 
 | Thing | Truth lives on | Everyone else |
 |---|---|---|
-| Player movement and look | **The owner** (RECOMMENDED; the host sanity-checks speed and rejects teleports it did not order) | Interpolate (`MOVE_INTERP_DELAY_S`) |
+| Player movement and look | **The owner** (DECIDED at M3; the host sanity-checks speed and rejects teleports it did not order) | Interpolate (`MOVE_INTERP_DELAY_S`) |
 | Hit judgment (punch, parry, lunge hit) | Host (uses its latest copy of positions, with `MAX_PUNCH_POS_ERROR_M` tolerance) | Receive replicated results and cosmetic events |
 | Limp / ragdoll simulation | Host | Render interpolated bone poses; run no bone physics |
 | Carry, throw, pickup | Host (clients send intent) | Mirror state |
@@ -78,7 +78,7 @@ Fowl Play is a first-person party game for four players who share one bank accou
 | Hands cosmetics | Local on the owner; replicated cosmetic events for others | |
 | Procedural legs | Local, derived on every peer (no traffic) | |
 
-**Movement authority (RECOMMENDED, confirm at the M3 gate):** on a LAN, owner-authoritative movement feels instant and needs no prediction. The host still decides everything that matters (combat, ragdoll, carry, throw). While limp, the owner's movement authority is **suspended**: the host-simulated hips body is the single truth. During a lunge the owner drives the movement and the host judges the hit from its own copy.
+**Movement authority (DECIDED at the M3 gate):** on a LAN, owner-authoritative movement feels instant and needs no prediction. The host still decides everything that matters (combat, ragdoll, carry, throw). While limp, the owner's movement authority is **suspended**: the host-simulated hips body is the single truth. During a lunge the owner drives the movement and the host judges the hit from its own copy.
 
 ## 7. Player body and skeleton
 
@@ -271,6 +271,7 @@ Focus-based: a ray from the camera finds the target, the target highlights, the 
 | `THROW_AUTO_FIRE_SECONDS` | 1.0 | hold time at which a throw fires |
 | `THROW_SPEED_MPS` / `THROW_SPEED_LIMP_MPS` | 14 / 10 | fixed power (tune in playtest) |
 | `REACH_M` | 3.2 | pickup reach |
+| `INTERACT_REQUEST_INTERVAL_S` | 0.15 | M3 per-player host interaction request interval; tune in playtest |
 | `RAGDOLL_SEND_HZ` | 30 | bone-pose snapshots; spike picks final (15 / 30 / 60) |
 | `RAGDOLL_INTERP_DELAY_S` | ~0.07 | about two send intervals |
 | `BODY_SNAPSHOT_HZ` | 15 | props and other bodies (not ragdoll bones) |
@@ -412,7 +413,7 @@ res://
 2. **M1 Interaction and one prop:** the Interactable component, focus/highlight, one USE device and one GRAB-able prop (local, host-validated), the base prop scene and profile.
 3. **M2 Hands (scene-backed, local):** hand and finger scenes, the API in §16, first-person and world modes.
 4. **M3 Networking slice 1 — GATE:** confirm the movement-authority approach; roster, connect, remote smoothing, the intent-RPC pattern and the shared validation helper; replicated hand cosmetics.
-5. **M4 Ragdoll spike — GATE:** (legs decision first.) Skeleton, 11 physical bones, joints under Jolt, self-collision policy, bandwidth and CPU measurements at 15/30/60 Hz; choose the sync approach.
+5. **M4 Ragdoll spike — GATE:** (legs decision first.) Skeleton, 11 physical bones, joints under Jolt, self-collision policy, bandwidth and CPU measurements at 15/30/60 Hz; validate the decided quantized bone-pose sync approach and only propose an alternative if measurements fail.
 6. **M5 Limp lifecycle:** knockdown → ground → recovery on host and clients (G1–G3, G8; G6 if late join is allowed).
 7. **M6 Carry and throw:** props and limp bodies, auto-fire throw, dangling limbs, carried player can look around (G4, G5).
 8. **M7 Combat:** jab and recoil, charged punch with auto-fire/cooldown/re-arm, lunge, parry with the attacker outcomes in §9.
@@ -428,7 +429,7 @@ res://
 - Limp lasts `LIMP_SECONDS` = 3.5 s (hard cap 6.0 s).
 - Budget: up to 4 full ragdolls, up to 70 awake bodies, to be proven by the spike.
 - A parried charged punch makes the attacker limp; a parried jab is recoil only.
-- Movement authority: owner-authoritative with host sanity checks (RECOMMENDED, confirm at the M3 gate).
+- Movement authority: owner-authoritative standing movement with host sanity checks was approved at the M3 gate (2026-11-16). Host validates and relays owner snapshots; remote peers interpolate. Gameplay outcomes remain host-authoritative.
 - Owner's legs are hidden when looking down (pitch below horizontal); when looking forward again they fade from hidden to visible via a smooth opacity slide (no instant snap).
 - Camera follow target while limp: **smoothed hips** (owner's capsule position) is the follow target.
 - Wind-up movement: **full speed** (no slowdown) during charge; **no early-release fizzle** (releasing before 1.0 s cancels with no punch and no penalty).
@@ -440,8 +441,6 @@ res://
 2. Dangling limbs while carried (confirm).
 3. Whether punches affect already-limp bodies.
 4. Whether to include impact/wall-slam feedback.
-5. Late join during play (decides whether G6 applies).
-6. Final lobby, nickname and color flow.
-7. Fixed throw power (`THROW_SPEED_MPS`) vs a variable-power option later.
-8. Per-bone ragdoll masses (spike).
-9. Rebuilding the casino/economy layer, and when.
+5. Final lobby, nickname and color flow.
+6. Per-bone ragdoll masses (spike).
+7. Rebuilding the casino/economy layer, and when.
