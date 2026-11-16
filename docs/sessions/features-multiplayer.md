@@ -1,7 +1,7 @@
 # Session memory: features/multiplayer
 
 Branch: features/multiplayer
-Status: IN PROGRESS — M3 interaction intents automated-verified; manual playtest pending
+Status: IN PROGRESS — M3 interaction intents automated-verified; host/client interaction user-verified
 Last updated: 2026-11-16
 
 ## Recovery
@@ -18,7 +18,7 @@ M2 hands committed at d722c96, with remaining integration/polish deferred at use
 
 ## Verification and next action
 
-DONE: recovery, movement and roster slices passed automation and user playtests. Interaction-intent slice now passes automation; next is its two-window device playtest below. Host net/movement_rejected should stay zero for ordinary movement.
+DONE: recovery, movement and roster slices passed automation and user playtests. Interaction-intent slice passes automation; user confirms host/client interaction works. User also confirmed the client device state returns to true after disconnect/reconnect. Next: user checkpoint, then M4 skeleton-authoring preparation; remaining M3 integration stays deferred. Host net/movement_rejected should stay zero for ordinary movement.
 
 ## Limitations
 
@@ -45,5 +45,5 @@ Roster verification: full run_checks.ps1 passed (exit 0), including all three ro
 - Interactable has enabled and an optional availability_check predicate; Prop supplies its pickup permission check before the interaction signal. Actual carry/throw and prop physics replication remain M6.
 - No scene edits. User project.godot edit preserved. No commit/push.
 - Verification: full run_checks.ps1 passed after fixing surface-versus-center reach mismatch found by the late-join test. Includes D0/M1/M2, movement, saved-scene interaction/focus/occlusion tests, separate-process client intent/rejection tests, and three-process device late-join/reconnect checks.
-- MANUAL PENDING: host and join; client walks near device, aims and presses E; compare interact/device/TestUseDevice/active in both windows. Toggle from host too; leave it true, reconnect client, confirm true returns. Device has no visual state animation yet. Debug reference contains expected logs.
+- USER VERIFIED: host and client interactions work. User recalls asymmetric console interaction messages but is unsure which direction. Code confirms expected behavior: host logs every validation; requester gets its own result; every client receives device state changes. USER VERIFIED: client disconnected and reconnected; its device active watch was still true. Reconnect-state playtest passes alongside automated coverage. Device has no visual state animation yet.
 - M3 is still incomplete: player gameplay state gates (limp etc.), gameplay-phase join restrictions, profile fields, hand cosmetics, and broader gameplay intents remain pending. Current host validation checks reach/occlusion but does not enforce view angle; future large/offset targets may need authored interaction anchors.
