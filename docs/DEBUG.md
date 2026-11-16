@@ -30,6 +30,7 @@ security secret.
 | `interact/focused/<name>` | player/focus.gd | Prompt text for the local player's focused target, or blank. |
 | `interact/device/<name>/active` | interaction/debug_use_device.gd | Toggle state of the M1 test USE device. |
 | `props/<name>/pickup_allowed` | props/prop.gd | Whether the prop's assigned profile allows pickup. |
+| `hands/<name>/state` | hands/hand.gd | World mode, hover, guard, carry, limp, and speed state. |
 
 ## Commands
 
@@ -51,6 +52,8 @@ Automated checks cover Enter/Run signal wiring, category toggles, feedback with 
 | `net_join` | optional IP | no | no | Joins an IP; defaults to 127.0.0.1. Example: `net_join 192.168.1.20`. |
 | `net_disconnect` | none | no | no | Disconnects this instance and clears its players. On the host, ends the session for clients. Use net_host/net_join afterward. |
 | `interact_use_<name>` | none | yes | no | Uses the local player's currently focused target through the normal validation path. |
+| `hand_status_<name>` | none | no | no | Reports this hand's cosmetic state. |
+| `hand_pose_<name>` | idle / point / guard / limp | no | no | Local cosmetic pose preview; idle and point have separate adjustable thumb poses. Guard blends finger curl, thumb closure and PoseRoot lift/rotation. Idle restores relaxed offsets; limp overrides guard. Requires a running scripted hand instance. |
 
 ## Playtest "what you should see" log
 
@@ -68,6 +71,7 @@ Automated checks cover Enter/Run signal wiring, category toggles, feedback with 
 | M1 | 1 | Aim at the editor-authored device: `interact: Focused <prompt>` and the device receives a highlight overlay. |
 | M1 | 2 | Press E or run `interact_use_<name>`: `interact: Interaction accepted: <prompt> action=use`, then `<device> active=true/false`. |
 | M1 | 3 | Aim at the GRAB prop: `props/<name>/pickup_allowed=true`; press E and see `props: <name> grab accepted; carry is deferred to M6`. |
+| M2 | 1 | Hand registration shows `hands/<name>/state`; `hand_status_<name>` reports world/hover/guard/carry/limp state. |
 
 M0 launch arguments go after Godot's `--` separator: `--host` or `--join=127.0.0.1`; optional `--port=7777`. No arguments starts offline. Movement is local-only at this milestone; remote capsules remain at their spawn positions until M3.
 
@@ -86,3 +90,5 @@ Alternatively, start two ordinary game instances and enter `net_host` in the fir
 - New systems register with `DebugHub` and the console picks them up automatically.
 - No logging in hot paths. No raw `print()`.
 - All commands must go through the same host-validated intent path as real input.
+
+M2 hand names: the first instance retains its node-name command/watch suffix. Colliding names receive an instance-ID suffix; use the Commands list to find each instance. Removing one hand preserves the other registrations. Index aim now blends within a configurable 35-degree cone. Player tint uses independent opaque material overrides and retains cuff brightness contrast.

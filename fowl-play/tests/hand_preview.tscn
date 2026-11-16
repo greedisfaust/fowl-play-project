@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://ci7d7rvtt8pwu"]
+
+[ext_resource type="PackedScene" uid="uid://d2b5kkylkuxn2" path="res://hands/hand.tscn" id="1_t1s68"]
+[ext_resource type="PackedScene" uid="uid://p4yueflmbgmy" path="res://ui/debug/debug_console.tscn" id="2_35qob"]
+
+[node name="HandPreview" type="Node3D" unique_id=1755038806]
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1365891168]
+current = true
+
+[node name="Hand" parent="Camera3D" unique_id=1049811483 instance=ExtResource("1_t1s68")]
+transform = Transform3D(-0.06342481, 0.23821, 0.17097743, -0.009753659, 0.17312075, -0.24481434, -0.2930565, -0.057316545, -0.028855808, 0.1, -0.06, -0.55)
+guard_thumb_root_degrees = Vector3(-5, -80, 0)
+guard_thumb_curl_degrees = Vector2(-10, -20)
+point_thumb_root_degrees = Vector3(-5, -55, 0)
+point_thumb_curl_degrees = Vector2(-8, -12)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=239023960]
+transform = Transform3D(0.8660254, 0.35355338, -0.35355338, 0, 0.70710677, 0.70710677, 0.5, -0.6123724, 0.6123724, 0, 0, 0)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1530571491]
+
+[node name="DebugConsole" parent="CanvasLayer" unique_id=1236782275 instance=ExtResource("2_35qob")]
