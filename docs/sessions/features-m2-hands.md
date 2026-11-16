@@ -50,3 +50,17 @@ User explicitly requires the approved study thumb in BOTH pointing and guard. Im
 
 ## User checkpoint
 USER VERIFIED: approved study thumb works in both pointing and guard; full pointing finger curl works. User explicitly asked to move away from hand work. Stop hand refinement for now. M2 remains partial: player/world/left-hand integration, bob/shake and geometry polish are outstanding. Next non-hand roadmap item is the M3 networking decision gate; do not silently mark M2 complete or implement networking before agreeing its authority approach.
+
+## M3 first movement slice (approved gate)
+
+- User committed M2 as d722c96 and approved owner-authoritative movement with host checks; requested proceeding away from hands.
+- Checkout remains features/m2-hands (clean before this slice). No branch/history writes performed. First M3 changes are uncommitted on this checkout; user can move them to a new feature branch.
+- core/movement_stream.gd implements per-owner sequence validation, finite/range checks, bounded displacement budgets and timestamped interpolation using local receive times. Horizontal credit cannot be refreshed by packet flooding. Falling vertical speed has a gravity-aware allowance.
+- Network routes submissions using the actual RPC sender ID (no client-selected player ID), validates on host, relays accepted movement, and corrects rejected client positions. Player references register/unregister with lifetime and session changes.
+- player.gd sends position/velocity/yaw/pitch at 20 Hz, retaining local physics/input. Remote capsules interpolate 100 ms behind receive timestamps without running local movement physics. Holds newest sample on packet loss; no extrapolation yet.
+- Network routing ignores snapshots for players not yet spawned; periodic snapshots bring late-spawned/late-joining copies up to date. Nodes are never reparented and multiplayer authority remains host for RPC routing.
+- Full run_checks passed import/D0/M1/M2/M3 and existing disconnect/console tests plus bidirectional movement. Additional transport rejection scenario added afterward; see final verification result.
+- Known limits: coarse plausibility checks, not authoritative collision simulation/anti-cheat; no sanctioned teleport API, limp suspension or lunge validation yet. Receive-time interpolation has no clock synchronization. Sends periodic snapshots even when stationary. Host gameplay should use accepted_position for latest accepted data; displayed remote capsule position is delayed.
+- Next user task: launch arena twice, net_host / net_join 127.0.0.1, close console, walk/jump in each and inspect the other. net/movement_rejected should remain zero under ordinary movement. Look data is transmitted but the plain capsule has no obvious facing marker. Manual smoothness, WAN/jitter, four-player and long-fall behavior remain unverified.
+- No scene/model changes; hand work remains deferred. M3 roster/discrete state, broader intent validation and hand cosmetics are not complete.
+`nFinal verification: separate-process movement-reject scenario passed on host and client; injected teleport was rejected and client correction logged. Full network suite rerun passed. Manual two-window visual playtest is next.

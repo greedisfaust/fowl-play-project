@@ -3,12 +3,15 @@
 
 extends Node
 
+const INTERACT_REQUEST_INTERVAL_S: float = 0.15
+
 const PLAYER_SPEED_MPS: float = 5.0
 const JUMP_SPEED_MPS: float = 6.5
 const GRAVITY_MPS2: float = 20.0
 const MOUSE_SENSITIVITY: float = 0.003
 const MOVE_INTERP_DELAY_S: float = 0.1
 const MOVE_SANITY_MAX_SPEED_MPS: float = 15.0
+const MOVE_SEND_HZ: float = 20.0
 const MAX_PUNCH_POS_ERROR_M: float = 6.0
 
 const TAP_MAX_SECONDS: float = 0.25

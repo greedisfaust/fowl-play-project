@@ -4,17 +4,26 @@
 extends Node
 
 const TUNING = preload("res://core/tuning.gd")
+const LAYERS = preload("res://core/layers.gd")
 
 signal session_ended
 signal session_started
+signal roster_changed
 
 var peer: ENetMultiplayerPeer = null
 var is_host: bool = false
 var is_client: bool = false
 var connected_peers: Array[int] = []
+## Host-published session membership, separate from transport connection events.
+var roster: Array[int] = []
 var status: String = "offline"
 var port: int = TUNING.ENET_PORT
 var _switching_session: bool = false
+var movement_players: Dictionary = {}
+var movement_rejected: int = 0
+var interaction_rejected: int = 0
+var interaction_accepted: int = 0
+var _interaction_times: Dictionary = {}
 
 func _ready() -> void:
 	multiplayer.peer_connected.connect(_on_peer_connected)
@@ -28,6 +37,10 @@ func _bootstrap() -> void:
 	var hub: Node = get_node("/root/DebugHub")
 	hub.call("watch", &"net/status", func() -> String: return status)
 	hub.call("watch", &"net/peers", func() -> Array[int]: return connected_peers.duplicate())
+	hub.call("watch", &"net/roster", func() -> Array[int]: return roster.duplicate())
+	hub.call("watch", &"net/movement_rejected", func() -> int: return movement_rejected)
+	hub.call("watch", &"net/interaction_rejected", func() -> int: return interaction_rejected)
+	hub.call("watch", &"net/interaction_accepted", func() -> int: return interaction_accepted)
 	hub.call("command", &"net_status", _command_status, "Report local connection state.", false, false)
 	hub.call("command", &"net_disconnect", _command_disconnect, "Leave this local network session.", false, false)
 	hub.call("command", &"net_host", _command_host, "Host a game on this computer.", false, false)
@@ -75,6 +88,8 @@ func start_host() -> Error:
 	status = "hosting"
 	is_client = false
 	connected_peers = [TUNING.PEER_ID_HOST]
+	roster = connected_peers.duplicate()
+	roster_changed.emit()
 	_debug_log("Host started on port %d" % port)
 	session_started.emit()
 	return OK
@@ -105,6 +120,13 @@ func shutdown() -> void:
 	is_host = false
 	is_client = false
 	connected_peers.clear()
+	roster.clear()
+	roster_changed.emit()
+	movement_players.clear()
+	movement_rejected = 0
+	interaction_rejected = 0
+	interaction_accepted = 0
+	_interaction_times.clear()
 	status = "disconnected"
 	session_ended.emit()
 	_debug_log("Network shut down")
@@ -179,6 +201,55 @@ func validate_rpc(expected_sender: int = -1) -> bool:
 		return false
 	return true
 
+func register_movement_player(owner_id: int, player: Node) -> void:
+	movement_players[owner_id] = player
+
+func unregister_movement_player(owner_id: int, player: Node) -> void:
+	if movement_players.get(owner_id) == player:
+		movement_players.erase(owner_id)
+
+func send_movement(owner_id: int, sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float) -> void:
+	if peer == null or peer.get_connection_status() != MultiplayerPeer.CONNECTION_CONNECTED:
+		return
+	if is_host:
+		_receive_movement(owner_id, sequence, at, speed, yaw, pitch)
+	else:
+		_submit_movement.rpc_id(TUNING.PEER_ID_HOST, sequence, at, speed, yaw, pitch)
+
+@rpc("any_peer", "call_remote", "unreliable_ordered", 1)
+func _submit_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float) -> void:
+	if not is_host or not validate_rpc():
+		return
+	# Sender identity selects the player; clients cannot choose another player's ID.
+	_receive_movement(multiplayer.get_remote_sender_id(), sequence, at, speed, yaw, pitch)
+
+func _receive_movement(owner_id: int, sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float) -> void:
+	var player: Node = movement_players.get(owner_id)
+	if not is_instance_valid(player):
+		return
+	if not bool(player.call("accept_movement", sequence, at, speed, yaw, pitch)):
+		movement_rejected += 1
+		if owner_id != TUNING.PEER_ID_HOST:
+			_correct_movement.rpc_id(owner_id, player.get("accepted_position"))
+		return
+	_publish_movement.rpc(owner_id, sequence, at, speed, yaw, pitch)
+
+@rpc("authority", "call_remote", "unreliable_ordered", 1)
+func _publish_movement(owner_id: int, sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float) -> void:
+	if not validate_rpc(TUNING.PEER_ID_HOST):
+		return
+	var player: Node = movement_players.get(owner_id)
+	if is_instance_valid(player):
+		player.call("receive_movement", sequence, at, speed, yaw, pitch)
+
+@rpc("authority", "call_remote", "reliable", 2)
+func _correct_movement(at: Vector3) -> void:
+	if not validate_rpc(TUNING.PEER_ID_HOST) or not at.is_finite():
+		return
+	var player: Node = movement_players.get(multiplayer.get_unique_id())
+	if is_instance_valid(player):
+		player.call("correct_movement", at)
+
 func is_host_peer(peer_id: int) -> bool:
 	return peer_id == TUNING.PEER_ID_HOST
 
@@ -186,15 +257,115 @@ func _on_peer_connected(peer_id: int) -> void:
 	if not connected_peers.has(peer_id):
 		connected_peers.append(peer_id)
 	_debug_log("Peer %d connected" % peer_id)
+	if is_host:
+		_publish_roster()
 
 func _on_peer_disconnected(peer_id: int) -> void:
+	_interaction_times.erase(peer_id)
 	connected_peers.erase(peer_id)
 	_debug_log("Peer %d disconnected" % peer_id)
+	if is_host:
+		_publish_roster()
+
+func _publish_roster() -> void:
+	roster = connected_peers.duplicate()
+	roster.sort()
+	roster_changed.emit()
+	_receive_roster.rpc(roster)
+	_debug_log("Roster updated: %s" % [roster])
+
+@rpc("authority", "call_remote", "reliable", 0)
+func _receive_roster(members: Array[int]) -> void:
+	if not validate_rpc(TUNING.PEER_ID_HOST):
+		return
+	roster = members.duplicate()
+	roster_changed.emit()
+	_debug_log("Roster received: %s" % [roster])
 
 func _debug_log(message: String) -> void:
 	var debug_hub: Node = get_node_or_null("/root/DebugHub")
 	if debug_hub != null:
 		debug_hub.call("log", &"net", message)
+
+## Host and client inputs (including console commands) share this intent path.
+func request_interaction(target_path: NodePath, action: StringName) -> bool:
+	if peer == null or is_host:
+		var owner_id: int = multiplayer.get_unique_id()
+		if peer == null and movement_players.has(0):
+			owner_id = 0
+		return _receive_interaction(owner_id, target_path, action)
+	if peer.get_connection_status() != MultiplayerPeer.CONNECTION_CONNECTED:
+		return false
+	_submit_interaction.rpc_id(TUNING.PEER_ID_HOST, target_path, action)
+	return true # Submitted; the reliable result is reported separately.
+
+@rpc("any_peer", "call_remote", "reliable", 0)
+func _submit_interaction(target_path: NodePath, action: StringName) -> void:
+	if is_host and validate_rpc():
+		_receive_interaction(multiplayer.get_remote_sender_id(), target_path, action)
+
+func _receive_interaction(owner_id: int, target_path: NodePath, action: StringName) -> bool:
+	var now: float = Time.get_ticks_msec() / 1000.0
+	var reason: String = ""
+	if now - float(_interaction_times.get(owner_id, -INF)) < TUNING.INTERACT_REQUEST_INTERVAL_S:
+		reason = "request cooldown"
+	else:
+		_interaction_times[owner_id] = now
+		var actor: Node3D = movement_players.get(owner_id) as Node3D
+		var target: Interactable = get_node_or_null(target_path) as Interactable
+		reason = _interaction_rejection(actor, target, action)
+		if reason.is_empty() and not target.interact(actor, action):
+			reason = "target state changed"
+	var accepted: bool = reason.is_empty()
+	if accepted:
+		interaction_accepted += 1
+	else:
+		interaction_rejected += 1
+	var message: String = "Interaction %s peer=%d action=%s%s" % ["accepted" if accepted else "rejected", owner_id, action, "" if accepted else ": " + reason]
+	_interaction_log(message)
+	if is_host and owner_id != TUNING.PEER_ID_HOST:
+		_interaction_result.rpc_id(owner_id, message)
+	return accepted
+
+func _interaction_rejection(actor: Node3D, target: Interactable, action: StringName) -> String:
+	if not is_instance_valid(actor) or actor.is_queued_for_deletion():
+		return "no active actor for sender"
+	if not is_instance_valid(target) or target.is_queued_for_deletion():
+		return "unknown target"
+	var body: Node3D = target.get_parent() as Node3D
+	if body == null or body.is_queued_for_deletion() or not target.can_interact(actor, action):
+		return "target unavailable or unsupported action"
+	var camera: Camera3D = actor.get_node_or_null("Head/Camera3D") as Camera3D
+	if camera == null:
+		return "actor has no interaction origin"
+	var origin: Vector3 = camera.global_position
+	# Remote visuals lag; use the most recent host-accepted actor position.
+	if peer != null and not bool(actor.get("is_local_player")):
+		origin += Vector3(actor.get("accepted_position")) - actor.global_position
+	if not origin.is_finite() or not body.global_position.is_finite():
+		return "invalid interaction position"
+	var mask: int = (1 << (LAYERS.WORLD_STATIC - 1)) | (1 << (LAYERS.DEVICES - 1)) | (1 << (LAYERS.PROPS - 1)) | (1 << (LAYERS.ELEVATOR - 1)) | (1 << (LAYERS.LIMP_BODIES - 1))
+	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(origin, body.global_position, mask)
+	if actor is CollisionObject3D:
+		query.exclude = [actor.get_rid()]
+	var hit: Dictionary = actor.get_world_3d().direct_space_state.intersect_ray(query)
+	var contact: Vector3 = body.global_position
+	if not hit.is_empty():
+		var collider: Node = hit.collider as Node
+		if collider != body and not body.is_ancestor_of(collider):
+			return "target obstructed"
+		contact = hit.position
+	if origin.distance_to(contact) > TUNING.REACH_M:
+		return "out of reach"
+	return ""
+
+@rpc("authority", "call_remote", "reliable", 0)
+func _interaction_result(message: String) -> void:
+	if validate_rpc(TUNING.PEER_ID_HOST):
+		_interaction_log(message)
+
+func _interaction_log(message: String) -> void:
+	get_node("/root/DebugHub").call("log", &"interact", message)
 
 func _debug_warn(message: String) -> void:
 	var debug_hub: Node = get_node_or_null("/root/DebugHub")

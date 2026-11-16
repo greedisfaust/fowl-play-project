@@ -51,7 +51,7 @@ Automated checks cover Enter/Run signal wiring, category toggles, feedback with 
 | `net_host` | none | no | no | Starts hosting from offline/disconnected state. Removes the offline player before spawning the host. |
 | `net_join` | optional IP | no | no | Joins an IP; defaults to 127.0.0.1. Example: `net_join 192.168.1.20`. |
 | `net_disconnect` | none | no | no | Disconnects this instance and clears its players. On the host, ends the session for clients. Use net_host/net_join afterward. |
-| `interact_use_<name>` | none | yes | no | Uses the local player's currently focused target through the normal validation path. |
+| `interact_use_<name>` | none | no | no | Submits the local player's focused interaction to the host. Remote-player commands reject locally. Submission is not acceptance; see interact logs. |
 | `hand_status_<name>` | none | no | no | Reports this hand's cosmetic state. |
 | `hand_pose_<name>` | idle / point / guard / limp | no | no | Local cosmetic pose preview; idle and point have separate adjustable thumb poses. Guard blends finger curl, thumb closure and PoseRoot lift/rotation. Idle restores relaxed offsets; limp overrides guard. Requires a running scripted hand instance. |
 
@@ -69,7 +69,7 @@ Automated checks cover Enter/Run signal wiring, category toggles, feedback with 
 | M0 | 6 | Client leaves: host logs `Despawning player <id>`; player count becomes 1. |
 | M0 | 7 | Host leaves: client logs `Host disconnected`; player count becomes 0. |
 | M1 | 1 | Aim at the editor-authored device: `interact: Focused <prompt>` and the device receives a highlight overlay. |
-| M1 | 2 | Press E or run `interact_use_<name>`: `interact: Interaction accepted: <prompt> action=use`, then `<device> active=true/false`. |
+| M1/M3 | 2 | Press E or run `interact_use_<name>`: `interact: Interaction accepted peer=<id> action=use`; host logs `<device> active=true/false`, clients log `<device> replicated active=true/false`. |
 | M1 | 3 | Aim at the GRAB prop: `props/<name>/pickup_allowed=true`; press E and see `props: <name> grab accepted; carry is deferred to M6`. |
 | M2 | 1 | Hand registration shows `hands/<name>/state`; `hand_status_<name>` reports world/hover/guard/carry/limp state. |
 
@@ -92,3 +92,25 @@ Alternatively, start two ordinary game instances and enter `net_host` in the fir
 - All commands must go through the same host-validated intent path as real input.
 
 M2 hand names: the first instance retains its node-name command/watch suffix. Colliding names receive an instance-ID suffix; use the Commands list to find each instance. Removing one hand preserves the other registrations. Index aim now blends within a configurable 35-degree cone. Player tint uses independent opaque material overrides and retains cuff brightness contrast.
+
+## M3 movement preview
+
+- `net/movement_rejected`: host count of rejected movement submissions, reset on session shutdown. Normal walking/jumping should leave it at zero.
+- Existing `player_status_<id>` and `player/<id>/speed_mps` report replicated remote movement as well as local movement.
+- Host receives owner movement at 20 Hz, checks sequence/finite data/speed/displacement, and relays accepted samples. Invalid client movement is corrected to the last accepted position (log: `Movement corrected for player <id>`).
+- Test: two arena instances, `net_host` and `net_join 127.0.0.1`; close consoles, move and jump in each. Remote capsules should move with a small interpolation delay. Disconnect/rejoin should not leave stale movement registrations.
+- Automated `run_checks.ps1` includes M3 validator/interpolation checks and separate-process movement/rejection cases in the existing network runner. No new editor nodes are needed.
+
+### M3 roster
+
+`net/roster` is the sorted host-published list of session peer IDs (including host 1); `net/peers` remains the transport-local list. Reliable roster updates log `Roster updated` on host and `Roster received` on clients. During join/despawn, roster and `net/player_count` may briefly differ; they should converge. Shutdown clears the roster. Rejoining should replace the departed peer ID without duplicate players. Three-process late-join/reconnect checks run through `run_checks.ps1`.
+
+### M3 interaction intents
+
+- Client input and `interact_use_<local-id>` send reliable requests; the host chooses the actor using the actual sender ID. Host/offline inputs use the same validator.
+- `net/interaction_accepted` and `net/interaction_rejected` are host counters, reset on shutdown. The host checks an existing actor/target, supported action, enabled state, prop pickup permission, 3.2 m camera-to-target-surface reach, obstruction, and a 0.15 s per-player request interval. Remote checks use the latest accepted position rather than the interpolated visual position.
+- `interact` logs the host's acceptance or rejection reason on both host and requesting client. Requests inside the interval are rejected; they do not extend the interval.
+- `interact/device/TestUseDevice/active` now replicates from the host, including late join and reconnect. Session shutdown resets it. There is no device color animation yet; use the watch to compare state.
+- Playtest: host and join, walk the client near TestUseDevice, aim at it, and press E. Both watches should switch together; the client log should say `Interaction accepted peer=<id> action=use`. Toggle again from the host and compare. Leave the device on, disconnect/rejoin the client, and confirm its watch returns to true.
+- A wall blocks focus and host validation. Disabled targets and pickup-disabled props reject before emitting interaction. GRAB still only logs acceptance; physical carry and prop physics replication remain deferred.
+- Tests cover the saved-scene focus command, state/action/reach/occlusion rejection, separate-process client requests and reliable results, and current device state on late join/reconnect.

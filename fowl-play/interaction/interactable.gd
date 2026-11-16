@@ -12,6 +12,10 @@ enum InteractionKind {
 
 @export var kind: InteractionKind = InteractionKind.USE
 @export var prompt_text: String = ""
+@export var enabled: bool = true
+
+## Optional host-side state predicate supplied by the target owner.
+var availability_check: Callable
 
 signal focused_changed(focused: bool)
 signal interacted(actor: Node, action: StringName)
@@ -34,7 +38,10 @@ func action_for_input(input_action: StringName) -> StringName:
 	return &""
 
 func can_interact(actor: Node, action: StringName) -> bool:
-	return is_instance_valid(actor) and (action == &"use" or action == &"grab")
+	if not enabled or not is_instance_valid(actor):
+		return false
+	var supported: bool = (action == &"use" and kind != InteractionKind.GRAB) or (action == &"grab" and kind != InteractionKind.USE)
+	return supported and (not availability_check.is_valid() or bool(availability_check.call(actor, action)))
 
 func interact(actor: Node, action: StringName) -> bool:
 	if not can_interact(actor, action):

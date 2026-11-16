@@ -12,6 +12,10 @@ var _departed_id: int = 0
 var _pair_time: int = 0
 var _ended: bool = false
 var _console_started: bool = false
+var _remote_start: Vector3
+var _saw_remote_movement: bool = false
+var _bad_move_sent: bool = false
+var _interaction_started: bool = false
 
 func _initialize() -> void:
 	for argument: String in OS.get_cmdline_user_args():
@@ -26,6 +30,8 @@ func _setup() -> void:
 	_hub = root.get_node("DebugHub")
 	var arena_scene: PackedScene = load("res://arena/test_arena.tscn")
 	_arena = arena_scene.instantiate()
+	if _case == "interaction":
+		_arena.get_node("SpawnPoints/Spawn2").position = Vector3(-3, 0.6, -4)
 	if _arena.has_node("PlayerPreview") or _arena.get_script() != load("res://arena/test_arena.gd"):
 		_arena.free()
 		_arena = null
@@ -60,11 +66,39 @@ func _process(_delta: float) -> bool:
 		_check_local_selection(players)
 		_saw_pair = true
 		_pair_time = Time.get_ticks_msec()
+		if _case.begins_with("movement"):
+			for player: Node3D in players.get_children():
+				if not bool(player.get("is_local_player")):
+					_remote_start = player.global_position
+			Input.action_press("move_right")
 		for player: Node in players.get_children():
 			if int(str(player.name)) != 1:
 				_departed_id = int(str(player.name))
 		print("M0 PAIR READY %s" % _role)
 	if not _saw_pair:
+		return false
+	if _case == "interaction":
+		if not _interaction_started:
+			_interaction_started = true
+			_check_interaction.call_deferred()
+		return false
+	if _case.begins_with("movement"):
+		for player: Node3D in players.get_children():
+			if not bool(player.get("is_local_player")) and player.global_position.distance_to(_remote_start) > 1.0:
+				_saw_remote_movement = true
+		var elapsed: int = Time.get_ticks_msec() - _pair_time
+		if _case == "movement-reject" and _role == "client" and elapsed > 500 and not _bad_move_sent:
+			_bad_move_sent = true
+			_network.rpc_id(1, "_submit_movement", 99999, Vector3(1000, 0, 0), Vector3.ZERO, 0.0, 0.0)
+		if elapsed > 800:
+			Input.action_release("move_right")
+		if elapsed > (2500 if _role == "host" else 2000):
+			var rejections: int = int(_network.get("movement_rejected"))
+			var rejection_ok: bool = rejections > 0 if _case == "movement-reject" and _role == "host" else rejections == 0
+			for player: Node3D in players.get_children():
+				if absf(player.global_position.x) > 50.0:
+					rejection_ok = false
+			_finish(_saw_remote_movement and rejection_ok, "bidirectional movement replication / rejection")
 		return false
 	if _case.ends_with("client-leaves"):
 		if _role == "client" and Time.get_ticks_msec() - _pair_time > 1000:
@@ -98,6 +132,25 @@ func _check_local_selection(players: Node) -> void:
 			_finish(false, "Remote camera took control")
 	if local_count != 1:
 		_finish(false, "Expected exactly one local player")
+
+func _check_interaction() -> void:
+	var device: Node = _arena.get_node("TestUseDevice")
+	var target: NodePath = device.get_node("Interactable").get_path()
+	await create_timer(0.4).timeout
+	if _role == "client":
+		_network.call("request_interaction", target, &"use")
+		_network.call("request_interaction", target, &"use") # Duplicate inside cooldown.
+		await create_timer(0.3).timeout
+		_network.call("request_interaction", target, &"grab") # USE-only target.
+		await create_timer(0.3).timeout
+		_network.call("request_interaction", NodePath("/root/MissingTarget"), &"use")
+		await create_timer(0.3).timeout
+		_network.call("request_interaction", _arena.get_node("TestGrabProp/Interactable").get_path(), &"grab") # Out of reach.
+		await create_timer(0.5).timeout
+		_finish(bool(device.get("is_active")), "client received authoritative device state")
+	else:
+		await create_timer(2.0).timeout
+		_finish(bool(device.get("is_active")) and int(_network.get("interaction_accepted")) == 1 and int(_network.get("interaction_rejected")) == 4, "host validated client interaction, kind, cooldown, target and reach")
 
 func _check_removed_debug(peer_id: int) -> void:
 	if _hub.call("get_command_names").has(StringName("player_status_%d" % peer_id)):

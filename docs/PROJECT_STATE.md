@@ -4,7 +4,7 @@
 
 ## Last verified (2026-11-16)
 
-- Current branch: `features/m2-hands`.
+- Current branch: `features/multiplayer`.
 - Godot 4.7 project: `fowl-play/`, using Jolt Physics, Forward+, and D3D12.
 - `fowl-play/project.godot` contains the project settings, input actions, and four autoload entries.
 - Foundation scripts exist in `fowl-play/core/`: `layers.gd`, `tuning.gd`, `network.gd`, and `debug_hub.gd`.
@@ -23,7 +23,7 @@
 | M0 Foundation | Project settings, layers, tuning, input map, networking autoload, test runner, arena, capsule movement, camera, spawn/despawn | Verified: automated tests and user host/join/disconnect/rejoin playtests; console scrolling fix confirmed; committed as `017f1cb` |
 | M1 Interaction + one prop | Interactable component, focus/highlight, one USE device, one GRAB prop | Verified: host/offline focus/use/grab playtest; reusable prop scene/profile saved |
 | M2 Hands | Scene-backed hand + finger scenes, first-person + world modes | In progress: hand/finger scenes and pose preview verified; player first-person/world integration pending; visual proposal in HAND_DESIGN.md |
-| M3 Networking slice 1 | Movement authority gate, roster, remote smoothing, intent RPC, validation helper | Not started |
+| M3 Networking slice 1 | Movement authority gate, roster, remote smoothing, intent RPC, validation helper | Gate approved; first standing movement snapshot/validation/interpolation slice implemented. Two-process movement tests pass; user verified movement works and looks smooth in two instances. Remaining M3 work deferred to subsequent slices. |
 | M4 Ragdoll spike | Skeleton, 11 physical bones, Jolt joints, sync measurements at 15/30/60 Hz | Not started |
 | M5 Limp lifecycle | Knockdown → ground → recovery (G1–G3, G8) | Not started |
 | M6 Carry and throw | Props and limp bodies, auto-fire throw, dangling limbs | Not started |
@@ -47,11 +47,11 @@ Late join is decided: allowed during the rest of a day, not during casino/elevat
 ## Known limitations
 
 - Automated M0 checks use the saved arena directly and verify offline spawn, host/client spawn and local camera/input selection, client departure, and host departure with debug cleanup. Saved-scene handoff/offline launch and rendered host/join are user-verified; manual disconnect checks are user-verified.
-- Movement replication remains M3; stationary remote capsules are expected. Actual timeout/refused-connection behavior and four-player capacity are not verified. Rejoining is user-verified; no automated reconnect loop exists yet.
+- M3 movement and roster/reconnect are automated- and user-verified. Interaction intents and device state replication are automated-verified; manual device playtest is pending. Actual timeout/refused-connection behavior and four-player capacity are not verified.
 - Console scroll/resize fix is user-verified. Landing with the console open has no explicit playtest result; falling gravity and input blocking were verified.
 - The root and `docs/` debug references were previously inconsistent; `docs/DEBUG.md` is now the active reference.
 - The gameplay loop overview is background design material, not the current technical authority.
 
 ## Next action
 
-User verified the approved thumb in both point/guard and the tighter pointing curl, and requested moving away from hand work. Defer remaining M2 player/world/left-hand integration, bob/shake and visual polish; M2 is not complete. Next non-hand roadmap discussion is the M3 networking authority gate before implementation. Keep carry/throw deferred to M6.
+USER VERIFIED: two-instance movement works and looks smooth. Host-published roster and three-process late-join/reconnect checks now pass. USER VERIFIED: roster/late-join/disconnect/rejoin checklist works. Next: manually verify client and host device use, matching active watches, and device state after client reconnect. Reliable host-validated interaction intents now pass automation, including action/state/reach/obstruction/cooldown rejection and late-join state. See sessions/features-multiplayer.md. Movement rejection-counter and falling-with-console checks were not separately confirmed. Movement authority was approved. M2 was committed as d722c96; remaining hand integration/polish is deferred. Current checkout is features/multiplayer, recovered from the M2 baseline with user authorization; older branches remain intact. First M3 movement changes are uncommitted. Keep carry/throw deferred to M6.

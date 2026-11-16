@@ -69,7 +69,7 @@ Fowl Play is a first-person party game for four players who share one bank accou
 
 | Thing | Truth lives on | Everyone else |
 |---|---|---|
-| Player movement and look | **The owner** (RECOMMENDED; the host sanity-checks speed and rejects teleports it did not order) | Interpolate (`MOVE_INTERP_DELAY_S`) |
+| Player movement and look | **The owner** (DECIDED at M3; the host sanity-checks speed and rejects teleports it did not order) | Interpolate (`MOVE_INTERP_DELAY_S`) |
 | Hit judgment (punch, parry, lunge hit) | Host (uses its latest copy of positions, with `MAX_PUNCH_POS_ERROR_M` tolerance) | Receive replicated results and cosmetic events |
 | Limp / ragdoll simulation | Host | Render interpolated bone poses; run no bone physics |
 | Carry, throw, pickup | Host (clients send intent) | Mirror state |
@@ -78,7 +78,7 @@ Fowl Play is a first-person party game for four players who share one bank accou
 | Hands cosmetics | Local on the owner; replicated cosmetic events for others | |
 | Procedural legs | Local, derived on every peer (no traffic) | |
 
-**Movement authority (RECOMMENDED, confirm at the M3 gate):** on a LAN, owner-authoritative movement feels instant and needs no prediction. The host still decides everything that matters (combat, ragdoll, carry, throw). While limp, the owner's movement authority is **suspended**: the host-simulated hips body is the single truth. During a lunge the owner drives the movement and the host judges the hit from its own copy.
+**Movement authority (DECIDED at the M3 gate):** on a LAN, owner-authoritative movement feels instant and needs no prediction. The host still decides everything that matters (combat, ragdoll, carry, throw). While limp, the owner's movement authority is **suspended**: the host-simulated hips body is the single truth. During a lunge the owner drives the movement and the host judges the hit from its own copy.
 
 ## 7. Player body and skeleton
 
@@ -271,6 +271,7 @@ Focus-based: a ray from the camera finds the target, the target highlights, the 
 | `THROW_AUTO_FIRE_SECONDS` | 1.0 | hold time at which a throw fires |
 | `THROW_SPEED_MPS` / `THROW_SPEED_LIMP_MPS` | 14 / 10 | fixed power (tune in playtest) |
 | `REACH_M` | 3.2 | pickup reach |
+| `INTERACT_REQUEST_INTERVAL_S` | 0.15 | M3 per-player host interaction request interval; tune in playtest |
 | `RAGDOLL_SEND_HZ` | 30 | bone-pose snapshots; spike picks final (15 / 30 / 60) |
 | `RAGDOLL_INTERP_DELAY_S` | ~0.07 | about two send intervals |
 | `BODY_SNAPSHOT_HZ` | 15 | props and other bodies (not ragdoll bones) |
@@ -428,7 +429,7 @@ res://
 - Limp lasts `LIMP_SECONDS` = 3.5 s (hard cap 6.0 s).
 - Budget: up to 4 full ragdolls, up to 70 awake bodies, to be proven by the spike.
 - A parried charged punch makes the attacker limp; a parried jab is recoil only.
-- Movement authority: owner-authoritative with host sanity checks remains the recommended M3 gate proposal; implementation requires confirmation at that gate.
+- Movement authority: owner-authoritative standing movement with host sanity checks was approved at the M3 gate (2026-11-16). Host validates and relays owner snapshots; remote peers interpolate. Gameplay outcomes remain host-authoritative.
 - Owner's legs are hidden when looking down (pitch below horizontal); when looking forward again they fade from hidden to visible via a smooth opacity slide (no instant snap).
 - Camera follow target while limp: **smoothed hips** (owner's capsule position) is the follow target.
 - Wind-up movement: **full speed** (no slowdown) during charge; **no early-release fizzle** (releasing before 1.0 s cancels with no punch and no penalty).

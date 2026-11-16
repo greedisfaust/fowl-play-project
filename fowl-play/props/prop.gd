@@ -14,6 +14,7 @@ const LAYERS = preload("res://core/layers.gd")
 var _debug_profile_watch_name: StringName
 
 func _ready() -> void:
+	interactable.availability_check = _can_interact
 	collision_layer = 1 << (LAYERS.PROPS - 1)
 	collision_mask = LAYERS.LAYER_MASK_PROPS
 	if profile == null:
@@ -30,6 +31,9 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	if is_instance_valid(debug_hub) and not _debug_profile_watch_name.is_empty():
 		debug_hub.call("unwatch", _debug_profile_watch_name)
+
+func _can_interact(_actor: Node, action: StringName) -> bool:
+	return action == &"grab" and profile != null and profile.pickup_allowed
 
 func _on_interacted(_actor: Node, action: StringName) -> void:
 	if action != &"grab":

@@ -5,7 +5,7 @@ extends CharacterBody3D
 
 const TUNING = preload("res://core/tuning.gd")
 
-# Input ownership only; replicated movement authority remains an M3 decision.
+# M3: owner drives standing movement; host validates before relay.
 var input_peer_id: int = 0
 var is_local_player: bool = true
 
@@ -13,6 +13,13 @@ var is_local_player: bool = true
 @onready var camera: Camera3D = $Head/Camera3D
 @onready var focus: Node = get_node_or_null("Head/Camera3D/Focus")
 @onready var debug_hub: Node = get_node("/root/DebugHub")
+@onready var network: Node = get_node("/root/Network")
+
+const MOVEMENT_STREAM = preload("res://core/movement_stream.gd")
+var _movement: MOVEMENT_STREAM = MOVEMENT_STREAM.new()
+var _send_elapsed: float = 0.0
+var _movement_sequence: int = 0
+var accepted_position: Vector3
 
 var _pitch_radians: float = 0.0
 var _debug_command_name: StringName
@@ -20,6 +27,9 @@ var _debug_speed_watch_name: StringName
 var _debug_floor_watch_name: StringName
 
 func _ready() -> void:
+	accepted_position = global_position
+	_movement.reset(global_position, Time.get_ticks_msec() / 1000.0)
+	network.call("register_movement_player", input_peer_id, self)
 	is_local_player = input_peer_id == 0 or input_peer_id == multiplayer.get_unique_id()
 	camera.current = is_local_player
 	set_process_unhandled_input(is_local_player)
@@ -53,12 +63,46 @@ func _ready() -> void:
 		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 func _exit_tree() -> void:
+	if is_instance_valid(network):
+		network.call("unregister_movement_player", input_peer_id, self)
 	if not is_instance_valid(debug_hub):
 		return
 	# Use the original registration names even if the node was renamed.
 	debug_hub.call("unregister_command", _debug_command_name)
 	debug_hub.call("unwatch", _debug_speed_watch_name)
 	debug_hub.call("unwatch", _debug_floor_watch_name)
+
+func _process(delta: float) -> void:
+	if is_local_player:
+		_send_elapsed += delta
+		if _send_elapsed >= 1.0 / TUNING.MOVE_SEND_HZ:
+			_send_elapsed = 0.0
+			_movement_sequence += 1
+			network.call("send_movement", input_peer_id, _movement_sequence, global_position, velocity, rotation.y, _pitch_radians)
+	else:
+		var snapshot: Dictionary = _movement.sample(Time.get_ticks_msec() / 1000.0)
+		if not snapshot.is_empty():
+			global_position = snapshot.position
+			velocity = snapshot.velocity
+			rotation.y = snapshot.yaw
+			head.rotation.x = snapshot.pitch
+
+func accept_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float) -> bool:
+	var now: float = Time.get_ticks_msec() / 1000.0
+	if not _movement.accept(sequence, at, speed, yaw, pitch, now):
+		return false
+	accepted_position = at
+	receive_movement(sequence, at, speed, yaw, pitch)
+	return true
+
+func receive_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float) -> void:
+	if not is_local_player:
+		_movement.push(sequence, at, speed, yaw, pitch, Time.get_ticks_msec() / 1000.0)
+
+func correct_movement(at: Vector3) -> void:
+	global_position = at
+	velocity = Vector3.ZERO
+	debug_hub.call("log", &"net", "Movement corrected for player %s" % name)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if bool(debug_hub.call("is_console_open")):

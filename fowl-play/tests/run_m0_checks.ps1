@@ -30,7 +30,7 @@ try {
 	$offline = Start-M0Process "offline" "offline" 7777
 	$jobs += $offline
 	Complete-M0Process $offline
-	foreach ($scenario in @("client-leaves", "host-leaves", "console-client-leaves", "console-host-leaves")) {
+	foreach ($scenario in @("client-leaves", "host-leaves", "console-client-leaves", "console-host-leaves", "movement", "movement-reject", "interaction")) {
 		$testPort = Get-Random -Minimum 20000 -Maximum 50000
 		$hostJob = Start-M0Process "host" $scenario $testPort
 		$jobs += $hostJob

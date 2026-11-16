@@ -1,5 +1,5 @@
 ## Camera focus and interaction input for the local player.
-## Owns the focus ray, target highlighting, host-side validation, and debug hooks.
+## Owns the focus ray, highlighting, intent submission, and debug hooks.
 
 extends Node3D
 
@@ -34,13 +34,13 @@ func _ready() -> void:
 		_debug_command_name,
 		_debug_use_focused,
 		"Use the currently focused interaction target.",
-		true,
+		false,
 		false
 	)
 	set_process_unhandled_input(false)
 
 func _exit_tree() -> void:
-	if _focused != null:
+	if is_instance_valid(_focused):
 		_focused.set_focused(false)
 	if not is_instance_valid(debug_hub):
 		return
@@ -69,7 +69,7 @@ func _update_focus() -> void:
 	var candidate: Interactable = _find_interactable(focus_ray.get_collider() as Node)
 	if candidate == _focused:
 		return
-	if _focused != null:
+	if is_instance_valid(_focused):
 		_focused.set_focused(false)
 	if candidate != null:
 		candidate.set_focused(true)
@@ -77,38 +77,20 @@ func _update_focus() -> void:
 	_focused = candidate
 
 func _try_interact(input_action: StringName) -> bool:
-	if _focused == null:
+	if not _active:
+		return false
+	_update_focus()
+	if not is_instance_valid(_focused):
 		_debug_log("Interaction rejected: no focused target")
 		return false
 	var action: StringName = _focused.action_for_input(input_action)
 	if action == &"":
 		_debug_log("Interaction rejected: target does not accept %s" % input_action)
 		return false
-	if not _is_authority():
-		_debug_warn("Interaction rejected: local client authority is not available in M1")
-		return false
-	if not _is_valid_target(_focused):
-		_debug_warn("Interaction rejected: target failed host validation")
-		return false
-	if not _focused.interact(_actor, action):
-		_debug_warn("Interaction rejected by target: %s" % _focused.prompt_text)
-		return false
-	_debug_log("Interaction accepted: %s action=%s" % [_focused.prompt_text, action])
-	return true
+	return bool(get_node("/root/Network").call("request_interaction", _focused.get_path(), action))
 
 func _debug_use_focused(_args: Array[Variant]) -> String:
-	return "Interaction accepted." if _try_interact(&"interact") else "Interaction rejected."
-
-func _is_authority() -> bool:
-	return multiplayer.multiplayer_peer == null or multiplayer.is_server()
-
-func _is_valid_target(target: Interactable) -> bool:
-	if _actor == null or not is_instance_valid(_actor):
-		return false
-	var target_node: Node3D = target.get_parent() as Node3D
-	if target_node == null:
-		return false
-	return _actor.global_position.distance_to(target_node.global_position) <= TUNING.REACH_M
+	return "Interaction requested; check interact logs for host result." if _try_interact(&"interact") else "Interaction rejected."
 
 func _find_interactable(node: Node) -> Interactable:
 	var current: Node = node
@@ -122,7 +104,7 @@ func _find_interactable(node: Node) -> Interactable:
 	return null
 
 func _focus_mask() -> int:
-	return (1 << (LAYERS.DEVICES - 1)) | (1 << (LAYERS.PROPS - 1)) | (1 << (LAYERS.LIMP_BODIES - 1))
+	return (1 << (LAYERS.WORLD_STATIC - 1)) | (1 << (LAYERS.ELEVATOR - 1)) | (1 << (LAYERS.DEVICES - 1)) | (1 << (LAYERS.PROPS - 1)) | (1 << (LAYERS.LIMP_BODIES - 1))
 
 func _debug_log(message: String) -> void:
 	if debug_hub.call("is_on", &"interact"):
