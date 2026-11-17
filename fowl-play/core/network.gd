@@ -24,6 +24,14 @@ var movement_rejected: int = 0
 var interaction_rejected: int = 0
 var interaction_accepted: int = 0
 var _interaction_times: Dictionary = {}
+var _ragdoll_epochs: Dictionary = {}
+var _pending_ragdoll_starts: Dictionary = {}
+var ragdoll_pose_sent: int = 0
+var ragdoll_pose_received: int = 0
+var ragdoll_pose_data_bytes_sent: int = 0
+var ragdoll_send_hz: int = TUNING.RAGDOLL_SEND_HZ
+var ragdoll_settled_sent: int = 0
+var ragdoll_settled_received: int = 0
 
 func _ready() -> void:
 	multiplayer.peer_connected.connect(_on_peer_connected)
@@ -41,10 +49,17 @@ func _bootstrap() -> void:
 	hub.call("watch", &"net/movement_rejected", func() -> int: return movement_rejected)
 	hub.call("watch", &"net/interaction_rejected", func() -> int: return interaction_rejected)
 	hub.call("watch", &"net/interaction_accepted", func() -> int: return interaction_accepted)
+	hub.call("watch", &"net/ragdoll_pose_sent", func() -> int: return ragdoll_pose_sent)
+	hub.call("watch", &"net/ragdoll_pose_received", func() -> int: return ragdoll_pose_received)
+	hub.call("watch", &"net/ragdoll_pose_data_bytes_sent", func() -> int: return ragdoll_pose_data_bytes_sent)
+	hub.call("watch", &"net/ragdoll_settled_sent", func() -> int: return ragdoll_settled_sent)
+	hub.call("watch", &"net/ragdoll_settled_received", func() -> int: return ragdoll_settled_received)
 	hub.call("command", &"net_status", _command_status, "Report local connection state.", false, false)
 	hub.call("command", &"net_disconnect", _command_disconnect, "Leave this local network session.", false, false)
 	hub.call("command", &"net_host", _command_host, "Host a game on this computer.", false, false)
 	hub.call("command", &"net_join", _command_join, "Join an IP: net_join [IP]. Default: 127.0.0.1.", false, false)
+	hub.call("command", &"ragdoll_spike_start", _command_ragdoll_start, "Host test: start a player's ragdoll by peer ID.", true, true)
+	hub.call("command", &"ragdoll_spike_stop", _command_ragdoll_stop, "Host test: restore a player's standing state by peer ID.", true, true)
 	parse_args(OS.get_cmdline_args() + OS.get_cmdline_user_args())
 
 func parse_args(arguments: PackedStringArray) -> void:
@@ -127,6 +142,14 @@ func shutdown() -> void:
 	interaction_rejected = 0
 	interaction_accepted = 0
 	_interaction_times.clear()
+	_ragdoll_epochs.clear()
+	_pending_ragdoll_starts.clear()
+	ragdoll_pose_sent = 0
+	ragdoll_pose_received = 0
+	ragdoll_pose_data_bytes_sent = 0
+	ragdoll_settled_sent = 0
+	ragdoll_settled_received = 0
+	ragdoll_send_hz = TUNING.RAGDOLL_SEND_HZ
 	status = "disconnected"
 	session_ended.emit()
 	_debug_log("Network shut down")
@@ -204,9 +227,19 @@ func validate_rpc(expected_sender: int = -1) -> bool:
 func register_movement_player(owner_id: int, player: Node) -> void:
 	movement_players[owner_id] = player
 
+func apply_pending_ragdoll_start(owner_id: int, player: Node) -> void:
+	if movement_players.get(owner_id) != player:
+		return
+	if _pending_ragdoll_starts.has(owner_id):
+		var pending: Dictionary = _pending_ragdoll_starts[owner_id]
+		_pending_ragdoll_starts.erase(owner_id)
+		if bool(player.call("begin_remote_limp", pending.epoch, pending.world_transform, pending.pose)) and pending.has("settled_pose"):
+			player.call("receive_remote_settled_pose", pending.epoch, pending.settled_sequence, pending.settled_time_ms, pending.settled_pose)
+
 func unregister_movement_player(owner_id: int, player: Node) -> void:
 	if movement_players.get(owner_id) == player:
 		movement_players.erase(owner_id)
+		_pending_ragdoll_starts.erase(owner_id)
 
 func send_movement(owner_id: int, sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float) -> void:
 	if peer == null or peer.get_connection_status() != MultiplayerPeer.CONNECTION_CONNECTED:
@@ -226,6 +259,8 @@ func _submit_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pi
 func _receive_movement(owner_id: int, sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float) -> void:
 	var player: Node = movement_players.get(owner_id)
 	if not is_instance_valid(player):
+		return
+	if bool(player.get("is_limp")):
 		return
 	if not bool(player.call("accept_movement", sequence, at, speed, yaw, pitch)):
 		movement_rejected += 1
@@ -250,6 +285,143 @@ func _correct_movement(at: Vector3) -> void:
 	if is_instance_valid(player):
 		player.call("correct_movement", at)
 
+## M4 spike entry point. Combat will call the same host-owned transition later.
+func start_ragdoll_spike(owner_id: int) -> bool:
+	if peer != null and not is_host:
+		return false
+	var player: Node = movement_players.get(owner_id)
+	if not is_instance_valid(player) or player.is_queued_for_deletion() or not bool(player.call("begin_host_limp")):
+		return false
+	var epoch: int = int(_ragdoll_epochs.get(owner_id, 0)) + 1
+	_ragdoll_epochs[owner_id] = epoch
+	player.set("limp_epoch", epoch)
+	var rig: Node3D = player.get("rig") as Node3D
+	var initial_pose: PackedInt32Array = rig.call("capture_quantized_pose")
+	if peer != null:
+		_ragdoll_begin.rpc(owner_id, epoch, rig.global_transform, initial_pose)
+	_debug_log("Ragdoll spike started for peer %d epoch %d" % [owner_id, epoch])
+	return true
+
+func stop_ragdoll_spike(owner_id: int, reason: String = "manual") -> bool:
+	if peer != null and not is_host:
+		return false
+	var player: Node = movement_players.get(owner_id)
+	if not is_instance_valid(player) or not bool(player.get("is_limp")):
+		return false
+	var rig: Node3D = player.get("rig") as Node3D
+	if rig == null:
+		return false
+	var final_pose: PackedInt32Array = rig.call("capture_quantized_pose")
+	player.call("stop_host_limp")
+	if peer != null:
+		_ragdoll_end.rpc(
+			owner_id,
+			int(_ragdoll_epochs.get(owner_id, 0)),
+			player.get("global_position"),
+			final_pose
+		)
+	_debug_log("Ragdoll spike stopped for peer %d (%s)" % [owner_id, reason])
+	return true
+
+func publish_ragdoll_pose(owner_id: int, epoch: int, sequence: int, pose: PackedInt32Array) -> void:
+	if peer == null or not is_host or epoch != int(_ragdoll_epochs.get(owner_id, 0)):
+		return
+	var player: Node = movement_players.get(owner_id)
+	if not is_instance_valid(player) or not bool(player.get("is_limp")):
+		return
+	var rig: Node3D = player.get("rig") as Node3D
+	if rig == null or not bool(rig.call("valid_pose", pose)):
+		return
+	ragdoll_pose_sent += 1
+	# 77 signed 32-bit bone values, plus four integer RPC arguments. This is
+	# application data only; Godot/ENet framing and compression are excluded.
+	ragdoll_pose_data_bytes_sent += pose.size() * 4 + 16
+	_ragdoll_pose.rpc(owner_id, epoch, sequence, Time.get_ticks_msec(), pose)
+
+func publish_settled_ragdoll_pose(owner_id: int, epoch: int, sequence: int, pose: PackedInt32Array) -> void:
+	if peer == null or not is_host or epoch != int(_ragdoll_epochs.get(owner_id, 0)):
+		return
+	var player: Node = movement_players.get(owner_id)
+	if not is_instance_valid(player) or not bool(player.get("is_limp")):
+		return
+	var rig: Node3D = player.get("rig") as Node3D
+	if rig == null or not bool(rig.call("valid_pose", pose)):
+		return
+	ragdoll_settled_sent += 1
+	_ragdoll_settled.rpc(owner_id, epoch, sequence, Time.get_ticks_msec(), pose)
+	_debug_log("Ragdoll settled for peer %d epoch %d" % [owner_id, epoch])
+
+@rpc("authority", "call_remote", "reliable", 0)
+func _ragdoll_begin(owner_id: int, epoch: int, world_transform: Transform3D, initial_pose: PackedInt32Array) -> void:
+	if not validate_rpc(TUNING.PEER_ID_HOST) or epoch <= int(_ragdoll_epochs.get(owner_id, 0)):
+		return
+	_ragdoll_epochs[owner_id] = epoch
+	var player: Node = movement_players.get(owner_id)
+	if not is_instance_valid(player):
+		_pending_ragdoll_starts[owner_id] = {"epoch": epoch, "world_transform": world_transform, "pose": initial_pose}
+		return
+	if bool(player.call("begin_remote_limp", epoch, world_transform, initial_pose)):
+		_debug_log("Ragdoll start received for peer %d epoch %d" % [owner_id, epoch])
+
+@rpc("authority", "call_remote", "unreliable_ordered", 3)
+func _ragdoll_pose(owner_id: int, epoch: int, sequence: int, host_time_ms: int, pose: PackedInt32Array) -> void:
+	if not validate_rpc(TUNING.PEER_ID_HOST) or epoch != int(_ragdoll_epochs.get(owner_id, 0)):
+		return
+	var player: Node = movement_players.get(owner_id)
+	if is_instance_valid(player):
+		if bool(player.call("receive_remote_pose", epoch, sequence, host_time_ms, pose)):
+			ragdoll_pose_received += 1
+
+@rpc("authority", "call_remote", "reliable", 0)
+func _ragdoll_settled(owner_id: int, epoch: int, sequence: int, host_time_ms: int, pose: PackedInt32Array) -> void:
+	if not validate_rpc(TUNING.PEER_ID_HOST) or epoch != int(_ragdoll_epochs.get(owner_id, 0)):
+		return
+	var player: Node = movement_players.get(owner_id)
+	if not is_instance_valid(player) and _pending_ragdoll_starts.has(owner_id):
+		var pending: Dictionary = _pending_ragdoll_starts[owner_id]
+		pending["settled_sequence"] = sequence
+		pending["settled_time_ms"] = host_time_ms
+		pending["settled_pose"] = pose
+		_pending_ragdoll_starts[owner_id] = pending
+		ragdoll_settled_received += 1
+		return
+	if is_instance_valid(player) and bool(player.call("receive_remote_settled_pose", epoch, sequence, host_time_ms, pose)):
+		ragdoll_settled_received += 1
+
+@rpc("authority", "call_remote", "reliable", 0)
+func _ragdoll_end(owner_id: int, epoch: int, standing_at: Vector3, final_pose: PackedInt32Array) -> void:
+	if not validate_rpc(TUNING.PEER_ID_HOST) or epoch != int(_ragdoll_epochs.get(owner_id, 0)):
+		return
+	_pending_ragdoll_starts.erase(owner_id)
+	var player: Node = movement_players.get(owner_id)
+	if is_instance_valid(player) and bool(player.call("end_remote_limp", epoch, standing_at, final_pose)):
+		_debug_log("Ragdoll end received for peer %d epoch %d" % [owner_id, epoch])
+
+func _sync_active_ragdolls(peer_id: int) -> void:
+	if not is_host or peer == null or not connected_peers.has(peer_id):
+		return
+	for owner: Variant in movement_players.keys():
+		var owner_id: int = int(owner)
+		var player: Node = movement_players[owner_id]
+		if not is_instance_valid(player) or not bool(player.get("is_limp")):
+			continue
+		var rig: Node3D = player.get("rig") as Node3D
+		var epoch: int = int(_ragdoll_epochs.get(owner_id, 0))
+		var current_pose: PackedInt32Array = rig.call("capture_quantized_pose")
+		_ragdoll_begin.rpc_id(peer_id, owner_id, epoch, rig.global_transform, current_pose)
+		if bool(player.get("_ragdoll_settled_sent")):
+			_ragdoll_settled.rpc_id(peer_id, owner_id, epoch, int(player.get("_ragdoll_sequence")), Time.get_ticks_msec(), current_pose)
+
+func _command_ragdoll_start(args: Array[Variant]) -> String:
+	if args.size() != 1 or not str(args[0]).is_valid_int():
+		return "Usage: ragdoll_spike_start <peer_id>"
+	return "Ragdoll started." if start_ragdoll_spike(int(args[0])) else "Ragdoll start rejected."
+
+func _command_ragdoll_stop(args: Array[Variant]) -> String:
+	if args.size() != 1 or not str(args[0]).is_valid_int():
+		return "Usage: ragdoll_spike_stop <peer_id>"
+	return "Standing restored." if stop_ragdoll_spike(int(args[0])) else "Ragdoll stop rejected."
+
 func is_host_peer(peer_id: int) -> bool:
 	return peer_id == TUNING.PEER_ID_HOST
 
@@ -259,9 +431,12 @@ func _on_peer_connected(peer_id: int) -> void:
 	_debug_log("Peer %d connected" % peer_id)
 	if is_host:
 		_publish_roster()
+		_sync_active_ragdolls.call_deferred(peer_id)
 
 func _on_peer_disconnected(peer_id: int) -> void:
 	_interaction_times.erase(peer_id)
+	_pending_ragdoll_starts.erase(peer_id)
+	_ragdoll_epochs.erase(peer_id)
 	connected_peers.erase(peer_id)
 	_debug_log("Peer %d disconnected" % peer_id)
 	if is_host:
@@ -330,6 +505,8 @@ func _receive_interaction(owner_id: int, target_path: NodePath, action: StringNa
 func _interaction_rejection(actor: Node3D, target: Interactable, action: StringName) -> String:
 	if not is_instance_valid(actor) or actor.is_queued_for_deletion():
 		return "no active actor for sender"
+	if bool(actor.get("is_limp")):
+		return "actor is limp"
 	if not is_instance_valid(target) or target.is_queued_for_deletion():
 		return "unknown target"
 	var body: Node3D = target.get_parent() as Node3D
