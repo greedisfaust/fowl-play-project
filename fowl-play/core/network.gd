@@ -313,7 +313,8 @@ func stop_ragdoll_spike(owner_id: int, reason: String = "manual") -> bool:
 		return false
 	var final_pose: PackedInt32Array = rig.call("capture_quantized_pose")
 	var recovery_variant: StringName = rig.call("get_recovery_variant")
-	player.call("stop_host_limp", recovery_variant)
+	if not bool(player.call("stop_host_limp", recovery_variant)):
+		return false
 	if peer != null:
 		_ragdoll_end.rpc(
 			owner_id,
@@ -443,6 +444,16 @@ func _on_peer_connected(peer_id: int) -> void:
 
 func _on_peer_disconnected(peer_id: int) -> void:
 	_interaction_times.erase(peer_id)
+	# G8 forced-exit cleanup: if a limp player disconnects, broadcast the
+	# reliable end event to the remaining clients so their limp bodies
+	# complete a get-up blend instead of vanishing silently. The host
+	# restores the departing player's rig locally before the arena despawns
+	# the player node. This runs before the epoch is erased so the end RPC
+	# carries the correct epoch.
+	if is_host and _ragdoll_epochs.has(peer_id):
+		var player: Node = movement_players.get(peer_id)
+		if is_instance_valid(player) and bool(player.get("is_limp")):
+			stop_ragdoll_spike(peer_id, "disconnect")
 	_pending_ragdoll_starts.erase(peer_id)
 	_ragdoll_epochs.erase(peer_id)
 	connected_peers.erase(peer_id)

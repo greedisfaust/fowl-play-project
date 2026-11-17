@@ -33,6 +33,7 @@ security secret.
 | `props/<name>/pickup_allowed` | props/prop.gd | Whether the prop's assigned profile allows pickup. |
 | `hands/<name>/state` | hands/hand.gd | World mode, hover, guard, carry, limp, and speed state. |
 | `ragdoll_test.simulating` | ragdoll/player_ragdoll_test.gd | Whether the isolated PhysicalBoneSimulator3D is simulating. |
+| `player/<name>/wall_clearance` | player/player.gd | Whether recovery placement had to move away from a wall/prop during limp recovery. |
 
 ## Commands
 
@@ -139,3 +140,7 @@ Playtest with two windows: host in one, join from the other, then on the **host*
 ### M5 recovery checkpoint
 
 Run `tests/run_m5_recovery_checks.ps1 -GodotExecutable <path>` for the host timer, floor placement, cleanup, and two-process automatic end event. The `limp` log says `Player <id> recovered at <position>`; the `net` log says `Ragdoll spike stopped for peer <id> (settled|hard cap|manual)`. If no walkable static/elevator floor is found within 2.5 m below the hips, a `limp` warning reports fallback to the previous standing height.
+
+Wall-clearance search runs after floor placement: if the standing capsule overlaps world/elevator/prop/player/limp geometry, it spirals outward in 0.15 m steps (8 angles per step, up to 1.5 m radius) and sets `player/<name>/wall_clearance` true when it finds a clear spot.
+
+**G8 forced-exit cleanup:** On the host, when a limp player disconnects, `_on_peer_disconnected` calls `stop_ragdoll_spike(peer_id, "disconnect")` before erasing the peer's ragdoll epoch. This broadcasts the reliable `_ragdoll_end` event to remaining clients so their limp bodies complete a get-up blend instead of vanishing silently. The host restores the departing player's rig locally before the arena despawns the player node.

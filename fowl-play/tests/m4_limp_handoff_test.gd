@@ -8,10 +8,18 @@ func _initialize() -> void:
 	_run.call_deferred()
 
 func _run() -> void:
+	# Recovery now requires real support instead of restoring in empty space.
+	var floor_body: StaticBody3D = StaticBody3D.new()
+	var floor_collider: CollisionShape3D = CollisionShape3D.new()
+	var floor_shape: BoxShape3D = BoxShape3D.new()
+	floor_shape.size = Vector3(20.0, 1.0, 20.0)
+	floor_collider.shape = floor_shape
+	floor_body.add_child(floor_collider)
+	root.add_child(floor_body)
 	var scene: PackedScene = load("res://player/player.tscn")
 	var player: CharacterBody3D = scene.instantiate()
 	player.name = "1"
-	player.position = Vector3(0.0, 2.5, 0.0)
+	player.position = Vector3(0.0, 1.8, 0.0)
 	root.add_child(player)
 	await physics_frame
 

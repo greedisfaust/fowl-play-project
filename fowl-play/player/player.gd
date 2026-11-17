@@ -31,6 +31,10 @@ var _ragdoll_sequence: int = 0
 var _ragdoll_slow_elapsed: float = 0.0
 var _ragdoll_settled_sent: bool = false
 var _limp_elapsed_s: float = 0.0
+var _recovery_retry_s: float = 0.0
+var _recovery_blocked: bool = false
+# M5 wall clearance: true when recovery placement had to move away from a wall/prop.
+var wall_clearance_active: bool = false
 # Profiling can keep a spike alive beyond the gameplay recovery deadline.
 var auto_recovery_enabled: bool = true
 var accepted_position: Vector3
@@ -48,6 +52,7 @@ var _debug_limp_watch_name: StringName
 var _debug_recovering_watch_name: StringName
 var _debug_limp_elapsed_watch_name: StringName
 var _debug_camera_follow_watch_name: StringName
+var _debug_wall_clearance_watch_name: StringName
 
 func _ready() -> void:
 	accepted_position = global_position
@@ -85,6 +90,7 @@ func _ready() -> void:
 	debug_hub.call("watch", _debug_recovering_watch_name, func() -> bool: return is_recovering)
 	debug_hub.call("watch", _debug_limp_elapsed_watch_name, func() -> float: return _limp_elapsed_s)
 	debug_hub.call("watch", _debug_camera_follow_watch_name, func() -> bool: return is_local_player and is_limp and camera.top_level)
+	debug_hub.call("watch", _debug_wall_clearance_watch_name, func() -> bool: return wall_clearance_active)
 	debug_hub.call(
 		"command",
 		_debug_command_name,
@@ -112,17 +118,20 @@ func _exit_tree() -> void:
 	debug_hub.call("unwatch", _debug_recovering_watch_name)
 	debug_hub.call("unwatch", _debug_limp_elapsed_watch_name)
 	debug_hub.call("unwatch", _debug_camera_follow_watch_name)
+	debug_hub.call("unwatch", _debug_wall_clearance_watch_name)
 
 func _process(delta: float) -> void:
 	if is_limp:
 		_update_limp_camera(delta)
 		if bool(network.get("is_host")) and rig != null:
 			_limp_elapsed_s += delta
+			_recovery_retry_s = maxf(0.0, _recovery_retry_s - delta)
 			var bones_slow: bool = bool(rig.call("are_physical_bones_slow"))
-			if auto_recovery_enabled and (_limp_elapsed_s >= TUNING.LIMP_MAX_SECONDS or (_limp_elapsed_s >= TUNING.LIMP_SECONDS and bones_slow)):
+			if auto_recovery_enabled and _recovery_retry_s <= 0.0 and (_limp_elapsed_s >= TUNING.LIMP_MAX_SECONDS or (_limp_elapsed_s >= TUNING.LIMP_SECONDS and bones_slow)):
 				var reason: String = "hard cap" if _limp_elapsed_s >= TUNING.LIMP_MAX_SECONDS else "settled"
-				network.call("stop_ragdoll_spike", input_peer_id, reason)
-				return
+				if bool(network.call("stop_ragdoll_spike", input_peer_id, reason)):
+					return
+				_recovery_retry_s = 0.25
 			if bones_slow:
 				_ragdoll_slow_elapsed += delta
 				if _ragdoll_slow_elapsed >= 0.35 and not _ragdoll_settled_sent:
@@ -243,6 +252,9 @@ func begin_host_limp() -> bool:
 	_ragdoll_slow_elapsed = 0.0
 	_ragdoll_settled_sent = false
 	_limp_elapsed_s = 0.0
+	_recovery_retry_s = 0.0
+	_recovery_blocked = false
+	wall_clearance_active = false
 	velocity = Vector3.ZERO
 	if focus != null:
 		focus.call("set_active", false)
@@ -251,12 +263,19 @@ func begin_host_limp() -> bool:
 	return true
 
 ## The host chooses the standing capsule position before restoring the rig.
-func stop_host_limp(recovery_variant: StringName = &"") -> void:
+func stop_host_limp(recovery_variant: StringName = &"") -> bool:
 	if not is_limp:
-		return
+		return false
 	var recovery_position: Vector3 = _find_recovery_position()
-	rig.call("stop_host_simulation_with_blend", TUNING.GET_UP_BLEND_SECONDS, recovery_variant)
+	if not recovery_position.is_finite():
+		if not _recovery_blocked:
+			debug_hub.call("warn", &"limp", "Player %s recovery blocked: no supported, clear capsule position; retrying while limp." % name)
+		_recovery_blocked = true
+		return false
+	_recovery_blocked = false
+	# Move the capsule while the ragdoll is still independent of its parent.
 	global_position = recovery_position
+	rig.call("stop_host_simulation_with_blend", TUNING.GET_UP_BLEND_SECONDS, recovery_variant)
 	is_limp = false
 	is_recovering = true
 	_limp_elapsed_s = 0.0
@@ -265,25 +284,54 @@ func stop_host_limp(recovery_variant: StringName = &"") -> void:
 	collision_layer = 1 << (LAYERS.HEALTHY_PLAYERS - 1)
 	collision_mask = LAYERS.LAYER_MASK_HEALTHY_PLAYERS
 	if focus != null:
-		focus.call("set_active", is_local_player)
+		focus.call("set_active", false)
 	_reset_movement_after_limp()
 	debug_hub.call("log", &"limp", "Player %s recovered at %s." % [name, recovery_position])
+	return true
 
 func _find_recovery_position() -> Vector3:
 	var hips: Vector3 = rig.call("get_hips_world_position")
+	wall_clearance_active = false
 	if not hips.is_finite():
-		return global_position
-	var standing_at: Vector3 = Vector3(hips.x, global_position.y, hips.z)
-	var ray: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(
-		hips + Vector3.UP * 0.6,
-		hips + Vector3.DOWN * 2.5,
-		(1 << (LAYERS.WORLD_STATIC - 1)) | (1 << (LAYERS.ELEVATOR - 1))
-	)
+		return Vector3.INF
+	var collider: CollisionShape3D = $CollisionShape3D
+	var excluded: Array[RID] = [get_rid()]
+	for bone: PhysicalBone3D in rig.get("physical_bones"):
+		excluded.append(bone.get_rid())
+	var params: PhysicsShapeQueryParameters3D = PhysicsShapeQueryParameters3D.new()
+	params.shape = collider.shape
+	params.collision_mask = LAYERS.LAYER_MASK_HEALTHY_PLAYERS | (1 << (LAYERS.HEALTHY_PLAYERS - 1))
+	params.exclude = excluded
+	params.margin = 0.01
+	var standing_at: Vector3 = _recovery_candidate(hips, collider.transform, params)
+	if standing_at.is_finite():
+		return standing_at
+	for step_count: int in range(1, int(TUNING.WALL_CLEARANCE_MAX_RADIUS / TUNING.WALL_CLEARANCE_STEP) + 1):
+		var radius: float = step_count * TUNING.WALL_CLEARANCE_STEP
+		for angle_index: int in range(TUNING.WALL_CLEARANCE_ANGLE_COUNT):
+			var angle: float = float(angle_index) * TAU / float(TUNING.WALL_CLEARANCE_ANGLE_COUNT)
+			var candidate: Vector3 = hips + Vector3(cos(angle), 0.0, sin(angle)) * radius
+			standing_at = _recovery_candidate(candidate, collider.transform, params)
+			if standing_at.is_finite():
+				wall_clearance_active = true
+				debug_hub.call("log", &"limp", "Player %s wall clearance: offset recovery by %.2f m at %.0f degrees." % [name, radius, rad_to_deg(angle)])
+				return standing_at
+	return Vector3.INF
+
+func _recovery_candidate(at: Vector3, collider_transform: Transform3D, params: PhysicsShapeQueryParameters3D) -> Vector3:
+	# Every candidate needs its own walkable support, including near ledges.
+	var ray: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.new()
+	ray.from = at + Vector3.UP * 0.6
+	ray.to = at + Vector3.DOWN * 2.5
+	ray.collision_mask = (1 << (LAYERS.WORLD_STATIC - 1)) | (1 << (LAYERS.ELEVATOR - 1))
+	ray.exclude = params.exclude
 	var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(ray)
-	if not hit.is_empty() and (hit.normal as Vector3).dot(Vector3.UP) > 0.6:
-		standing_at.y = (hit.position as Vector3).y + 0.03
-	else:
-		debug_hub.call("warn", &"limp", "No walkable floor beneath player %s; retaining previous standing height." % name)
+	if hit.is_empty() or (hit.normal as Vector3).dot(Vector3.UP) <= 0.6:
+		return Vector3.INF
+	var standing_at: Vector3 = Vector3(at.x, (hit.position as Vector3).y + 0.03, at.z)
+	params.transform = Transform3D(global_basis, standing_at) * collider_transform
+	if not get_world_3d().direct_space_state.intersect_shape(params, 1).is_empty():
+		return Vector3.INF
 	return standing_at
 
 func begin_remote_limp(epoch: int, world_transform: Transform3D, initial_pose: PackedInt32Array) -> bool:
@@ -320,8 +368,8 @@ func end_remote_limp(
 ) -> bool:
 	if not is_limp or epoch != limp_epoch or rig == null or not standing_at.is_finite():
 		return false
-	rig.call("end_remote_pose_with_blend", TUNING.GET_UP_BLEND_SECONDS, final_pose, recovery_variant)
 	global_position = standing_at
+	rig.call("end_remote_pose_with_blend", TUNING.GET_UP_BLEND_SECONDS, final_pose, recovery_variant)
 	is_limp = false
 	is_recovering = true
 	_begin_recovery_camera()
@@ -329,7 +377,7 @@ func end_remote_limp(
 	collision_layer = 1 << (LAYERS.HEALTHY_PLAYERS - 1)
 	collision_mask = LAYERS.LAYER_MASK_HEALTHY_PLAYERS
 	if focus != null:
-		focus.call("set_active", is_local_player)
+		focus.call("set_active", false)
 	_reset_movement_after_limp()
 	debug_hub.call("log", &"limp", "Player %s received limp end." % name)
 	return true
@@ -359,7 +407,8 @@ func _begin_recovery_camera() -> void:
 	_recovery_elapsed_s = 0.0
 	if not is_local_player:
 		return
-	rotate_y(_limp_look_yaw)
+	# Do not rotate the Player root only on its owner: that moves the blend
+	# start and makes host/client recovery orientations disagree.
 	_pitch_radians = _limp_look_pitch
 	head.rotation.x = _pitch_radians
 	_recovery_camera_start = camera.global_transform
@@ -407,6 +456,8 @@ func _update_limp_camera(_delta: float) -> void:
 
 func _rotate_view(mouse_delta: Vector2) -> void:
 	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+		return
+	if is_recovering:
 		return
 	if is_limp:
 		_rotate_limp_view(mouse_delta)

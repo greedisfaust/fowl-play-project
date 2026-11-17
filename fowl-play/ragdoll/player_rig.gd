@@ -32,8 +32,16 @@ var _pose_blend_elapsed: float = 0.0
 var _pose_blend_duration: float = 0.0
 var _pose_blend_start: Array[Transform3D] = []
 var _pose_blend_target: Array[Transform3D] = []
+var _standing_pose: Array[Transform3D] = []
 var _pending_recovery_animation: StringName = &""
 var _recovery_animation_active: bool = false
+
+func _enter_tree() -> void:
+	# An editor animation preview can be saved in the skeleton's pose. Reset
+	# BEFORE PhysicalBone3D children enter and construct their joint frames.
+	# Resetting in _ready alone leaves those frames bound to the preview pose.
+	var saved_skeleton: Skeleton3D = get_node("Skeleton3D") as Skeleton3D
+	saved_skeleton.reset_bone_poses()
 
 func _ready() -> void:
 	_watch_name = StringName("rig/%s/physical_bones" % get_parent().name)
@@ -79,6 +87,10 @@ func disable_collisions() -> void:
 func begin_host_simulation() -> bool:
 	if simulator.is_simulating_physics() or _remote_active or not _has_valid_bones():
 		return false
+	# Capture the standing pose before simulation overwrites it, so recovery
+	# blends back to the actual standing pose instead of the rest/T-pose.
+	if not _remote_active:
+		_standing_pose = _capture_skeleton_pose()
 	# The Player capsule can move independently; the simulated rig must not
 	# inherit that transform or feed its own movement back through the parent.
 	var world_transform: Transform3D = global_transform
@@ -87,12 +99,16 @@ func begin_host_simulation() -> bool:
 	simulator.active = true
 	_latest_host_pose = PackedInt32Array()
 	enable_host_collisions()
+	for bone: PhysicalBone3D in physical_bones:
+		bone.linear_velocity = Vector3.ZERO
+		bone.angular_velocity = Vector3.ZERO
 	simulator.physical_bones_start_simulation()
 	return true
 
 func stop_host_simulation() -> void:
 	_pose_blend_active = false
 	_recovery_animation_active = false
+	_pending_recovery_animation = &""
 	_pose_blend_start.clear()
 	_pose_blend_target.clear()
 	if recovery_animation_player != null:
@@ -105,8 +121,15 @@ func stop_host_simulation() -> void:
 	_latest_host_pose = PackedInt32Array()
 
 func stop_host_simulation_with_blend(duration: float, recovery_variant: StringName = &"") -> void:
-	var start_pose: Array[Transform3D] = _capture_skeleton_pose()
+	# Outside modification_processed the host skeleton can contain the
+	# pre-physics (rest) pose. Reconstruct the same final sample sent to clients.
+	var final_pose: PackedInt32Array = capture_quantized_pose()
+	var old_skeleton_world: Transform3D = skeleton.global_transform
 	stop_host_simulation()
+	if valid_pose(final_pose):
+		_apply_pose(final_pose, final_pose, 0.0)
+	var start_pose: Array[Transform3D] = _capture_skeleton_pose()
+	_rebase_pose(start_pose, skeleton.global_transform.affine_inverse() * old_skeleton_world)
 	_begin_recovery(start_pose, duration, recovery_variant)
 
 func is_pose_blending() -> bool:
@@ -165,6 +188,9 @@ func _encode_current_pose() -> PackedInt32Array:
 func begin_remote_pose(world_transform: Transform3D, initial_pose: PackedInt32Array) -> bool:
 	if _remote_active or not _has_valid_bones() or not valid_pose(initial_pose):
 		return false
+	# Capture the standing pose before limp overwrites it, so recovery
+	# blends back to the actual standing pose instead of the rest/T-pose.
+	_standing_pose = _capture_skeleton_pose()
 	var previous_transform: Transform3D = global_transform
 	top_level = true
 	global_transform = world_transform if world_transform.is_finite() else previous_transform
@@ -205,6 +231,7 @@ func push_settled_pose(sequence: int, host_time_ms: int, data: PackedInt32Array)
 func end_remote_pose() -> void:
 	_pose_blend_active = false
 	_recovery_animation_active = false
+	_pending_recovery_animation = &""
 	_pose_blend_start.clear()
 	_pose_blend_target.clear()
 	if recovery_animation_player != null:
@@ -226,13 +253,20 @@ func end_remote_pose_with_blend(
 	if valid_pose(final_pose):
 		_apply_pose(final_pose, final_pose, 0.0)
 	var start_pose: Array[Transform3D] = _capture_skeleton_pose()
+	var old_skeleton_world: Transform3D = skeleton.global_transform
 	end_remote_pose()
+	_rebase_pose(start_pose, skeleton.global_transform.affine_inverse() * old_skeleton_world)
 	_begin_recovery(start_pose, duration, recovery_variant)
 
 func get_recovery_variant() -> StringName:
 	if _chest_bone_index < 0:
 		return &"get_up_face_up"
-	var chest_forward: Vector3 = -skeleton.get_bone_global_pose(_chest_bone_index).basis.z
+	var chest_pose: Transform3D = skeleton.get_bone_global_pose(_chest_bone_index)
+	if simulator.is_simulating_physics() and valid_pose(_latest_host_pose):
+		var offset: int = _bone_indices.find(_chest_bone_index) * POSE_VALUES_PER_BONE
+		var rotation: Quaternion = Quaternion(_latest_host_pose[offset + 3], _latest_host_pose[offset + 4], _latest_host_pose[offset + 5], _latest_host_pose[offset + 6]).normalized()
+		chest_pose.basis = Basis(rotation)
+	var chest_forward: Vector3 = -(skeleton.global_basis * chest_pose.basis.z).normalized()
 	var face_direction: float = chest_forward.dot(Vector3.UP)
 	if absf(face_direction) >= FACE_ORIENTATION_THRESHOLD:
 		return &"get_up_face_up" if face_direction > 0.0 else &"get_up_face_down"
@@ -302,6 +336,17 @@ func _capture_skeleton_pose() -> Array[Transform3D]:
 		poses[bone_index] = skeleton.get_bone_global_pose(bone_index)
 	return poses
 
+func _rebase_pose(poses: Array[Transform3D], old_to_new: Transform3D) -> void:
+	for bone_index: int in range(poses.size()):
+		poses[bone_index] = old_to_new * poses[bone_index]
+
+func _to_local_pose(poses: Array[Transform3D]) -> Array[Transform3D]:
+	var local_poses: Array[Transform3D] = []
+	for bone_index: int in range(poses.size()):
+		var parent_index: int = skeleton.get_bone_parent(bone_index)
+		local_poses.append(poses[parent_index].affine_inverse() * poses[bone_index] if parent_index >= 0 else poses[bone_index])
+	return local_poses
+
 func _begin_recovery(start_pose: Array[Transform3D], duration: float, recovery_variant: StringName) -> void:
 	if start_pose.size() != skeleton.get_bone_count() or duration <= 0.0:
 		skeleton.reset_bone_poses()
@@ -310,8 +355,13 @@ func _begin_recovery(start_pose: Array[Transform3D], duration: float, recovery_v
 	_pending_recovery_animation = &""
 	if _prepare_recovery_animation(recovery_variant):
 		_pending_recovery_animation = recovery_variant
-	_pose_blend_start = start_pose
-	_pose_blend_target = _capture_skeleton_pose()
+		# Blend straight into the authored opening, never via standing/T-pose.
+		_pose_blend_target = _to_local_pose(_capture_skeleton_pose())
+	elif _standing_pose.size() == skeleton.get_bone_count():
+		_pose_blend_target = _to_local_pose(_standing_pose)
+	else:
+		_pose_blend_target = _to_local_pose(_capture_skeleton_pose())
+	_pose_blend_start = _to_local_pose(start_pose)
 	for bone_index: int in range(start_pose.size()):
 		skeleton.set_bone_global_pose(bone_index, start_pose[bone_index])
 	_pose_blend_duration = duration
@@ -327,9 +377,9 @@ func _prepare_recovery_animation(recovery_variant: StringName) -> bool:
 	if library == null or not library.has_animation(recovery_variant):
 		debug_hub.call("warn", &"limp", "Rig %s missing recovery clip %s; using procedural fallback." % [get_parent().name, recovery_variant])
 		return false
-	recovery_animation_player.play(recovery_variant)
+	recovery_animation_player.play(recovery_variant, 0.0)
 	recovery_animation_player.seek(0.0, true)
-	recovery_animation_player.stop()
+	recovery_animation_player.pause()
 	return true
 
 func _process_pose_blend(delta: float) -> void:
@@ -343,7 +393,7 @@ func _process_pose_blend(delta: float) -> void:
 			target.basis.get_rotation_quaternion(),
 			eased_weight
 		)
-		skeleton.set_bone_global_pose(
+		skeleton.set_bone_pose(
 			bone_index,
 			Transform3D(Basis(rotation), start.origin.lerp(target.origin, eased_weight))
 		)
@@ -353,7 +403,7 @@ func _process_pose_blend(delta: float) -> void:
 	_pose_blend_start.clear()
 	_pose_blend_target.clear()
 	if _pending_recovery_animation != &"" and recovery_animation_player != null:
-		recovery_animation_player.play(_pending_recovery_animation)
+		recovery_animation_player.play(_pending_recovery_animation, 0.0)
 		recovery_animation_player.seek(0.0, true)
 		_recovery_animation_active = true
 		debug_hub.call("log", &"limp", "Rig %s playing authored recovery %s." % [get_parent().name, _pending_recovery_animation])
