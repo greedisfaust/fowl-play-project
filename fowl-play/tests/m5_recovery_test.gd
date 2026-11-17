@@ -26,9 +26,15 @@ func _run() -> void:
 	player.set("_limp_elapsed_s", 6.0)
 	player.call("_process", 0.0)
 	check(not bool(player.get("is_limp")), "hard cap ends moving ragdoll")
-	check(not simulator.is_simulating_physics() and not rig.top_level, "one cleanup restores standing rig")
+	check(bool(player.get("is_recovering")), "hard cap starts get-up blend")
+	check(not simulator.is_simulating_physics() and not rig.top_level, "one cleanup leaves simulation")
 	check(player.collision_layer != 0 and player.collision_mask != 0, "standing capsule collisions restored")
 	check(player.global_position.distance_to(Vector3(hips.x, 0.53, hips.z)) < 0.18, "capsule planted at final hips on arena floor")
+	for frame: int in range(120):
+		await process_frame
+		if not bool(player.get("is_recovering")):
+			break
+	check(not bool(player.get("is_recovering")), "hard-cap get-up blend completes")
 	check(bool(network.call("start_ragdoll_spike", 1)), "second limp can start after recovery")
 	var bones: Array = rig.get("physical_bones")
 	for bone: PhysicalBone3D in bones:
@@ -37,6 +43,11 @@ func _run() -> void:
 	player.set("_limp_elapsed_s", 3.5)
 	player.call("_process", 0.0)
 	check(not bool(player.get("is_limp")), "settled ragdoll recovers at minimum duration")
+	for frame: int in range(120):
+		await process_frame
+		if not bool(player.get("is_recovering")):
+			break
+	check(not bool(player.get("is_recovering")), "settled get-up blend completes")
 	check(int(player.get("limp_epoch")) == 2, "recovery preserves epoch sequencing")
 	if not failed:
 		print("M5 recovery checks passed")

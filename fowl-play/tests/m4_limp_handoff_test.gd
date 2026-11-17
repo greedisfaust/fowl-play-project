@@ -43,8 +43,8 @@ func _run() -> void:
 		await physics_frame
 	check(player.global_position.distance_to(start_root) < 0.001, "Player root stayed fixed")
 	check(hips.global_position.y < start_hips_y - 0.01, "hips fell independently")
-	check(camera.global_position.y < start_camera_y - 0.01, "owner camera followed falling head")
 	player.call("_update_limp_camera", 0.0)
+	check(camera.global_position.y < start_camera_y - 0.01, "owner camera followed falling head")
 	var eye_transform: Transform3D = rig.call("get_head_eye_transform")
 	check(camera.global_position.distance_to(eye_transform.origin) < 0.01, "owner camera anchored at head eye point")
 	var before_look: Vector3 = camera.global_basis.z
@@ -59,7 +59,14 @@ func _run() -> void:
 
 	player.call("stop_host_limp")
 	check(not bool(player.get("is_limp")), "limp state cleared")
-	check(not rig.top_level and not simulator.is_simulating_physics(), "rig returned to standing")
+	check(bool(player.get("is_recovering")), "get-up blend started")
+	check(not rig.top_level and not simulator.is_simulating_physics(), "rig left simulation for recovery")
+	check(camera.top_level and rig.visible and not head_attachment.visible, "camera and body remain active during recovery")
+	for frame: int in range(120):
+		await process_frame
+		if not bool(player.get("is_recovering")):
+			break
+	check(not bool(player.get("is_recovering")), "get-up blend completed")
 	check(not camera.top_level and not rig.visible and head_attachment.visible, "owner camera and model returned to standing")
 	check(player.collision_layer == 1 << 4 and player.collision_mask == 103, "capsule collisions restored")
 	for child: Node in simulator.get_children():

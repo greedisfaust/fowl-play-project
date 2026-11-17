@@ -31,6 +31,7 @@ const PARRY_LIMP_SECONDS: float = 3.5
 const LIMP_SECONDS: float = 3.5
 const LIMP_MAX_SECONDS: float = 6.0
 const LIMP_SETTLED_SPEED_MPS: float = 1.0
+const GET_UP_BLEND_SECONDS: float = 0.5
 
 const THROW_AUTO_FIRE_SECONDS: float = 1.0
 const THROW_SPEED_MPS: float = 14.0

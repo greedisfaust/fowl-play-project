@@ -24,6 +24,11 @@ var _last_remote_host_time_ms: int = -1
 var _latest_host_pose: PackedInt32Array = PackedInt32Array()
 var _hips_bone_index: int = -1
 var _hips_physical_bone: PhysicalBone3D
+var _pose_blend_active: bool = false
+var _pose_blend_elapsed: float = 0.0
+var _pose_blend_duration: float = 0.0
+var _pose_blend_start: Array[Transform3D] = []
+var _pose_blend_target: Array[Transform3D] = []
 
 func _ready() -> void:
 	_watch_name = StringName("rig/%s/physical_bones" % get_parent().name)
@@ -78,12 +83,23 @@ func begin_host_simulation() -> bool:
 	return true
 
 func stop_host_simulation() -> void:
+	_pose_blend_active = false
+	_pose_blend_start.clear()
+	_pose_blend_target.clear()
 	simulator.physical_bones_stop_simulation()
 	disable_collisions()
 	skeleton.reset_bone_poses()
 	top_level = false
 	transform = Transform3D.IDENTITY
 	_latest_host_pose = PackedInt32Array()
+
+func stop_host_simulation_with_blend(duration: float) -> void:
+	var start_pose: Array[Transform3D] = _capture_skeleton_pose()
+	stop_host_simulation()
+	_begin_pose_blend(start_pose, duration)
+
+func is_pose_blending() -> bool:
+	return _pose_blend_active
 
 func capture_quantized_pose() -> PackedInt32Array:
 	if simulator.is_simulating_physics() and not _latest_host_pose.is_empty():
@@ -176,6 +192,9 @@ func push_settled_pose(sequence: int, host_time_ms: int, data: PackedInt32Array)
 	return true
 
 func end_remote_pose() -> void:
+	_pose_blend_active = false
+	_pose_blend_start.clear()
+	_pose_blend_target.clear()
 	_remote_active = false
 	_remote_samples.clear()
 	set_process(false)
@@ -184,6 +203,13 @@ func end_remote_pose() -> void:
 	simulator.active = true
 	top_level = false
 	transform = Transform3D.IDENTITY
+
+func end_remote_pose_with_blend(duration: float, final_pose: PackedInt32Array) -> void:
+	if valid_pose(final_pose):
+		_apply_pose(final_pose, final_pose, 0.0)
+	var start_pose: Array[Transform3D] = _capture_skeleton_pose()
+	end_remote_pose()
+	_begin_pose_blend(start_pose, duration)
 
 func valid_pose(data: PackedInt32Array) -> bool:
 	if data.size() != EXPECTED_PHYSICAL_BONES * POSE_VALUES_PER_BONE:
@@ -202,6 +228,9 @@ func _has_valid_bones() -> bool:
 	return true
 
 func _process(_delta: float) -> void:
+	if _pose_blend_active:
+		_process_pose_blend(_delta)
+		return
 	if not _remote_active or _remote_samples.is_empty():
 		return
 	var render_time: float = Time.get_ticks_msec() / 1000.0 - TUNING.RAGDOLL_INTERP_DELAY_S
@@ -230,6 +259,50 @@ func _enforce_hips_sync_tolerance() -> void:
 	_apply_pose(latest_pose, latest_pose, 0.0)
 	_remote_samples.clear()
 	_remote_samples.append(latest)
+
+func _capture_skeleton_pose() -> Array[Transform3D]:
+	var poses: Array[Transform3D] = []
+	poses.resize(skeleton.get_bone_count())
+	for bone_index: int in range(skeleton.get_bone_count()):
+		poses[bone_index] = skeleton.get_bone_global_pose(bone_index)
+	return poses
+
+func _begin_pose_blend(start_pose: Array[Transform3D], duration: float) -> void:
+	if start_pose.size() != skeleton.get_bone_count() or duration <= 0.0:
+		skeleton.reset_bone_poses()
+		set_process(_remote_active)
+		return
+	_pose_blend_start = start_pose
+	_pose_blend_target = _capture_skeleton_pose()
+	_pose_blend_duration = duration
+	_pose_blend_elapsed = 0.0
+	_pose_blend_active = true
+	set_process(true)
+	debug_hub.call("log", &"limp", "Rig %s started get-up blend." % get_parent().name)
+
+func _process_pose_blend(delta: float) -> void:
+	_pose_blend_elapsed += delta
+	var weight: float = clampf(_pose_blend_elapsed / _pose_blend_duration, 0.0, 1.0)
+	var eased_weight: float = weight * weight * (3.0 - 2.0 * weight)
+	for bone_index: int in range(_pose_blend_start.size()):
+		var start: Transform3D = _pose_blend_start[bone_index]
+		var target: Transform3D = _pose_blend_target[bone_index]
+		var rotation: Quaternion = start.basis.get_rotation_quaternion().slerp(
+			target.basis.get_rotation_quaternion(),
+			eased_weight
+		)
+		skeleton.set_bone_global_pose(
+			bone_index,
+			Transform3D(Basis(rotation), start.origin.lerp(target.origin, eased_weight))
+		)
+	if weight < 1.0:
+		return
+	skeleton.reset_bone_poses()
+	_pose_blend_active = false
+	_pose_blend_start.clear()
+	_pose_blend_target.clear()
+	set_process(_remote_active)
+	debug_hub.call("log", &"limp", "Rig %s completed get-up blend." % get_parent().name)
 
 func _apply_pose(first: PackedInt32Array, second: PackedInt32Array, weight: float) -> void:
 	for bone_number: int in range(EXPECTED_PHYSICAL_BONES):

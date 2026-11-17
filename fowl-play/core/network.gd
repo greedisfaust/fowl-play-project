@@ -308,9 +308,18 @@ func stop_ragdoll_spike(owner_id: int, reason: String = "manual") -> bool:
 	var player: Node = movement_players.get(owner_id)
 	if not is_instance_valid(player) or not bool(player.get("is_limp")):
 		return false
+	var rig: Node3D = player.get("rig") as Node3D
+	if rig == null:
+		return false
+	var final_pose: PackedInt32Array = rig.call("capture_quantized_pose")
 	player.call("stop_host_limp")
 	if peer != null:
-		_ragdoll_end.rpc(owner_id, int(_ragdoll_epochs.get(owner_id, 0)), player.get("global_position"))
+		_ragdoll_end.rpc(
+			owner_id,
+			int(_ragdoll_epochs.get(owner_id, 0)),
+			player.get("global_position"),
+			final_pose
+		)
 	_debug_log("Ragdoll spike stopped for peer %d (%s)" % [owner_id, reason])
 	return true
 
@@ -380,12 +389,12 @@ func _ragdoll_settled(owner_id: int, epoch: int, sequence: int, host_time_ms: in
 		ragdoll_settled_received += 1
 
 @rpc("authority", "call_remote", "reliable", 0)
-func _ragdoll_end(owner_id: int, epoch: int, standing_at: Vector3) -> void:
+func _ragdoll_end(owner_id: int, epoch: int, standing_at: Vector3, final_pose: PackedInt32Array) -> void:
 	if not validate_rpc(TUNING.PEER_ID_HOST) or epoch != int(_ragdoll_epochs.get(owner_id, 0)):
 		return
 	_pending_ragdoll_starts.erase(owner_id)
 	var player: Node = movement_players.get(owner_id)
-	if is_instance_valid(player) and bool(player.call("end_remote_limp", epoch, standing_at)):
+	if is_instance_valid(player) and bool(player.call("end_remote_limp", epoch, standing_at, final_pose)):
 		_debug_log("Ragdoll end received for peer %d epoch %d" % [owner_id, epoch])
 
 func _sync_active_ragdolls(peer_id: int) -> void:

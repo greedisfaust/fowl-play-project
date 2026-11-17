@@ -11,13 +11,16 @@ Base docs: [overview](../PROJECT_OVERVIEW.md), [project state](../PROJECT_STATE.
 - VERIFIED HEADLESS: M5 host-owned 3.5 s settled / 6 s hard-cap recovery, floor placement under final hips, cleanup, and reliable host/client end pass focused tests.
 - USER VERIFIED: automatic recovery and final placement look correct in game.
 - VERIFIED HEADLESS: 10 selective non-neighboring forearm/thigh/shin-to-torso contact pairs replace the all-exempt baseline; focused exception-map, M4 paired, and four-ragdoll 7-second profile checks pass. Visual clipping and jitter still need a playtest.
-- PARTIAL: recovery currently snaps from ragdoll to the standing rest pose/camera. The get-up blend, wall-clearance search, and full G8 forced-exit audit remain.
-- USER NEXT: test several ragdoll falls on host and client; inspect limb/torso overlap and any jitter or explosions.
-- AGENT NEXT: implement the ~0.5 s ragdoll-to-standing visual/camera blend after the playtest.
+- VERIFIED HEADLESS: a 0.5 s host/client pose blend and owner-camera blend now run after reliable limp end; movement remains locked until the blend completes.
+- REVERTED AFTER USER FEEDBACK: the owner limp camera must continue following the simulated head orientation for the intended simulated-FPS view; stabilizing the camera alone made the head feel stationary. Head stability must be fixed in the physical bone/joint tuning instead.
+- USER VERIFIED: physical head tuning removed the rapid left-right head oscillation while preserving the simulated-FPS camera following the head.
+- PARTIAL: wall-clearance search and the full G8 forced-exit audit remain. Visual smoothness, selective self-contact, and weak-laptop cost still need user review.
+- USER NEXT: author and visually review the first face-up recovery clip before creating the face-down and side variants.
+- AGENT NEXT: audit G8 forced exits after the visual playtest.
 
 ## Exact next step
 
-USER: in host/client playtest, use `ragdoll_spike_start 1` and repeat for the client's peer ID. Compare arm/leg torso clipping against the old all-exempt behavior, and watch for jitter, joint separation or unusual settling. AGENT: tune the selective contact pairs only if the visual and stability result warrants it; then continue the get-up blend and G8 audit.
+USER: in host/client playtest, use `ragdoll_spike_start 1` and repeat for the client's peer ID. Compare arm/leg torso clipping against the old all-exempt behavior, and watch the 0.5 s get-up pose/camera blend for jitter, joint separation, unusual settling, or a snap at the end. AGENT: audit G8 forced exits after the playtest and tune selective contact pairs only if the visual and stability result warrants it.
 
 ## Historical rig authoring checkpoints
 
@@ -198,3 +201,12 @@ M4 FINAL CHECK (2026-11-17): added late join after the host has already sent its
 M5 FIRST RECOVERY SLICE (2026-11-17, PARTIAL): `player/player.gd` runs the sole host-owned free-tumbling timer. At 3.5 s plus all 11 bones slow, or at the 6 s cap, it calls `network.stop_ragdoll_spike()` with a logged reason. That single path captures final physical hips, raycasts down against static/elevator floors, plants the standing capsule at the hips X/Z and floor Y+0.03, stops simulation, restores collisions/camera, and sends the final position through reliable `_ragdoll_end`. If there is no walkable hit within 2.5 m below the hips, it keeps the old standing Y and warns; wall-clearance search remains. The M4 long-running network/profile tests disable automatic recovery explicitly. `tests/run_m5_recovery_checks.ps1` passes host deadline/settled/floor/cleanup checks and a two-process automatic end check; the full M4 paired suite passed after these changes. USER NEXT: playtest host and client `ragdoll_spike_start 1`, allow automatic return, inspect foot placement, walls, and camera snap. AGENT NEXT: implement ~0.5 s ragdoll-to-standing pose/camera blend, then audit G8 forced exits. M4 40 ms smoothing feel and weak-laptop cost are still unverified. No scene files changed in this slice.
 
 M4 SELF-CONTACT POLISH (2026-11-17, PARTIAL): user reported both arms/legs can overlap the torso and approved a selective-contact trial. `ragdoll/self_collision_policy.gd` configures 10 non-neighboring limb-to-Hips/Chest pairs; `player_rig.gd` and isolated `player_ragdoll_test.gd` share it. Connected shoulder/hip/elbow/knee pairs and other same-rig pairs remain exempt. `m4_limp_handoff_test.gd` asserts a forearm/chest and shin/hips contact plus shoulder/knee exemptions. Focused check, full two-process M4 suite, and four-ragdoll 7-second 15/30/60 Hz profiles pass without script errors. Four-ragdoll CPU was about 25–27% of one core versus about 23% standing in this run; these local noisy figures do not prove a weak-laptop budget or visual improvement. USER NEXT: repeat drops in both windows and judge clipping/jitter. No scene files edited.
+
+GET-UP BLEND (2026-11-17, VERIFIED HEADLESS): added `GET_UP_BLEND_SECONDS = 0.5` to the tuning source. `player_rig.gd` captures the final full-skeleton pose before simulation cleanup and blends every bone to the authored rest pose after host or remote end. `player.gd` keeps movement and interaction acceptance locked during `is_recovering`, blends the local camera to the standing Head transform, and exposes `player/<id>/recovering`. The M4 handoff, M5 recovery, and paired automatic-end checks pass. USER NEXT: visually confirm the transition and camera return in both windows; wall clearance and G8 forced exits remain.
+
+RECOVERY SYNC FIX (2026-11-17, VERIFIED HEADLESS): the reliable `_ragdoll_end` event now includes the host's final quantized pose. Remote peers apply that authoritative pose as the recovery blend start instead of relying on the latest local interpolation sample. Host-target and client-target paired M4 checks both pass and require the remote `is_pose_blending` phase. The current blend remains a temporary rest-pose interpolation and is visually awkward; the recommended next animation slice is an editor-authored `AnimationPlayer` get-up clip selected by a replicated recovery variant, with procedural fallback only for unrecognized poses.
+
+### Session 2026-11-17 — get-up blend
+- Did: implemented and headless-verified the 0.5 s host/client ragdoll-to-standing pose blend and owner-camera return; added the `recovering` debug watch and updated state/debug documentation.
+- Verified: `run_m5_recovery_checks.ps1` passed M5 recovery plus paired M4 automatic end; the standalone M4 handoff check exited 0 without script errors.
+- Stopped at: user visual confirmation of get-up motion, selective self-contact, 40 ms interpolation feel, and wall behavior; G8 forced-exit audit is next.

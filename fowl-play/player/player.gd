@@ -12,6 +12,7 @@ const LIMP_LOOK_PITCH_LIMIT: float = deg_to_rad(75.0)
 var input_peer_id: int = 0
 var is_local_player: bool = true
 var is_limp: bool = false
+var is_recovering: bool = false
 var limp_epoch: int = 0
 
 @onready var head: Node3D = $Head
@@ -37,10 +38,14 @@ var accepted_position: Vector3
 var _pitch_radians: float = 0.0
 var _limp_look_yaw: float = 0.0
 var _limp_look_pitch: float = 0.0
+var _recovery_elapsed_s: float = 0.0
+var _recovery_camera_start: Transform3D
+var _recovery_camera_target: Transform3D
 var _debug_command_name: StringName
 var _debug_speed_watch_name: StringName
 var _debug_floor_watch_name: StringName
 var _debug_limp_watch_name: StringName
+var _debug_recovering_watch_name: StringName
 var _debug_limp_elapsed_watch_name: StringName
 var _debug_camera_follow_watch_name: StringName
 
@@ -61,6 +66,7 @@ func _ready() -> void:
 	_debug_speed_watch_name = StringName("player/%s/speed_mps" % name)
 	_debug_floor_watch_name = StringName("player/%s/on_floor" % name)
 	_debug_limp_watch_name = StringName("player/%s/limp" % name)
+	_debug_recovering_watch_name = StringName("player/%s/recovering" % name)
 	_debug_limp_elapsed_watch_name = StringName("player/%s/limp_elapsed_s" % name)
 	_debug_camera_follow_watch_name = StringName("player/%s/camera_following_ragdoll" % name)
 	debug_hub.call(
@@ -76,6 +82,7 @@ func _ready() -> void:
 			return is_on_floor()
 	)
 	debug_hub.call("watch", _debug_limp_watch_name, func() -> bool: return is_limp)
+	debug_hub.call("watch", _debug_recovering_watch_name, func() -> bool: return is_recovering)
 	debug_hub.call("watch", _debug_limp_elapsed_watch_name, func() -> float: return _limp_elapsed_s)
 	debug_hub.call("watch", _debug_camera_follow_watch_name, func() -> bool: return is_local_player and is_limp and camera.top_level)
 	debug_hub.call(
@@ -91,7 +98,7 @@ func _ready() -> void:
 	network.call("apply_pending_ragdoll_start", input_peer_id, self)
 
 func _exit_tree() -> void:
-	if is_limp and is_instance_valid(rig):
+	if (is_limp or is_recovering) and is_instance_valid(rig):
 		rig.call("stop_host_simulation")
 	if is_instance_valid(network):
 		network.call("unregister_movement_player", input_peer_id, self)
@@ -102,6 +109,7 @@ func _exit_tree() -> void:
 	debug_hub.call("unwatch", _debug_speed_watch_name)
 	debug_hub.call("unwatch", _debug_floor_watch_name)
 	debug_hub.call("unwatch", _debug_limp_watch_name)
+	debug_hub.call("unwatch", _debug_recovering_watch_name)
 	debug_hub.call("unwatch", _debug_limp_elapsed_watch_name)
 	debug_hub.call("unwatch", _debug_camera_follow_watch_name)
 
@@ -133,6 +141,11 @@ func _process(delta: float) -> void:
 				_ragdoll_sequence += 1
 				network.call("publish_ragdoll_pose", input_peer_id, limp_epoch, _ragdoll_sequence, rig.call("capture_quantized_pose"))
 		return
+	if is_recovering:
+		_update_recovery_camera(delta)
+		if rig != null and not bool(rig.call("is_pose_blending")):
+			_finish_recovery()
+		return
 	if is_local_player:
 		_send_elapsed += delta
 		if _send_elapsed >= 1.0 / TUNING.MOVE_SEND_HZ:
@@ -148,7 +161,7 @@ func _process(delta: float) -> void:
 			head.rotation.x = snapshot.pitch
 
 func accept_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float) -> bool:
-	if is_limp:
+	if is_limp or is_recovering:
 		return false
 	var now: float = Time.get_ticks_msec() / 1000.0
 	if not _movement.accept(sequence, at, speed, yaw, pitch, now):
@@ -158,13 +171,13 @@ func accept_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pit
 	return true
 
 func receive_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float) -> void:
-	if is_limp:
+	if is_limp or is_recovering:
 		return
 	if not is_local_player:
 		_movement.push(sequence, at, speed, yaw, pitch, Time.get_ticks_msec() / 1000.0)
 
 func correct_movement(at: Vector3) -> void:
-	if is_limp:
+	if is_limp or is_recovering:
 		return
 	global_position = at
 	velocity = Vector3.ZERO
@@ -184,7 +197,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 func _physics_process(delta: float) -> void:
-	if is_limp:
+	if is_limp or is_recovering:
 		return
 	if not is_on_floor():
 		velocity.y -= TUNING.GRAVITY_MPS2 * delta
@@ -216,7 +229,7 @@ func _physics_process(delta: float) -> void:
 
 ## Internal host-only handoff. A later reliable limp event will invoke this.
 func begin_host_limp() -> bool:
-	if is_limp or rig == null or (network.get("peer") != null and not bool(network.get("is_host"))):
+	if is_limp or is_recovering or rig == null or (network.get("peer") != null and not bool(network.get("is_host"))):
 		return false
 	collision_layer = 0
 	collision_mask = 0
@@ -242,11 +255,12 @@ func stop_host_limp() -> void:
 	if not is_limp:
 		return
 	var recovery_position: Vector3 = _find_recovery_position()
-	rig.call("stop_host_simulation")
+	rig.call("stop_host_simulation_with_blend", TUNING.GET_UP_BLEND_SECONDS)
 	global_position = recovery_position
 	is_limp = false
+	is_recovering = true
 	_limp_elapsed_s = 0.0
-	_end_limp_camera()
+	_begin_recovery_camera()
 	velocity = Vector3.ZERO
 	collision_layer = 1 << (LAYERS.HEALTHY_PLAYERS - 1)
 	collision_mask = LAYERS.LAYER_MASK_HEALTHY_PLAYERS
@@ -273,7 +287,7 @@ func _find_recovery_position() -> Vector3:
 	return standing_at
 
 func begin_remote_limp(epoch: int, world_transform: Transform3D, initial_pose: PackedInt32Array) -> bool:
-	if is_limp or epoch <= limp_epoch or rig == null:
+	if is_limp or is_recovering or epoch <= limp_epoch or rig == null:
 		return false
 	if not bool(rig.call("begin_remote_pose", world_transform, initial_pose)):
 		return false
@@ -298,13 +312,14 @@ func receive_remote_settled_pose(epoch: int, sequence: int, host_time_ms: int, p
 		return false
 	return bool(rig.call("push_settled_pose", sequence, host_time_ms, pose))
 
-func end_remote_limp(epoch: int, standing_at: Vector3) -> bool:
+func end_remote_limp(epoch: int, standing_at: Vector3, final_pose: PackedInt32Array) -> bool:
 	if not is_limp or epoch != limp_epoch or rig == null or not standing_at.is_finite():
 		return false
-	rig.call("end_remote_pose")
+	rig.call("end_remote_pose_with_blend", TUNING.GET_UP_BLEND_SECONDS, final_pose)
 	global_position = standing_at
 	is_limp = false
-	_end_limp_camera()
+	is_recovering = true
+	_begin_recovery_camera()
 	velocity = Vector3.ZERO
 	collision_layer = 1 << (LAYERS.HEALTHY_PLAYERS - 1)
 	collision_mask = LAYERS.LAYER_MASK_HEALTHY_PLAYERS
@@ -335,6 +350,46 @@ func _begin_limp_camera() -> void:
 		rig.visible = true
 		rig.call("set_owner_head_visible", false)
 
+func _begin_recovery_camera() -> void:
+	_recovery_elapsed_s = 0.0
+	if not is_local_player:
+		return
+	rotate_y(_limp_look_yaw)
+	_pitch_radians = _limp_look_pitch
+	head.rotation.x = _pitch_radians
+	_recovery_camera_start = camera.global_transform
+	_recovery_camera_target = Transform3D(head.global_basis, head.global_position)
+	if rig != null:
+		rig.visible = true
+		rig.call("set_owner_head_visible", false)
+
+func _update_recovery_camera(delta: float) -> void:
+	_recovery_elapsed_s += delta
+	if not is_local_player:
+		return
+	var weight: float = clampf(_recovery_elapsed_s / TUNING.GET_UP_BLEND_SECONDS, 0.0, 1.0)
+	var eased_weight: float = weight * weight * (3.0 - 2.0 * weight)
+	var rotation: Quaternion = _recovery_camera_start.basis.get_rotation_quaternion().slerp(
+		_recovery_camera_target.basis.get_rotation_quaternion(),
+		eased_weight
+	)
+	camera.global_transform = Transform3D(
+		Basis(rotation),
+		_recovery_camera_start.origin.lerp(_recovery_camera_target.origin, eased_weight)
+	)
+
+func _finish_recovery() -> void:
+	is_recovering = false
+	if is_local_player:
+		camera.top_level = false
+		camera.transform = Transform3D.IDENTITY
+		if rig != null:
+			rig.call("set_owner_head_visible", true)
+			rig.visible = false
+	if focus != null:
+		focus.call("set_active", is_local_player)
+	debug_hub.call("log", &"limp", "Player %s finished get-up blend." % name)
+
 func _update_limp_camera(_delta: float) -> void:
 	if not is_local_player or rig == null:
 		return
@@ -344,18 +399,6 @@ func _update_limp_camera(_delta: float) -> void:
 	var look_yaw: Basis = Basis(Vector3.UP, _limp_look_yaw)
 	var look_pitch: Basis = Basis(Vector3.RIGHT, _limp_look_pitch)
 	camera.global_transform = Transform3D(eye_transform.basis * look_yaw * look_pitch, eye_transform.origin)
-
-func _end_limp_camera() -> void:
-	if not is_local_player:
-		return
-	rotate_y(_limp_look_yaw)
-	_pitch_radians = _limp_look_pitch
-	head.rotation.x = _pitch_radians
-	camera.top_level = false
-	camera.transform = Transform3D.IDENTITY
-	if rig != null:
-		rig.call("set_owner_head_visible", true)
-		rig.visible = false
 
 func _rotate_view(mouse_delta: Vector2) -> void:
 	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:

@@ -21,6 +21,7 @@ var _finished: bool = false
 var _checked_client_authority: bool = false
 var _client_camera_start_y: float = NAN
 var _saw_client_camera_follow: bool = false
+var _saw_client_recovery_blend: bool = false
 var _max_client_hips_error_m: float = 0.0
 
 func _initialize() -> void:
@@ -49,7 +50,7 @@ func _setup() -> void:
 func _process(_delta: float) -> bool:
 	if _finished or _arena == null:
 		return false
-	if _role == "host" and _stopped and Time.get_ticks_msec() - _started_at_ms > (4850 if _join_after_settled else 3350 if _late_join else 1850) and (not _auto_recovery or not bool((_arena.get_node("Players/1") as Node).get("is_limp"))):
+	if _role == "host" and _stopped and Time.get_ticks_msec() - _started_at_ms > (5500 if _join_after_settled else 4000 if _late_join else 2500) and (not _auto_recovery or (not bool((_arena.get_node("Players/1") as Node).get("is_limp")) and not bool((_arena.get_node("Players/1") as Node).get("is_recovering")))):
 		_finish(true, "host completed start/stop")
 		return false
 	var players: Node3D = _arena.get_node("Players") as Node3D
@@ -126,6 +127,9 @@ func _process(_delta: float) -> bool:
 				_saw_client_pose_move = true
 			if _join_after_settled and int(_network.get("ragdoll_settled_received")) >= 1:
 				_finish(true, "late client received already-settled pose")
+		elif bool(host_player.get("is_recovering")):
+			if bool(rig.call("is_pose_blending")):
+				_saw_client_recovery_blend = true
 		elif not is_nan(_first_client_hips_y) and _saw_client_pose_move:
 			if _max_client_hips_error_m > 0.251:
 				_finish(false, "client hips exceeded 0.25 m from latest host pose")
@@ -133,6 +137,8 @@ func _process(_delta: float) -> bool:
 				_finish(false, "late client did not receive reliable settled pose")
 			elif _target == "client" and not _saw_client_camera_follow:
 				_finish(false, "client owner camera did not follow the ragdoll")
+			elif not _saw_client_recovery_blend:
+				_finish(false, "client did not render the recovery blend")
 			else:
 				_finish(true, "client saw moving poses, camera follow, and reliable end")
 	return false
