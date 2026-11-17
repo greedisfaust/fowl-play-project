@@ -106,7 +106,7 @@ Hips (root)
 | Waist | Hips → Chest | Cone | ~25° swing, ~20° twist |
 
 - **Meshes:** rigid primitive meshes on `BoneAttachment3D` nodes (no skin weights, no Blender). Blocky low-poly look. The head has a **beak and eyes** as a rigid attachment (DECIDED, cosmetic only; does not change the skeleton).
-- **Skeleton authoring (OPEN, decide at the M4 gate):** (A) build the bones in the editor through the Skeleton3D inspector (RECOMMENDED to try first on a minimal skeleton); (B) if A is too painful, a **one-time `@tool` script** run in the editor that creates the bones, whose result is saved as a scene and the script then deleted (needs explicit approval); (C) Blender (non-goal unless approved).
+- **Skeleton authoring (DECIDED):** user chose manual Godot editor authoring to learn rigging/modeling directly. Begin with a minimal skeleton, then expand. User subsequently approved a one-time Godot EditorScript for only the initial Hips/Spine/Chest bones because the editor has no ordinary bone-add control. User subsequently extended approval to adding the remaining planned bones in small groups via editor helpers. Modeling and physics construction remain manual; no mesh/physics generator or Blender authorized. See [player rig design](PLAYER_RIG_DESIGN.md) for construction order and proposed proportions.
 - **Self-collision (RECOMMENDED, verify in the spike):** bones of the **same** ragdoll never collide with each other (collision exceptions or Jolt collision groups); bones of **different** ragdolls do.
 - **Mass (OPEN):** per-bone masses are decided in the Jolt spike.
 - **Node paths (stable contract):** the player scene root is named by peer id (`Players/<id>`) and exposes `Head`, `Head/Camera3D`, `Rig/Skeleton3D`, `NamePlate`, plus script properties `hands`, `head`, `state`, `combat`, `carrier`. **A Player node is never reparented** (it breaks every RPC path).
@@ -117,7 +117,7 @@ Hips (root)
 - WASD move, mouse look (pitch clamped ±85°), jump. Starting values are in §15.
 - Camera is on `Head`. The raycast for interaction is a child of the camera.
 - Escape releases the mouse (no pause); a click recaptures it.
-- While limp, the **owner's camera** follows the **smoothed hips** (owner's capsule position), smoothed, with mouse look added on top. A carried player **can still look around**. **RECOMMENDED:** limit camera roll, push the camera out of walls (short ray, mask in §13), no snapping when the head clips geometry. **DECIDED:** follow smoothed hips (owner's capsule position) rather than the head bone.
+- While limp, the **owner's camera** sits at the simulated head's eye point and inherits head rotation, with mouse look added on top. Relative mouse look is limited to **±75° yaw and ±75° pitch**, so the player cannot turn the camera behind the head. Hide only the owner's head geometry so the rest of the body stays visible. A carried player **can still look around**. **DECIDED (user playtest, 2026-11-17):** use the head for a first-person ragdoll view; the earlier smoothed-hips camera target looked down on the body and was rejected. Wall avoidance and comfort tuning remain for the camera pass.
 
 ## 9. Combat
 
@@ -152,9 +152,9 @@ Inputs are InputMap actions only (never raw keycodes). The full action table is 
 | State | Bones | Authoritative position | Camera (owner) | Exits |
 |---|---|---|---|---|
 | STANDING | animated (procedural legs) | capsule (owner) | first person | knockdown → GROUND |
-| GROUND | simulated | hips body, host-simulated | head bone, smoothed | pickup → CARRIED, timer+settled → RECOVERY |
-| CARRIED | hips pinned to carry anchor, limbs **dangle** (simulated) | carry anchor | head bone, mouse look still works | drop → GROUND, throw → THROWN, carrier forced-ends → GROUND |
-| THROWN | simulated with launch impulse | hips body, host-simulated | head bone | settles → GROUND |
+| GROUND | simulated | hips body, host-simulated | head eye point and rotation, mouse look | pickup → CARRIED, timer+settled → RECOVERY |
+| CARRIED | hips pinned to carry anchor, limbs **dangle** (simulated) | carry anchor | head eye point and rotation, mouse look still works | drop → GROUND, throw → THROWN, carrier forced-ends → GROUND |
+| THROWN | simulated with launch impulse | hips body, host-simulated | head eye point and rotation, mouse look | settles → GROUND |
 | RECOVERY | blend ragdoll → standing pose over ~0.5 s | capsule re-placed at hips ground position | blends back to first person | → STANDING |
 
 - **OPEN:** dangling limbs (above) feel more like the references; confirm.
@@ -227,7 +227,7 @@ Focus-based: a ray from the camera finds the target, the target highlights, the 
 **Ragdoll sync (DECIDED by the user): quantized bone poses.** The host simulates the ragdoll and sends each physical bone's position + rotation (quantized, with a timestamp) at `RAGDOLL_SEND_HZ` (`unreliable_ordered`) to all clients. Clients run no bone physics for remote ragdolls. Clients never fabricate launches. Limp begin/end/phase changes are reliable RPCs, plus one reliable "settled" pose when a body comes to rest.
 
 **Smoothness requirement (must):** the ragdoll must look smooth on the host and on every client.
-- The send rate is **not** the display rate. Clients render every frame and **interpolate by timestamp** between buffered snapshots, drawing the remote ragdoll slightly in the past (`RAGDOLL_INTERP_DELAY_S`, about two send intervals).
+- The send rate is **not** the display rate. Clients render every frame and **interpolate by timestamp** between buffered snapshots, drawing the remote ragdoll slightly in the past (`RAGDOLL_INTERP_DELAY_S`; currently 0.04 s at the 30 Hz default). If the displayed hips drift more than `HIPS_SYNC_TOLERANCE_M` from the newest host pose, apply that whole pose to keep the skeleton together.
 - **Default `RAGDOLL_SEND_HZ = 30`** (starting value; the spike picks the final number from 15 / 30 / 60 by measurement and by how it looks). Rough cost: 11 bones × ~10 B × 30 Hz × 3 clients ≈ 10 KB/s per limp player (estimate, measure it). Nothing is sent when no one is ragdolling or when the body is asleep.
 - On a lost or late packet: briefly extrapolate from the last velocity, then ease back to the next snapshot. A late packet must never move the pose backwards (ordered delivery + timestamp check).
 - The host sees the true simulation with no delay. Carried bodies stay responsive for the carrier (the carry anchor is followed locally, not waited on).
@@ -273,7 +273,7 @@ Focus-based: a ray from the camera finds the target, the target highlights, the 
 | `REACH_M` | 3.2 | pickup reach |
 | `INTERACT_REQUEST_INTERVAL_S` | 0.15 | M3 per-player host interaction request interval; tune in playtest |
 | `RAGDOLL_SEND_HZ` | 30 | bone-pose snapshots; spike picks final (15 / 30 / 60) |
-| `RAGDOLL_INTERP_DELAY_S` | ~0.07 | about two send intervals |
+| `RAGDOLL_INTERP_DELAY_S` | 0.04 | measured to keep latest-pose hips error below 0.25 m at 30 Hz in the M4 two-process test; visual smoothness requires recheck |
 | `BODY_SNAPSHOT_HZ` | 15 | props and other bodies (not ragdoll bones) |
 | `BODY_MAX_SPEED_MPS` | 20 | speed clamp |
 | `BODY_KILL_PLANE_Y_M` | −10 | return to last safe spot |
@@ -311,7 +311,7 @@ A scene-backed component with real nodes (palm, forearm, 4 fingers × 3 joints, 
 - Phase clock plus world-locked planted feet, step trigger when the body outruns a foot, landing prediction, speed-scaled swing arc, ground raycast once per step, turn-in-place and settle steps, air/landing handling, instant re-plant on teleport.
 - Paused while limp; on recovery blend ragdoll pose → planted feet under the final transform.
 - Budget: ≤ 0.2 ms per visible player, ≤ 4 ray queries per step, LOD for remote players.
-- **Gate:** bird (digitigrade) vs humanoid legs is decided **before the M4 ragdoll spike**, because it changes the skeleton and the knee/ankle joints.
+- **Gate resolved:** user chose humanoid legs before M4. Use thigh/shin/foot chains with human knee and ankle placement; bird-style legs are not the current plan.
 
 ## 18. Props and devices (extensibility contract)
 
@@ -431,13 +431,13 @@ res://
 - A parried charged punch makes the attacker limp; a parried jab is recoil only.
 - Movement authority: owner-authoritative standing movement with host sanity checks was approved at the M3 gate (2026-11-16). Host validates and relays owner snapshots; remote peers interpolate. Gameplay outcomes remain host-authoritative.
 - Owner's legs are hidden when looking down (pitch below horizontal); when looking forward again they fade from hidden to visible via a smooth opacity slide (no instant snap).
-- Camera follow target while limp: **smoothed hips** (owner's capsule position) is the follow target.
+- Camera follow target while limp: **simulated head eye point** with head rotation and additive mouse look (user changed the earlier hips decision after visual playtest on 2026-11-17).
 - Wind-up movement: **full speed** (no slowdown) during charge; **no early-release fizzle** (releasing before 1.0 s cancels with no punch and no penalty).
 - Beak and eyes are a rigid attachment on the head (cosmetic only; does not change the skeleton).
 - A player node is never reparented (it breaks every RPC path).
 
 **Open (ask before building):**
-1. Skeleton authoring: inspector vs a one-time tool script.
+1. Skeleton authoring gate resolved: manual Godot editor authoring selected; no longer open.
 2. Dangling limbs while carried (confirm).
 3. Whether punches affect already-limp bodies.
 4. Whether to include impact/wall-slam feedback.

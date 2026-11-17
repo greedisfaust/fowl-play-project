@@ -15,6 +15,7 @@ security secret.
 | hands | core/hands.gd | reach, hover, guard, shake, color changes |
 | legs | core/legs.gd | step, land, settle, air movement |
 | props | core/props.gd | spawn, grab, throw, interact, state |
+| ragdoll | ragdoll/player_ragdoll_test.gd | isolated physical-bone test start/stop |
 | interact | player/focus.gd and interaction/interactable.gd | focus changes, accepted/rejected interaction requests |
 | player | player/player.gd | movement state and local camera input |
 
@@ -31,6 +32,7 @@ security secret.
 | `interact/device/<name>/active` | interaction/debug_use_device.gd | Toggle state of the M1 test USE device. |
 | `props/<name>/pickup_allowed` | props/prop.gd | Whether the prop's assigned profile allows pickup. |
 | `hands/<name>/state` | hands/hand.gd | World mode, hover, guard, carry, limp, and speed state. |
+| `ragdoll_test.simulating` | ragdoll/player_ragdoll_test.gd | Whether the isolated PhysicalBoneSimulator3D is simulating. |
 
 ## Commands
 
@@ -53,6 +55,9 @@ Automated checks cover Enter/Run signal wiring, category toggles, feedback with 
 | `net_disconnect` | none | no | no | Disconnects this instance and clears its players. On the host, ends the session for clients. Use net_host/net_join afterward. |
 | `interact_use_<name>` | none | no | no | Submits the local player's focused interaction to the host. Remote-player commands reject locally. Submission is not acceptance; see interact logs. |
 | `hand_status_<name>` | none | no | no | Reports this hand's cosmetic state. |
+| `ragdoll_test_start` | none | no | yes | Starts the isolated player ragdoll simulation. |
+| `ragdoll_test_stop` | none | no | yes | Stops the isolated player ragdoll simulation. |
+| `ragdoll_test_reset` | none | no | yes | Stops the isolated simulation and restores the skeleton rest pose. |
 | `hand_pose_<name>` | idle / point / guard / limp | no | no | Local cosmetic pose preview; idle and point have separate adjustable thumb poses. Guard blends finger curl, thumb closure and PoseRoot lift/rotation. Idle restores relaxed offsets; limp overrides guard. Requires a running scripted hand instance. |
 
 ## Playtest "what you should see" log
@@ -114,3 +119,23 @@ M2 hand names: the first instance retains its node-name command/watch suffix. Co
 - Playtest: host and join, walk the client near TestUseDevice, aim at it, and press E. Both watches should switch together; the client log should say `Interaction accepted peer=<id> action=use`. Toggle again from the host and compare. Leave the device on, disconnect/rejoin the client, and confirm its watch returns to true.
 - A wall blocks focus and host validation. Disabled targets and pickup-disabled props reject before emitting interaction. GRAB still only logs acceptance; physical carry and prop physics replication remain deferred.
 - Tests cover the saved-scene focus command, state/action/reach/occlusion rejection, separate-process client requests and reliable results, and current device state on late join/reconnect.
+
+### M4 live rig preparation
+
+Once `res://ragdoll/player_rig.gd` is attached to the visual Rig root, `rig/<player-id>/physical_bones` reports the number of physical bones prepared for that Player. Expect 11, with `Rig <player-id> prepared 11 dormant physical bones; 10 selective self-contact pairs.` in the ragdoll log. A different count emits a warning. The component stops simulation and clears physical-bone collision layers/masks while standing. During limp, 10 non-neighboring forearm/thigh/shin-to-torso pairs may contact; connected joints and remaining same-ragdoll pairs stay exempt. The isolated `ragdoll_test_*` commands use the same policy. Run `tests/run_ragdoll_collision_checks.ps1 -GodotExecutable <path>` to check the exception map; visual clipping and jitter still need an in-game drop test.
+
+`player/<player-id>/limp` reports the handoff state. The host-only `begin_host_limp()` and `stop_host_limp()` methods are exercised by `tests/m4_limp_handoff_test.gd`. `limp` logs the two transitions. During the handoff test, the Player root remains fixed while the rig simulates as a top-level node; capsule collisions are off. Stopping restores standing collisions and the rest pose at the final hips position on walkable ground.
+
+### M4 replicated ragdoll spike
+
+The host can use `ragdoll_spike_start <peer_id>` and `ragdoll_spike_stop <peer_id>` as temporary cheat commands. They enter/leave the same host-owned handoff as the internal test, send reliable begin/end events, and stream quantized physical-bone poses at `RAGDOLL_SEND_HZ` while active. The owner cannot issue these commands from a client. `player/<peer_id>/limp` changes on both peers; `rig/<peer_id>/physical_bones` stays at 11. The start and end appear in `limp` and `net` logs. The two-process check in `tests/run_m4_ragdoll_checks.ps1` exercises both host-owned and client-owned targets and confirms that a client receives changing bone poses.
+
+`net/ragdoll_pose_sent` counts streamed pose packets on the host and `net/ragdoll_pose_received` counts accepted snapshots on each client. They reset when a network session shuts down. These are packet counts, not bandwidth or quality measurements.
+
+Playtest with two windows: host in one, join from the other, then on the **host** enter `ragdoll_spike_start 1`. The client should see the host body fall, while the host's camera sits at its head and rotates with it; mouse look still works but stops at ±75° yaw and pitch relative to the head. The owner should see the body but not the inside of the head or face. The host now recovers automatically after at least 3.5 s when every bone is slow, or by 6 s regardless; `ragdoll_spike_stop 1` forces the same recovery early. Repeat with the client ID shown by `net/roster`. `player/<peer_id>/camera_following_ragdoll` is true only on the limp owner's machine; `player/<peer_id>/limp_elapsed_s` reports the host timer. The host sends a reliable final pose after all 11 bodies remain slow for 0.35 s; `net/ragdoll_settled_sent/received` count those events. `net/ragdoll_pose_data_bytes_sent` excludes RPC and ENet overhead. The capsule returns at the final hips position on the floor, and the reliable end event gives clients that position. The ~0.5 s get-up pose/camera blend, wall-clearance search, and combat trigger are still pending; recovery currently snaps to the standing pose.
+
+`tests/run_m4_ragdoll_checks.ps1` now covers host/client targets, a mid-limp late join, a reliable settled pose, G2 latest-snapshot hips error, and wire rates at 15/30/60 Hz. `tests/run_m4_ragdoll_profile.ps1` runs four host ragdolls at those rates plus a standing baseline and reports application pose data, Godot physics timing, and process CPU. Its host-only payload count is a lower-bound estimate of network use; the two-process `host_wire_Bps` output uses Godot ENet's total-sent-data statistic and includes background game traffic.
+
+### M5 recovery checkpoint
+
+Run `tests/run_m5_recovery_checks.ps1 -GodotExecutable <path>` for the host timer, floor placement, cleanup, and two-process automatic end event. The `limp` log says `Player <id> recovered at <position>`; the `net` log says `Ragdoll spike stopped for peer <id> (settled|hard cap|manual)`. If no walkable static/elevator floor is found within 2.5 m below the hips, a `limp` warning reports fallback to the previous standing height.

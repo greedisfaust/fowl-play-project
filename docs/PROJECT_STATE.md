@@ -2,9 +2,9 @@
 
 **Status:** D0, M0, and M1 interaction/prop slices verified. Console overflow fix user-playtested. M2 hands has started with the scene-backed hand API.
 
-## Last verified (2026-11-16)
+## Last verified (2026-11-17)
 
-- Current branch: `features/multiplayer`.
+- Current branch: `features/player-rig-and-physics-implementation` (M4 preparation). Multiplayer implementation and verification are committed in its history: 0533d52, 773e42c; starting HEAD 31b5395.
 - Godot 4.7 project: `fowl-play/`, using Jolt Physics, Forward+, and D3D12.
 - `fowl-play/project.godot` contains the project settings, input actions, and four autoload entries.
 - Foundation scripts exist in `fowl-play/core/`: `layers.gd`, `tuning.gd`, `network.gd`, and `debug_hub.gd`.
@@ -24,17 +24,17 @@
 | M1 Interaction + one prop | Interactable component, focus/highlight, one USE device, one GRAB prop | Verified: host/offline focus/use/grab playtest; reusable prop scene/profile saved |
 | M2 Hands | Scene-backed hand + finger scenes, first-person + world modes | In progress: hand/finger scenes and pose preview verified; player first-person/world integration pending; visual proposal in HAND_DESIGN.md |
 | M3 Networking slice 1 | Movement authority gate, roster, remote smoothing, intent RPC, validation helper | Gate approved; first standing movement snapshot/validation/interpolation slice implemented. Two-process movement tests pass; user verified movement works and looks smooth in two instances. Remaining M3 work deferred to subsequent slices. |
-| M4 Ragdoll spike | Skeleton, 11 physical bones, Jolt joints, sync measurements at 15/30/60 Hz | Not started |
-| M5 Limp lifecycle | Knockdown → ground → recovery (G1–G3, G8) | Not started |
+| M4 Ragdoll spike | Skeleton, 11 physical bones, Jolt joints, sync measurements at 15/30/60 Hz | User verified both peers see the ragdoll and approved the head camera/look limit. Two-process checks pass for host/client targets, mid-limp and already-settled late joins, reliable settled pose, and latest-snapshot hips error <0.25 m with 40 ms interpolation. One-client host ENet send rates at 15/30/60 Hz were roughly 4–7/8–12/21–22 KB/s across runs (natural settling and other game traffic affect totals). A new 10-pair selective self-contact policy passes exception-map, multiplayer, and four-ragdoll 7-second headless checks; its visible effect and weak-laptop cost await user review. 30 Hz remains the default. |
+| M5 Limp lifecycle | Knockdown → ground → recovery (G1–G3, G8) | PARTIAL: host timer recovers after 3.5 s plus slow bones or at 6 s hard cap. Host plants capsule under final hips on walkable floor and sends the standing position reliably to clients; focused and paired headless checks pass. Get-up pose/camera blend, wall-clearance search, forced-exit cleanup audit, and user visual playtest remain. |
 | M6 Carry and throw | Props and limp bodies, auto-fire throw, dangling limbs | Not started |
 | M7 Combat | Jab/recoil, charged punch, lunge, parry outcomes | Not started |
 | M8 Procedural legs | Cosmetic legs, zero network traffic | Not started |
-| M9 Camera + owner view | Camera follow target, owner legs visibility | Not started |
+| M9 Camera + owner view | Camera follow target, owner legs visibility | Limp camera follows the simulated head as an M4 integration precursor; the owner's head geometry is hidden and body visible. Visual comfort, wall avoidance and final camera transitions remain. |
 | M10 Hardening | Cleanup matrix, weak-laptop budget, 4-player soak | Not started |
 
 ## Open decisions (from PROJECT_OVERVIEW.md §24)
 
-1. Skeleton authoring: inspector vs one-time tool script.
+1. Skeleton authoring resolved: manual Godot editor authoring, with humanoid legs.
 2. Dangling limbs while carried.
 3. Whether punches affect already-limp bodies.
 4. Whether to include impact/wall-slam feedback.
@@ -53,5 +53,7 @@ Late join is decided: allowed during the rest of a day, not during casino/elevat
 - The gameplay loop overview is background design material, not the current technical authority.
 
 ## Next action
+
+Current: the 17-bone visual rig is mounted under Player, and the user verified standing host/client visibility and movement. The 11-body ragdoll has host-owned debug start/stop, client-rendered quantized poses, a reliable settled pose, late-join state, and a user-approved head camera. M4 automation and local 15/30/60 Hz profiling pass. M5 timer, floor placement and reliable automatic recovery end pass headless checks; the standing transition currently snaps. Next: user checks recovery visuals and 40 ms interpolation smoothness, then implement the ~0.5 s get-up pose/camera blend and audit forced exits. Weak-laptop CPU profiling remains. See [player rig design](PLAYER_RIG_DESIGN.md) and [current rig session](sessions/features-player-rig-and-physics-implementation.md). The paragraph below is a historical multiplayer handoff and is superseded by the current branch/history above.
 
 USER VERIFIED: two-instance movement works and looks smooth. Host-published roster and three-process late-join/reconnect checks now pass. USER VERIFIED: roster/late-join/disconnect/rejoin checklist works. USER VERIFIED: host/client device use and client device state after reconnect (active=true). Next: user checkpoint of the multiplayer slice, then M4 skeleton-authoring preparation. Remaining M3 hand integration and gameplay-dependent validation stay deferred; M3 is not fully complete. Reliable host-validated interaction intents now pass automation, including action/state/reach/obstruction/cooldown rejection and late-join state. See sessions/features-multiplayer.md. Movement rejection-counter and falling-with-console checks were not separately confirmed. Movement authority was approved. M2 was committed as d722c96; remaining hand integration/polish is deferred. Current checkout is features/multiplayer, recovered from the M2 baseline with user authorization; older branches remain intact. First M3 movement changes are uncommitted. Keep carry/throw deferred to M6.

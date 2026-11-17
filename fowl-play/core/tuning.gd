@@ -45,7 +45,7 @@ const NETWORK_TICK_RATE_HZ: int = 60
 const NETWORK_PEER_TIMEOUT_S: float = 2.0
 
 const RAGDOLL_SEND_HZ: int = 30
-const RAGDOLL_INTERP_DELAY_S: float = 0.07
+const RAGDOLL_INTERP_DELAY_S: float = 0.04
 const BODY_SNAPSHOT_HZ: int = 15
 const BODY_MAX_SPEED_MPS: float = 20.0
 const BODY_KILL_PLANE_Y_M: float = -10.0
