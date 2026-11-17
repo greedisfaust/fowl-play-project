@@ -312,13 +312,16 @@ func stop_ragdoll_spike(owner_id: int, reason: String = "manual") -> bool:
 	if rig == null:
 		return false
 	var final_pose: PackedInt32Array = rig.call("capture_quantized_pose")
-	player.call("stop_host_limp")
+	var recovery_variant: StringName = rig.call("get_recovery_variant")
+	if not bool(player.call("stop_host_limp", recovery_variant)):
+		return false
 	if peer != null:
 		_ragdoll_end.rpc(
 			owner_id,
 			int(_ragdoll_epochs.get(owner_id, 0)),
 			player.get("global_position"),
-			final_pose
+			final_pose,
+			recovery_variant
 		)
 	_debug_log("Ragdoll spike stopped for peer %d (%s)" % [owner_id, reason])
 	return true
@@ -389,12 +392,18 @@ func _ragdoll_settled(owner_id: int, epoch: int, sequence: int, host_time_ms: in
 		ragdoll_settled_received += 1
 
 @rpc("authority", "call_remote", "reliable", 0)
-func _ragdoll_end(owner_id: int, epoch: int, standing_at: Vector3, final_pose: PackedInt32Array) -> void:
+func _ragdoll_end(
+	owner_id: int,
+	epoch: int,
+	standing_at: Vector3,
+	final_pose: PackedInt32Array,
+	recovery_variant: StringName
+) -> void:
 	if not validate_rpc(TUNING.PEER_ID_HOST) or epoch != int(_ragdoll_epochs.get(owner_id, 0)):
 		return
 	_pending_ragdoll_starts.erase(owner_id)
 	var player: Node = movement_players.get(owner_id)
-	if is_instance_valid(player) and bool(player.call("end_remote_limp", epoch, standing_at, final_pose)):
+	if is_instance_valid(player) and bool(player.call("end_remote_limp", epoch, standing_at, final_pose, recovery_variant)):
 		_debug_log("Ragdoll end received for peer %d epoch %d" % [owner_id, epoch])
 
 func _sync_active_ragdolls(peer_id: int) -> void:
@@ -435,6 +444,16 @@ func _on_peer_connected(peer_id: int) -> void:
 
 func _on_peer_disconnected(peer_id: int) -> void:
 	_interaction_times.erase(peer_id)
+	# G8 forced-exit cleanup: if a limp player disconnects, broadcast the
+	# reliable end event to the remaining clients so their limp bodies
+	# complete a get-up blend instead of vanishing silently. The host
+	# restores the departing player's rig locally before the arena despawns
+	# the player node. This runs before the epoch is erased so the end RPC
+	# carries the correct epoch.
+	if is_host and _ragdoll_epochs.has(peer_id):
+		var player: Node = movement_players.get(peer_id)
+		if is_instance_valid(player) and bool(player.get("is_limp")):
+			stop_ragdoll_spike(peer_id, "disconnect")
 	_pending_ragdoll_starts.erase(peer_id)
 	_ragdoll_epochs.erase(peer_id)
 	connected_peers.erase(peer_id)

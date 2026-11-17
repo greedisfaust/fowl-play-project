@@ -17,11 +17,13 @@ var _saw_client_pose_move: bool = false
 var _client_max_sequence: int = -1
 var _client_lowest_hips_y: float = INF
 var _stopped: bool = false
+var _stopped_at_ms: int = 0
 var _finished: bool = false
 var _checked_client_authority: bool = false
 var _client_camera_start_y: float = NAN
 var _saw_client_camera_follow: bool = false
 var _saw_client_recovery_blend: bool = false
+var _saw_client_authored_recovery: bool = false
 var _max_client_hips_error_m: float = 0.0
 
 func _initialize() -> void:
@@ -50,7 +52,8 @@ func _setup() -> void:
 func _process(_delta: float) -> bool:
 	if _finished or _arena == null:
 		return false
-	if _role == "host" and _stopped and Time.get_ticks_msec() - _started_at_ms > (5500 if _join_after_settled else 4000 if _late_join else 2500) and (not _auto_recovery or (not bool((_arena.get_node("Players/1") as Node).get("is_limp")) and not bool((_arena.get_node("Players/1") as Node).get("is_recovering")))):
+	# Keep the server alive through the blend AND authored clip on its client.
+	if _role == "host" and _stopped and Time.get_ticks_msec() - _stopped_at_ms > 3000:
 		_finish(true, "host completed start/stop")
 		return false
 	var players: Node3D = _arena.get_node("Players") as Node3D
@@ -79,8 +82,9 @@ func _process(_delta: float) -> bool:
 				_finish(false, "host start rejected")
 				return false
 			_started_at_ms = Time.get_ticks_msec()
-		if _auto_recovery and _started_at_ms > 0 and not bool(host_player.get("is_limp")):
+		if _auto_recovery and not _stopped and _started_at_ms > 0 and not bool(host_player.get("is_limp")):
 			_stopped = true
+			_stopped_at_ms = Time.get_ticks_msec()
 		if _late_join and _started_at_ms > 0 and Time.get_ticks_msec() - _started_at_ms > 1700:
 			# Drive a deterministic settled state to verify the reliable final-pose
 			# path; natural settling is measured separately by the profile.
@@ -91,6 +95,7 @@ func _process(_delta: float) -> bool:
 				bone.angular_velocity = Vector3.ZERO
 		if not _auto_recovery and _started_at_ms > 0 and not _stopped and Time.get_ticks_msec() - _started_at_ms > (4500 if _join_after_settled else 3000 if _late_join else 1500):
 			_stopped = true
+			_stopped_at_ms = Time.get_ticks_msec()
 			var connection: ENetConnection = (_network.get("peer") as ENetMultiplayerPeer).host
 			_host_wire_bps = connection.pop_statistic(ENetConnection.HOST_TOTAL_SENT_DATA) / ((Time.get_ticks_msec() - _started_at_ms) / 1000.0)
 			if not bool(_network.call("stop_ragdoll_spike", target_id)):
@@ -130,7 +135,16 @@ func _process(_delta: float) -> bool:
 		elif bool(host_player.get("is_recovering")):
 			if bool(rig.call("is_pose_blending")):
 				_saw_client_recovery_blend = true
-		elif not is_nan(_first_client_hips_y) and _saw_client_pose_move:
+			if bool(rig.get("_pose_blend_active")):
+				var targets: Array = rig.get("_pose_blend_target")
+				var animation_player: AnimationPlayer = rig.get_node("RecoveryAnimationPlayer") as AnimationPlayer
+				var clip: Animation = animation_player.get_animation(rig.get("_pending_recovery_animation"))
+				var hips_track: int = clip.find_track(NodePath("Skeleton3D:Hips"), Animation.TYPE_POSITION_3D)
+				if targets[0].origin.distance_to(clip.position_track_interpolate(hips_track, 0.0)) > 0.001:
+					_finish(false, "client blended to standing instead of clip opening")
+			elif bool(rig.get("_recovery_animation_active")):
+				_saw_client_authored_recovery = true
+		elif not is_nan(_first_client_hips_y) and (_saw_client_pose_move or (_late_join and _client_max_sequence >= 3 and int(_network.get("ragdoll_settled_received")) >= 1)):
 			if _max_client_hips_error_m > 0.251:
 				_finish(false, "client hips exceeded 0.25 m from latest host pose")
 			elif _late_join and int(_network.get("ragdoll_settled_received")) < 1:
@@ -139,6 +153,8 @@ func _process(_delta: float) -> bool:
 				_finish(false, "client owner camera did not follow the ragdoll")
 			elif not _saw_client_recovery_blend:
 				_finish(false, "client did not render the recovery blend")
+			elif not _saw_client_authored_recovery:
+				_finish(false, "client did not play the authored get-up clip")
 			else:
 				_finish(true, "client saw moving poses, camera follow, and reliable end")
 	return false

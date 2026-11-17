@@ -52,6 +52,11 @@ const BODY_MAX_SPEED_MPS: float = 20.0
 const BODY_KILL_PLANE_Y_M: float = -10.0
 const HIPS_SYNC_TOLERANCE_M: float = 0.25
 
+## Wall clearance for ragdoll recovery placement.
+const WALL_CLEARANCE_MAX_RADIUS: float = 1.5
+const WALL_CLEARANCE_STEP: float = 0.15
+const WALL_CLEARANCE_ANGLE_COUNT: int = 8
+
 const MAX_FULL_RAGDOLLS: int = 4
 const MAX_AWAKE_BODIES: int = 70
 
