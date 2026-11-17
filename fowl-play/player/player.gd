@@ -251,11 +251,11 @@ func begin_host_limp() -> bool:
 	return true
 
 ## The host chooses the standing capsule position before restoring the rig.
-func stop_host_limp() -> void:
+func stop_host_limp(recovery_variant: StringName = &"") -> void:
 	if not is_limp:
 		return
 	var recovery_position: Vector3 = _find_recovery_position()
-	rig.call("stop_host_simulation_with_blend", TUNING.GET_UP_BLEND_SECONDS)
+	rig.call("stop_host_simulation_with_blend", TUNING.GET_UP_BLEND_SECONDS, recovery_variant)
 	global_position = recovery_position
 	is_limp = false
 	is_recovering = true
@@ -312,10 +312,15 @@ func receive_remote_settled_pose(epoch: int, sequence: int, host_time_ms: int, p
 		return false
 	return bool(rig.call("push_settled_pose", sequence, host_time_ms, pose))
 
-func end_remote_limp(epoch: int, standing_at: Vector3, final_pose: PackedInt32Array) -> bool:
+func end_remote_limp(
+	epoch: int,
+	standing_at: Vector3,
+	final_pose: PackedInt32Array,
+	recovery_variant: StringName
+) -> bool:
 	if not is_limp or epoch != limp_epoch or rig == null or not standing_at.is_finite():
 		return false
-	rig.call("end_remote_pose_with_blend", TUNING.GET_UP_BLEND_SECONDS, final_pose)
+	rig.call("end_remote_pose_with_blend", TUNING.GET_UP_BLEND_SECONDS, final_pose, recovery_variant)
 	global_position = standing_at
 	is_limp = false
 	is_recovering = true

@@ -15,12 +15,15 @@ Base docs: [overview](../PROJECT_OVERVIEW.md), [project state](../PROJECT_STATE.
 - REVERTED AFTER USER FEEDBACK: the owner limp camera must continue following the simulated head orientation for the intended simulated-FPS view; stabilizing the camera alone made the head feel stationary. Head stability must be fixed in the physical bone/joint tuning instead.
 - USER VERIFIED: physical head tuning removed the rapid left-right head oscillation while preserving the simulated-FPS camera following the head.
 - PARTIAL: wall-clearance search and the full G8 forced-exit audit remain. Visual smoothness, selective self-contact, and weak-laptop cost still need user review.
-- USER NEXT: author and visually review the first face-up recovery clip before creating the face-down and side variants.
-- AGENT NEXT: audit G8 forced exits after the visual playtest.
+- USER DECISION: use two authored recovery variants, `get_up_face_up` and `get_up_face_down`; side recovery is deferred.
+- VERIFIED SAVED SCENE: `RecoveryAnimationPlayer` contains `RESET`, `get_up_face_up`, and `get_up_face_down` animation resources.
+- USER VERIFIED: runtime selects and reliably replicates the face-up/face-down clip, blends the authoritative final pose into the clip opening, locks recovery through the authored clip, seeks frame 0 without a T-pose flicker, resets startup pose overrides, and falls back procedurally when needed.
+- REVERTED AFTER PLAYTEST: enabling the 11 remote physical-bone collision shapes made remote bodies behave like heavy local rigid obstacles and produced inconsistent speed-dependent phasing. Remote peers now render replicated bones without local ragdoll collision; symmetric contact requires a host-authoritative design.
+- AGENT NEXT: design host-authoritative ragdoll contact, then audit G8 forced exits.
 
 ## Exact next step
 
-USER: in host/client playtest, use `ragdoll_spike_start 1` and repeat for the client's peer ID. Compare arm/leg torso clipping against the old all-exempt behavior, and watch the 0.5 s get-up pose/camera blend for jitter, joint separation, unusual settling, or a snap at the end. AGENT: audit G8 forced exits after the playtest and tune selective contact pairs only if the visual and stability result warrants it.
+USER: when continuing, verify recovery remains stable after the remote collision rollback. AGENT: design the host-authoritative ragdoll contact approach before implementing another collision experiment.
 
 ## Historical rig authoring checkpoints
 
