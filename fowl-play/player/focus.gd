@@ -10,6 +10,8 @@ const TUNING = preload("res://core/tuning.gd")
 
 @onready var focus_ray: RayCast3D = $FocusRay
 @onready var debug_hub: Node = get_node("/root/DebugHub")
+@onready var left_hand: Hand = get_node_or_null("../ViewmodelHands/LeftHand") as Hand
+@onready var right_hand: Hand = get_node_or_null("../ViewmodelHands/RightHand") as Hand
 
 var _actor: Node3D = null
 var _focused: Interactable = null
@@ -40,8 +42,7 @@ func _ready() -> void:
 	set_process_unhandled_input(false)
 
 func _exit_tree() -> void:
-	if is_instance_valid(_focused):
-		_focused.set_focused(false)
+	_clear_focus()
 	if not is_instance_valid(debug_hub):
 		return
 	debug_hub.call("unregister_command", _debug_command_name)
@@ -50,6 +51,8 @@ func _exit_tree() -> void:
 func set_active(active: bool) -> void:
 	_active = active
 	set_process_unhandled_input(active)
+	if not active:
+		_clear_focus()
 
 func _process(_delta: float) -> void:
 	if not _active:
@@ -67,14 +70,28 @@ func _unhandled_input(event: InputEvent) -> void:
 func _update_focus() -> void:
 	focus_ray.force_raycast_update()
 	var candidate: Interactable = _find_interactable(focus_ray.get_collider() as Node)
-	if candidate == _focused:
-		return
+	if candidate != _focused:
+		if is_instance_valid(_focused):
+			_focused.set_focused(false)
+		_focused = candidate
+		if is_instance_valid(_focused):
+			_focused.set_focused(true)
+			_debug_log("Focused %s" % _focused.prompt_text)
+	var collision_point: Vector3 = Vector3.ZERO
+	if is_instance_valid(candidate) and focus_ray.is_colliding():
+		collision_point = focus_ray.get_collision_point()
+	_set_hands_hover(is_instance_valid(candidate), collision_point)
+
+func _set_hands_hover(active: bool, world_point: Vector3) -> void:
+	if is_instance_valid(right_hand):
+		right_hand.set_hover(active, world_point)
+
+
+func _clear_focus() -> void:
 	if is_instance_valid(_focused):
 		_focused.set_focused(false)
-	if candidate != null:
-		candidate.set_focused(true)
-		_debug_log("Focused %s" % candidate.prompt_text)
-	_focused = candidate
+	_focused = null
+	_set_hands_hover(false, Vector3.ZERO)
 
 func _try_interact(input_action: StringName) -> bool:
 	if not _active:

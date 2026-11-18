@@ -46,8 +46,10 @@ target_position = Vector3(0, -0.2, -1.5)
 [node name="ViewmodelHands" type="Node3D" parent="Head/Camera3D" unique_id=381231923]
 
 [node name="LeftHand" parent="Head/Camera3D/ViewmodelHands" unique_id=1049811483 instance=ExtResource("3_g6k8r")]
+transform = Transform3D(-0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, -0.25, -0.25, -0.55)
 
 [node name="RightHand" parent="Head/Camera3D/ViewmodelHands" unique_id=1368451350 instance=ExtResource("3_g6k8r")]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0.25, -0.25, -0.55)
 
 [node name="Rig" parent="." unique_id=695809982 instance=ExtResource("3_g1dw6")]
 
