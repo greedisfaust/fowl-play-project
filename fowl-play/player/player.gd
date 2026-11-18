@@ -19,7 +19,8 @@ var limp_epoch: int = 0
 @onready var camera: Camera3D = $Head/Camera3D
 @onready var rig: Node3D = get_node_or_null("Rig") as Node3D
 @onready var carrier: Carrier = get_node_or_null("Carrier") as Carrier
-@onready var limp_interactable: Interactable = get_node_or_null("LimpInteractable") as Interactable
+@onready var limp_interactable: Interactable = get_node_or_null("Interactable") as Interactable
+@onready var limp_interaction_proxy: StaticBody3D = get_node_or_null("LimpInteractionProxy") as StaticBody3D
 @onready var focus: Node = get_node_or_null("Head/Camera3D/Focus")
 @onready var debug_hub: Node = get_node("/root/DebugHub")
 @onready var network: Node = get_node("/root/Network")
@@ -139,21 +140,26 @@ func _exit_tree() -> void:
 func _process(delta: float) -> void:
 	if is_limp:
 		_update_limp_camera(delta)
-		if bool(network.get("is_host")) and rig != null:
-			_limp_elapsed_s += delta
-			_recovery_retry_s = maxf(0.0, _recovery_retry_s - delta)
-			var bones_slow: bool = bool(rig.call("are_physical_bones_slow"))
-			if auto_recovery_enabled and _recovery_retry_s <= 0.0 and (_limp_elapsed_s >= TUNING.LIMP_MAX_SECONDS or (_limp_elapsed_s >= TUNING.LIMP_SECONDS and bones_slow)):
-				var reason: String = "hard cap" if _limp_elapsed_s >= TUNING.LIMP_MAX_SECONDS else "settled"
-				if bool(network.call("stop_ragdoll_spike", input_peer_id, reason)):
-					return
-				_recovery_retry_s = 0.25
-			if bones_slow:
-				_ragdoll_slow_elapsed += delta
-				if _ragdoll_slow_elapsed >= 0.35 and not _ragdoll_settled_sent:
+		_update_limp_interaction_proxy()
+		if _has_host_authority() and rig != null:
+			if not _is_carried:
+				_limp_elapsed_s += delta
+				_recovery_retry_s = maxf(0.0, _recovery_retry_s - delta)
+				var bones_slow: bool = bool(rig.call("are_physical_bones_slow"))
+				if auto_recovery_enabled and _recovery_retry_s <= 0.0 and (_limp_elapsed_s >= TUNING.LIMP_MAX_SECONDS or (_limp_elapsed_s >= TUNING.LIMP_SECONDS and bones_slow)):
+					var reason: String = "hard cap" if _limp_elapsed_s >= TUNING.LIMP_MAX_SECONDS else "settled"
+					if bool(network.call("stop_ragdoll_spike", input_peer_id, reason)):
+						return
+					_recovery_retry_s = 0.25
+				if bones_slow:
+					_ragdoll_slow_elapsed += delta
+					if _ragdoll_slow_elapsed >= 0.35 and not _ragdoll_settled_sent:
 					_ragdoll_sequence += 1
 					network.call("publish_settled_ragdoll_pose", input_peer_id, limp_epoch, _ragdoll_sequence, rig.call("capture_quantized_pose"))
 					_ragdoll_settled_sent = true
+				else:
+					_ragdoll_slow_elapsed = 0.0
+					_ragdoll_settled_sent = false
 			else:
 				_ragdoll_slow_elapsed = 0.0
 				_ragdoll_settled_sent = false
@@ -185,6 +191,26 @@ func _process(delta: float) -> void:
 			rotation.y = snapshot.yaw
 			head.rotation.x = snapshot.pitch
 
+func _has_host_authority() -> bool:
+	return network.get("peer") == null or bool(network.get("is_host"))
+
+func _set_limp_interaction_proxy(active: bool) -> void:
+	if limp_interaction_proxy == null:
+		return
+	if active:
+		limp_interaction_proxy.top_level = true
+		limp_interaction_proxy.collision_layer = 1 << (LAYERS.LIMP_BODIES - 1)
+		_update_limp_interaction_proxy()
+	else:
+		limp_interaction_proxy.collision_layer = 0
+		limp_interaction_proxy.top_level = false
+		limp_interaction_proxy.transform = Transform3D.IDENTITY
+
+func _update_limp_interaction_proxy() -> void:
+	if limp_interaction_proxy == null or limp_interaction_proxy.collision_layer == 0 or not is_limp or rig == null:
+		return
+	limp_interaction_proxy.global_position = rig.call("get_hips_world_position")
+
 func accept_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float) -> bool:
 	if is_limp or is_recovering:
 		return false
@@ -203,23 +229,60 @@ func is_carrying() -> bool:
 func is_carried() -> bool:
 	return _is_carried
 
-## Called by Carrier.attach_item / detach_item when this player is carried/released.
+func _can_be_carried(actor: Node, action: StringName) -> bool:
+	return action == &"grab" and actor != self and is_limp and not is_recovering and not _is_carried
+
 func set_carried(carried: bool, by: Node3D = null) -> void:
 	if carried:
-		if _is_carried:
+		if _is_carried or not is_limp or is_recovering:
 			return
 		_is_carried = true
+		_set_limp_interaction_proxy(false)
+		if _has_host_authority() and rig != null:
+			rig.call("disable_collisions")
+			rig.call("stop_carry_support")
+			_ragdoll_slow_elapsed = 0.0
+			_ragdoll_settled_sent = false
+			_ragdoll_send_elapsed = 0.0
 		debug_hub.call("log", &"carry", "%s is now carried by %s" % [name, by.name if by != null else "unknown"])
 		return
 	if not _is_carried:
 		return
 	_is_carried = false
+	if _has_host_authority() and is_limp and rig != null:
+		rig.call("stop_carry_support")
+		rig.call("enable_host_collisions")
+		_reset_limp_recovery_deadline()
+	elif is_limp:
+		_set_limp_interaction_proxy(true)
 	debug_hub.call("log", &"carry", "%s was released by %s" % [name, by.name if by != null else "unknown"])
 
-## Final placement + velocities after a drop/throw. Mirrors Prop.apply_release.
+func set_carry_target(target_world: Vector3) -> void:
+	if _is_carried and is_limp and rig != null and _has_host_authority():
+		rig.call("set_carry_target", target_world)
+
+func get_carry_world_position() -> Vector3:
+	return Vector3(rig.call("get_hips_world_position")) if is_limp and rig != null else global_position
+
+func get_interaction_world_position() -> Vector3:
+	return get_carry_world_position()
+
+func _reset_limp_recovery_deadline() -> void:
+	_limp_elapsed_s = 0.0
+	_recovery_retry_s = 0.0
+	_ragdoll_slow_elapsed = 0.0
+	_ragdoll_settled_sent = false
+	_ragdoll_send_elapsed = 0.0
+
 func apply_release(at: Vector3, linear: Vector3, angular: Vector3) -> void:
 	if _is_carried:
 		set_carried(false, null)
+	if is_limp and rig != null:
+		if _has_host_authority():
+			rig.call("release_carry", linear, angular)
+			_reset_limp_recovery_deadline()
+		velocity = linear
+		return
 	global_position = at
 	velocity = linear
 
@@ -256,7 +319,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 func _physics_process(delta: float) -> void:
-	if is_limp or is_recovering:
+	if is_limp:
+		if _is_carried and _has_host_authority() and rig != null:
+			rig.call("apply_carry_support")
+		return
+	if is_recovering:
 		return
 	if not is_on_floor():
 		velocity.y -= TUNING.GRAVITY_MPS2 * delta
@@ -310,6 +377,8 @@ func begin_host_limp() -> bool:
 		collision_mask = LAYERS.LAYER_MASK_HEALTHY_PLAYERS
 		return false
 	is_limp = true
+	set_physics_process(true)
+	_set_limp_interaction_proxy(false)
 	if limp_interactable != null:
 		limp_interactable.enabled = true
 		debug_hub.call("log", &"carry", "%s limp Interactable enabled as grab target." % name)
@@ -330,7 +399,7 @@ func begin_host_limp() -> bool:
 
 ## The host chooses the standing capsule position before restoring the rig.
 func stop_host_limp(recovery_variant: StringName = &"") -> bool:
-	if not is_limp:
+	if not is_limp or _is_carried:
 		return false
 	var recovery_position: Vector3 = _find_recovery_position()
 	if not recovery_position.is_finite():
@@ -344,6 +413,8 @@ func stop_host_limp(recovery_variant: StringName = &"") -> bool:
 	rig.call("stop_host_simulation_with_blend", TUNING.GET_UP_BLEND_SECONDS, recovery_variant)
 	is_limp = false
 	is_recovering = true
+	_set_limp_interaction_proxy(false)
+	set_physics_process(is_local_player)
 	if limp_interactable != null:
 		limp_interactable.enabled = false
 		debug_hub.call("log", &"carry", "%s limp Interactable disabled on recovery." % name)
@@ -410,6 +481,9 @@ func begin_remote_limp(epoch: int, world_transform: Transform3D, initial_pose: P
 		return false
 	limp_epoch = epoch
 	is_limp = true
+	_set_limp_interaction_proxy(true)
+	if limp_interactable != null:
+		limp_interactable.enabled = true
 	velocity = Vector3.ZERO
 	collision_layer = 0
 	collision_mask = 0
@@ -441,6 +515,7 @@ func end_remote_limp(
 	rig.call("end_remote_pose_with_blend", TUNING.GET_UP_BLEND_SECONDS, final_pose, recovery_variant)
 	is_limp = false
 	is_recovering = true
+	_set_limp_interaction_proxy(false)
 	if limp_interactable != null:
 		limp_interactable.enabled = false
 		debug_hub.call("log", &"carry", "%s limp Interactable disabled on remote limp end." % name)
