@@ -210,3 +210,10 @@ The first visible contact-response slice now uses the index fingertip's nearest 
 ### M2 all-finger surface-directed carry bend
 
 The box-surface contact bend is now applied to all four fingers (index, middle, ring, pinky), each using its own current fingertip and nearest BoxShape3D contact target. The per-finger correction remains weighted and angularly clamped, with the existing exponential joint blend preserving smooth transitions. Sphere and capsule surface solvers are not included in this slice. M2 checks finite, bounded corrections and confirms at least one finger responds to a transformed box. Godot execution and visual confirmation remain user-run.
+
+
+### Hand rig multiplayer milestone
+
+See [HAND_RIG_MULTIPLAYER_MILESTONE.md](HAND_RIG_MULTIPLAYER_MILESTONE.md) for the complete host/client verification matrix and implementation order. The current hand diagnostics are listed there, including `hand_status_<name>`, `hands/<name>/state`, `net/hand_poke_sent`, and `net/hand_poke_received`.
+
+Important: these counters and automated receive-handler tests are diagnostic support, not proof of live RPC delivery. Verify each action with two running instances and test both host-as-actor and client-as-actor. Record sender, relay/authority, receiver, and rendered-hand results separately. Do not mark the hand rig multiplayer-ready until the full matrix passes.
