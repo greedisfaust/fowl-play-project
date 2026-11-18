@@ -127,6 +127,8 @@ func _ready() -> void:
 	_right_rig_hand_visuals.clear()
 	if right_rig_hand_root != null:
 		for visual_node: Node in right_rig_hand_root.find_children("*", "VisualInstance3D", true, false):
+			if visual_node.name == &"Forearm":
+				continue
 			var visual_instance: VisualInstance3D = visual_node as VisualInstance3D
 			if visual_instance != null:
 				_right_rig_hand_visuals.append(visual_instance)
@@ -136,6 +138,8 @@ func _ready() -> void:
 	_left_rig_hand_visuals.clear()
 	if left_rig_hand_root != null:
 		for left_visual_node: Node in left_rig_hand_root.find_children("*", "VisualInstance3D", true, false):
+			if left_visual_node.name == &"Forearm":
+				continue
 			var left_visual_instance: VisualInstance3D = left_visual_node as VisualInstance3D
 			if left_visual_instance != null:
 				_left_rig_hand_visuals.append(left_visual_instance)
