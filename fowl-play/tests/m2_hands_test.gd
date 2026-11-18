@@ -154,6 +154,12 @@ func _check_individual_carry_finger_curls() -> void:
 	var middle_curl: Vector3 = hand._get_carry_finger_curl_degrees(1)
 	var ring_curl: Vector3 = hand._get_carry_finger_curl_degrees(2)
 	var pinky_curl: Vector3 = hand._get_carry_finger_curl_degrees(3)
+	var thumb_rotation: Quaternion = hand._get_carry_thumb_root_rotation()
+	var thumb_direction: Vector3 = thumb_rotation * Vector3.FORWARD
+	var thumb_base: Node3D = hand._thumb_nodes[0]
+	var thumb_target: Vector3 = hand._pose_root.to_local(prop.global_position) - thumb_base.position
+	if thumb_direction.normalized().dot(thumb_target.normalized()) < 0.99:
+		_fail("Carry thumb root should aim toward the prop from its authored mount")
 	if index_curl.x >= middle_curl.x or pinky_curl.x >= ring_curl.x:
 		_fail("Outer fingers should receive a slightly tighter edge-hook curl than inner fingers")
 	hand.set_carrying(false)
