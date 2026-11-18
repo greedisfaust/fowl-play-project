@@ -22,6 +22,7 @@ var limp_epoch: int = 0
 @onready var world_left_hand: Hand = get_node_or_null("Rig/Skeleton3D/HandAttachment_L/HandMount_L/Hand") as Hand
 @onready var viewmodel_left_hand: Hand = get_node_or_null("Head/Camera3D/ViewmodelHands/LeftHand") as Hand
 @onready var viewmodel_right_hand: Hand = get_node_or_null("Head/Camera3D/ViewmodelHands/RightHand") as Hand
+@onready var viewmodel_right_hand_pose_root: Node3D = get_node_or_null("Head/Camera3D/ViewmodelHands/RightHand/PoseRoot") as Node3D
 @onready var carrier: Carrier = get_node_or_null("Carrier") as Carrier
 @onready var limp_interactable: Interactable = get_node_or_null("Interactable") as Interactable
 @onready var limp_interaction_proxy: StaticBody3D = get_node_or_null("LimpInteractionProxy") as StaticBody3D
@@ -202,8 +203,8 @@ func _process(delta: float) -> void:
 		return
 	# The camera-attached Viewmodel hand is the pose source for remote-visible arms.
 	# Its authored wrist pivot sits 0.32 hand-local units behind the palm.
-	if rig != null and is_instance_valid(viewmodel_right_hand):
-		var wrist_target_world: Vector3 = viewmodel_right_hand.to_global(Vector3(0.0, 0.0, 0.32))
+	if rig != null and is_instance_valid(viewmodel_right_hand_pose_root):
+		var wrist_target_world: Vector3 = viewmodel_right_hand_pose_root.to_global(Vector3(0.0, 0.0, 0.32))
 		rig.call("update_procedural_right_arm", wrist_target_world, delta)
 	if is_local_player:
 		_send_elapsed += delta
