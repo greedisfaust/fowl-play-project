@@ -130,7 +130,7 @@ func _ready() -> void:
 		debug_hub.call("log", &"ragdoll", "Rig %s prepared 11 dormant physical bones; %d selective self-contact pairs." % [get_parent().name, self_contact_pairs])
 	debug_hub.call("watch", _watch_name, func() -> int: return physical_bones.size())
 	debug_hub.call("watch", _right_arm_ik_watch_name, func() -> bool: return _right_arm_ik_active)
-	debug_hub.call("watch", _right_rig_hand_visible_watch_name, func() -> bool: return not _right_rig_hand_visuals.is_empty() and _right_rig_hand_visuals[0].visible)
+	debug_hub.call("watch", _right_rig_hand_visible_watch_name, _is_right_rig_hand_visual_visible)
 	debug_hub.call("command", _right_arm_ik_command_name, _debug_right_arm_ik_status, "Report the procedural Viewmodel right-arm target and ownership state.", false, false)
 	set_process(false)
 
@@ -143,6 +143,12 @@ func _exit_tree() -> void:
 
 ## The positive-X Rig hand is a duplicate of the camera-attached Viewmodel hand while standing.
 ## Keep its node and skeleton attachment intact; only its rendered hand instance changes visibility.
+func _is_right_rig_hand_visual_visible() -> bool:
+	for visual_instance: VisualInstance3D in _right_rig_hand_visuals:
+		if is_instance_valid(visual_instance) and visual_instance.visible:
+			return true
+	return false
+
 func _set_right_rig_hand_visual_visible(visible: bool) -> void:
 	for visual_instance: VisualInstance3D in _right_rig_hand_visuals:
 		if is_instance_valid(visual_instance):
