@@ -573,7 +573,10 @@ func _receive_hand_hover(owner_id: int, active: bool, world_point: Vector3) -> v
 	var player: Node = movement_players.get(owner_id)
 	if not is_instance_valid(player) or player.is_queued_for_deletion():
 		return
-	player.call("set_world_hand_hover", active, world_point)
+	# Count a hover only when this instance actually applies it to a remote
+	# world hand. The owning peer intentionally rejects its hidden world copy.
+	if bool(player.call("set_world_hand_hover", active, world_point)):
+		hand_hover_received += 1
 	if peer != null and is_host:
 		hand_hover_sent += 1
 		_hand_hover.rpc(owner_id, active, world_point)
