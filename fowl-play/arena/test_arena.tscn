@@ -4,7 +4,8 @@
 [ext_resource type="PackedScene" uid="uid://p4yueflmbgmy" path="res://ui/debug/debug_console.tscn" id="2_nr24g"]
 [ext_resource type="Script" uid="uid://46ghk5d3vk2r" path="res://interaction/debug_use_device.gd" id="3_6pj3w"]
 [ext_resource type="Script" uid="uid://dd5c04repreo1" path="res://interaction/interactable.gd" id="3_555b8"]
-[ext_resource type="PackedScene" uid="uid://330xhwqju48a" path="res://props/base_prop.tscn" id="5_5fshk"]
+[ext_resource type="Script" uid="uid://dyw4wgr3svwvg" path="res://props/prop.gd" id="5_5fshk"]
+[ext_resource type="Script" uid="uid://bw1bicstmeec7" path="res://props/prop_profile.gd" id="6_w7fvv"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_g4v7s"]
 size = Vector3(20, 1, 20)
@@ -15,6 +16,15 @@ size = Vector3(20, 1, 20)
 [sub_resource type="BoxShape3D" id="BoxShape3D_yf5fn"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_yf5fn"]
+
+[sub_resource type="Resource" id="Resource_g4v7s"]
+script = ExtResource("6_w7fvv")
+weight_class = 0
+metadata/_custom_type_script = "uid://bw1bicstmeec7"
+
+[sub_resource type="BoxMesh" id="BoxMesh_3gngh"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_57qmd"]
 
 [node name="TestArena" type="Node3D" unique_id=2059650083]
 script = ExtResource("1_555b8")
@@ -68,5 +78,19 @@ mesh = SubResource("BoxMesh_yf5fn")
 script = ExtResource("3_555b8")
 prompt_text = "Toggle Test Device"
 
-[node name="TestGrabProp" parent="." unique_id=1566184061 instance=ExtResource("5_5fshk")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -6)
+[node name="Box2" type="RigidBody3D" parent="." unique_id=1783746375]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.1438768, -4.7573233)
+script = ExtResource("5_5fshk")
+profile = SubResource("Resource_g4v7s")
+
+[node name="Interactable" type="Node" parent="Box2" unique_id=251276649]
+script = ExtResource("3_555b8")
+kind = 1
+prompt_text = "[GRAB] Box"
+metadata/_custom_type_script = "uid://dd5c04repreo1"
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Box2" unique_id=652503524]
+mesh = SubResource("BoxMesh_3gngh")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Box2" unique_id=672640431]
+shape = SubResource("BoxShape3D_57qmd")

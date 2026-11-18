@@ -23,7 +23,7 @@ Base docs: [overview](../PROJECT_OVERVIEW.md), [project state](../PROJECT_STATE.
 
 ## Exact next step
 
-AGENT (2026-11-17, regression repair in progress): user authorized fixing wall placement and host/client get-up. Verified code defects: the blend target overrides the sampled animation opening with the standing pose; host reads pre-modifier skeleton poses; reattaching the rig then moving the capsule changes the final pose's world position; clearance queries include own bones and do not recheck floor support at candidates. Baseline M5 runner fails recovery-completion checks (frame-count timeout is too short for the authored clip). Repair scripts and add focused regression tests; leave user-authored scenes intact.
+/AGENT (2026-11-17, regression repair in progress): user authorized fixing wall placement and host/client get-up. Verified code defects: the blend target overrides the sampled animation opening with the standing pose; host reads pre-modifier skeleton poses; reattaching the rig then moving the capsule changes the final pose's world position; clearance queries include own bones and do not recheck floor support at candidates. Baseline M5 runner fails recovery-completion checks (frame-count timeout is too short for the authored clip). Repair scripts and add focused regression tests; leave user-authored scenes intact.
 
 ## Historical rig authoring checkpoints
 
