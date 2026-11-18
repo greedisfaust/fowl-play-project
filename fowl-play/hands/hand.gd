@@ -59,6 +59,9 @@ const AUTHORED_GUARD_THUMB_BASES: Array[Basis] = [
 @export_range(0.2, 1.5) var carry_curl_large_extent_m: float = 0.90
 ## Additional curl for fingers nearest the lateral edges of the prop.
 @export var carry_edge_curl_degrees: Vector3 = Vector3(-8.0, -10.0, -6.0)
+## The thumb opens as prop thickness increases, preventing large props from forcing an inward curl.
+@export var carry_thumb_tight_curl_degrees: Vector2 = Vector2(-24.0, -32.0)
+@export var carry_thumb_open_curl_degrees: Vector2 = Vector2(-4.0, -8.0)
 
 var _reach_elapsed: float = -1.0
 var _reach_target: Vector3
@@ -215,7 +218,7 @@ func _blend_thumb_and_hand_pose(weight: float, delta: float, pose_state: PoseSta
 		thumb_curl_degrees = Vector2.ZERO
 	elif pose_state == PoseState.CARRY:
 		thumb_root_degrees = Vector3.ZERO
-		thumb_curl_degrees = Vector2(-24.0, -32.0)
+		thumb_curl_degrees = _get_carry_thumb_curl_degrees()
 	elif guard_active:
 		thumb_root_degrees = guard_thumb_root_degrees
 		thumb_curl_degrees = guard_thumb_curl_degrees
@@ -339,6 +342,27 @@ func _get_carry_thumb_root_rotation() -> Quaternion:
 	var rest_direction_local: Vector3 = _thumb_rest_rotations[0] * Vector3.FORWARD
 	var aim_delta: Quaternion = Quaternion(rest_direction_local.normalized(), target_direction_local.normalized())
 	return aim_delta * _thumb_rest_rotations[0]
+
+## Blend thumb joint curl from tight to open using the same projected prop thickness
+## measurement as the fingers. Large props leave the thumb more extended instead
+## of curling it farther inward across the object's center.
+func _get_carry_thumb_curl_degrees() -> Vector2:
+	if not is_instance_valid(carry_item):
+		return carry_thumb_tight_curl_degrees
+	var grip_position: Vector3 = _get_carry_pose_position()
+	var grip_rotation: Quaternion = _get_carry_pose_rotation(grip_position)
+	var palm_normal_world: Vector3 = (global_basis.orthonormalized() * (grip_rotation * Vector3.DOWN)).normalized()
+	var local_bounds: AABB = _get_carry_local_bounds()
+	var minimum_projection: float = INF
+	var maximum_projection: float = -INF
+	for corner_index: int in 8:
+		var corner_world: Vector3 = carry_item.to_global(_aabb_corner(local_bounds, corner_index))
+		var projection: float = corner_world.dot(palm_normal_world)
+		minimum_projection = minf(minimum_projection, projection)
+		maximum_projection = maxf(maximum_projection, projection)
+	var prop_thickness: float = maxf(maximum_projection - minimum_projection, 0.0)
+	var open_weight: float = clampf(inverse_lerp(carry_curl_small_extent_m, carry_curl_large_extent_m, prop_thickness), 0.0, 1.0)
+	return carry_thumb_tight_curl_degrees.lerp(carry_thumb_open_curl_degrees, open_weight)
 
 ## Adapt each finger's three joint bends to prop thickness and lateral position.
 ## Fingers near the prop's lateral edges curl slightly farther to hook around it.
