@@ -120,3 +120,12 @@ Removed the action-phase gate from procedural poke starts. A new poke can now re
 - Added the first surface-contact solver for `BoxShape3D`: outside points clamp to the box surface, inside points select the nearest face, and transformed/scaled collision children are evaluated in their own local space. Compound props select the nearest box contact candidate.
 - Added M2 checks for outside/inside surface projection and a translated, rotated, non-uniformly scaled box collision shape.
 - This is a tested-by-code foundation only: contact targets are not yet driving visible finger bends. Next implementation slice will connect a contact target to one finger's smooth procedural bend before expanding shape support.
+
+
+## 2026-11-19 — first visible surface-contact response
+
+- Connected the first BoxShape3D contact target to a restrained, target-directed bend correction on the index finger's three joints.
+- Added exported weight and angular-limit controls; existing pose blending keeps the correction smooth.
+- Cached the carried item's CollisionShape3D children when the item changes, avoiding a tree search during each frame's contact update.
+- Added an M2 assertion for a non-zero, bounded index-finger correction toward a transformed box surface.
+- This is the first visible response slice, not full finger IK. The remaining fingers and sphere/capsule surface solvers stay queued until this index-finger behavior is visually approved. Godot tests and in-game verification have not been run by the assistant.
