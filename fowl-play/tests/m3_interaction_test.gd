@@ -42,25 +42,28 @@ func _run() -> void:
 	root.add_child(remote_player)
 	await process_frame
 	var remote_point: Vector3 = remote_player.global_position + Vector3(0.0, 1.0, -2.0)
-	var world_hand: Hand = remote_player.get_node("Rig/Skeleton3D/HandAttachment_R/HandMount_R/Hand") as Hand
+	var world_hand: Hand = remote_player.get_node("Head/Camera3D/ViewmodelHands/RightHand") as Hand
+	var rig_world_hand: Hand = remote_player.get_node("Rig/Skeleton3D/HandAttachment_R/HandMount_R/Hand") as Hand
 	var hover_point: Vector3 = remote_player.global_position + Vector3(0.5, 1.2, -1.5)
 	var hover_applied_before: int = int(network.get("hand_hover_received"))
 	network.call("_receive_hand_hover", 77, true, hover_point)
-	check(world_hand.is_hovering, "Remote player's world right hand should enter pointing pose")
-	check(world_hand.hover_point.is_equal_approx(hover_point), "Remote pointing hand should receive the hover world point")
+	check(world_hand.is_hovering, "Remote player's Viewmodel right hand should enter pointing pose")
+	check(world_hand.hover_point.is_equal_approx(hover_point), "Remote Viewmodel pointing hand should receive the hover world point")
+	check(not rig_world_hand.is_hovering, "Ragdoll Rig hand must not receive ordinary hover pointing")
 	check(int(network.get("hand_hover_received")) == hover_applied_before + 1, "Host-side remote world-hand hover application should increment its receive watch")
 	for frame: int in 30:
 		await process_frame
-	check(world_hand._resolve_pose_state() == Hand.PoseState.POINT, "Remote world hand should resolve its procedural point pose")
+	check(world_hand._resolve_pose_state() == Hand.PoseState.POINT, "Remote Viewmodel hand should resolve its procedural point pose")
 	var world_index: Node3D = world_hand.get_node("PoseRoot/IndexAim/Index/Joint1") as Node3D
 	var world_middle: Node3D = world_hand.get_node("PoseRoot/Middle/Joint1") as Node3D
-	check(absf(world_index.rotation_degrees.x) < 2.0, "Remote world hand should procedurally straighten its index finger while pointing")
-	check(absf(world_middle.rotation_degrees.x + 75.0) < 2.0, "Remote world hand should curl its other fingers while pointing")
+	check(absf(world_index.rotation_degrees.x) < 2.0, "Remote Viewmodel hand should procedurally straighten its index finger while pointing")
+	check(absf(world_middle.rotation_degrees.x + 75.0) < 2.0, "Remote Viewmodel hand should curl its other fingers while pointing")
 	network.call("_receive_hand_hover", 77, false, Vector3.ZERO)
 	for frame: int in 30:
 		await process_frame
-	check(not world_hand.is_hovering, "Remote player's world right hand should return to idle after hover clears")
-	check(absf(world_middle.rotation_degrees.x + 12.0) < 2.0, "Remote world hand should procedurally relax its middle finger after hover clears")
+	check(not world_hand.is_hovering, "Remote player's Viewmodel right hand should return to idle after hover clears")
+	check(not rig_world_hand.is_hovering, "Ragdoll Rig hand should remain unaffected when hover clears")
+	check(absf(world_middle.rotation_degrees.x + 12.0) < 2.0, "Remote Viewmodel hand should procedurally relax its middle finger after hover clears")
 	# Carry events must drive both hands on the correct presentation rig.
 	var remote_carrier: Carrier = remote_player.get_node("Carrier") as Carrier
 	var held_test_item: Node3D = Node3D.new()
@@ -68,11 +71,11 @@ func _run() -> void:
 	for frame: int in 30:
 		await process_frame
 	var world_left_hand: Hand = remote_player.get_node("Rig/Skeleton3D/HandAttachment_L/HandMount_L/Hand") as Hand
-	check(world_left_hand.is_carrying and world_hand.is_carrying, "Remote carry event should activate both world hands")
-	check(world_left_hand._resolve_pose_state() == Hand.PoseState.CARRY and world_hand._resolve_pose_state() == Hand.PoseState.CARRY, "Remote world hands should resolve the carry pose")
-	check(world_left_hand.carry_side < 0.0 and world_hand.carry_side > 0.0, "Remote hands should receive opposite grip sides")
+	check(world_left_hand.is_carrying and rig_world_hand.is_carrying, "Remote carry event should activate both ragdoll Rig hands")
+	check(world_left_hand._resolve_pose_state() == Hand.PoseState.CARRY and rig_world_hand._resolve_pose_state() == Hand.PoseState.CARRY, "Remote Rig hands should resolve the carry pose")
+	check(world_left_hand.carry_side < 0.0 and rig_world_hand.carry_side > 0.0, "Remote Rig hands should receive opposite grip sides")
 	remote_carrier.detach_item()
-	check(not world_left_hand.is_carrying and not world_hand.is_carrying, "Remote carry end should clear both world hands")
+	check(not world_left_hand.is_carrying and not rig_world_hand.is_carrying, "Remote carry end should clear both ragdoll Rig hands")
 	remote_player.set("is_local_player", true)
 	var local_test_item: Node3D = Node3D.new()
 	remote_carrier.attach_item(local_test_item)
@@ -84,10 +87,11 @@ func _run() -> void:
 	remote_player.set("is_local_player", false)
 	var previous_poke_count: int = int(network.get("hand_poke_received"))
 	network.call("_receive_hand_poke", 77, remote_point)
-	check(world_hand._reach_elapsed >= 0.0, "Remote player's world right hand should begin a poke")
+	check(world_hand._reach_elapsed >= 0.0, "Remote player's Viewmodel right hand should begin a poke")
+	check(rig_world_hand._reach_elapsed < 0.0, "Ragdoll Rig hand must not play the replicated Viewmodel poke")
 	check(int(network.get("hand_poke_received")) == previous_poke_count + 1, "Remote world-hand poke should increment its receive watch")
 	network.call("_receive_hand_poke", 77, remote_point + Vector3(0.1, 0.0, 0.0))
-	check(world_hand._action_phase == Hand.HandActionPhase.EXTENDING, "Remote world hand should accept a second poke while the first is active")
+	check(world_hand._action_phase == Hand.HandActionPhase.EXTENDING, "Remote Viewmodel hand should accept a second poke while the first is active")
 	check(int(network.get("hand_poke_received")) == previous_poke_count + 2, "Rapid remote pokes should both be presented")
 	remote_player.set("is_local_player", true)
 	check(not bool(remote_player.call("play_world_hand_poke", remote_point)), "Local owner must not double-play its hidden world hand")
