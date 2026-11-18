@@ -221,13 +221,17 @@ func _set_left_arm_ik_active(active: bool) -> void:
 	])
 
 func _debug_right_arm_ik_status(_args: Array[Variant]) -> String:
-	return "active=%s target=%s bones=UpperArm_L/Forearm_L/Hand_L" % [
-		_right_arm_ik_active, _right_arm_ik_target_world
+	return "active=%s target=%s upper_scale=%s forearm_scale=%s bones=UpperArm_L/Forearm_L/Hand_L" % [
+		_right_arm_ik_active, _right_arm_ik_target_world,
+		skeleton.get_bone_pose_scale(_right_viewmodel_upper_arm_bone_index),
+		skeleton.get_bone_pose_scale(_right_viewmodel_forearm_bone_index)
 	]
 
 func _debug_left_arm_ik_status(_args: Array[Variant]) -> String:
-	return "active=%s target=%s bones=UpperArm_R/Forearm_R/Hand_R" % [
-		_left_arm_ik_active, _left_arm_ik_target_world
+	return "active=%s target=%s upper_scale=%s forearm_scale=%s bones=UpperArm_R/Forearm_R/Hand_R" % [
+		_left_arm_ik_active, _left_arm_ik_target_world,
+		skeleton.get_bone_pose_scale(_left_viewmodel_upper_arm_bone_index),
+		skeleton.get_bone_pose_scale(_left_viewmodel_forearm_bone_index)
 	]
 
 func _bone_axis_scale(rest_offset: Vector3, amount: float) -> Vector3:
