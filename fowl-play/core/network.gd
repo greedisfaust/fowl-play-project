@@ -540,8 +540,10 @@ func _receive_interaction(owner_id: int, target_path: NodePath, action: StringNa
 		interaction_rejected += 1
 	var message: String = "Interaction %s peer=%d action=%s%s" % ["accepted" if accepted else "rejected", owner_id, action, "" if accepted else ": " + reason]
 	_interaction_log(message)
-	if is_host and owner_id != TUNING.PEER_ID_HOST:
-		_interaction_result.rpc_id(owner_id, message)
+	if owner_id == TUNING.PEER_ID_HOST or peer == null:
+		_finish_local_interaction_hand(owner_id, accepted)
+	elif is_host:
+		_interaction_result.rpc_id(owner_id, owner_id, accepted, message)
 	return accepted
 
 ## Replicate the local owner's current hover target to other players' world hands.
@@ -627,10 +629,17 @@ func _interaction_rejection(actor: Node3D, target: Interactable, action: StringN
 		return "out of reach"
 	return ""
 
+func _finish_local_interaction_hand(owner_id: int, accepted: bool) -> void:
+	var player: Node = movement_players.get(owner_id)
+	if is_instance_valid(player) and not player.is_queued_for_deletion():
+		player.call("finish_local_hand_action", accepted)
+
 @rpc("authority", "call_remote", "reliable", 0)
-func _interaction_result(message: String) -> void:
-	if validate_rpc(TUNING.PEER_ID_HOST):
-		_interaction_log(message)
+func _interaction_result(owner_id: int, accepted: bool, message: String) -> void:
+	if not validate_rpc(TUNING.PEER_ID_HOST):
+		return
+	_finish_local_interaction_hand(owner_id, accepted)
+	_interaction_log(message)
 
 ## Host broadcasts a cosmetic poke only after the gameplay interaction is accepted.
 func _publish_hand_poke(owner_id: int, target: Interactable) -> void:
