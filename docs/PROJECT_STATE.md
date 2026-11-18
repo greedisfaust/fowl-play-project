@@ -87,3 +87,8 @@ Procedural carry targets now derive their side spacing from the carried prop's c
 ## 2026-11-19 — size-adaptive procedural carry fingers
 
 Carry finger joints now blend between exported tight and open curl presets using the carried prop's collision/mesh bounds projected along the palm normal. Smaller projected thickness produces a tighter curl; larger thickness leaves the fingers more open. The existing finger hierarchy and pose blending are preserved. The M2 hand test checks the curl response between full- and half-scale box props. This is an initial size-adaptive curl foundation, not per-finger surface contact or exact contour wrapping; thumb opposition and per-finger placement remain future work. Godot tests and rendered playtesting remain user-run checks.
+
+
+## 2026-11-19 — individual procedural carry finger curls
+
+Each of the four fingers now receives its own carry curl target. The existing projected-thickness blend remains the shared baseline; each finger's root is transformed into prop-local space and its lateral distance from the prop center is compared with the prop's lateral half-extent. Fingers nearer the lateral bounds receive a small additional edge-hook curl. The M2 test checks that outer fingers curl slightly farther than inner fingers. This is a geometry-guided pose heuristic, not per-finger contact solving or exact contour wrapping. Thumb opposition remains the next hand-grip task. Godot tests and rendered playtesting remain user-run checks.
