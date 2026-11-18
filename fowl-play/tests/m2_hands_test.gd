@@ -41,6 +41,7 @@ func _run() -> void:
 		_fail("Left and right carry targets should approach opposite sides of the prop")
 	hand.set_carrying(false)
 	grip_item.free()
+	_check_shape_aware_grip(hand)
 	if hand._resolve_pose_state() != Hand.PoseState.GUARD:
 		_fail("Guard must override hover")
 	hand.set_guard(false)
@@ -68,6 +69,63 @@ func _run() -> void:
 		return
 	print("M2 hand checks passed")
 	quit(0)
+
+func _check_shape_aware_grip(hand: Hand) -> void:
+	var box: BoxShape3D = BoxShape3D.new()
+	box.size = Vector3(0.8, 0.8, 0.8)
+	var box_prop: Node3D = _make_grip_test_prop(box, Vector3.ONE)
+	hand.set_carrying(true, box_prop, -1.0)
+	var full_size_left: Vector3 = hand._get_carry_pose_position()
+	hand.set_carrying(true, box_prop, 1.0)
+	var full_size_right: Vector3 = hand._get_carry_pose_position()
+	var full_size_span: float = full_size_left.distance_to(full_size_right)
+	var collision: CollisionShape3D = box_prop.get_node("CollisionShape3D") as CollisionShape3D
+	collision.scale = Vector3.ONE * 0.5
+	hand.set_carrying(true, box_prop, -1.0)
+	var half_size_left: Vector3 = hand._get_carry_pose_position()
+	hand.set_carrying(true, box_prop, 1.0)
+	var half_size_right: Vector3 = hand._get_carry_pose_position()
+	var half_size_span: float = half_size_left.distance_to(half_size_right)
+	if full_size_span <= half_size_span + 0.2:
+		_fail("Scaled box collision bounds did not move the grip targets inward")
+	if absf(full_size_span - 0.88) > 0.03 or absf(half_size_span - 0.48) > 0.03:
+		_fail("Box grip span did not include collision dimensions and clearance: full=%s half=%s" % [full_size_span, half_size_span])
+	box_prop.free()
+
+	var sphere: SphereShape3D = SphereShape3D.new()
+	sphere.radius = 0.25
+	var sphere_prop: Node3D = _make_grip_test_prop(sphere, Vector3.ONE)
+	hand.set_carrying(true, sphere_prop, -1.0)
+	var sphere_left: Vector3 = hand._get_carry_pose_position()
+	hand.set_carrying(true, sphere_prop, 1.0)
+	var sphere_right: Vector3 = hand._get_carry_pose_position()
+	if absf(sphere_left.distance_to(sphere_right) - 0.58) > 0.04:
+		_fail("Sphere grip did not use its collision radius")
+	sphere_prop.free()
+
+	var capsule: CapsuleShape3D = CapsuleShape3D.new()
+	capsule.radius = 0.2
+	capsule.height = 0.8
+	var capsule_prop: Node3D = _make_grip_test_prop(capsule, Vector3.ONE)
+	hand.set_carrying(true, capsule_prop, -1.0)
+	var capsule_left: Vector3 = hand._get_carry_pose_position()
+	hand.set_carrying(true, capsule_prop, 1.0)
+	var capsule_right: Vector3 = hand._get_carry_pose_position()
+	if absf(capsule_left.distance_to(capsule_right) - 0.48) > 0.04:
+		_fail("Capsule grip did not use its collision radius")
+	hand.set_carrying(false)
+	capsule_prop.free()
+
+func _make_grip_test_prop(shape: Shape3D, collision_scale: Vector3) -> Node3D:
+	var prop: Node3D = Node3D.new()
+	root.add_child(prop)
+	prop.global_position = Vector3(1.0, 0.5, -2.0)
+	var collision: CollisionShape3D = CollisionShape3D.new()
+	collision.name = "CollisionShape3D"
+	collision.shape = shape
+	collision.scale = collision_scale
+	prop.add_child(collision)
+	return prop
 
 func _fail(message: String) -> void:
 	_failed = true
