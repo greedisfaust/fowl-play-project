@@ -25,7 +25,7 @@ height = 0.3
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_j13iq"]
 radius = 0.05
-height = 0.27
+height = 0.34
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_hfbtv"]
 radius = 0.065
@@ -1047,7 +1047,7 @@ bone_name = "Forearm_L"
 bone_idx = 6
 
 [node name="ForearmLMesh" type="MeshInstance3D" parent="Skeleton3D/ForearmAttachment_L" unique_id=1122780713]
-transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0.125, 0, 0)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0.14, 0, 0)
 mesh = SubResource("CapsuleMesh_j13iq")
 
 [node name="UpperArmAttachment_R" type="BoneAttachment3D" parent="Skeleton3D" unique_id=1292866239]
