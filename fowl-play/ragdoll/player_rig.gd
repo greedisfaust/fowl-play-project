@@ -44,15 +44,15 @@ var _carry_saved_angular_damp: Dictionary = {}
 var _carry_saved_chest_swing_span: float = 0.0
 var _carry_saved_chest_twist_span: float = 0.0
 
-# Soft yaw-only guide: chest turns toward carrier while pitch/roll remain physical.
-# The chest is the carry anchor now: firm enough to stay in front of the
-# carrier, but spring-damped so the torso can still sway instead of locking.
-const CARRY_CHEST_SPRING_N_PER_M: float = 1150.0
-const CARRY_CHEST_DAMPING_N_PER_MPS: float = 115.0
-const CARRY_CHEST_MAX_FORCE_N: float = 4200.0
-const CARRY_CHEST_YAW_STIFFNESS: float = 105.0
-const CARRY_CHEST_YAW_DAMPING: float = 22.0
-const CARRY_CHEST_MAX_TORQUE: float = 95.0
+# Strong, damped 6-DOF carry anchor. The Chest follows the carrier's
+# CarryAnchor position and upright facing; spring damping gives slight lag
+# without allowing the ragdoll limbs to spin the upper body away.
+const CARRY_CHEST_SPRING_N_PER_M: float = 5000.0
+const CARRY_CHEST_DAMPING_N_PER_MPS: float = 350.0
+const CARRY_CHEST_MAX_FORCE_N: float = 18000.0
+const CARRY_CHEST_ROTATION_STIFFNESS: float = 260.0
+const CARRY_CHEST_ROTATION_DAMPING: float = 48.0
+const CARRY_CHEST_MAX_TORQUE: float = 900.0
 
 # Temporary rotational damping used only while this ragdoll is being carried.
 const CARRY_TORSO_ANGULAR_DAMP: float = 4.0
@@ -238,32 +238,32 @@ func end_carry_physics() -> void:
 	_carry_physics_active = false
 
 func apply_carry_support() -> void:
-	if not _carry_support_active or not simulator.is_simulating_physics() or _hips_physical_bone == null:
+	if not _carry_support_active or not simulator.is_simulating_physics() or _chest_physical_bone == null:
 		return
-	# Keep the chest in the carrier's view. The hips are deliberately NOT
-	# position-driven anymore; they hang below the supported chest through the
-	# ragdoll joints, along with the freely simulated arms and legs.
-	if _chest_physical_bone == null:
-		return
+	# The Chest itself is actively held at the carrier's CarryAnchor. This is
+	# deliberately much firmer than the old spring so arm/leg forces cannot
+	# drag the entire body away. All other bones remain physical.
 	var displacement: Vector3 = _carry_target_world - _chest_physical_bone.global_position
 	var force: Vector3 = displacement * CARRY_CHEST_SPRING_N_PER_M
 	force -= _chest_physical_bone.linear_velocity * CARRY_CHEST_DAMPING_N_PER_MPS
 	PhysicsServer3D.body_apply_central_force(_chest_physical_bone.get_rid(), force.limit_length(CARRY_CHEST_MAX_FORCE_N))
-	_apply_carry_chest_facing()
+	_apply_carry_chest_orientation()
 
-func _apply_carry_chest_facing() -> void:
+func _apply_carry_chest_orientation() -> void:
 	if _chest_physical_bone == null or _carry_facing_world.length_squared() < 0.0001:
 		return
-	# Only steer around world-up. The chest can still pitch, roll, and react to
-	# gravity/collisions; the arms, head, and legs receive no direct motor force.
-	var current_forward: Vector3 = -_chest_physical_bone.global_basis.z
-	current_forward.y = 0.0
-	if current_forward.length_squared() < 0.0001:
-		return
-	current_forward = current_forward.normalized()
-	var yaw_error: float = current_forward.signed_angle_to(_carry_facing_world, Vector3.UP)
-	var yaw_speed: float = _chest_physical_bone.angular_velocity.dot(Vector3.UP)
-	var torque: Vector3 = Vector3.UP * (yaw_error * CARRY_CHEST_YAW_STIFFNESS - yaw_speed * CARRY_CHEST_YAW_DAMPING)
+	# Keep the Chest upright and facing the carrier's requested direction.
+	# A full 3-axis spring resists pitch/roll as well as yaw, with damping
+	# preserving a small delayed response when the carrier turns.
+	var target_basis: Basis = Basis.looking_at(_carry_facing_world.normalized(), Vector3.UP)
+	var target_rotation: Quaternion = target_basis.get_rotation_quaternion().normalized()
+	var current_rotation: Quaternion = _chest_physical_bone.global_basis.get_rotation_quaternion().normalized()
+	var rotation_error: Quaternion = (target_rotation * current_rotation.inverse()).normalized()
+	if rotation_error.w < 0.0:
+		rotation_error = Quaternion(-rotation_error.x, -rotation_error.y, -rotation_error.z, -rotation_error.w)
+	var angular_error: Vector3 = rotation_error.get_axis() * rotation_error.get_angle()
+	var torque: Vector3 = angular_error * CARRY_CHEST_ROTATION_STIFFNESS
+	torque -= _chest_physical_bone.angular_velocity * CARRY_CHEST_ROTATION_DAMPING
 	PhysicsServer3D.body_apply_torque(_chest_physical_bone.get_rid(), torque.limit_length(CARRY_CHEST_MAX_TORQUE))
 
 func release_carry(linear: Vector3, angular: Vector3) -> void:
