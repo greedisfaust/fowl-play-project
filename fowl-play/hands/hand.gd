@@ -328,7 +328,7 @@ func update_hover_point(world_point: Vector3) -> void:
 	hover_point = world_point
 
 func begin_action(world_point: Vector3) -> bool:
-	if is_guarding or is_limp or is_carrying or _action_phase != HandActionPhase.NONE:
+	if is_guarding or is_limp or is_carrying:
 		return false
 	if not world_point.is_finite():
 		return false
@@ -337,6 +337,8 @@ func begin_action(world_point: Vector3) -> bool:
 		return false
 	_reach_target = world_point
 	_reach_offset = local_direction.normalized() * minf(reach_distance, local_direction.length())
+	# Retrigger from the current blend amount so rapid pokes take over smoothly.
+	# Never snap back to rest or wait for the previous action to finish.
 	_reach_start_amount = _reach_amount
 	_action_elapsed = 0.0
 	_action_phase = HandActionPhase.EXTENDING
