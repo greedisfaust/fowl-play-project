@@ -137,3 +137,12 @@ Removed the action-phase gate from procedural poke starts. A new poke can now re
 - Kept the correction weighted, angularly limited, and integrated with existing smooth joint blending.
 - Expanded M2 coverage for finite/bounded per-finger corrections and a non-zero contact response.
 - Sphere and capsule surface solvers remain the next shape-coverage step. Godot tests and visual verification have not been run by the assistant.
+
+
+## 2026-11-19 — hand rig multiplayer milestone bundle
+
+- Added [HAND_RIG_MULTIPLAYER_MILESTONE.md](HAND_RIG_MULTIPLAYER_MILESTONE.md) as the consolidated hand-rig handoff and next verification plan.
+- The bundle records implemented procedural poses, carry grip, box surface-directed all-finger bend, and spam-friendly poke behavior, while explicitly distinguishing code paths from real two-instance verification.
+- Next milestone: audit ownership/RPC paths, then verify hover/point, host-approved poke, carry/drop/throw, and pose priority in both host-to-client and client-to-host directions.
+- Current status remains **not multiplayer-ready**. Hover relay, poke broadcast, and carry-pose integration have code/test coverage, but rendered two-instance delivery has not been confirmed.
+- Latest all-finger box-contact extension and spam-friendly poke retrigger still require user visual confirmation in the current build. Godot execution and runtime verification have not been performed by the assistant.
