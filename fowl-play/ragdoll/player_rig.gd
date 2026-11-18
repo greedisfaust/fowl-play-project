@@ -135,10 +135,10 @@ func _ready() -> void:
 	var left_rig_hand_root: Node = get_node_or_null("Skeleton3D/HandAttachment_R/HandMount_R/Hand")
 	_left_rig_hand_visuals.clear()
 	if left_rig_hand_root != null:
-		for visual_node: Node in left_rig_hand_root.find_children("*", "VisualInstance3D", true, false):
-			var visual_instance: VisualInstance3D = visual_node as VisualInstance3D
-			if visual_instance != null:
-				_left_rig_hand_visuals.append(visual_instance)
+		for left_visual_node: Node in left_rig_hand_root.find_children("*", "VisualInstance3D", true, false):
+			var left_visual_instance: VisualInstance3D = left_visual_node as VisualInstance3D
+			if left_visual_instance != null:
+				_left_rig_hand_visuals.append(left_visual_instance)
 	_left_rig_hand_visible_watch_name = StringName("rig/%s/left_rig_hand_visible" % get_parent().name)
 	_set_left_rig_hand_visual_visible(false)
 	_right_arm_ik_watch_name = StringName("rig/%s/right_arm_ik" % get_parent().name)
