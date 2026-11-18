@@ -134,6 +134,14 @@ M2 hand names: the first instance retains its node-name command/watch suffix. Co
 - A wall blocks focus and host validation. Disabled targets and pickup-disabled props reject before emitting interaction. GRAB still only logs acceptance; physical carry and prop physics replication remain deferred.
 - Tests cover the saved-scene focus command, state/action/reach/occlusion rejection, separate-process client requests and reliable results, and current device state on late join/reconnect.
 
+### M2/M3 replicated hand cosmetics
+
+- The local first-person right hand points at the focused interactable. The host relays the hover state and world target to remote world hands; the left hand remains relaxed.
+- `net/hand_hover_sent` counts host relays and `net/hand_hover_received` counts hover states applied to remote world hands on clients. These are cosmetic pose updates, not gameplay authority.
+- On an accepted interaction, `net/hand_poke_sent` counts host poke broadcasts and `net/hand_poke_received` counts world-hand poke animations accepted on clients. Rejected interactions do not produce a remote poke.
+- Two-instance check: aim at an interactable without clicking. The other instance should see that player's right hand point at it. Move aim away and the remote hand should return to idle. Then click; the other instance should see the poke and smooth return.
+- If the counters remain at zero, inspect `net/roster` and `interact` logs first. If sent rises but received stays zero, inspect the client RPC/owner lookup. If received rises but the pose is invisible, inspect the remote Player Rig visibility and the world-hand attachment.
+
 ### M4 live rig preparation
 
 Once `res://ragdoll/player_rig.gd` is attached to the visual Rig root, `rig/<player-id>/physical_bones` reports the number of physical bones prepared for that Player. Expect 11, with `Rig <player-id> prepared 11 dormant physical bones; 10 selective self-contact pairs.` in the ragdoll log. A different count emits a warning. The component stops simulation and clears physical-bone collision layers/masks while standing. During limp, 10 non-neighboring forearm/thigh/shin-to-torso pairs may contact; connected joints and remaining same-ragdoll pairs stay exempt. The isolated `ragdoll_test_*` commands use the same policy. Run `tests/run_ragdoll_collision_checks.ps1 -GodotExecutable <path>` to check the exception map; visual clipping and jitter still need an in-game drop test.
