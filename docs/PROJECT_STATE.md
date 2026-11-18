@@ -92,3 +92,8 @@ Carry finger joints now blend between exported tight and open curl presets using
 ## 2026-11-19 — individual procedural carry finger curls
 
 Each of the four fingers now receives its own carry curl target. The existing projected-thickness blend remains the shared baseline; each finger's root is transformed into prop-local space and its lateral distance from the prop center is compared with the prop's lateral half-extent. Fingers nearer the lateral bounds receive a small additional edge-hook curl. The M2 test checks that outer fingers curl slightly farther than inner fingers. This is a geometry-guided pose heuristic, not per-finger contact solving or exact contour wrapping. Thumb opposition remains the next hand-grip task. Godot tests and rendered playtesting remain user-run checks.
+
+
+## 2026-11-19 — procedural carry thumb opposition
+
+During carry, the thumb root now aims its authored segment direction from the thumb mount toward the carried prop center. The two thumb joints receive a modest carry curl while idle/point/guard/limp thumb behavior remains unchanged. The M2 test checks the thumb root's aim direction toward a test prop. This is an initial opposition pose, not yet surface-contact solving or exact thumb placement around each shape. Godot tests and rendered playtesting remain user-run checks.
