@@ -64,6 +64,7 @@ Automated checks cover Enter/Run signal wiring, category toggles, feedback with 
 | `interact_use_<name>` | none | no | no | Submits the local player's focused interaction to the host. Remote-player commands reject locally. Submission is not acceptance; see interact logs. |
 | `hand_status_<name>` | none | no | no | Reports this hand's cosmetic state. |
 | `arm_ik_status_<player>` | none | no | no | Reports the Viewmodel-right arm IK target, active state, and mapped Rig bone chain. |
+| `arm_ik_status_left_<player>` | none | no | no | Reports the Viewmodel-left arm IK target, active state, and mapped Rig bone chain. |
 | `ragdoll_test_start` | none | no | yes | Starts the isolated player ragdoll simulation. |
 | `ragdoll_test_stop` | none | no | yes | Stops the isolated player ragdoll simulation. |
 | `ragdoll_test_reset` | none | no | yes | Stops the isolated simulation and restores the skeleton rest pose. |
@@ -246,10 +247,12 @@ When the carried target is a limp player, cosmetic hand grips use the live Chest
 - The Rig hand scene becomes visible when host physical ragdoll simulation or remote ragdoll pose playback begins, then hides again when simulation ends and recovery owns the skeleton. `rig/<player-id>/right_rig_hand_visible` reports the actual visual state.
 - The positive-X forearm's render capsule is extended from 0.27 m to 0.34 m and its center nudged to 0.14 m along the forearm. This is render geometry only; the PhysicalBone collision capsule and joint lengths are unchanged. Inspect the wrist seam in-game and reduce the overlap if it looks swollen.
 - `tests/m2_procedural_arm_test.gd` checks the standing-hidden → ragdoll-visible → standing-hidden handoff. Run `tests/run_checks.ps1`; Godot execution and visual confirmation remain user-run.
-### M2 procedural right-arm IK — first integration slice
+### M2 procedural two-arm IK — first integration slice
 
-- The remote-visible Player Rig positive-X upper arm and forearm (the Rig currently names this chain UpperArm_L/Forearm_L) solve toward the camera-attached Viewmodel right hand world-space wrist target. The Viewmodel hand remains the pose/presentation owner; the body rig supplies the connected shoulder-to-wrist silhouette.
-- The first solver is two-bone position IK using the authored 0.28 m upper arm and 0.25 m forearm lengths. Targets outside the reachable envelope are clamped; a downward/forward pole keeps the elbow bend predictable. Exponential blending smooths target changes.
-- IK is called only during standing Player processing. PlayerRig refuses to write arm bones while PhysicalBoneSimulator3D, remote ragdoll pose playback, or recovery blending owns the skeleton. No gameplay authority or network messages were added.
-- Debug watch: rig/<player-id>/right_arm_ik reports whether the standing right-arm solver is active. Run tests/m2_procedural_arm_test.gd through tests/run_checks.ps1 for reach geometry, wrist movement, and ragdoll ownership assertions.
-- This is deliberately right-arm-only. Left arm, wrist orientation matching, carry/guard pose tuning, and visual elbow-pole tuning remain future slices. Godot execution and in-game visual/multiplayer verification have not been run by the assistant.
+- The camera-attached Viewmodel right hand targets the positive-X Rig chain `UpperArm_L/Forearm_L/Hand_L`; the Viewmodel left hand targets the negative-X Rig chain `UpperArm_R/Forearm_R/Hand_R`. Mapping is spatial: Viewmodel side names do not match the Rig's suffixes.
+- Both chains use the shared two-bone position solver with their authored bone lengths, reachable-distance clamping, a downward/forward elbow pole, and exponential blending. Each wrist target comes from its own Viewmodel hand's `PoseRoot` at local `(0, 0, 0.32)`.
+- Both duplicate Rig hand meshes are hidden during standing presentation so the Viewmodel hands remain the visible hands. Both Rig hand meshes are restored for host ragdoll simulation and remote ragdoll pose playback, then hidden when simulation ends and recovery owns the skeleton. Their skeleton attachments and physical bones remain intact.
+- Both Rig hand-scene `Forearm` MeshInstance3D children are hidden through `player_rig.tscn` instance overrides; the FPS Viewmodel hand scenes are untouched. Both Rig forearm render capsules now bridge toward their wrist targets with mirrored 0.34 m mesh geometry. PhysicalBone collision shapes and bone lengths are unchanged.
+- IK runs only in the Player standing update path. PlayerRig refuses to write either arm while PhysicalBoneSimulator3D, remote ragdoll pose playback, or recovery blending owns the skeleton.
+- Debug watches: `rig/<player-id>/right_arm_ik`, `rig/<player-id>/left_arm_ik`, `rig/<player-id>/right_rig_hand_visible`, and `rig/<player-id>/left_rig_hand_visible`. Commands: `arm_ik_status_<player>` and `arm_ik_status_left_<player>`.
+- `tests/m2_procedural_arm_test.gd` checks both wrist targets, hand visibility handoff, hidden world-hand forearm meshes, and ragdoll ownership. Run `tests/run_checks.ps1`; Godot execution and rendered two-instance verification remain user-run.
