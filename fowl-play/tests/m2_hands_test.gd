@@ -58,8 +58,14 @@ func _run() -> void:
 	if hand.reach(Vector3.ZERO):
 		_fail("An active hand action should not restart from a second request")
 	hand.finish_action(false)
+	if hand._action_phase != Hand.HandActionPhase.EXTENDING:
+		_fail("Interaction result should not cancel the visible reach extension")
+	hand._process(hand.action_extend_seconds + 0.01)
+	if hand._action_phase != Hand.HandActionPhase.CONTACT:
+		_fail("Hand action should reach its contact phase before recovery")
+	hand._process(hand.action_contact_seconds + 0.01)
 	if hand._action_phase != Hand.HandActionPhase.RETURNING:
-		_fail("Rejected interaction should transition the hand into recovery")
+		_fail("Rejected interaction should transition into recovery after contact")
 	hand._process(hand.action_return_seconds + 0.1)
 	if hand._action_phase != Hand.HandActionPhase.NONE or hand._reach_amount > 0.001:
 		_fail("Hand action recovery should return to its resting amount")
