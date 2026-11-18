@@ -243,6 +243,16 @@ func _bone_axis_scale(rest_offset: Vector3, amount: float) -> Vector3:
 		result.z = amount
 	return result
 
+func _bone_axis_scale_value(rest_offset: Vector3, pose_scale: Vector3) -> float:
+	var axis_x: float = absf(rest_offset.x)
+	var axis_y: float = absf(rest_offset.y)
+	var axis_z: float = absf(rest_offset.z)
+	if axis_x >= axis_y and axis_x >= axis_z:
+		return pose_scale.x
+	if axis_y >= axis_z:
+		return pose_scale.y
+	return pose_scale.z
+
 func _reset_arm_pose_scale(upper_index: int, forearm_index: int) -> void:
 	if upper_index >= 0:
 		skeleton.set_bone_pose_scale(upper_index, Vector3.ONE)
@@ -271,7 +281,10 @@ func _update_procedural_arm_chain(
 	var base_forearm_length: float = forearm_rest_offset.length()
 	var base_reach: float = base_upper_length + base_forearm_length
 	var target_distance: float = shoulder_world.distance_to(wrist_target_world)
-	var stretch_ratio: float = clampf(target_distance / maxf(base_reach, 0.001), 1.0, ARM_IK_MAX_STRETCH_RATIO)
+	var target_stretch_ratio: float = clampf(target_distance / maxf(base_reach, 0.001), 1.0, ARM_IK_MAX_STRETCH_RATIO)
+	var blend_weight: float = 1.0 - exp(-ARM_IK_BLEND_SPEED * maxf(delta, 0.0))
+	var current_stretch_ratio: float = _bone_axis_scale_value(upper_rest_offset, skeleton.get_bone_pose_scale(upper_index))
+	var stretch_ratio: float = lerpf(current_stretch_ratio, target_stretch_ratio, blend_weight)
 	var upper_length: float = base_upper_length * stretch_ratio
 	var forearm_length: float = base_forearm_length * stretch_ratio
 	# Scale only along each bone chain axis. This is a small cosmetic extension
@@ -289,7 +302,6 @@ func _update_procedural_arm_chain(
 	var upper_direction_parent: Vector3 = chest_world_basis.inverse() * (elbow_world - shoulder_world).normalized()
 	var upper_rest_axis: Vector3 = skeleton.get_bone_rest(forearm_index).origin.normalized()
 	var upper_target_rotation: Quaternion = Quaternion(upper_rest_axis, upper_direction_parent.normalized())
-	var blend_weight: float = 1.0 - exp(-ARM_IK_BLEND_SPEED * maxf(delta, 0.0))
 	var upper_current: Quaternion = skeleton.get_bone_pose_rotation(upper_index)
 	skeleton.set_bone_pose_rotation(upper_index, upper_current.slerp(upper_target_rotation, blend_weight))
 	skeleton.force_update_all_bone_transforms()
