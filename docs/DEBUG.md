@@ -205,3 +205,8 @@ The action controller is cosmetic only. Host interaction validation remains resp
 ### M2 surface-directed index carry bend
 
 The first visible contact-response slice now uses the index fingertip's nearest BoxShape3D surface target to add a restrained directional correction to its three bend joints. The correction is weighted and clamped by `carry_contact_bend_weight` and `carry_contact_bend_limit_degrees`, then uses the existing exponential pose blend; the other fingers keep their established size/edge curl until this technique is visually approved. CollisionShape3D children are cached when the carried item changes, rather than rediscovered during the frame loop. This is a directional bend assist, not full inverse kinematics or guaranteed physical contact. M2 checks that a transformed box produces a non-zero, bounded index correction. Godot execution and visual confirmation remain user-run.
+
+
+### M2 all-finger surface-directed carry bend
+
+The box-surface contact bend is now applied to all four fingers (index, middle, ring, pinky), each using its own current fingertip and nearest BoxShape3D contact target. The per-finger correction remains weighted and angularly clamped, with the existing exponential joint blend preserving smooth transitions. Sphere and capsule surface solvers are not included in this slice. M2 checks finite, bounded corrections and confirms at least one finger responds to a transformed box. Godot execution and visual confirmation remain user-run.
