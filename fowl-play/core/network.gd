@@ -22,6 +22,8 @@ var _switching_session: bool = false
 var movement_players: Dictionary = {}
 var movement_rejected: int = 0
 var interaction_rejected: int = 0
+var carry_rejected: int = 0
+var _carry_times: Dictionary = {}
 var interaction_accepted: int = 0
 var _interaction_times: Dictionary = {}
 var _ragdoll_epochs: Dictionary = {}
@@ -60,6 +62,7 @@ func _bootstrap() -> void:
 	hub.call("command", &"net_join", _command_join, "Join an IP: net_join [IP]. Default: 127.0.0.1.", false, false)
 	hub.call("command", &"ragdoll_spike_start", _command_ragdoll_start, "Host test: start a player's ragdoll by peer ID.", true, true)
 	hub.call("command", &"ragdoll_spike_stop", _command_ragdoll_stop, "Host test: restore a player's standing state by peer ID.", true, true)
+	hub.call("watch", &"net/carry_rejected", func() -> int: return carry_rejected)
 	parse_args(OS.get_cmdline_args() + OS.get_cmdline_user_args())
 
 func parse_args(arguments: PackedStringArray) -> void:
@@ -150,6 +153,8 @@ func shutdown() -> void:
 	ragdoll_settled_sent = 0
 	ragdoll_settled_received = 0
 	ragdoll_send_hz = TUNING.RAGDOLL_SEND_HZ
+	carry_rejected = 0
+	_carry_times.clear()
 	status = "disconnected"
 	session_ended.emit()
 	_debug_log("Network shut down")
@@ -290,6 +295,7 @@ func start_ragdoll_spike(owner_id: int) -> bool:
 	if peer != null and not is_host:
 		return false
 	var player: Node = movement_players.get(owner_id)
+	force_drop_carry(owner_id, "limp")
 	if not is_instance_valid(player) or player.is_queued_for_deletion() or not bool(player.call("begin_host_limp")):
 		return false
 	var epoch: int = int(_ragdoll_epochs.get(owner_id, 0)) + 1
@@ -441,9 +447,12 @@ func _on_peer_connected(peer_id: int) -> void:
 	if is_host:
 		_publish_roster()
 		_sync_active_ragdolls.call_deferred(peer_id)
+		_sync_active_carries.call_deferred(peer_id)
 
 func _on_peer_disconnected(peer_id: int) -> void:
 	_interaction_times.erase(peer_id)
+	force_drop_carry(peer_id, "disconnect")
+	_carry_times.erase(peer_id)
 	# G8 forced-exit cleanup: if a limp player disconnects, broadcast the
 	# reliable end event to the remaining clients so their limp bodies
 	# complete a get-up blend instead of vanishing silently. The host
@@ -526,6 +535,9 @@ func _interaction_rejection(actor: Node3D, target: Interactable, action: StringN
 		return "no active actor for sender"
 	if bool(actor.get("is_limp")):
 		return "actor is limp"
+	var carrier: Node = actor.get_node_or_null("Carrier")
+	if carrier != null and bool(carrier.call("is_holding")):
+		return "actor is carrying"
 	if not is_instance_valid(target) or target.is_queued_for_deletion():
 		return "unknown target"
 	var body: Node3D = target.get_parent() as Node3D
@@ -567,3 +579,169 @@ func _debug_warn(message: String) -> void:
 	var debug_hub: Node = get_node_or_null("/root/DebugHub")
 	if debug_hub != null:
 		debug_hub.call("warn", &"net", message)
+
+
+
+# ---------------------------------------------------------------------
+# Carry / drop / throw (host-authoritative)
+# Clients send intent only. The host validates, mutates its own Carrier +
+# Prop, then broadcasts a reliable event so every peer mirrors the state.
+# ---------------------------------------------------------------------
+ 
+## Local entry point for drop/throw intent (input and console commands).
+func request_carry_action(action: StringName, direction: Vector3) -> bool:
+	if peer == null or is_host:
+		var owner_id: int = multiplayer.get_unique_id()
+		if peer == null and movement_players.has(0):
+			owner_id = 0
+		return _receive_carry_action(owner_id, action, direction)
+	if peer.get_connection_status() != MultiplayerPeer.CONNECTION_CONNECTED:
+		return false
+	_submit_carry_action.rpc_id(TUNING.PEER_ID_HOST, action, direction)
+	return true
+ 
+@rpc("any_peer", "call_remote", "reliable", 0)
+func _submit_carry_action(action: StringName, direction: Vector3) -> void:
+	if is_host and validate_rpc():
+		_receive_carry_action(multiplayer.get_remote_sender_id(), action, direction)
+ 
+func _receive_carry_action(owner_id: int, action: StringName, direction: Vector3) -> bool:
+	var now: float = Time.get_ticks_msec() / 1000.0
+	if now - float(_carry_times.get(owner_id, -INF)) < TUNING.CARRY_ACTION_INTERVAL_S:
+		return _carry_reject(owner_id, action, "request cooldown")
+	_carry_times[owner_id] = now
+	if action != &"drop" and action != &"throw":
+		return _carry_reject(owner_id, action, "unknown action")
+	var actor: Node3D = movement_players.get(owner_id) as Node3D
+	if not is_instance_valid(actor) or actor.is_queued_for_deletion():
+		return _carry_reject(owner_id, action, "no active actor for sender")
+	if bool(actor.get("is_limp")):
+		return _carry_reject(owner_id, action, "actor is limp")
+	var carrier: Node = actor.get_node_or_null("Carrier")
+	if carrier == null or not bool(carrier.call("is_holding")):
+		return _carry_reject(owner_id, action, "nothing held")
+ 
+	var inherited: Vector3 = Vector3(actor.get("velocity")).limit_length(TUNING.PLAYER_SPEED_MPS)
+	if action == &"throw":
+		var spin: Vector3 = Vector3(randf_range(-3.0, 3.0), randf_range(-3.0, 3.0), randf_range(-3.0, 3.0))
+		_release_carried(owner_id, carrier, _throw_velocity(carrier, direction) + inherited, spin)
+	else:
+		_release_carried(owner_id, carrier, inherited, Vector3.ZERO)
+	_debug_log("Carry %s accepted peer=%d" % [action, owner_id])
+	return true
+ 
+func _carry_reject(owner_id: int, action: StringName, reason: String) -> bool:
+	carry_rejected += 1
+	_debug_log("Carry %s rejected peer=%d: %s" % [action, owner_id, reason])
+	return false
+ 
+## Trust the client's aim only if it agrees with the host's view of where the
+## player is looking; otherwise fall back to the host's own camera forward.
+## Limp bodies are thrown slower than props (TUNING.THROW_SPEED_LIMP_MPS).
+func _throw_velocity(carrier: Node, requested: Vector3) -> Vector3:
+	const MAX_AIM_ERROR_DEG: float = 25.0
+	var item: Node3D = carrier.get("held_item") as Node3D
+	var item_is_limp: bool = false
+	if item != null:
+		item_is_limp = item.get("is_limp") == true
+	var actor: Node3D = carrier.get_node_or_null("..") as Node3D
+	var camera: Camera3D = actor.get_node_or_null("Head/Camera3D") as Camera3D
+	var forward: Vector3 = (-camera.global_basis.z if camera != null else -actor.global_basis.z).normalized()
+	var dir: Vector3 = forward
+	if requested.is_finite() and requested.length() > 0.001:
+		var wanted: Vector3 = requested.normalized()
+		if wanted.angle_to(forward) <= deg_to_rad(MAX_AIM_ERROR_DEG):
+			dir = wanted
+	var speed: float = TUNING.THROW_SPEED_LIMP_MPS if item_is_limp else TUNING.THROW_SPEED_MPS
+	return dir * speed
+ 
+## Host-only: detach, apply physics, and broadcast.
+func _release_carried(owner_id: int, carrier: Node, linear: Vector3, angular: Vector3) -> void:
+	var item: Node3D = carrier.get("held_item") as Node3D
+	if not is_instance_valid(item):
+		return
+	var at: Vector3 = item.global_position
+	carrier.call("detach_item")
+	item.call("apply_release", at, linear, angular)
+	if peer != null:
+		_carry_release.rpc(owner_id, item.get_path(), at, linear, angular)
+ 
+## Host-only: called by Prop when an accepted "grab" interaction fires.
+func host_begin_carry(actor: Node, item: Node3D) -> bool:
+	if peer != null and not is_host:
+		return false
+	var actor_3d: Node3D = actor as Node3D
+	if not is_instance_valid(actor_3d) or not is_instance_valid(item) or actor_3d.is_queued_for_deletion():
+		return false
+	if bool(actor_3d.get("is_limp")) or bool(actor_3d.get("is_recovering")):
+		return false
+	var carrier: Node = actor_3d.get_node_or_null("Carrier")
+	if carrier == null or bool(carrier.call("is_holding")):
+		return false
+	if not item.has_method("is_carried") or bool(item.call("is_carried")):
+		return false
+	var owner_id: int = int(actor_3d.get("input_peer_id"))
+	carrier.call("attach_item", item)
+	if peer != null:
+		_carry_begin.rpc(owner_id, item.get_path())
+	_debug_log("Carry begin peer=%d item=%s" % [owner_id, item.get_path()])
+	return true
+ 
+## Host-only: drop whatever this player holds (limp, disconnect, etc.).
+func force_drop_carry(owner_id: int, reason: String) -> void:
+	if peer != null and not is_host:
+		return
+	var player: Node = movement_players.get(owner_id)
+	if not is_instance_valid(player):
+		return
+	var carrier: Node = player.get_node_or_null("Carrier")
+	if carrier == null or not bool(carrier.call("is_holding")):
+		return
+	var inherited: Vector3 = Vector3(player.get("velocity")).limit_length(TUNING.PLAYER_SPEED_MPS)
+	_release_carried(owner_id, carrier, inherited, Vector3.ZERO)
+	_debug_log("Carry forced drop peer=%d (%s)" % [owner_id, reason])
+ 
+@rpc("authority", "call_remote", "reliable", 0)
+func _carry_begin(owner_id: int, item_path: NodePath) -> void:
+	if not validate_rpc(TUNING.PEER_ID_HOST):
+		return
+	var player: Node = movement_players.get(owner_id)
+	var item: Node3D = get_node_or_null(item_path) as Node3D
+	if not is_instance_valid(player) or not is_instance_valid(item):
+		return
+	var carrier: Node = player.get_node_or_null("Carrier")
+	if carrier != null:
+		carrier.call("attach_item", item)
+	_debug_log("Carry begin mirrored peer=%d item=%s" % [owner_id, item_path])
+ 
+@rpc("authority", "call_remote", "reliable", 0)
+func _carry_release(owner_id: int, item_path: NodePath, at: Vector3, linear: Vector3, angular: Vector3) -> void:
+	if not validate_rpc(TUNING.PEER_ID_HOST):
+		return
+	if not at.is_finite() or not linear.is_finite() or not angular.is_finite():
+		return
+	var item: Node3D = get_node_or_null(item_path) as Node3D
+	var player: Node = movement_players.get(owner_id)
+	if is_instance_valid(player):
+		var carrier: Node = player.get_node_or_null("Carrier")
+		if carrier != null and carrier.get("held_item") == item:
+			carrier.call("detach_item")
+	if is_instance_valid(item) and item.has_method("apply_release"):
+		item.call("apply_release", at, linear, angular)
+	_debug_log("Carry release mirrored peer=%d item=%s at=%s" % [owner_id, item_path, str(at)])
+ 
+## Late joiners learn who is already carrying what.
+func _sync_active_carries(peer_id: int) -> void:
+	if not is_host or peer == null or not connected_peers.has(peer_id):
+		return
+	for key: Variant in movement_players.keys():
+		var owner_id: int = int(key)
+		var player: Node = movement_players[owner_id]
+		if not is_instance_valid(player):
+			continue
+		var carrier: Node = player.get_node_or_null("Carrier")
+		if carrier != null and bool(carrier.call("is_holding")):
+			var item: Node3D = carrier.get("held_item") as Node3D
+			_carry_begin.rpc_id(peer_id, owner_id, item.get_path())
+ 
+ 

@@ -79,6 +79,9 @@ func _update_focus() -> void:
 func _try_interact(input_action: StringName) -> bool:
 	if not _active:
 		return false
+	if _actor != null and _actor.call("is_carrying"):
+		_debug_log("Interaction rejected: actor is carrying")
+		return false
 	_update_focus()
 	if not is_instance_valid(_focused):
 		_debug_log("Interaction rejected: no focused target")

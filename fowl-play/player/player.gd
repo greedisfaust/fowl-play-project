@@ -18,6 +18,8 @@ var limp_epoch: int = 0
 @onready var head: Node3D = $Head
 @onready var camera: Camera3D = $Head/Camera3D
 @onready var rig: Node3D = get_node_or_null("Rig") as Node3D
+@onready var carrier: Carrier = get_node_or_null("Carrier") as Carrier
+@onready var limp_interactable: Interactable = get_node_or_null("LimpInteractable") as Interactable
 @onready var focus: Node = get_node_or_null("Head/Camera3D/Focus")
 @onready var debug_hub: Node = get_node("/root/DebugHub")
 @onready var network: Node = get_node("/root/Network")
@@ -38,6 +40,8 @@ var wall_clearance_active: bool = false
 # Profiling can keep a spike alive beyond the gameplay recovery deadline.
 var auto_recovery_enabled: bool = true
 var accepted_position: Vector3
+# True when another player's Carrier is holding this player (limp carry).
+var _is_carried: bool = false
 
 var _pitch_radians: float = 0.0
 var _limp_look_yaw: float = 0.0
@@ -53,6 +57,8 @@ var _debug_recovering_watch_name: StringName
 var _debug_limp_elapsed_watch_name: StringName
 var _debug_camera_follow_watch_name: StringName
 var _debug_wall_clearance_watch_name: StringName
+var _debug_carrying_watch_name: StringName
+var _debug_limp_target_watch_name: StringName
 
 func _ready() -> void:
 	accepted_position = global_position
@@ -68,6 +74,9 @@ func _ready() -> void:
 	if focus != null:
 		focus.call("set_active", is_local_player)
 	_debug_command_name = StringName("player_status_%s" % name)
+	if limp_interactable != null:
+		limp_interactable.enabled = false
+		limp_interactable.interacted.connect(_on_limp_interacted)
 	_debug_speed_watch_name = StringName("player/%s/speed_mps" % name)
 	_debug_floor_watch_name = StringName("player/%s/on_floor" % name)
 	_debug_limp_watch_name = StringName("player/%s/limp" % name)
@@ -91,6 +100,10 @@ func _ready() -> void:
 	debug_hub.call("watch", _debug_limp_elapsed_watch_name, func() -> float: return _limp_elapsed_s)
 	debug_hub.call("watch", _debug_camera_follow_watch_name, func() -> bool: return is_local_player and is_limp and camera.top_level)
 	debug_hub.call("watch", _debug_wall_clearance_watch_name, func() -> bool: return wall_clearance_active)
+	debug_hub.call("watch", _debug_carrying_watch_name, func() -> bool: return is_carrying())
+	if limp_interactable != null:
+		_debug_limp_target_watch_name = StringName("player/%s/limp_interactable_enabled" % name)
+		debug_hub.call("watch", _debug_limp_target_watch_name, func() -> bool: return limp_interactable.enabled)
 	debug_hub.call(
 		"command",
 		_debug_command_name,
@@ -119,6 +132,9 @@ func _exit_tree() -> void:
 	debug_hub.call("unwatch", _debug_limp_elapsed_watch_name)
 	debug_hub.call("unwatch", _debug_camera_follow_watch_name)
 	debug_hub.call("unwatch", _debug_wall_clearance_watch_name)
+	debug_hub.call("unwatch", _debug_carrying_watch_name)
+	if not _debug_limp_target_watch_name.is_empty():
+		debug_hub.call("unwatch", _debug_limp_target_watch_name)
 
 func _process(delta: float) -> void:
 	if is_limp:
@@ -179,6 +195,34 @@ func accept_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pit
 	receive_movement(sequence, at, speed, yaw, pitch)
 	return true
 
+## Returns true while this player holds a carried item (prop or limp body).
+func is_carrying() -> bool:
+	return carrier != null and bool(carrier.call("is_holding"))
+
+## Returns true while another player's Carrier is holding this player (limp carry).
+func is_carried() -> bool:
+	return _is_carried
+
+## Called by Carrier.attach_item / detach_item when this player is carried/released.
+func set_carried(carried: bool, by: Node3D = null) -> void:
+	if carried:
+		if _is_carried:
+			return
+		_is_carried = true
+		debug_hub.call("log", &"carry", "%s is now carried by %s" % [name, by.name if by != null else "unknown"])
+		return
+	if not _is_carried:
+		return
+	_is_carried = false
+	debug_hub.call("log", &"carry", "%s was released by %s" % [name, by.name if by != null else "unknown"])
+
+## Final placement + velocities after a drop/throw. Mirrors Prop.apply_release.
+func apply_release(at: Vector3, linear: Vector3, angular: Vector3) -> void:
+	if _is_carried:
+		set_carried(false, null)
+	global_position = at
+	velocity = linear
+
 func receive_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float) -> void:
 	if is_limp or is_recovering:
 		return
@@ -200,6 +244,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		_rotate_view(mouse_event.relative)
 	elif event.is_action_pressed("ui_cancel"):
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	elif event.is_action_pressed("punch"):
+		# While carrying, punch is owned by the Carrier (tap = drop, hold = throw).
+		# Do not also process it as combat input; M7 combat reads punch only when
+		# not carrying. When not carrying, fall through so M7 can claim it.
+		if is_carrying():
+			return
 	elif event is InputEventMouseButton:
 		var mouse_button: InputEventMouseButton = event
 		if mouse_button.pressed and Input.mouse_mode == Input.MOUSE_MODE_VISIBLE:
@@ -236,10 +286,23 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
+## Host-only: called when another player grabs this limp player's Interactable.
+## Delegates to Network.host_begin_carry so host validation applies.
+func _on_limp_interacted(actor: Node, action: StringName) -> void:
+	if action != &"grab":
+		return
+	var network_node: Node = get_node("/root/Network")
+	if bool(network_node.call("host_begin_carry", actor, self)):
+		debug_hub.call("log", &"carry", "%s grabbed by %s" % [name, actor.name])
+	else:
+		debug_hub.call("warn", &"carry", "%s grab rejected by %s" % [name, actor.name])
+
 ## Internal host-only handoff. A later reliable limp event will invoke this.
 func begin_host_limp() -> bool:
 	if is_limp or is_recovering or rig == null or (network.get("peer") != null and not bool(network.get("is_host"))):
 		return false
+	if is_carrying():
+		network.call("force_drop_carry", input_peer_id, "entered limp")
 	collision_layer = 0
 	collision_mask = 0
 	if not bool(rig.call("begin_host_simulation")):
@@ -247,6 +310,9 @@ func begin_host_limp() -> bool:
 		collision_mask = LAYERS.LAYER_MASK_HEALTHY_PLAYERS
 		return false
 	is_limp = true
+	if limp_interactable != null:
+		limp_interactable.enabled = true
+		debug_hub.call("log", &"carry", "%s limp Interactable enabled as grab target." % name)
 	_ragdoll_sequence = 0
 	_ragdoll_send_elapsed = 0.0
 	_ragdoll_slow_elapsed = 0.0
@@ -278,6 +344,9 @@ func stop_host_limp(recovery_variant: StringName = &"") -> bool:
 	rig.call("stop_host_simulation_with_blend", TUNING.GET_UP_BLEND_SECONDS, recovery_variant)
 	is_limp = false
 	is_recovering = true
+	if limp_interactable != null:
+		limp_interactable.enabled = false
+		debug_hub.call("log", &"carry", "%s limp Interactable disabled on recovery." % name)
 	_limp_elapsed_s = 0.0
 	_begin_recovery_camera()
 	velocity = Vector3.ZERO
@@ -372,6 +441,9 @@ func end_remote_limp(
 	rig.call("end_remote_pose_with_blend", TUNING.GET_UP_BLEND_SECONDS, final_pose, recovery_variant)
 	is_limp = false
 	is_recovering = true
+	if limp_interactable != null:
+		limp_interactable.enabled = false
+		debug_hub.call("log", &"carry", "%s limp Interactable disabled on remote limp end." % name)
 	_begin_recovery_camera()
 	velocity = Vector3.ZERO
 	collision_layer = 1 << (LAYERS.HEALTHY_PLAYERS - 1)

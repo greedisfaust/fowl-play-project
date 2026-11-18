@@ -34,6 +34,8 @@ security secret.
 | `hands/<name>/state` | hands/hand.gd | World mode, hover, guard, carry, limp, and speed state. |
 | `ragdoll_test.simulating` | ragdoll/player_ragdoll_test.gd | Whether the isolated PhysicalBoneSimulator3D is simulating. |
 | `player/<name>/wall_clearance` | player/player.gd | Whether recovery placement had to move away from a wall/prop during limp recovery. |
+| `player/<name>/carrying` | player/player.gd | Whether this player currently holds a carried item (prop or limp body). |
+| `player/<name>/limp_interactable_enabled` | player/player.gd | Whether this limp player's grab-target Interactable is enabled. |
 
 ## Commands
 
@@ -50,6 +52,8 @@ Automated checks cover Enter/Run signal wiring, category toggles, feedback with 
 | `debug_disable` | category | no | no | Disables a local debug category. |
 | `debug_watches` | none | no | no | Lists registered watches and current values. |
 | `player_status_<name>` | none | no | no | Reports one player's position, velocity, and grounded state. |
+| `carry_drop_<name>` | none | no | no | Requests a drop of the carried item by this player. |
+| `carry_throw_<name>` | none | no | no | Requests a throw of the carried item by this player. |
 | `net_status` | none | no | no | Reports connection status, port, and known peers. |
 | `net_host` | none | no | no | Starts hosting from offline/disconnected state. Removes the offline player before spawning the host. |
 | `net_join` | optional IP | no | no | Joins an IP; defaults to 127.0.0.1. Example: `net_join 192.168.1.20`. |
@@ -78,6 +82,12 @@ Automated checks cover Enter/Run signal wiring, category toggles, feedback with 
 | M1/M3 | 2 | Press E or run `interact_use_<name>`: `interact: Interaction accepted peer=<id> action=use`; host logs `<device> active=true/false`, clients log `<device> replicated active=true/false`. |
 | M1 | 3 | Aim at the GRAB prop: `props/<name>/pickup_allowed=true`; press E and see `props: <name> grab accepted; carry is deferred to M6`. |
 | M2 | 1 | Hand registration shows `hands/<name>/state`; `hand_status_<name>` reports world/hover/guard/carry/limp state. |
+| M6 | 1 | Aim at a free prop or limp body: `props/<name>/pickup_allowed=true` or `player/<name>/limp_interactable_enabled=true`; press interact → `carry: Player <name> picked up <item>` on host and `carry/<name>/holding=<item>` watch appears. |
+| M6 | 2 | Press punch once and release quickly: `carry: Player <name> released <item>` and `props/<name> set carried=false`. |
+| M6 | 3 | Hold punch past auto-fire: `carry: Player <name> released <item>`; prop/body flies at `THROW_SPEED_MPS` (props) or `THROW_SPEED_LIMP_MPS` (limp bodies). |
+| M6 | 4 | While carrying: `player/<name>/carrying=true`; interaction requests reject with `actor is carrying`; punch is routed to the Carrier (no combat punch). |
+| M6 | 5 | Carrier enters limp: forced drop log `Carry forced drop peer=<id> (entered limp)`; item falls with inherited velocity. |
+| M6 | 6 | Late join: `Carry begin mirrored peer=<id> item=<path>` on joining client; carried item follows new carrier's anchor. |
 
 M0 launch arguments go after Godot's `--` separator: `--host` or `--join=127.0.0.1`; optional `--port=7777`. No arguments starts offline. Movement is local-only at this milestone; remote capsules remain at their spawn positions until M3.
 
