@@ -49,6 +49,9 @@ const AUTHORED_GUARD_THUMB_BASES: Array[Basis] = [
 @export_range(0.02, 1.0) var reach_extend_seconds: float = 0.07
 ## The longer recovery keeps the hand from snapping back after the final click.
 @export_range(0.02, 1.0) var reach_return_seconds: float = 0.22
+## World-space offset from the prop center for each hand grip target.
+@export_range(0.0, 0.5) var carry_side_offset_m: float = 0.18
+@export_range(-0.5, 0.5) var carry_height_offset_m: float = 0.02
 
 var _reach_elapsed: float = -1.0
 var _reach_target: Vector3
@@ -77,6 +80,7 @@ var speed_mps: float = 0.0
 var color: Color = Color.WHITE
 var hover_point: Vector3 = Vector3.ZERO
 var carry_item: Node3D = null
+var carry_side: float = 0.0
 var _aim_node: Node3D = null
 var _pose_root: Node3D = null
 var _debug_command_name: StringName
@@ -217,6 +221,8 @@ func _blend_thumb_and_hand_pose(weight: float, delta: float, pose_state: PoseSta
 		return
 	var position_target: Vector3 = _pose_rest_position
 	var rotation_offset: Vector3 = Vector3.ZERO
+	if pose_state == PoseState.CARRY and is_instance_valid(carry_item):
+		position_target = _get_carry_pose_position()
 	if guard_active:
 		position_target += guard_position_offset
 		rotation_offset = guard_rotation_degrees * PI / 180.0
@@ -288,10 +294,22 @@ func add_sway(relative_motion: Vector2) -> void:
 func set_speed(new_speed_mps: float) -> void:
 	speed_mps = maxf(new_speed_mps, 0.0)
 
-func set_carrying(on: bool, item: Node3D = null) -> void:
+func set_carrying(on: bool, item: Node3D = null, side: float = 0.0) -> void:
 	is_carrying = on
 	carry_item = item if on else null
-	_debug_log("Carrying %s" % ("on" if on else "off"))
+	carry_side = clampf(side, -1.0, 1.0) if on else 0.0
+	_debug_log("Carrying %s side=%.1f" % ["on" if on else "off", carry_side])
+
+## Convert a point on the prop's left/right side into this hand's local space.
+## The hand's attachment root stays fixed; only PoseRoot follows the grip target.
+func _get_carry_pose_position() -> Vector3:
+	if not is_instance_valid(carry_item):
+		return _pose_rest_position
+	var item_basis: Basis = carry_item.global_basis.orthonormalized()
+	var grip_world: Vector3 = carry_item.global_position
+	grip_world += item_basis.x * carry_side * carry_side_offset_m
+	grip_world += item_basis.y * carry_height_offset_m
+	return to_local(grip_world)
 
 func set_limp(on: bool) -> void:
 	is_limp = on
