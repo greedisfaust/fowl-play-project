@@ -20,6 +20,7 @@ var limp_epoch: int = 0
 @onready var rig: Node3D = get_node_or_null("Rig") as Node3D
 @onready var world_right_hand: Hand = get_node_or_null("Rig/Skeleton3D/HandAttachment_R/HandMount_R/Hand") as Hand
 @onready var world_left_hand: Hand = get_node_or_null("Rig/Skeleton3D/HandAttachment_L/HandMount_L/Hand") as Hand
+@onready var viewmodel_hands: Node3D = get_node_or_null("Head/Camera3D/ViewmodelHands") as Node3D
 @onready var viewmodel_left_hand: Hand = get_node_or_null("Head/Camera3D/ViewmodelHands/LeftHand") as Hand
 @onready var viewmodel_right_hand: Hand = get_node_or_null("Head/Camera3D/ViewmodelHands/RightHand") as Hand
 @onready var viewmodel_right_hand_pose_root: Node3D = get_node_or_null("Head/Camera3D/ViewmodelHands/RightHand/PoseRoot") as Node3D
@@ -462,6 +463,7 @@ func begin_host_limp() -> bool:
 		collision_mask = LAYERS.LAYER_MASK_HEALTHY_PLAYERS
 		return false
 	is_limp = true
+	_set_viewmodel_hands_visible(false)
 	set_physics_process(true)
 	_set_limp_interaction_proxy(false)
 	if limp_interactable != null:
@@ -566,6 +568,7 @@ func begin_remote_limp(epoch: int, world_transform: Transform3D, initial_pose: P
 		return false
 	limp_epoch = epoch
 	is_limp = true
+	_set_viewmodel_hands_visible(false)
 	_set_limp_interaction_proxy(true)
 	if limp_interactable != null:
 		limp_interactable.enabled = true
@@ -622,6 +625,10 @@ func _reset_movement_after_limp() -> void:
 	_movement.horizontal_budget = 0.5
 	_movement.vertical_budget = 0.5
 
+func _set_viewmodel_hands_visible(visible: bool) -> void:
+	if is_instance_valid(viewmodel_hands):
+		viewmodel_hands.visible = visible
+
 func _begin_limp_camera() -> void:
 	if not is_local_player:
 		return
@@ -666,6 +673,7 @@ func _update_recovery_camera(delta: float) -> void:
 
 func _finish_recovery() -> void:
 	is_recovering = false
+	_set_viewmodel_hands_visible(true)
 	if is_local_player:
 		camera.top_level = false
 		camera.transform = Transform3D.IDENTITY
