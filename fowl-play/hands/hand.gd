@@ -49,8 +49,8 @@ const AUTHORED_GUARD_THUMB_BASES: Array[Basis] = [
 @export_range(0.02, 1.0) var reach_extend_seconds: float = 0.07
 ## The longer recovery keeps the hand from snapping back after the final click.
 @export_range(0.02, 1.0) var reach_return_seconds: float = 0.22
-## World-space offset from the prop center for each hand grip target.
-@export_range(0.0, 0.5) var carry_side_offset_m: float = 0.18
+## Small world-space clearance added beyond the detected prop collision bounds.
+@export_range(0.0, 0.2) var carry_side_offset_m: float = 0.04
 @export_range(-0.5, 0.5) var carry_height_offset_m: float = 0.02
 
 var _reach_elapsed: float = -1.0
@@ -300,16 +300,84 @@ func set_carrying(on: bool, item: Node3D = null, side: float = 0.0) -> void:
 	carry_side = clampf(side, -1.0, 1.0) if on else 0.0
 	_debug_log("Carrying %s side=%.1f" % ["on" if on else "off", carry_side])
 
-## Convert a point on the prop's left/right side into this hand's local space.
-## The hand's attachment root stays fixed; only PoseRoot follows the grip target.
+## Convert the detected prop bounds into a world-space side grip target.
+## Collision shape debug meshes provide a shape-agnostic bounds source, so boxes,
+## spheres, capsules, cylinders, and compound collision props share this path.
+## Mesh bounds are used only when no usable collision shape is present.
 func _get_carry_pose_position() -> Vector3:
 	if not is_instance_valid(carry_item):
 		return _pose_rest_position
+	var local_bounds: AABB = _get_carry_local_bounds()
 	var item_basis: Basis = carry_item.global_basis.orthonormalized()
-	var grip_world: Vector3 = carry_item.global_position
-	grip_world += item_basis.x * carry_side * carry_side_offset_m
-	grip_world += item_basis.y * carry_height_offset_m
+	var minimums: Vector3 = Vector3(INF, INF, INF)
+	var maximums: Vector3 = Vector3(-INF, -INF, -INF)
+	for corner_index: int in 8:
+		var corner: Vector3 = _aabb_corner(local_bounds, corner_index)
+		var world_corner: Vector3 = carry_item.to_global(corner)
+		var projected: Vector3 = Vector3(
+			world_corner.dot(item_basis.x),
+			world_corner.dot(item_basis.y),
+			world_corner.dot(item_basis.z)
+		)
+		minimums = minimums.min(projected)
+		maximums = maximums.max(projected)
+	var center: Vector3 = (minimums + maximums) * 0.5
+	var half_extents: Vector3 = (maximums - minimums) * 0.5
+	var grip_world: Vector3 = item_basis.x * (center.x + carry_side * (half_extents.x + carry_side_offset_m))
+	grip_world += item_basis.y * (center.y + carry_height_offset_m)
+	grip_world += item_basis.z * center.z
 	return to_local(grip_world)
+
+## Build one prop-local AABB from every usable collision shape. Transforming each
+## debug-mesh corner handles shape-node offsets, rotation, and scale, including
+## a scaled CollisionShape3D beneath an unscaled RigidBody3D.
+func _get_carry_local_bounds() -> AABB:
+	if not is_instance_valid(carry_item):
+		return AABB(Vector3.ZERO, Vector3.ZERO)
+	var bounds_min: Vector3 = Vector3(INF, INF, INF)
+	var bounds_max: Vector3 = Vector3(-INF, -INF, -INF)
+	var found_collision_bounds: bool = false
+	for candidate: Node in carry_item.find_children("*", "CollisionShape3D", true, false):
+		var collision_shape: CollisionShape3D = candidate as CollisionShape3D
+		if collision_shape == null or collision_shape.shape == null:
+			continue
+		var debug_mesh: Mesh = collision_shape.shape.get_debug_mesh()
+		if debug_mesh == null:
+			continue
+		var shape_bounds: AABB = debug_mesh.get_aabb()
+		for corner_index: int in 8:
+			var shape_corner: Vector3 = _aabb_corner(shape_bounds, corner_index)
+			var prop_local_corner: Vector3 = carry_item.to_local(collision_shape.to_global(shape_corner))
+			bounds_min = bounds_min.min(prop_local_corner)
+			bounds_max = bounds_max.max(prop_local_corner)
+			found_collision_bounds = true
+	if found_collision_bounds:
+		return AABB(bounds_min, bounds_max - bounds_min)
+	# Some custom shapes may not expose a debug mesh. Fall back to visible mesh
+	# bounds rather than silently assuming every prop is a box.
+	var found_mesh_bounds: bool = false
+	for candidate: Node in carry_item.find_children("*", "MeshInstance3D", true, false):
+		var mesh_instance: MeshInstance3D = candidate as MeshInstance3D
+		if mesh_instance == null or mesh_instance.mesh == null:
+			continue
+		var mesh_bounds: AABB = mesh_instance.mesh.get_aabb()
+		for corner_index: int in 8:
+			var mesh_corner: Vector3 = _aabb_corner(mesh_bounds, corner_index)
+			var prop_local_mesh_corner: Vector3 = carry_item.to_local(mesh_instance.to_global(mesh_corner))
+			bounds_min = bounds_min.min(prop_local_mesh_corner)
+			bounds_max = bounds_max.max(prop_local_mesh_corner)
+			found_mesh_bounds = true
+	if found_mesh_bounds:
+		return AABB(bounds_min, bounds_max - bounds_min)
+	# Last-resort fallback preserves a small, usable grip target for invisible props.
+	return AABB(Vector3(-0.18, -0.10, -0.18), Vector3(0.36, 0.20, 0.36))
+
+func _aabb_corner(bounds: AABB, corner_index: int) -> Vector3:
+	return Vector3(
+		bounds.position.x + (bounds.size.x if (corner_index & 1) != 0 else 0.0),
+		bounds.position.y + (bounds.size.y if (corner_index & 2) != 0 else 0.0),
+		bounds.position.z + (bounds.size.z if (corner_index & 4) != 0 else 0.0)
+	)
 
 func set_limp(on: bool) -> void:
 	is_limp = on
