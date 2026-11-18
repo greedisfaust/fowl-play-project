@@ -51,13 +51,18 @@ func _check_rig_arm_target() -> void:
 	var skeleton: Skeleton3D = rig.get_node("Skeleton3D") as Skeleton3D
 	var upper_index: int = skeleton.find_bone("UpperArm_L")
 	var hand_index: int = skeleton.find_bone("Hand_L")
+	var left_upper_index: int = skeleton.find_bone("UpperArm_R")
+	var left_hand_index: int = skeleton.find_bone("Hand_R")
 	var rig_hand_visual: MeshInstance3D = rig.get_node("Skeleton3D/HandAttachment_L/HandMount_L/Hand/PoseRoot/Wrist") as MeshInstance3D
-	if upper_index < 0 or hand_index < 0:
-		_fail("Right arm bone chain is incomplete")
+	var left_rig_hand_visual: MeshInstance3D = rig.get_node("Skeleton3D/HandAttachment_R/HandMount_R/Hand/PoseRoot/Wrist") as MeshInstance3D
+	if upper_index < 0 or hand_index < 0 or left_upper_index < 0 or left_hand_index < 0:
+		_fail("One of the Rig arm bone chains is incomplete")
 		rig.free()
 		return
 	if rig_hand_visual.visible:
 		_fail("Duplicate positive-X Rig hand should be hidden while the Viewmodel hand owns standing presentation")
+	if left_rig_hand_visual.visible:
+		_fail("Duplicate negative-X Rig hand should be hidden while the Viewmodel hand owns standing presentation")
 	var target: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(upper_index).origin) + Vector3(0.18, -0.06, -0.38)
 	var before: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(hand_index).origin)
 	var applied: bool = bool(rig.call("update_procedural_right_arm", target, 1.0))
@@ -67,11 +72,22 @@ func _check_rig_arm_target() -> void:
 		_fail("Standing Player Rig should accept a valid right wrist target")
 	if after.distance_to(target) >= before.distance_to(target):
 		_fail("Right wrist should move closer to the requested Viewmodel wrist target")
+	var left_target: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(left_upper_index).origin) + Vector3(-0.18, -0.06, -0.38)
+	var left_before: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(left_hand_index).origin)
+	var left_applied: bool = bool(rig.call("update_procedural_left_arm", left_target, 1.0))
+	skeleton.force_update_all_bone_transforms()
+	var left_after: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(left_hand_index).origin)
+	if not left_applied:
+		_fail("Standing Player Rig should accept a valid left wrist target")
+	if left_after.distance_to(left_target) >= left_before.distance_to(left_target):
+		_fail("Left wrist should move closer to the requested Viewmodel wrist target")
 	var started: bool = bool(rig.call("begin_host_simulation"))
 	if not started:
 		_fail("Player Rig should enter ragdoll for ownership test")
 	if not rig_hand_visual.visible:
 		_fail("Rig hand visual should return when ragdoll physics takes ownership")
+	if not left_rig_hand_visual.visible:
+		_fail("Left Rig hand visual should return when ragdoll physics takes ownership")
 	var frozen_rotation: Quaternion = skeleton.get_bone_pose_rotation(upper_index)
 	rig.call("update_procedural_right_arm", target + Vector3(0.1, 0.0, 0.0), 1.0)
 	if skeleton.get_bone_pose_rotation(upper_index).angle_to(frozen_rotation) > 0.001:
@@ -79,6 +95,8 @@ func _check_rig_arm_target() -> void:
 	rig.call("stop_host_simulation")
 	if rig_hand_visual.visible:
 		_fail("Duplicate Rig hand should hide again after ragdoll simulation stops")
+	if left_rig_hand_visual.visible:
+		_fail("Duplicate left Rig hand should hide again after ragdoll simulation stops")
 	rig.free()
 
 func _fail(message: String) -> void:
