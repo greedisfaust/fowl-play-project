@@ -83,6 +83,7 @@ const CARRY_ARM_ANGULAR_DAMP: float = 9.0
 const CARRY_FOREARM_ANGULAR_DAMP: float = 11.0
 const ARM_IK_BLEND_SPEED: float = 18.0
 const ARM_IK_POLE_FORWARD_WEIGHT: float = 0.22
+const ARM_IK_MAX_STRETCH_RATIO: float = 1.12
 const CARRY_HEAD_ANGULAR_DAMP: float = 12.0
 
 func _enter_tree() -> void:
@@ -200,6 +201,8 @@ func _set_left_rig_hand_visual_visible(visible: bool) -> void:
 
 ## Viewmodel right is positive X / Rig suffix L; Viewmodel left is negative X / Rig suffix R.
 func _set_right_arm_ik_active(active: bool) -> void:
+	if not active:
+		_reset_arm_pose_scale(_right_viewmodel_upper_arm_bone_index, _right_viewmodel_forearm_bone_index)
 	if _right_arm_ik_active == active:
 		return
 	_right_arm_ik_active = active
@@ -208,6 +211,8 @@ func _set_right_arm_ik_active(active: bool) -> void:
 	])
 
 func _set_left_arm_ik_active(active: bool) -> void:
+	if not active:
+		_reset_arm_pose_scale(_left_viewmodel_upper_arm_bone_index, _left_viewmodel_forearm_bone_index)
 	if _left_arm_ik_active == active:
 		return
 	_left_arm_ik_active = active
@@ -225,6 +230,25 @@ func _debug_left_arm_ik_status(_args: Array[Variant]) -> String:
 		_left_arm_ik_active, _left_arm_ik_target_world
 	]
 
+func _bone_axis_scale(rest_offset: Vector3, amount: float) -> Vector3:
+	var result: Vector3 = Vector3.ONE
+	var axis_x: float = absf(rest_offset.x)
+	var axis_y: float = absf(rest_offset.y)
+	var axis_z: float = absf(rest_offset.z)
+	if axis_x >= axis_y and axis_x >= axis_z:
+		result.x = amount
+	elif axis_y >= axis_z:
+		result.y = amount
+	else:
+		result.z = amount
+	return result
+
+func _reset_arm_pose_scale(upper_index: int, forearm_index: int) -> void:
+	if upper_index >= 0:
+		skeleton.set_bone_pose_scale(upper_index, Vector3.ONE)
+	if forearm_index >= 0:
+		skeleton.set_bone_pose_scale(forearm_index, Vector3.ONE)
+
 func _update_procedural_arm_chain(
 	upper_index: int,
 	forearm_index: int,
@@ -241,8 +265,20 @@ func _update_procedural_arm_chain(
 	skeleton.force_update_all_bone_transforms()
 	var shoulder_local: Vector3 = skeleton.get_bone_global_pose(upper_index).origin
 	var shoulder_world: Vector3 = skeleton.to_global(shoulder_local)
-	var upper_length: float = skeleton.get_bone_rest(forearm_index).origin.length()
-	var forearm_length: float = skeleton.get_bone_rest(hand_index).origin.length()
+	var upper_rest_offset: Vector3 = skeleton.get_bone_rest(forearm_index).origin
+	var forearm_rest_offset: Vector3 = skeleton.get_bone_rest(hand_index).origin
+	var base_upper_length: float = upper_rest_offset.length()
+	var base_forearm_length: float = forearm_rest_offset.length()
+	var base_reach: float = base_upper_length + base_forearm_length
+	var target_distance: float = shoulder_world.distance_to(wrist_target_world)
+	var stretch_ratio: float = clampf(target_distance / maxf(base_reach, 0.001), 1.0, ARM_IK_MAX_STRETCH_RATIO)
+	var upper_length: float = base_upper_length * stretch_ratio
+	var forearm_length: float = base_forearm_length * stretch_ratio
+	# Scale only along each bone chain axis. This is a small cosmetic extension
+	# while standing; ragdoll ownership resets these scales before physics starts.
+	skeleton.set_bone_pose_scale(upper_index, _bone_axis_scale(upper_rest_offset, stretch_ratio))
+	skeleton.set_bone_pose_scale(forearm_index, _bone_axis_scale(forearm_rest_offset, stretch_ratio))
+	skeleton.force_update_all_bone_transforms()
 	var pole_world: Vector3 = (global_basis * (Vector3.DOWN + Vector3.BACK * ARM_IK_POLE_FORWARD_WEIGHT)).normalized()
 	var solution: Dictionary = ARM_IK.solve_two_bone(shoulder_world, wrist_target_world, pole_world, upper_length, forearm_length)
 	if solution.is_empty():
