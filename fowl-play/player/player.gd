@@ -244,6 +244,7 @@ func set_carried(carried: bool, by: Node3D = null) -> void:
 		if _has_host_authority() and rig != null:
 			rig.call("disable_collisions")
 			rig.call("stop_carry_support")
+			rig.call("begin_carry_physics")
 			_ragdoll_slow_elapsed = 0.0
 			_ragdoll_settled_sent = false
 			_ragdoll_send_elapsed = 0.0
@@ -253,6 +254,7 @@ func set_carried(carried: bool, by: Node3D = null) -> void:
 		return
 	_is_carried = false
 	if _has_host_authority() and is_limp and rig != null:
+		rig.call("end_carry_physics")
 		rig.call("stop_carry_support")
 		rig.call("enable_host_collisions")
 		_reset_limp_recovery_deadline()
