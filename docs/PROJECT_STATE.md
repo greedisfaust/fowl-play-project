@@ -102,3 +102,8 @@ During carry, the thumb root now aims its authored segment direction from the th
 ## 2026-11-19 — size-adaptive carry thumb
 
 The carry thumb joints now blend between tight and open curl presets using the same projected prop-thickness measurement as the fingers. Larger props leave the thumb more extended, avoiding the previous inward curl; smaller props retain the tighter opposition pose. The M2 test checks that a smaller box produces a tighter thumb curl than a larger box. Godot execution and rendered playtesting remain user-run checks.
+
+
+## 2026-11-19 — redesigned target-driven hand actions
+
+The previous one-off reach timer has been replaced by a small action lifecycle: `EXTENDING → CONTACT → RETURNING → NONE`. Hover pointing now adds a restrained target-directed PoseRoot offset and rotates the whole hand toward the hover point within an angular limit; the index aim handles fine correction. The same action API is used by local interaction pokes and replicated world-hand pokes. Local hands begin immediately for responsiveness, then the host's accepted/rejected interaction result starts recovery; failed submissions also recover. Guard, carry, and limp cancel the action and retain priority. The attachment root is never moved. M2/M3 tests were extended for action recovery and interaction-result routing. This is the first redesign slice; tuning and visual verification remain. Godot tests and rendered two-instance checks have not been run by the assistant.
