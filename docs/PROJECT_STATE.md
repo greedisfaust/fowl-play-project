@@ -57,3 +57,152 @@ Late join is decided: allowed during the rest of a day, not during casino/elevat
 M6 carry/drop/throw implementation is complete and its core carried-ragdoll presentation has been user visual-playtested. Remaining M6 validation: run `fowl-play/tests/run_checks.ps1` (including `m6_carry_test.gd`) and complete the two-instance host/client checklist in [the carry session](sessions/features-carry-drop-throw.md). Do not mark those checks passed until actually run. M5 wall-clearance and recovery visual checks also remain as previously noted.
 
 USER VERIFIED: two-instance movement works and looks smooth. Host-published roster and three-process late-join/reconnect checks now pass. USER VERIFIED: roster/late-join/disconnect/rejoin checklist works. USER VERIFIED: host/client device use and client device state after reconnect (active=true). Next: user checkpoint of the multiplayer slice, then M4 skeleton-authoring preparation. Remaining M3 hand integration and gameplay-dependent validation stay deferred; M3 is not fully complete. Reliable host-validated interaction intents now pass automation, including action/state/reach/obstruction/cooldown rejection and late-join state. See sessions/features-multiplayer.md. Movement rejection-counter and falling-with-console checks were not separately confirmed. Movement authority was approved. M2 was committed as d722c96; remaining hand integration/polish is deferred. Current checkout is features/multiplayer, recovered from the M2 baseline with user authorization; older branches remain intact. First M3 movement changes are uncommitted. Keep carry/throw deferred to M6.
+
+
+## 2026-11-19 — replicated hover pointing
+
+The local first-person focus now sends hover state and its world-space target to the host. The host derives client ownership from the RPC sender and relays the cosmetic state to peers; remote Player instances apply it to their attached world right hand. Hover updates use an unreliable-ordered channel and are throttled to 20 Hz with immediate state transitions. Added a headless remote world-hand hover assertion and `net/hand_hover_sent` / `net/hand_hover_received` diagnostics. Automated Godot tests and the rendered two-instance test remain unrun by the assistant.
+## 2026-11-19 — reactive hands and multiplayer poke sync
+
+On `features/new-reactive-hands-and-viewport`, the local spam-aware poke animation is in place. The accepted-interaction path now broadcasts a reliable cosmetic hand-poke event from the host; remote peers animate the actor's existing world right hand, while the owning peer avoids duplicating its first-person animation. Debug watches `net/hand_poke_sent` and `net/hand_poke_received` were added, along with a headless check in `m3_interaction_test.gd`.
+
+Code and documentation have been committed directly to the feature branch with conventional commit messages. Godot tests and the rendered two-instance host/client visual check have **not** been run by the assistant; the user must pull the branch and verify them before this slice is marked complete.
+
+
+## 2026-11-19 — procedural hand carry-state integration
+
+Carrier `carry_started` / `carry_ended` signals now drive both hands on each peer. The local owner receives the two-handed carry pose on first-person viewmodel hands; remote observers receive it on the two world-rig hands. The M3 interaction test covers carry start/end for both presentation paths. Godot execution and rendered multiplayer verification remain user-run checks.
+
+
+## 2026-11-19 — target-driven procedural grip foundation
+
+The hand controller now derives a local PoseRoot grip target from the carried prop transform. Left and right hands approach opposite sides using their explicit side values; the stable hand attachment roots remain untouched and the existing blend response smooths the movement. Automated checks cover distinct left/right targets and opposite-side assignment on remote hands. This is the first target-driven grip foundation; palm orientation and object-specific finger wrapping remain visual tuning work. Godot tests and rendered playtesting have not been run by the assistant.
+
+
+## 2026-11-19 — shape-aware procedural carry targets
+
+Procedural carry targets now derive their side spacing from the carried prop's collision geometry instead of a fixed center offset. Enabled `CollisionShape3D` nodes contribute their debug-mesh bounds after node transforms; compound shapes are combined in prop-local space, then projected onto the prop's oriented world axes. This accounts for collision-node offsets, rotations, and scale beneath an unscaled prop root. Visible mesh bounds are a fallback when no usable collision debug mesh is available, with a small last-resort target for invisible props. The M2 hand test now checks full/half-scale boxes and sphere/capsule bounds. Godot execution and rendered visual/multiplayer verification remain user-run checks. Palm orientation and object-specific finger wrapping are not yet implemented.
+
+
+## 2026-11-19 — size-adaptive procedural carry fingers
+
+Carry finger joints now blend between exported tight and open curl presets using the carried prop's collision/mesh bounds projected along the palm normal. Smaller projected thickness produces a tighter curl; larger thickness leaves the fingers more open. The existing finger hierarchy and pose blending are preserved. The M2 hand test checks the curl response between full- and half-scale box props. This is an initial size-adaptive curl foundation, not per-finger surface contact or exact contour wrapping; thumb opposition and per-finger placement remain future work. Godot tests and rendered playtesting remain user-run checks.
+
+
+## 2026-11-19 — individual procedural carry finger curls
+
+Each of the four fingers now receives its own carry curl target. The existing projected-thickness blend remains the shared baseline; each finger's root is transformed into prop-local space and its lateral distance from the prop center is compared with the prop's lateral half-extent. Fingers nearer the lateral bounds receive a small additional edge-hook curl. The M2 test checks that outer fingers curl slightly farther than inner fingers. This is a geometry-guided pose heuristic, not per-finger contact solving or exact contour wrapping. Thumb opposition remains the next hand-grip task. Godot tests and rendered playtesting remain user-run checks.
+
+
+## 2026-11-19 — procedural carry thumb opposition
+
+During carry, the thumb root now aims its authored segment direction from the thumb mount toward the carried prop center. The two thumb joints receive a modest carry curl while idle/point/guard/limp thumb behavior remains unchanged. The M2 test checks the thumb root's aim direction toward a test prop. This is an initial opposition pose, not yet surface-contact solving or exact thumb placement around each shape. Godot tests and rendered playtesting remain user-run checks.
+
+
+## 2026-11-19 — size-adaptive carry thumb
+
+The carry thumb joints now blend between tight and open curl presets using the same projected prop-thickness measurement as the fingers. Larger props leave the thumb more extended, avoiding the previous inward curl; smaller props retain the tighter opposition pose. The M2 test checks that a smaller box produces a tighter thumb curl than a larger box. Godot execution and rendered playtesting remain user-run checks.
+
+
+## 2026-11-19 — redesigned target-driven hand actions
+
+The previous one-off reach timer has been replaced by a small action lifecycle: `EXTENDING → CONTACT → RETURNING → NONE`. Hover pointing now adds a restrained target-directed PoseRoot offset and rotates the whole hand toward the hover point within an angular limit; the index aim handles fine correction. The same action API is used by local interaction pokes and replicated world-hand pokes. Local hands begin immediately for responsiveness, then the host's accepted/rejected interaction result confirms the action; the hand completes its extension/contact phase before recovery; failed submissions also recover. Guard, carry, and limp cancel the action and retain priority. The attachment root is never moved. M2/M3 tests were extended for action recovery, seamless mid-animation retriggering, repeated remote world-hand pokes, and interaction-result routing. This is the first redesign slice; tuning and visual verification remain. Godot tests and rendered two-instance checks have not been run by the assistant.
+
+
+## 2026-11-19 — spam-friendly hand pokes
+
+Removed the action-phase gate from procedural poke starts. A new poke can now retrigger during extension, contact, or recovery, taking its starting blend amount from the current reach amount and easing toward the new target. This keeps rapid clicks responsive without snapping to rest or stacking competing animation timers. When input stops, the normal contact/recovery lifecycle blends the hand back to hover pointing or idle. Gameplay interaction validation and host-side request throttling remain unchanged; only the cosmetic animation is freely retriggerable. M2 and M3 assertions cover local and remote repeated pokes. Godot tests and two-instance visual checks remain user-run.
+
+
+## 2026-11-19 — Advanced finger contact foundation
+
+- Added a distal fingertip position helper based on the third finger joint and the authored fingertip offset.
+- Added the first surface-contact solver for `BoxShape3D`: outside points clamp to the box surface, inside points select the nearest face, and transformed/scaled collision children are evaluated in their own local space. Compound props select the nearest box contact candidate.
+- Added M2 checks for outside/inside surface projection and a translated, rotated, non-uniformly scaled box collision shape.
+- This is a tested-by-code foundation only: contact targets are not yet driving visible finger bends. Next implementation slice will connect a contact target to one finger's smooth procedural bend before expanding shape support.
+
+
+## 2026-11-19 — first visible surface-contact response
+
+- Connected the first BoxShape3D contact target to a restrained, target-directed bend correction on the index finger's three joints.
+- Added exported weight and angular-limit controls; existing pose blending keeps the correction smooth.
+- Cached the carried item's CollisionShape3D children when the item changes, avoiding a tree search during each frame's contact update.
+- Added an M2 assertion for a non-zero, bounded index-finger correction toward a transformed box surface.
+- This is the first visible response slice, not full finger IK. The remaining fingers and sphere/capsule surface solvers stay queued until this index-finger behavior is visually approved. Godot tests and in-game verification have not been run by the assistant.
+
+
+## 2026-11-19 — all-finger box contact bend
+
+- Extended the surface-directed carry bend from the index finger to all four fingers, each using its own fingertip and nearest box-surface target.
+- Kept the correction weighted, angularly limited, and integrated with existing smooth joint blending.
+- Expanded M2 coverage for finite/bounded per-finger corrections and a non-zero contact response.
+- Sphere and capsule surface solvers remain the next shape-coverage step. Godot tests and visual verification have not been run by the assistant.
+
+
+## 2026-11-19 — hand rig multiplayer milestone bundle
+
+- Added [HAND_RIG_MULTIPLAYER_MILESTONE.md](HAND_RIG_MULTIPLAYER_MILESTONE.md) as the consolidated hand-rig handoff and next verification plan.
+- The bundle records implemented procedural poses, carry grip, box surface-directed all-finger bend, and spam-friendly poke behavior, while explicitly distinguishing code paths from real two-instance verification.
+- Next milestone: audit ownership/RPC paths, then verify hover/point, host-approved poke, carry/drop/throw, and pose priority in both host-to-client and client-to-host directions.
+- Current status remains **not multiplayer-ready**. Hover relay, poke broadcast, and carry-pose integration have code/test coverage, but rendered two-instance delivery has not been confirmed.
+- Latest all-finger box-contact extension and spam-friendly poke retrigger still require user visual confirmation in the current build. Godot execution and runtime verification have not been performed by the assistant.
+
+
+## 2026-11-19 — multiplayer hand hover diagnostics
+
+- The host-side hover relay now increments `hand_hover_received` only when the corresponding remote world hand actually accepts and applies the hover state.
+- The existing client-side relay receiver uses the same applied-to-world-hand meaning; the owning peer's hidden world-hand copy is intentionally not counted because its first-person viewmodel is the visible hand.
+- M3 interaction coverage now asserts the host-side remote world-hand application counter.
+- This improves diagnosis of client-to-host hover delivery but does not prove live RPC delivery. Real two-instance host/client visual verification remains required. Godot tests have not been run by the assistant.
+
+
+### Hand replication investigation diagnostics
+- Added `player_hands_<peer_id>` to report all four hand references on a player separately, including instance IDs, world mode, and live pose/hover state. This supports isolating world-hand hover application without changing the RPC path.
+
+
+## 2026-11-19 — route replicated pointing to remote Viewmodel hands
+
+- Corrected the replicated hover and host-approved poke targets: remote players now animate their camera-attached `ViewmodelHands/RightHand`, not the ragdoll `Rig/Skeleton3D/.../Hand`.
+- The local owner's Viewmodel remains driven directly by `Focus`; remote peers drive the same Viewmodel hand through the existing host-authoritative hover/poke relay.
+- Kept ragdoll Rig hands dedicated to ragdoll/physical presentation and existing carry grip behavior.
+- Updated M3 checks to assert that remote Viewmodel pointing/poking works while the Rig hand remains untouched; remote carry still targets the Rig hands.
+- Godot tests and rendered two-instance host/client verification have not been run by the assistant and must be checked in the user's local project.
+
+
+## 2026-11-19 — longer pokes and moving limp-player grip targets
+
+- Increased procedural poke travel to 0.28 world-space metres (previously 0.20 hand-local units), converting through each hand's transform so scaled Viewmodel hands and unscaled world hands move the same visible distance. Extension, contact, and return timing remain unchanged.
+- Added a special carry target path for limp players: cosmetic grip placement now follows the live Chest PhysicalBone3D position and orientation, matching the existing chest carry-support anchor rather than the hips or stationary CharacterBody3D root.
+- Added separate Player/Rig accessors for the chest hand target; the existing hips-based gameplay interaction/recovery position remains unchanged.
+- Carrier signals now drive the camera-attached Viewmodel hands on both the owner and remote observers. Remote carry no longer animates the ragdoll Rig hands; prop collision-bound grip behavior is unchanged.
+- M2 coverage follows a moving chest target; M3 coverage asserts remote carry activates both Viewmodel hands and leaves both Rig hands untouched.
+- Godot tests and two-instance visual verification have not been run by the assistant.
+
+
+## 2026-11-19 — first procedural arm integration
+
+- Added a small two-bone IK position solver with fixed-length geometry and a reachable-distance clamp.
+- Connected the remote-visible Rig positive-X UpperArm_L/Forearm_L chain to the camera-attached Viewmodel right hand PoseRoot wrist target. The existing Viewmodel hand remains the pose owner.
+- The Player calls the solver only in its standing update path. The Rig yields while ragdoll physics, remote ragdoll playback, or recovery blending owns the skeleton.
+- Added rig/<player-id>/right_arm_ik and headless test coverage for bone lengths, reach clamping, wrist movement, and physics ownership. Tests are registered in run_checks.ps1 but have not been run by the assistant.
+- Scope is intentionally one arm only. Left arm, wrist orientation, and visual tuning are next after user verification.
+
+- Side mapping note: the Viewmodel right hand is on positive X, while the current Rig names its positive-X chain with the `_L` suffix. The solver intentionally maps by spatial side rather than matching suffixes.
+
+
+### M2 procedural right-arm visual connection — first cleanup slice
+
+The positive-X Rig hand scene (`HandAttachment_L/HandMount_L/Hand`) is now hidden during standing presentation so the camera-attached Viewmodel right hand remains the single visible hand. The Rig hand scene is restored for host ragdoll simulation and remote ragdoll pose playback, then hidden again when physics ends and recovery owns the skeleton. The attachment, skeleton bone, and physical-bone bodies are not removed or disabled. The positive-X forearm render capsule is lengthened to 0.34 m and centered at 0.14 m to overlap the Viewmodel wrist/forearm silhouette; its PhysicalBone collision shape is unchanged. `rig/<player-id>/right_rig_hand_visible` reports visibility. Automated checks assert the visual handoff; Godot execution and rendered seam confirmation remain user-run.
+
+### M2 procedural two-arm IK integration — implementation ready for visual verification
+
+The shared two-bone solver now drives both arms from their matching camera-attached Viewmodel hand wrist targets. Viewmodel right maps to positive-X Rig bones `UpperArm_L/Forearm_L/Hand_L`; Viewmodel left maps to negative-X Rig bones `UpperArm_R/Forearm_R/Hand_R`. Both target each Viewmodel `PoseRoot` at local `(0, 0, 0.32)` and use the existing reach clamp, elbow pole, and smoothing. Both duplicate Rig hand meshes are hidden while standing and restored for host/remote ragdoll ownership. The hand-scene Forearm meshes remain hidden only on the two world Rig hand instances; FPS Viewmodel hands are unchanged. The negative-X Rig forearm render capsule is mirrored to the same 0.34 m bridge geometry as the positive-X side; physical collision geometry and bone lengths are unchanged. Added left-arm debug watch/command and tests for both wrist targets, both hand visibility handoffs, hidden world-hand forearms, and ragdoll IK yielding. Godot tests and two-instance visual verification have not been run by the assistant.
+
+The Rig hand visibility collectors explicitly exclude the `Forearm` MeshInstance3D child, preventing the ragdoll hand-restore step from overriding its hidden state. The automated test now checks that both world-hand forearm meshes remain hidden while the Rig hands themselves become visible for ragdoll.
+
+
+### M2 ragdoll Viewmodel visibility and limited arm reach
+
+- Hide the camera-attached `Head/Camera3D/ViewmodelHands` group as soon as host ragdoll simulation or remote ragdoll playback begins. Restore it after the recovery pose blend finishes; this applies to both the local owner and remote Player copies.
+- Add reach-aware visual arm extension to both standing IK chains. Each upper-arm and forearm bone scales only along its child-chain axis, with a hard 12% maximum extension. The scale eases back to one as the target returns to normal reach and is reset when IK yields to ragdoll/recovery. The existing two-bone solver still clamps beyond the extended limit.
+- No PhysicalBone collision shape, physical bone body, or ragdoll simulation setting is changed. Automated M2 checks cover the stretch cap and existing IK handoff; Godot tests and rendered host/client verification remain user-run.

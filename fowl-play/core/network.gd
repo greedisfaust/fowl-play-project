@@ -25,6 +25,10 @@ var interaction_rejected: int = 0
 var carry_rejected: int = 0
 var _carry_times: Dictionary = {}
 var interaction_accepted: int = 0
+var hand_poke_sent: int = 0
+var hand_poke_received: int = 0
+var hand_hover_sent: int = 0
+var hand_hover_received: int = 0
 var _interaction_times: Dictionary = {}
 var _ragdoll_epochs: Dictionary = {}
 var _pending_ragdoll_starts: Dictionary = {}
@@ -51,6 +55,10 @@ func _bootstrap() -> void:
 	hub.call("watch", &"net/movement_rejected", func() -> int: return movement_rejected)
 	hub.call("watch", &"net/interaction_rejected", func() -> int: return interaction_rejected)
 	hub.call("watch", &"net/interaction_accepted", func() -> int: return interaction_accepted)
+	hub.call("watch", &"net/hand_poke_sent", func() -> int: return hand_poke_sent)
+	hub.call("watch", &"net/hand_poke_received", func() -> int: return hand_poke_received)
+	hub.call("watch", &"net/hand_hover_sent", func() -> int: return hand_hover_sent)
+	hub.call("watch", &"net/hand_hover_received", func() -> int: return hand_hover_received)
 	hub.call("watch", &"net/ragdoll_pose_sent", func() -> int: return ragdoll_pose_sent)
 	hub.call("watch", &"net/ragdoll_pose_received", func() -> int: return ragdoll_pose_received)
 	hub.call("watch", &"net/ragdoll_pose_data_bytes_sent", func() -> int: return ragdoll_pose_data_bytes_sent)
@@ -144,6 +152,10 @@ func shutdown() -> void:
 	movement_rejected = 0
 	interaction_rejected = 0
 	interaction_accepted = 0
+	hand_poke_sent = 0
+	hand_poke_received = 0
+	hand_hover_sent = 0
+	hand_hover_received = 0
 	_interaction_times.clear()
 	_ragdoll_epochs.clear()
 	_pending_ragdoll_starts.clear()
@@ -510,25 +522,75 @@ func _submit_interaction(target_path: NodePath, action: StringName) -> void:
 func _receive_interaction(owner_id: int, target_path: NodePath, action: StringName) -> bool:
 	var now: float = Time.get_ticks_msec() / 1000.0
 	var reason: String = ""
+	var target: Interactable = null
 	if now - float(_interaction_times.get(owner_id, -INF)) < TUNING.INTERACT_REQUEST_INTERVAL_S:
 		reason = "request cooldown"
 	else:
 		_interaction_times[owner_id] = now
 		var actor: Node3D = movement_players.get(owner_id) as Node3D
-		var target: Interactable = get_node_or_null(target_path) as Interactable
+		target = get_node_or_null(target_path) as Interactable
 		reason = _interaction_rejection(actor, target, action)
 		if reason.is_empty() and not target.interact(actor, action):
 			reason = "target state changed"
 	var accepted: bool = reason.is_empty()
 	if accepted:
 		interaction_accepted += 1
+		_publish_hand_poke(owner_id, target)
 	else:
 		interaction_rejected += 1
 	var message: String = "Interaction %s peer=%d action=%s%s" % ["accepted" if accepted else "rejected", owner_id, action, "" if accepted else ": " + reason]
 	_interaction_log(message)
-	if is_host and owner_id != TUNING.PEER_ID_HOST:
-		_interaction_result.rpc_id(owner_id, message)
+	if owner_id == TUNING.PEER_ID_HOST or peer == null:
+		_finish_local_interaction_hand(owner_id, accepted)
+	elif is_host:
+		_interaction_result.rpc_id(owner_id, owner_id, accepted, message)
 	return accepted
+
+## Replicate the local owner's current hover target to other players' camera-attached Viewmodel hands.
+## Clients submit only the hover state; the host derives the owner from the RPC sender.
+func update_hand_hover(active: bool, world_point: Vector3) -> void:
+	var owner_id: int = multiplayer.get_unique_id()
+	if peer == null and movement_players.has(0):
+		owner_id = 0
+	if active and not world_point.is_finite():
+		return
+	if peer == null or is_host:
+		_receive_hand_hover(owner_id, active, world_point)
+	elif peer.get_connection_status() == MultiplayerPeer.CONNECTION_CONNECTED:
+		_submit_hand_hover.rpc_id(TUNING.PEER_ID_HOST, active, world_point)
+
+@rpc("any_peer", "call_remote", "unreliable_ordered", 1)
+func _submit_hand_hover(active: bool, world_point: Vector3) -> void:
+	if not is_host or not validate_rpc():
+		return
+	if active and not world_point.is_finite():
+		return
+	_receive_hand_hover(multiplayer.get_remote_sender_id(), active, world_point)
+
+func _receive_hand_hover(owner_id: int, active: bool, world_point: Vector3) -> void:
+	if active and not world_point.is_finite():
+		return
+	var player: Node = movement_players.get(owner_id)
+	if not is_instance_valid(player) or player.is_queued_for_deletion():
+		return
+	# Count a hover only when this instance actually applies it to a remote
+	# Viewmodel hand. The owning peer intentionally rejects its own copy.
+	if bool(player.call("set_world_hand_hover", active, world_point)):
+		hand_hover_received += 1
+	if peer != null and is_host:
+		hand_hover_sent += 1
+		_hand_hover.rpc(owner_id, active, world_point)
+
+@rpc("authority", "call_remote", "unreliable_ordered", 1)
+func _hand_hover(owner_id: int, active: bool, world_point: Vector3) -> void:
+	if not validate_rpc(TUNING.PEER_ID_HOST):
+		return
+	if active and not world_point.is_finite():
+		return
+	var player: Node = movement_players.get(owner_id)
+	if is_instance_valid(player) and not player.is_queued_for_deletion():
+		if bool(player.call("set_world_hand_hover", active, world_point)):
+			hand_hover_received += 1
 
 func _interaction_rejection(actor: Node3D, target: Interactable, action: StringName) -> String:
 	if not is_instance_valid(actor) or actor.is_queued_for_deletion():
@@ -570,10 +632,51 @@ func _interaction_rejection(actor: Node3D, target: Interactable, action: StringN
 		return "out of reach"
 	return ""
 
+func _finish_local_interaction_hand(owner_id: int, accepted: bool) -> void:
+	var player: Node = movement_players.get(owner_id)
+	if is_instance_valid(player) and not player.is_queued_for_deletion():
+		player.call("finish_local_hand_action", accepted)
+
 @rpc("authority", "call_remote", "reliable", 0)
-func _interaction_result(message: String) -> void:
-	if validate_rpc(TUNING.PEER_ID_HOST):
-		_interaction_log(message)
+func _interaction_result(owner_id: int, accepted: bool, message: String) -> void:
+	if not validate_rpc(TUNING.PEER_ID_HOST):
+		return
+	_finish_local_interaction_hand(owner_id, accepted)
+	_interaction_log(message)
+
+## Host broadcasts a cosmetic poke only after the gameplay interaction is accepted.
+func _publish_hand_poke(owner_id: int, target: Interactable) -> void:
+	if peer == null or not is_host or not is_instance_valid(target):
+		return
+	var body: Node3D = target.get_parent() as Node3D
+	if not is_instance_valid(body):
+		return
+	var point: Vector3 = body.global_position
+	if body.has_method("get_interaction_world_position"):
+		point = Vector3(body.call("get_interaction_world_position"))
+	if not point.is_finite():
+		return
+	_receive_hand_poke(owner_id, point)
+	hand_poke_sent += 1
+	_hand_poke.rpc(owner_id, point)
+
+@rpc("authority", "call_remote", "reliable", 0)
+func _hand_poke(owner_id: int, world_point: Vector3) -> void:
+	if not validate_rpc(TUNING.PEER_ID_HOST) or not world_point.is_finite():
+		return
+	_receive_hand_poke(owner_id, world_point)
+
+func _receive_hand_poke(owner_id: int, world_point: Vector3) -> void:
+	if not world_point.is_finite():
+		return
+	var player: Node = movement_players.get(owner_id)
+	if not is_instance_valid(player) or player.is_queued_for_deletion():
+		return
+	if bool(player.get("is_limp")) or bool(player.get("is_recovering")) or bool(player.call("is_carrying")):
+		return
+	if bool(player.call("play_world_hand_poke", world_point)):
+		hand_poke_received += 1
+		_debug_log("Hand poke mirrored for peer %d" % owner_id)
 
 func _interaction_log(message: String) -> void:
 	get_node("/root/DebugHub").call("log", &"interact", message)

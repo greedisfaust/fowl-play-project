@@ -23,8 +23,19 @@ weight_class = 0
 metadata/_custom_type_script = "uid://bw1bicstmeec7"
 
 [sub_resource type="BoxMesh" id="BoxMesh_3gngh"]
+size = Vector3(0.5, 0.5, 0.5)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_57qmd"]
+
+[sub_resource type="Resource" id="Resource_w7fvv"]
+script = ExtResource("6_w7fvv")
+metadata/_custom_type_script = "uid://bw1bicstmeec7"
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_yf5fn"]
+radius = 0.35
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_57qmd"]
+radius = 0.35
 
 [node name="TestArena" type="Node3D" unique_id=2059650083]
 script = ExtResource("1_555b8")
@@ -93,4 +104,22 @@ metadata/_custom_type_script = "uid://dd5c04repreo1"
 mesh = SubResource("BoxMesh_3gngh")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Box2" unique_id=672640431]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 shape = SubResource("BoxShape3D_57qmd")
+
+[node name="Pill1" type="RigidBody3D" parent="." unique_id=1545095293]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.7786927, 1.9435985, -3.9107537)
+script = ExtResource("5_5fshk")
+profile = SubResource("Resource_w7fvv")
+
+[node name="Interactable" type="Node" parent="Pill1" unique_id=1438358297]
+script = ExtResource("3_555b8")
+kind = 2
+prompt_text = "[GRAB] Grab Pill"
+metadata/_custom_type_script = "uid://dd5c04repreo1"
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Pill1" unique_id=1679135477]
+mesh = SubResource("CapsuleMesh_yf5fn")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Pill1" unique_id=1120665128]
+shape = SubResource("CapsuleShape3D_57qmd")

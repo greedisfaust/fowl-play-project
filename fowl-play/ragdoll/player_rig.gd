@@ -4,6 +4,7 @@ extends Node3D
 const LAYERS = preload("res://core/layers.gd")
 const TUNING = preload("res://core/tuning.gd")
 const SELF_COLLISION = preload("res://ragdoll/self_collision_policy.gd")
+const ARM_IK = preload("res://ragdoll/procedural_arm_ik.gd")
 const EXPECTED_PHYSICAL_BONES: int = 11
 const POSE_VALUES_PER_BONE: int = 7
 const POSITION_QUANTIZATION: float = 1000.0
@@ -26,6 +27,24 @@ var _last_remote_host_time_ms: int = -1
 var _latest_host_pose: PackedInt32Array = PackedInt32Array()
 var _hips_bone_index: int = -1
 var _chest_bone_index: int = -1
+var _right_viewmodel_upper_arm_bone_index: int = -1
+var _right_viewmodel_forearm_bone_index: int = -1
+var _right_viewmodel_hand_bone_index: int = -1
+var _left_viewmodel_upper_arm_bone_index: int = -1
+var _left_viewmodel_forearm_bone_index: int = -1
+var _left_viewmodel_hand_bone_index: int = -1
+var _right_arm_ik_watch_name: StringName
+var _left_arm_ik_watch_name: StringName
+var _right_arm_ik_command_name: StringName
+var _left_arm_ik_command_name: StringName
+var _right_rig_hand_visible_watch_name: StringName
+var _left_rig_hand_visible_watch_name: StringName
+var _right_rig_hand_visuals: Array[VisualInstance3D] = []
+var _left_rig_hand_visuals: Array[VisualInstance3D] = []
+var _right_arm_ik_active: bool = false
+var _left_arm_ik_active: bool = false
+var _right_arm_ik_target_world: Vector3 = Vector3.ZERO
+var _left_arm_ik_target_world: Vector3 = Vector3.ZERO
 var _hips_physical_bone: PhysicalBone3D
 var _pose_blend_active: bool = false
 var _pose_blend_elapsed: float = 0.0
@@ -62,6 +81,9 @@ const CARRY_CHEST_MAX_TORQUE: float = 900.0
 const CARRY_TORSO_ANGULAR_DAMP: float = 4.0
 const CARRY_ARM_ANGULAR_DAMP: float = 9.0
 const CARRY_FOREARM_ANGULAR_DAMP: float = 11.0
+const ARM_IK_BLEND_SPEED: float = 18.0
+const ARM_IK_POLE_FORWARD_WEIGHT: float = 0.22
+const ARM_IK_MAX_STRETCH_RATIO: float = 1.12
 const CARRY_HEAD_ANGULAR_DAMP: float = 12.0
 
 func _enter_tree() -> void:
@@ -96,6 +118,38 @@ func _ready() -> void:
 		# not the character's forward axis. Preserve that bind-space offset.
 		_chest_rest_basis_offset = global_basis.inverse() * _chest_physical_bone.global_basis
 
+	_right_viewmodel_upper_arm_bone_index = skeleton.find_bone("UpperArm_L")
+	_right_viewmodel_forearm_bone_index = skeleton.find_bone("Forearm_L")
+	_right_viewmodel_hand_bone_index = skeleton.find_bone("Hand_L")
+	_left_viewmodel_upper_arm_bone_index = skeleton.find_bone("UpperArm_R")
+	_left_viewmodel_forearm_bone_index = skeleton.find_bone("Forearm_R")
+	_left_viewmodel_hand_bone_index = skeleton.find_bone("Hand_R")
+	var right_rig_hand_root: Node = get_node_or_null("Skeleton3D/HandAttachment_L/HandMount_L/Hand")
+	_right_rig_hand_visuals.clear()
+	if right_rig_hand_root != null:
+		for visual_node: Node in right_rig_hand_root.find_children("*", "VisualInstance3D", true, false):
+			if visual_node.name == &"Forearm":
+				continue
+			var visual_instance: VisualInstance3D = visual_node as VisualInstance3D
+			if visual_instance != null:
+				_right_rig_hand_visuals.append(visual_instance)
+	_right_rig_hand_visible_watch_name = StringName("rig/%s/right_rig_hand_visible" % get_parent().name)
+	_set_right_rig_hand_visual_visible(false)
+	var left_rig_hand_root: Node = get_node_or_null("Skeleton3D/HandAttachment_R/HandMount_R/Hand")
+	_left_rig_hand_visuals.clear()
+	if left_rig_hand_root != null:
+		for left_visual_node: Node in left_rig_hand_root.find_children("*", "VisualInstance3D", true, false):
+			if left_visual_node.name == &"Forearm":
+				continue
+			var left_visual_instance: VisualInstance3D = left_visual_node as VisualInstance3D
+			if left_visual_instance != null:
+				_left_rig_hand_visuals.append(left_visual_instance)
+	_left_rig_hand_visible_watch_name = StringName("rig/%s/left_rig_hand_visible" % get_parent().name)
+	_set_left_rig_hand_visual_visible(false)
+	_right_arm_ik_watch_name = StringName("rig/%s/right_arm_ik" % get_parent().name)
+	_right_arm_ik_command_name = StringName("arm_ik_status_%s" % get_parent().name)
+	_left_arm_ik_watch_name = StringName("rig/%s/left_arm_ik" % get_parent().name)
+	_left_arm_ik_command_name = StringName("arm_ik_status_left_%s" % get_parent().name)
 	var self_contact_pairs: int = SELF_COLLISION.configure(physical_bones)
 
 	if physical_bones.size() != EXPECTED_PHYSICAL_BONES:
@@ -103,11 +157,198 @@ func _ready() -> void:
 	else:
 		debug_hub.call("log", &"ragdoll", "Rig %s prepared 11 dormant physical bones; %d selective self-contact pairs." % [get_parent().name, self_contact_pairs])
 	debug_hub.call("watch", _watch_name, func() -> int: return physical_bones.size())
+	debug_hub.call("watch", _right_arm_ik_watch_name, func() -> bool: return _right_arm_ik_active)
+	debug_hub.call("watch", _right_rig_hand_visible_watch_name, _is_right_rig_hand_visual_visible)
+	debug_hub.call("watch", _left_arm_ik_watch_name, func() -> bool: return _left_arm_ik_active)
+	debug_hub.call("watch", _left_rig_hand_visible_watch_name, _is_left_rig_hand_visual_visible)
+	debug_hub.call("command", _right_arm_ik_command_name, _debug_right_arm_ik_status, "Report the procedural Viewmodel right-arm target and ownership state.", false, false)
+	debug_hub.call("command", _left_arm_ik_command_name, _debug_left_arm_ik_status, "Report the procedural Viewmodel left-arm target and ownership state.", false, false)
 	set_process(false)
 
 func _exit_tree() -> void:
 	if is_instance_valid(debug_hub):
 		debug_hub.call("unwatch", _watch_name)
+		debug_hub.call("unwatch", _right_arm_ik_watch_name)
+		debug_hub.call("unwatch", _left_arm_ik_watch_name)
+		debug_hub.call("unwatch", _right_rig_hand_visible_watch_name)
+		debug_hub.call("unwatch", _left_rig_hand_visible_watch_name)
+		debug_hub.call("unregister_command", _right_arm_ik_command_name)
+		debug_hub.call("unregister_command", _left_arm_ik_command_name)
+
+## The positive-X Rig hand is a duplicate of the camera-attached Viewmodel hand while standing.
+## Keep its node and skeleton attachment intact; only its rendered hand instance changes visibility.
+func _is_right_rig_hand_visual_visible() -> bool:
+	for visual_instance: VisualInstance3D in _right_rig_hand_visuals:
+		if is_instance_valid(visual_instance) and visual_instance.visible:
+			return true
+	return false
+
+func _set_right_rig_hand_visual_visible(visible: bool) -> void:
+	for visual_instance: VisualInstance3D in _right_rig_hand_visuals:
+		if is_instance_valid(visual_instance):
+			visual_instance.visible = visible
+
+func _is_left_rig_hand_visual_visible() -> bool:
+	for visual_instance: VisualInstance3D in _left_rig_hand_visuals:
+		if is_instance_valid(visual_instance) and visual_instance.visible:
+			return true
+	return false
+
+func _set_left_rig_hand_visual_visible(visible: bool) -> void:
+	for visual_instance: VisualInstance3D in _left_rig_hand_visuals:
+		if is_instance_valid(visual_instance):
+			visual_instance.visible = visible
+
+## Viewmodel right is positive X / Rig suffix L; Viewmodel left is negative X / Rig suffix R.
+func _set_right_arm_ik_active(active: bool) -> void:
+	if not active:
+		_reset_arm_pose_scale(_right_viewmodel_upper_arm_bone_index, _right_viewmodel_forearm_bone_index)
+	if _right_arm_ik_active == active:
+		return
+	_right_arm_ik_active = active
+	debug_hub.call("log", &"hands", "Rig %s Viewmodel-right arm IK %s." % [
+		get_parent().name, "active" if active else "yielded"
+	])
+
+func _set_left_arm_ik_active(active: bool) -> void:
+	if not active:
+		_reset_arm_pose_scale(_left_viewmodel_upper_arm_bone_index, _left_viewmodel_forearm_bone_index)
+	if _left_arm_ik_active == active:
+		return
+	_left_arm_ik_active = active
+	debug_hub.call("log", &"hands", "Rig %s Viewmodel-left arm IK %s." % [
+		get_parent().name, "active" if active else "yielded"
+	])
+
+func _debug_right_arm_ik_status(_args: Array[Variant]) -> String:
+	return "active=%s target=%s upper_scale=%s forearm_scale=%s bones=UpperArm_L/Forearm_L/Hand_L" % [
+		_right_arm_ik_active, _right_arm_ik_target_world,
+		skeleton.get_bone_pose_scale(_right_viewmodel_upper_arm_bone_index),
+		skeleton.get_bone_pose_scale(_right_viewmodel_forearm_bone_index)
+	]
+
+func _debug_left_arm_ik_status(_args: Array[Variant]) -> String:
+	return "active=%s target=%s upper_scale=%s forearm_scale=%s bones=UpperArm_R/Forearm_R/Hand_R" % [
+		_left_arm_ik_active, _left_arm_ik_target_world,
+		skeleton.get_bone_pose_scale(_left_viewmodel_upper_arm_bone_index),
+		skeleton.get_bone_pose_scale(_left_viewmodel_forearm_bone_index)
+	]
+
+func _bone_axis_scale(rest_offset: Vector3, amount: float) -> Vector3:
+	var result: Vector3 = Vector3.ONE
+	var axis_x: float = absf(rest_offset.x)
+	var axis_y: float = absf(rest_offset.y)
+	var axis_z: float = absf(rest_offset.z)
+	if axis_x >= axis_y and axis_x >= axis_z:
+		result.x = amount
+	elif axis_y >= axis_z:
+		result.y = amount
+	else:
+		result.z = amount
+	return result
+
+func _bone_axis_scale_value(rest_offset: Vector3, pose_scale: Vector3) -> float:
+	var axis_x: float = absf(rest_offset.x)
+	var axis_y: float = absf(rest_offset.y)
+	var axis_z: float = absf(rest_offset.z)
+	if axis_x >= axis_y and axis_x >= axis_z:
+		return pose_scale.x
+	if axis_y >= axis_z:
+		return pose_scale.y
+	return pose_scale.z
+
+func _reset_arm_pose_scale(upper_index: int, forearm_index: int) -> void:
+	if upper_index >= 0:
+		skeleton.set_bone_pose_scale(upper_index, Vector3.ONE)
+	if forearm_index >= 0:
+		skeleton.set_bone_pose_scale(forearm_index, Vector3.ONE)
+
+func _update_procedural_arm_chain(
+	upper_index: int,
+	forearm_index: int,
+	hand_index: int,
+	wrist_target_world: Vector3,
+	delta: float
+) -> bool:
+	if upper_index < 0 or forearm_index < 0 or hand_index < 0:
+		return false
+	if simulator.is_simulating_physics() or _remote_active or _pose_blend_active or _recovery_animation_active:
+		return false
+	if not wrist_target_world.is_finite():
+		return false
+	skeleton.force_update_all_bone_transforms()
+	var shoulder_local: Vector3 = skeleton.get_bone_global_pose(upper_index).origin
+	var shoulder_world: Vector3 = skeleton.to_global(shoulder_local)
+	var upper_rest_offset: Vector3 = skeleton.get_bone_rest(forearm_index).origin
+	var forearm_rest_offset: Vector3 = skeleton.get_bone_rest(hand_index).origin
+	var base_upper_length: float = upper_rest_offset.length()
+	var base_forearm_length: float = forearm_rest_offset.length()
+	var base_reach: float = base_upper_length + base_forearm_length
+	var target_distance: float = shoulder_world.distance_to(wrist_target_world)
+	var target_stretch_ratio: float = clampf(target_distance / maxf(base_reach, 0.001), 1.0, ARM_IK_MAX_STRETCH_RATIO)
+	var blend_weight: float = 1.0 - exp(-ARM_IK_BLEND_SPEED * maxf(delta, 0.0))
+	var current_stretch_ratio: float = _bone_axis_scale_value(upper_rest_offset, skeleton.get_bone_pose_scale(upper_index))
+	var stretch_ratio: float = lerpf(current_stretch_ratio, target_stretch_ratio, blend_weight)
+	var upper_length: float = base_upper_length * stretch_ratio
+	var forearm_length: float = base_forearm_length * stretch_ratio
+	# Scale only along each bone chain axis. This is a small cosmetic extension
+	# while standing; ragdoll ownership resets these scales before physics starts.
+	skeleton.set_bone_pose_scale(upper_index, _bone_axis_scale(upper_rest_offset, stretch_ratio))
+	skeleton.set_bone_pose_scale(forearm_index, _bone_axis_scale(forearm_rest_offset, stretch_ratio))
+	skeleton.force_update_all_bone_transforms()
+	var pole_world: Vector3 = (global_basis * (Vector3.DOWN + Vector3.BACK * ARM_IK_POLE_FORWARD_WEIGHT)).normalized()
+	var solution: Dictionary = ARM_IK.solve_two_bone(shoulder_world, wrist_target_world, pole_world, upper_length, forearm_length)
+	if solution.is_empty():
+		return false
+	var elbow_world: Vector3 = solution["elbow"]
+	var parent_index: int = skeleton.get_bone_parent(upper_index)
+	var chest_world_basis: Basis = skeleton.global_basis * skeleton.get_bone_global_pose(parent_index).basis
+	var upper_direction_parent: Vector3 = chest_world_basis.inverse() * (elbow_world - shoulder_world).normalized()
+	var upper_rest_axis: Vector3 = skeleton.get_bone_rest(forearm_index).origin.normalized()
+	var upper_target_rotation: Quaternion = Quaternion(upper_rest_axis, upper_direction_parent.normalized())
+	var upper_current: Quaternion = skeleton.get_bone_pose_rotation(upper_index)
+	skeleton.set_bone_pose_rotation(upper_index, upper_current.slerp(upper_target_rotation, blend_weight))
+	skeleton.force_update_all_bone_transforms()
+	var elbow_local: Vector3 = skeleton.get_bone_global_pose(forearm_index).origin
+	var elbow_actual_world: Vector3 = skeleton.to_global(elbow_local)
+	var upper_world_basis: Basis = skeleton.global_basis * skeleton.get_bone_global_pose(upper_index).basis
+	var forearm_direction_local: Vector3 = upper_world_basis.inverse() * (wrist_target_world - elbow_actual_world).normalized()
+	var forearm_rest_axis: Vector3 = skeleton.get_bone_rest(hand_index).origin.normalized()
+	var forearm_target_rotation: Quaternion = Quaternion(forearm_rest_axis, forearm_direction_local.normalized())
+	var forearm_current: Quaternion = skeleton.get_bone_pose_rotation(forearm_index)
+	skeleton.set_bone_pose_rotation(forearm_index, forearm_current.slerp(forearm_target_rotation, blend_weight))
+	skeleton.force_update_all_bone_transforms()
+	return true
+
+func update_procedural_right_arm(wrist_target_world: Vector3, delta: float) -> bool:
+	var applied: bool = _update_procedural_arm_chain(
+		_right_viewmodel_upper_arm_bone_index,
+		_right_viewmodel_forearm_bone_index,
+		_right_viewmodel_hand_bone_index,
+		wrist_target_world,
+		delta
+	)
+	if not applied:
+		_set_right_arm_ik_active(false)
+		return false
+	_right_arm_ik_target_world = wrist_target_world
+	_set_right_arm_ik_active(true)
+	return true
+
+func update_procedural_left_arm(wrist_target_world: Vector3, delta: float) -> bool:
+	var applied: bool = _update_procedural_arm_chain(
+		_left_viewmodel_upper_arm_bone_index,
+		_left_viewmodel_forearm_bone_index,
+		_left_viewmodel_hand_bone_index,
+		wrist_target_world,
+		delta
+	)
+	if not applied:
+		_set_left_arm_ik_active(false)
+		return false
+	_left_arm_ik_target_world = wrist_target_world
+	_set_left_arm_ik_active(true)
+	return true
 
 func enable_host_collisions() -> void:
 	for physical_bone: PhysicalBone3D in physical_bones:
@@ -127,6 +368,10 @@ func begin_host_simulation() -> bool:
 	# blends back to the actual standing pose instead of the rest/T-pose.
 	if not _remote_active:
 		_standing_pose = _capture_skeleton_pose()
+	_set_right_arm_ik_active(false)
+	_set_left_arm_ik_active(false)
+	_set_right_rig_hand_visual_visible(true)
+	_set_left_rig_hand_visual_visible(true)
 	# The Player capsule can move independently; the simulated rig must not
 	# inherit that transform or feed its own movement back through the parent.
 	var world_transform: Transform3D = global_transform
@@ -153,6 +398,10 @@ func stop_host_simulation() -> void:
 	if recovery_animation_player != null:
 		recovery_animation_player.stop()
 	simulator.physical_bones_stop_simulation()
+	_set_right_arm_ik_active(false)
+	_set_left_arm_ik_active(false)
+	_set_right_rig_hand_visual_visible(false)
+	_set_left_rig_hand_visual_visible(false)
 	disable_collisions()
 	skeleton.reset_bone_poses()
 	top_level = false
@@ -193,6 +442,22 @@ func get_hips_world_position() -> Vector3:
 	if _hips_bone_index >= 0:
 		return skeleton.to_global(skeleton.get_bone_global_pose(_hips_bone_index).origin)
 	return global_position
+
+## Return the live Chest PhysicalBone transform while simulating. The animated
+## skeleton pose is the fallback before/after physics ownership.
+func get_chest_world_position() -> Vector3:
+	if simulator.is_simulating_physics() and _chest_physical_bone != null:
+		return _chest_physical_bone.global_position
+	if _chest_bone_index >= 0:
+		return skeleton.to_global(skeleton.get_bone_global_pose(_chest_bone_index).origin)
+	return get_hips_world_position()
+
+func get_chest_world_basis() -> Basis:
+	if simulator.is_simulating_physics() and _chest_physical_bone != null:
+		return _chest_physical_bone.global_basis.orthonormalized()
+	if _chest_bone_index >= 0:
+		return (skeleton.global_basis * skeleton.get_bone_global_pose(_chest_bone_index).basis).orthonormalized()
+	return global_basis.orthonormalized()
 
 ## Host-only spring support: chest follows the carrier anchor while hips,
 ## head and limbs remain free to sway under gravity and joint constraints.
@@ -336,6 +601,10 @@ func begin_remote_pose(world_transform: Transform3D, initial_pose: PackedInt32Ar
 	global_transform = world_transform if world_transform.is_finite() else previous_transform
 	simulator.active = false
 	_remote_active = true
+	_set_right_arm_ik_active(false)
+	_set_left_arm_ik_active(false)
+	_set_right_rig_hand_visual_visible(true)
+	_set_left_rig_hand_visual_visible(true)
 	_last_remote_sequence = 0
 	_last_remote_host_time_ms = -1
 	_remote_samples.clear()
@@ -377,6 +646,10 @@ func end_remote_pose() -> void:
 	if recovery_animation_player != null:
 		recovery_animation_player.stop()
 	_remote_active = false
+	_set_right_arm_ik_active(false)
+	_set_left_arm_ik_active(false)
+	_set_right_rig_hand_visual_visible(false)
+	_set_left_rig_hand_visual_visible(false)
 	_remote_samples.clear()
 	set_process(false)
 	disable_collisions()

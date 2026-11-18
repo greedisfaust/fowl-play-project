@@ -18,6 +18,13 @@ var limp_epoch: int = 0
 @onready var head: Node3D = $Head
 @onready var camera: Camera3D = $Head/Camera3D
 @onready var rig: Node3D = get_node_or_null("Rig") as Node3D
+@onready var world_right_hand: Hand = get_node_or_null("Rig/Skeleton3D/HandAttachment_R/HandMount_R/Hand") as Hand
+@onready var world_left_hand: Hand = get_node_or_null("Rig/Skeleton3D/HandAttachment_L/HandMount_L/Hand") as Hand
+@onready var viewmodel_hands: Node3D = get_node_or_null("Head/Camera3D/ViewmodelHands") as Node3D
+@onready var viewmodel_left_hand: Hand = get_node_or_null("Head/Camera3D/ViewmodelHands/LeftHand") as Hand
+@onready var viewmodel_right_hand: Hand = get_node_or_null("Head/Camera3D/ViewmodelHands/RightHand") as Hand
+@onready var viewmodel_right_hand_pose_root: Node3D = get_node_or_null("Head/Camera3D/ViewmodelHands/RightHand/PoseRoot") as Node3D
+@onready var viewmodel_left_hand_pose_root: Node3D = get_node_or_null("Head/Camera3D/ViewmodelHands/LeftHand/PoseRoot") as Node3D
 @onready var carrier: Carrier = get_node_or_null("Carrier") as Carrier
 @onready var limp_interactable: Interactable = get_node_or_null("Interactable") as Interactable
 @onready var limp_interaction_proxy: StaticBody3D = get_node_or_null("LimpInteractionProxy") as StaticBody3D
@@ -67,6 +74,7 @@ var _debug_camera_follow_watch_name: StringName
 var _debug_wall_clearance_watch_name: StringName
 var _debug_carrying_watch_name: StringName
 var _debug_limp_target_watch_name: StringName
+var _debug_hands_command_name: StringName
 
 func _ready() -> void:
 	accepted_position = global_position
@@ -81,7 +89,13 @@ func _ready() -> void:
 	set_physics_process(is_local_player)
 	if focus != null:
 		focus.call("set_active", is_local_player)
+	if carrier != null:
+		carrier.carry_started.connect(_on_carry_started)
+		carrier.carry_ended.connect(_on_carry_ended)
+		if carrier.is_holding():
+			_on_carry_started(carrier.held_item)
 	_debug_command_name = StringName("player_status_%s" % name)
+	_debug_hands_command_name = StringName("player_hands_%s" % name)
 	if limp_interactable != null:
 		limp_interactable.enabled = false
 		limp_interactable.availability_check = _can_be_carried
@@ -123,6 +137,7 @@ func _ready() -> void:
 		false,
 		false
 	)
+	debug_hub.call("command", _debug_hands_command_name, _debug_hands_status, "Report this player FPS and world hands separately.", false, false)
 	if is_local_player and not bool(debug_hub.call("is_console_open")):
 		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	network.call("apply_pending_ragdoll_start", input_peer_id, self)
@@ -136,6 +151,7 @@ func _exit_tree() -> void:
 		return
 	# Use the original registration names even if the node was renamed.
 	debug_hub.call("unregister_command", _debug_command_name)
+	debug_hub.call("unregister_command", _debug_hands_command_name)
 	debug_hub.call("unwatch", _debug_speed_watch_name)
 	debug_hub.call("unwatch", _debug_floor_watch_name)
 	debug_hub.call("unwatch", _debug_limp_watch_name)
@@ -187,6 +203,14 @@ func _process(delta: float) -> void:
 		if rig != null and not bool(rig.call("is_pose_blending")):
 			_finish_recovery()
 		return
+	# The camera-attached Viewmodel hand is the pose source for remote-visible arms.
+	# Its authored wrist pivot sits 0.32 hand-local units behind the palm.
+	if rig != null and is_instance_valid(viewmodel_right_hand_pose_root):
+		var wrist_target_world: Vector3 = viewmodel_right_hand_pose_root.to_global(Vector3(0.0, 0.0, 0.32))
+		rig.call("update_procedural_right_arm", wrist_target_world, delta)
+	if rig != null and is_instance_valid(viewmodel_left_hand_pose_root):
+		var left_wrist_target_world: Vector3 = viewmodel_left_hand_pose_root.to_global(Vector3(0.0, 0.0, 0.32))
+		rig.call("update_procedural_left_arm", left_wrist_target_world, delta)
 	if is_local_player:
 		_send_elapsed += delta
 		if _send_elapsed >= 1.0 / TUNING.MOVE_SEND_HZ:
@@ -235,6 +259,46 @@ func accept_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pit
 func is_carrying() -> bool:
 	return carrier != null and bool(carrier.call("is_holding"))
 
+## Carrier signals drive the camera-attached Viewmodel hands on every peer.
+## Remote observers therefore see the same hand instances used for pointing/poking;
+## ragdoll Rig hands remain dedicated to physical/ragdoll presentation.
+func _on_carry_started(item: Node3D) -> void:
+	_set_carry_hand_pose(true, item)
+
+func _on_carry_ended() -> void:
+	_set_carry_hand_pose(false)
+
+func _set_carry_hand_pose(active: bool, item: Node3D = null) -> void:
+	if is_instance_valid(viewmodel_left_hand):
+		viewmodel_left_hand.set_carrying(active, item, -1.0)
+	if is_instance_valid(viewmodel_right_hand):
+		viewmodel_right_hand.set_carrying(active, item, 1.0)
+
+## Applies replicated pointing to this player's camera-attached Viewmodel right hand.
+## The local owner already drives that hand directly through Focus.
+func set_world_hand_hover(active: bool, world_point: Vector3) -> bool:
+	if is_local_player or not is_instance_valid(viewmodel_right_hand):
+		return false
+	if active and (is_limp or is_recovering or is_carrying() or not world_point.is_finite()):
+		return false
+	viewmodel_right_hand.set_hover(active, world_point)
+	return true
+
+## Plays a host-approved poke on this player's camera-attached Viewmodel right hand.
+## The local owner already sees the first-person poke, so only remote copies animate.
+func play_world_hand_poke(world_point: Vector3) -> bool:
+	if is_local_player or is_limp or is_recovering or is_carrying() or not world_point.is_finite():
+		return false
+	if not is_instance_valid(viewmodel_right_hand):
+		return false
+	return viewmodel_right_hand.reach(world_point)
+
+## Interaction authority reports the final result to the local first-person hand.
+func finish_local_hand_action(accepted: bool) -> void:
+	if not is_local_player or not is_instance_valid(viewmodel_right_hand):
+		return
+	viewmodel_right_hand.finish_action(accepted)
+
 ## Returns true while another player's Carrier is holding this player (limp carry).
 func is_carried() -> bool:
 	return _is_carried
@@ -277,6 +341,14 @@ func set_carry_target(target_world: Vector3, facing_world: Vector3 = Vector3.ZER
 
 func get_carry_world_position() -> Vector3:
 	return Vector3(rig.call("get_hips_world_position")) if is_limp and rig != null else global_position
+
+## Cosmetic hand grips follow the actively stabilised chest, not the hips.
+## Gameplay interaction and recovery continue using get_carry_world_position().
+func get_carry_hand_target_position() -> Vector3:
+	return Vector3(rig.call("get_chest_world_position")) if is_limp and rig != null else global_position
+
+func get_carry_hand_target_basis() -> Basis:
+	return Basis(rig.call("get_chest_world_basis")).orthonormalized() if is_limp and rig != null else global_basis.orthonormalized()
 
 func get_interaction_world_position() -> Vector3:
 	return get_carry_world_position()
@@ -391,6 +463,7 @@ func begin_host_limp() -> bool:
 		collision_mask = LAYERS.LAYER_MASK_HEALTHY_PLAYERS
 		return false
 	is_limp = true
+	_set_viewmodel_hands_visible(false)
 	set_physics_process(true)
 	_set_limp_interaction_proxy(false)
 	if limp_interactable != null:
@@ -495,6 +568,7 @@ func begin_remote_limp(epoch: int, world_transform: Transform3D, initial_pose: P
 		return false
 	limp_epoch = epoch
 	is_limp = true
+	_set_viewmodel_hands_visible(false)
 	_set_limp_interaction_proxy(true)
 	if limp_interactable != null:
 		limp_interactable.enabled = true
@@ -551,6 +625,10 @@ func _reset_movement_after_limp() -> void:
 	_movement.horizontal_budget = 0.5
 	_movement.vertical_budget = 0.5
 
+func _set_viewmodel_hands_visible(visible: bool) -> void:
+	if is_instance_valid(viewmodel_hands):
+		viewmodel_hands.visible = visible
+
 func _begin_limp_camera() -> void:
 	if not is_local_player:
 		return
@@ -595,6 +673,7 @@ func _update_recovery_camera(delta: float) -> void:
 
 func _finish_recovery() -> void:
 	is_recovering = false
+	_set_viewmodel_hands_visible(true)
 	if is_local_player:
 		camera.top_level = false
 		camera.transform = Transform3D.IDENTITY
@@ -659,6 +738,26 @@ func _rotate_limp_view(mouse_delta: Vector2) -> void:
 		-LIMP_LOOK_PITCH_LIMIT,
 		LIMP_LOOK_PITCH_LIMIT
 	)
+
+func _debug_hands_status(_args: Array[Variant]) -> String:
+	return "player=%s local=%s\nFPS left: %s\nFPS right: %s\nWORLD left: %s\nWORLD right: %s" % [
+		name,
+		is_local_player,
+		_hand_debug_line(viewmodel_left_hand),
+		_hand_debug_line(viewmodel_right_hand),
+		_hand_debug_line(world_left_hand),
+		_hand_debug_line(world_right_hand),
+	]
+
+func _hand_debug_line(hand: Hand) -> String:
+	if not is_instance_valid(hand):
+		return "missing"
+	return "name=%s id=%d world_mode=%s %s" % [
+		hand.name,
+		hand.get_instance_id(),
+		hand.world_mode,
+		hand.call("_debug_state"),
+	]
 
 func _debug_status(_args: Array[Variant]) -> String:
 	return "position=%s velocity=%s on_floor=%s" % [
