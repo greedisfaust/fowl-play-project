@@ -64,23 +64,23 @@ func _run() -> void:
 	check(not world_hand.is_hovering, "Remote player's Viewmodel right hand should return to idle after hover clears")
 	check(not rig_world_hand.is_hovering, "Ragdoll Rig hand should remain unaffected when hover clears")
 	check(absf(world_middle.rotation_degrees.x + 12.0) < 2.0, "Remote Viewmodel hand should procedurally relax its middle finger after hover clears")
-	# Carry events must drive both hands on the correct presentation rig.
+	# Carry events must drive the camera-attached Viewmodel hands on every peer.
 	var remote_carrier: Carrier = remote_player.get_node("Carrier") as Carrier
 	var held_test_item: Node3D = Node3D.new()
 	remote_carrier.attach_item(held_test_item)
 	for frame: int in 30:
 		await process_frame
-	var world_left_hand: Hand = remote_player.get_node("Rig/Skeleton3D/HandAttachment_L/HandMount_L/Hand") as Hand
-	check(world_left_hand.is_carrying and rig_world_hand.is_carrying, "Remote carry event should activate both ragdoll Rig hands")
-	check(world_left_hand._resolve_pose_state() == Hand.PoseState.CARRY and rig_world_hand._resolve_pose_state() == Hand.PoseState.CARRY, "Remote Rig hands should resolve the carry pose")
-	check(world_left_hand.carry_side < 0.0 and rig_world_hand.carry_side > 0.0, "Remote Rig hands should receive opposite grip sides")
+	var viewmodel_left_hand: Hand = remote_player.get_node("Head/Camera3D/ViewmodelHands/LeftHand") as Hand
+	var viewmodel_right_hand: Hand = remote_player.get_node("Head/Camera3D/ViewmodelHands/RightHand") as Hand
+	check(viewmodel_left_hand.is_carrying and viewmodel_right_hand.is_carrying, "Remote carry event should activate both camera-attached Viewmodel hands")
+	check(viewmodel_left_hand._resolve_pose_state() == Hand.PoseState.CARRY and viewmodel_right_hand._resolve_pose_state() == Hand.PoseState.CARRY, "Remote Viewmodel hands should resolve the carry pose")
+	check(viewmodel_left_hand.carry_side < 0.0 and viewmodel_right_hand.carry_side > 0.0, "Remote Viewmodel hands should receive opposite grip sides")
+	check(not remote_player.get_node("Rig/Skeleton3D/HandAttachment_L/HandMount_L/Hand").is_carrying and not rig_world_hand.is_carrying, "Remote carry should leave ragdoll Rig hands untouched")
 	remote_carrier.detach_item()
-	check(not world_left_hand.is_carrying and not rig_world_hand.is_carrying, "Remote carry end should clear both ragdoll Rig hands")
+	check(not viewmodel_left_hand.is_carrying and not viewmodel_right_hand.is_carrying, "Remote carry end should clear both Viewmodel hands")
 	remote_player.set("is_local_player", true)
 	var local_test_item: Node3D = Node3D.new()
 	remote_carrier.attach_item(local_test_item)
-	var viewmodel_left_hand: Hand = remote_player.get_node("Head/Camera3D/ViewmodelHands/LeftHand") as Hand
-	var viewmodel_right_hand: Hand = remote_player.get_node("Head/Camera3D/ViewmodelHands/RightHand") as Hand
 	check(viewmodel_left_hand.is_carrying and viewmodel_right_hand.is_carrying, "Local carry event should activate both first-person hands")
 	remote_carrier.detach_item()
 	check(not viewmodel_left_hand.is_carrying and not viewmodel_right_hand.is_carrying, "Local carry end should clear both first-person hands")
