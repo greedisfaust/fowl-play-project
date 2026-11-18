@@ -87,6 +87,15 @@ func _check_shape_aware_grip(hand: Hand) -> void:
 	var right_toward_item: Vector3 = (box_prop.global_position - hand.to_global(full_size_right)).normalized()
 	if left_normal.dot(left_toward_item) < 0.99 or right_normal.dot(right_toward_item) < 0.99:
 		_fail("Carry palm normals should face inward toward the prop on both sides")
+	var rest_forearm_axis: Vector3 = hand.global_basis * (hand._pose_rest_rotation * Vector3.BACK)
+	var left_forearm_axis: Vector3 = hand.global_basis * (left_rotation * Vector3.BACK)
+	var right_forearm_axis: Vector3 = hand.global_basis * (right_rotation * Vector3.BACK)
+	var left_forearm_flat: Vector3 = rest_forearm_axis - left_normal * rest_forearm_axis.dot(left_normal)
+	var right_forearm_flat: Vector3 = rest_forearm_axis - right_normal * rest_forearm_axis.dot(right_normal)
+	if left_forearm_flat.length_squared() > 0.0001 and left_forearm_axis.normalized().dot(left_forearm_flat.normalized()) < 0.99:
+		_fail("Left carry wrist roll should preserve the forearm direction")
+	if right_forearm_flat.length_squared() > 0.0001 and right_forearm_axis.normalized().dot(right_forearm_flat.normalized()) < 0.99:
+		_fail("Right carry wrist roll should preserve the forearm direction")
 	var collision: CollisionShape3D = box_prop.get_node("CollisionShape3D") as CollisionShape3D
 	collision.scale = Vector3.ONE * 0.5
 	hand.set_carrying(true, box_prop, -1.0)
