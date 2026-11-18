@@ -18,6 +18,7 @@ var limp_epoch: int = 0
 @onready var head: Node3D = $Head
 @onready var camera: Camera3D = $Head/Camera3D
 @onready var rig: Node3D = get_node_or_null("Rig") as Node3D
+@onready var world_right_hand: Hand = get_node_or_null("Rig/Skeleton3D/HandAttachment_R/HandMount_R/Hand") as Hand
 @onready var carrier: Carrier = get_node_or_null("Carrier") as Carrier
 @onready var limp_interactable: Interactable = get_node_or_null("Interactable") as Interactable
 @onready var limp_interaction_proxy: StaticBody3D = get_node_or_null("LimpInteractionProxy") as StaticBody3D
@@ -240,7 +241,6 @@ func is_carrying() -> bool:
 func play_world_hand_poke(world_point: Vector3) -> bool:
 	if is_local_player or is_limp or is_recovering or is_carrying() or not world_point.is_finite():
 		return false
-	var world_right_hand: Hand = get_node_or_null("Rig/Skeleton3D/HandAttachment_R/HandMount_R/Hand") as Hand
 	if not is_instance_valid(world_right_hand):
 		return false
 	return world_right_hand.reach(world_point)
