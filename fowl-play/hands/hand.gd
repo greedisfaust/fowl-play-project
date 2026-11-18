@@ -66,6 +66,10 @@ const AUTHORED_GUARD_THUMB_BASES: Array[Basis] = [
 ## The thumb opens as prop thickness increases, preventing large props from forcing an inward curl.
 ## Local distal fingertip offset from the third finger joint; matches finger.tscn's final capsule.
 @export var carry_fingertip_offset: Vector3 = Vector3(0.0, 0.0, -0.113)
+## First contact-driven bend slice: the index finger receives a small directional
+## correction toward its nearest box surface target. Joint blending stays in _process.
+@export_range(0.0, 1.0) var carry_contact_bend_weight: float = 0.35
+@export_range(0.0, 45.0) var carry_contact_bend_limit_degrees: float = 24.0
 @export var carry_thumb_tight_curl_degrees: Vector2 = Vector2(-24.0, -32.0)
 @export var carry_thumb_open_curl_degrees: Vector2 = Vector2(-4.0, -8.0)
 
@@ -107,6 +111,7 @@ var _debug_command_name: StringName
 var _debug_watch_name: StringName
 var _tinted_geometry: Array[GeometryInstance3D] = []
 var _original_materials: Array[Material] = []
+var _carry_collision_shapes: Array[CollisionShape3D] = []
 
 func _ready() -> void:
 	_aim_node = get_node_or_null(aim_node_path) as Node3D
@@ -178,6 +183,8 @@ func _process(delta: float) -> void:
 			PoseState.CARRY:
 				var finger_index: int = index / 3
 				curl = carry_finger_curls[finger_index] if finger_index < carry_finger_curls.size() else carry_tight_curl_degrees
+				if finger_index == 0:
+					curl = _get_contact_adjusted_index_curl(curl)
 			PoseState.POINT, PoseState.REACH:
 				curl = Vector3.ZERO if index < 3 else point_curl_degrees
 		var target: Vector3 = _joint_rest_rotations[index]
@@ -410,10 +417,43 @@ func set_speed(new_speed_mps: float) -> void:
 	speed_mps = maxf(new_speed_mps, 0.0)
 
 func set_carrying(on: bool, item: Node3D = null, side: float = 0.0) -> void:
+	var item_changed: bool = carry_item != item
 	is_carrying = on
 	carry_item = item if on else null
 	carry_side = clampf(side, -1.0, 1.0) if on else 0.0
+	if not on or item_changed:
+		_cache_carry_collision_shapes()
 	_debug_log("Carrying %s side=%.1f" % ["on" if on else "off", carry_side])
+
+## Cache collision children when the carried item changes, not in the frame loop.
+func _cache_carry_collision_shapes() -> void:
+	_carry_collision_shapes.clear()
+	if not is_instance_valid(carry_item):
+		return
+	for candidate: Node in carry_item.find_children("*", "CollisionShape3D", true, false):
+		var collision_shape: CollisionShape3D = candidate as CollisionShape3D
+		if collision_shape != null:
+			_carry_collision_shapes.append(collision_shape)
+
+## Use the box contact target to nudge only the index finger's bend toward the
+## surface. This is deliberately a restrained directional assist, not full IK.
+func _get_contact_adjusted_index_curl(base_curl: Vector3) -> Vector3:
+	if not is_instance_valid(carry_item) or _finger_roots.is_empty():
+		return base_curl
+	var index_root: Node3D = _finger_roots[0]
+	if not is_instance_valid(index_root):
+		return base_curl
+	var contact_world: Vector3 = _get_carry_finger_contact_world(0)
+	var target_direction_local: Vector3 = index_root.global_basis.orthonormalized().inverse() * (contact_world - index_root.global_position)
+	if target_direction_local.length_squared() < 0.000001:
+		return base_curl
+	var target_angle_degrees: float = rad_to_deg(atan2(target_direction_local.y, -target_direction_local.z))
+	var correction_degrees: float = clampf(
+		target_angle_degrees * carry_contact_bend_weight,
+		-carry_contact_bend_limit_degrees,
+		carry_contact_bend_limit_degrees
+	)
+	return base_curl + Vector3(correction_degrees * 0.5, correction_degrees * 0.3, correction_degrees * 0.2)
 
 ## Aim the thumb base from its authored mount toward the carried prop center.
 ## Only the thumb root is redirected; the palm and finger joints are untouched.
@@ -506,9 +546,8 @@ func _get_carry_finger_contact_world(finger_index: int) -> Vector3:
 		return fingertip_world
 	var best_contact: Vector3 = fingertip_world
 	var best_distance_squared: float = INF
-	for candidate: Node in carry_item.find_children("*", "CollisionShape3D", true, false):
-		var collision_shape: CollisionShape3D = candidate as CollisionShape3D
-		if collision_shape == null or collision_shape.disabled or not (collision_shape.shape is BoxShape3D):
+	for collision_shape: CollisionShape3D in _carry_collision_shapes:
+		if not is_instance_valid(collision_shape) or collision_shape.disabled or not (collision_shape.shape is BoxShape3D):
 			continue
 		var box_shape: BoxShape3D = collision_shape.shape as BoxShape3D
 		var half_extents: Vector3 = box_shape.size * 0.5
