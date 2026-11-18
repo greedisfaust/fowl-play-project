@@ -538,6 +538,47 @@ func _receive_interaction(owner_id: int, target_path: NodePath, action: StringNa
 		_interaction_result.rpc_id(owner_id, message)
 	return accepted
 
+## Replicate the local owner's current hover target to other players' world hands.
+## Clients submit only the hover state; the host derives the owner from the RPC sender.
+func update_hand_hover(active: bool, world_point: Vector3) -> void:
+	var owner_id: int = multiplayer.get_unique_id()
+	if peer == null and movement_players.has(0):
+		owner_id = 0
+	if active and not world_point.is_finite():
+		return
+	if peer == null or is_host:
+		_receive_hand_hover(owner_id, active, world_point)
+	elif peer.get_connection_status() == MultiplayerPeer.CONNECTION_CONNECTED:
+		_submit_hand_hover.rpc_id(TUNING.PEER_ID_HOST, active, world_point)
+
+@rpc("any_peer", "call_remote", "unreliable_ordered", 1)
+func _submit_hand_hover(active: bool, world_point: Vector3) -> void:
+	if not is_host or not validate_rpc():
+		return
+	if active and not world_point.is_finite():
+		return
+	_receive_hand_hover(multiplayer.get_remote_sender_id(), active, world_point)
+
+func _receive_hand_hover(owner_id: int, active: bool, world_point: Vector3) -> void:
+	if active and not world_point.is_finite():
+		return
+	var player: Node = movement_players.get(owner_id)
+	if not is_instance_valid(player) or player.is_queued_for_deletion():
+		return
+	player.call("set_world_hand_hover", active, world_point)
+	if peer != null and is_host:
+		_hand_hover.rpc(owner_id, active, world_point)
+
+@rpc("authority", "call_remote", "unreliable_ordered", 1)
+func _hand_hover(owner_id: int, active: bool, world_point: Vector3) -> void:
+	if not validate_rpc(TUNING.PEER_ID_HOST):
+		return
+	if active and not world_point.is_finite():
+		return
+	var player: Node = movement_players.get(owner_id)
+	if is_instance_valid(player) and not player.is_queued_for_deletion():
+		player.call("set_world_hand_hover", active, world_point)
+
 func _interaction_rejection(actor: Node3D, target: Interactable, action: StringName) -> String:
 	if not is_instance_valid(actor) or actor.is_queued_for_deletion():
 		return "no active actor for sender"
