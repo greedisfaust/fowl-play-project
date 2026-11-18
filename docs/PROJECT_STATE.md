@@ -146,3 +146,11 @@ Removed the action-phase gate from procedural poke starts. A new poke can now re
 - Next milestone: audit ownership/RPC paths, then verify hover/point, host-approved poke, carry/drop/throw, and pose priority in both host-to-client and client-to-host directions.
 - Current status remains **not multiplayer-ready**. Hover relay, poke broadcast, and carry-pose integration have code/test coverage, but rendered two-instance delivery has not been confirmed.
 - Latest all-finger box-contact extension and spam-friendly poke retrigger still require user visual confirmation in the current build. Godot execution and runtime verification have not been performed by the assistant.
+
+
+## 2026-11-19 — multiplayer hand hover diagnostics
+
+- The host-side hover relay now increments `hand_hover_received` only when the corresponding remote world hand actually accepts and applies the hover state.
+- The existing client-side relay receiver uses the same applied-to-world-hand meaning; the owning peer's hidden world-hand copy is intentionally not counted because its first-person viewmodel is the visible hand.
+- M3 interaction coverage now asserts the host-side remote world-hand application counter.
+- This improves diagnosis of client-to-host hover delivery but does not prove live RPC delivery. Real two-instance host/client visual verification remains required. Godot tests have not been run by the assistant.
