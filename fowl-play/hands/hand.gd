@@ -339,19 +339,11 @@ func _get_carry_pose_rotation(grip_position: Vector3) -> Quaternion:
 	var toward_item_world: Vector3 = carry_item.global_position - grip_world
 	if toward_item_world.length_squared() < 0.000001:
 		return _pose_rest_rotation
-	var palm_normal_world: Vector3 = toward_item_world.normalized()
-	# The authored thumb root sits on local -X. Keep that side toward world-up
-	# so the palm cannot take the shortest-path backhand roll underneath props.
-	var thumb_up_world: Vector3 = Vector3.UP - palm_normal_world * Vector3.UP.dot(palm_normal_world)
-	if thumb_up_world.length_squared() < 0.0001:
-		var hand_up_world: Vector3 = global_basis.orthonormalized() * Vector3.RIGHT
-		thumb_up_world = hand_up_world - palm_normal_world * hand_up_world.dot(palm_normal_world)
-	thumb_up_world = thumb_up_world.normalized()
-	var palm_x_world: Vector3 = -thumb_up_world
-	var palm_z_world: Vector3 = palm_x_world.cross(palm_normal_world).normalized()
-	var desired_world_basis: Basis = Basis(palm_x_world, palm_normal_world, palm_z_world).orthonormalized()
 	var hand_basis: Basis = global_basis.orthonormalized()
-	return (hand_basis.inverse() * desired_world_basis).get_rotation_quaternion()
+	var toward_item_local: Vector3 = (hand_basis.inverse() * toward_item_world).normalized()
+	var rest_palm_normal: Vector3 = (_pose_rest_rotation * Vector3.UP).normalized()
+	var facing_delta: Quaternion = Quaternion(rest_palm_normal, toward_item_local)
+	return facing_delta * _pose_rest_rotation
 
 ## Build one prop-local AABB from every usable collision shape. Transforming each
 ## debug-mesh corner handles shape-node offsets, rotation, and scale, including
