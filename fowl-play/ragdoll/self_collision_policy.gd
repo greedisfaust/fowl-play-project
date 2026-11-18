@@ -2,11 +2,20 @@
 extends RefCounted
 
 const CONTACT_PAIRS: Array = [
+	# Existing torso/limb contacts.
 	["Chest", "Forearm_L"], ["Chest", "Forearm_R"],
 	["Hips", "Forearm_L"], ["Hips", "Forearm_R"],
 	["Chest", "Thigh_L"], ["Chest", "Thigh_R"],
 	["Chest", "Shin_L"], ["Chest", "Shin_R"],
 	["Hips", "Shin_L"], ["Hips", "Shin_R"],
+	# Opposite-side arm contacts: stop arms and forearms passing through each other.
+	["UpperArm_L", "UpperArm_R"],
+	["UpperArm_L", "Forearm_R"], ["Forearm_L", "UpperArm_R"],
+	["Forearm_L", "Forearm_R"],
+	# Opposite-side leg contacts: stop thighs and shins interpenetrating.
+	["Thigh_L", "Thigh_R"],
+	["Thigh_L", "Shin_R"], ["Shin_L", "Thigh_R"],
+	["Shin_L", "Shin_R"],
 ]
 
 static func configure(bones: Array[PhysicalBone3D]) -> int:

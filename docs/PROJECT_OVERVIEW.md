@@ -107,7 +107,7 @@ Hips (root)
 
 - **Meshes:** rigid primitive meshes on `BoneAttachment3D` nodes (no skin weights, no Blender). Blocky low-poly look. The head has a **beak and eyes** as a rigid attachment (DECIDED, cosmetic only; does not change the skeleton).
 - **Skeleton authoring (DECIDED):** user chose manual Godot editor authoring to learn rigging/modeling directly. Begin with a minimal skeleton, then expand. User subsequently approved a one-time Godot EditorScript for only the initial Hips/Spine/Chest bones because the editor has no ordinary bone-add control. User subsequently extended approval to adding the remaining planned bones in small groups via editor helpers. Modeling and physics construction remain manual; no mesh/physics generator or Blender authorized. See [player rig design](PLAYER_RIG_DESIGN.md) for construction order and proposed proportions.
-- **Self-collision (RECOMMENDED, verify in the spike):** bones of the **same** ragdoll never collide with each other (collision exceptions or Jolt collision groups); bones of **different** ragdolls do.
+- **Self-collision (IMPLEMENTED, selective):** connected neighbouring bones remain collision-exempt. Selected non-neighbouring same-ragdoll pairs can contact, including opposite-side upper arms/forearms and thighs/shins, plus the existing torso/limb contact pairs. This prevents opposite limbs from passing through one another without enabling every possible self-contact pair. Remote ragdoll physical bones remain non-simulating/non-colliding; the host owns physical simulation.
 - **Mass (OPEN):** per-bone masses are decided in the Jolt spike.
 - **Node paths (stable contract):** the player scene root is named by peer id (`Players/<id>`) and exposes `Head`, `Head/Camera3D`, `Rig/Skeleton3D`, `NamePlate`, plus script properties `hands`, `head`, `state`, `combat`, `carrier`. **A Player node is never reparented** (it breaks every RPC path).
 - **Owner view:** the owner's body mesh may be hidden in first person. **DECIDED:** the owner's legs are hidden when looking down (pitch below horizontal); when looking forward again they fade from hidden to visible via a smooth opacity slide (no instant snap). Default: hidden when looking down (also saves their leg compute).
@@ -117,7 +117,7 @@ Hips (root)
 - WASD move, mouse look (pitch clamped ±85°), jump. Starting values are in §15.
 - Camera is on `Head`. The raycast for interaction is a child of the camera.
 - Escape releases the mouse (no pause); a click recaptures it.
-- While limp, the **owner's camera** sits at the simulated head's eye point and inherits head rotation, with mouse look added on top. Relative mouse look is limited to **±75° yaw and ±75° pitch**, so the player cannot turn the camera behind the head. Hide only the owner's head geometry so the rest of the body stays visible. A carried player **can still look around**. **DECIDED (user playtest, 2026-11-17):** use the head for a first-person ragdoll view; the earlier smoothed-hips camera target looked down on the body and was rejected. Wall avoidance and comfort tuning remain for the camera pass.
+- While limp, the **owner's camera** uses the simulated head's eye point and inherits head rotation, with mouse look added on top. Relative mouse look is limited to **±75° yaw and ±75° pitch**, so the player cannot turn the camera behind the head. Hide only the owner's head geometry so the rest of the body stays visible. A carried player **can still look around**. **DECIDED (user playtest):** use the head for a first-person ragdoll view; the earlier smoothed-hips camera target looked down on the body and was rejected. While carried, the physics-driven head position/rotation contribution is smoothed for comfort; mouse-look and dynamic FOV are preserved. The camera continues to use the head-mounted eye point.
 
 ## 9. Combat
 
@@ -143,7 +143,7 @@ Inputs are InputMap actions only (never raw keycodes). The full action table is 
 
 **Rules**
 - Limp begins on the host (charged hit, parried charged punch) and is replicated reliably to everyone through **one entry point**.
-- **Recovery rule (RECOMMENDED):** the limp timer (`LIMP_SECONDS`, **3.5 s**, DECIDED) must have elapsed **and** the body must be settled (speed below `LIMP_SETTLED_SPEED_MPS`); a hard cap (`LIMP_MAX_SECONDS`, 6.0 s of free tumbling) forces recovery. The timer **pauses while carried** and **restarts on drop/throw**. **The host owns the one timer**; no machine runs its own.
+- **Recovery rule (DECIDED):** the limp timer (`LIMP_SECONDS`, **3.5 s**) must have elapsed **and** the body must be settled (speed below `LIMP_SETTLED_SPEED_MPS`); a hard cap (`LIMP_MAX_SECONDS`, 6.0 s) forces recovery. The timer is suspended while carried. **Every drop or throw resets a fresh 3.5-second countdown**; no elapsed progress from before that release is retained. **The host owns the one timer**; no machine runs its own.
 - Input and interaction are locked while limp. A limp player can still look around.
 - Exactly one cleanup path ends a ragdoll (see §14, G8).
 
@@ -153,11 +153,11 @@ Inputs are InputMap actions only (never raw keycodes). The full action table is 
 |---|---|---|---|---|
 | STANDING | animated (procedural legs) | capsule (owner) | first person | knockdown → GROUND |
 | GROUND | simulated | hips body, host-simulated | head eye point and rotation, mouse look | pickup → CARRIED, timer+settled → RECOVERY |
-| CARRIED | hips pinned to carry anchor, limbs **dangle** (simulated) | carry anchor | head eye point and rotation, mouse look still works | drop → GROUND, throw → THROWN, carrier forced-ends → GROUND |
+| CARRIED | Chest is spring/torque-stabilised at the carrier's carry anchor; Hips, Head and limbs remain simulated and **dangle** under gravity and joint constraints | host drives the Chest toward the carrier anchor; Player root remains fixed | smoothed head eye point/rotation, mouse look and dynamic FOV remain active | drop → GROUND, throw → THROWN, carrier forced-ends → GROUND |
 | THROWN | simulated with launch impulse | hips body, host-simulated | head eye point and rotation, mouse look | settles → GROUND |
 | RECOVERY | blend ragdoll → standing pose over ~0.5 s | capsule re-placed at hips ground position | blends back to first person | → STANDING |
 
-- **OPEN:** dangling limbs (above) feel more like the references; confirm.
+- Carried limp bodies use host-only spring-damper position support and a damped three-axis orientation controller on the Chest PhysicalBone3D. The target orientation accounts for the Chest bone's bind-space basis. The Player root is never moved or reparented. Hips, Head and limbs remain simulated; selective opposite-side arm/leg self-collision prevents those limbs passing through each other. Carried-only angular damping and narrower Head joint limits reduce oscillation and are restored on release. The local carried player's head-mounted camera smooths physics-driven head motion while preserving mouse-look and dynamic FOV. Remote peers render the normal host pose stream and use a query-only StaticBody3D at the replicated hips for interaction focus, without local ragdoll collision.
 - **Forced exits** (disconnect, teleport/room change, run reset, host leaves) always route to the single cleanup path, then STANDING.
 - **Authority of position while limp (RECOMMENDED):** the host-simulated hips body is the single truth. The capsule is dormant and is re-placed at handback. Clients drive the root from the interpolated hips pose. **The body drives the root, never the reverse** (see §22).
 
@@ -426,7 +426,7 @@ res://
 
 **Decided (2026-11-15):**
 - Throw: auto-fires at full charge (1.0 s); early release after the tap window drops the item; tap drops; throw power is fixed.
-- Limp lasts `LIMP_SECONDS` = 3.5 s (hard cap 6.0 s).
+- Limp lasts `LIMP_SECONDS` = 3.5 s (hard cap 6.0 s); every drop/throw starts a fresh 3.5 s recovery countdown after any carried interval.
 - Budget: up to 4 full ragdolls, up to 70 awake bodies, to be proven by the spike.
 - A parried charged punch makes the attacker limp; a parried jab is recoil only.
 - Movement authority: owner-authoritative standing movement with host sanity checks was approved at the M3 gate (2026-11-16). Host validates and relays owner snapshots; remote peers interpolate. Gameplay outcomes remain host-authoritative.
@@ -437,10 +437,8 @@ res://
 - A player node is never reparented (it breaks every RPC path).
 
 **Open (ask before building):**
-1. Skeleton authoring gate resolved: manual Godot editor authoring selected; no longer open.
-2. Dangling limbs while carried (confirm).
-3. Whether punches affect already-limp bodies.
-4. Whether to include impact/wall-slam feedback.
-5. Final lobby, nickname and color flow.
-6. Per-bone ragdoll masses (spike).
-7. Rebuilding the casino/economy layer, and when.
+1. Whether punches affect already-limp bodies.
+2. Whether to include impact/wall-slam feedback.
+3. Final lobby, nickname and color flow.
+4. Per-bone ragdoll masses (spike).
+5. Rebuilding the casino/economy layer, and when.

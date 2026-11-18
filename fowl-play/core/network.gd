@@ -550,14 +550,17 @@ func _interaction_rejection(actor: Node3D, target: Interactable, action: StringN
 	# Remote visuals lag; use the most recent host-accepted actor position.
 	if peer != null and not bool(actor.get("is_local_player")):
 		origin += Vector3(actor.get("accepted_position")) - actor.global_position
-	if not origin.is_finite() or not body.global_position.is_finite():
+	var target_position: Vector3 = body.global_position
+	if body.has_method("get_interaction_world_position"):
+		target_position = Vector3(body.call("get_interaction_world_position"))
+	if not origin.is_finite() or not target_position.is_finite():
 		return "invalid interaction position"
 	var mask: int = (1 << (LAYERS.WORLD_STATIC - 1)) | (1 << (LAYERS.DEVICES - 1)) | (1 << (LAYERS.PROPS - 1)) | (1 << (LAYERS.ELEVATOR - 1)) | (1 << (LAYERS.LIMP_BODIES - 1))
-	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(origin, body.global_position, mask)
+	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(origin, target_position, mask)
 	if actor is CollisionObject3D:
 		query.exclude = [actor.get_rid()]
 	var hit: Dictionary = actor.get_world_3d().direct_space_state.intersect_ray(query)
-	var contact: Vector3 = body.global_position
+	var contact: Vector3 = target_position
 	if not hit.is_empty():
 		var collider: Node = hit.collider as Node
 		if collider != body and not body.is_ancestor_of(collider):
@@ -661,6 +664,8 @@ func _release_carried(owner_id: int, carrier: Node, linear: Vector3, angular: Ve
 	if not is_instance_valid(item):
 		return
 	var at: Vector3 = item.global_position
+	if item.has_method("get_carry_world_position"):
+		at = Vector3(item.call("get_carry_world_position"))
 	carrier.call("detach_item")
 	item.call("apply_release", at, linear, angular)
 	if peer != null:
@@ -679,6 +684,8 @@ func host_begin_carry(actor: Node, item: Node3D) -> bool:
 	if carrier == null or bool(carrier.call("is_holding")):
 		return false
 	if not item.has_method("is_carried") or bool(item.call("is_carried")):
+		return false
+	if item.has_method("set_carry_target") and (not bool(item.get("is_limp")) or bool(item.get("is_recovering"))):
 		return false
 	var owner_id: int = int(actor_3d.get("input_peer_id"))
 	carrier.call("attach_item", item)

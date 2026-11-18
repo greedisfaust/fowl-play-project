@@ -35,6 +35,34 @@ var _pose_blend_target: Array[Transform3D] = []
 var _standing_pose: Array[Transform3D] = []
 var _pending_recovery_animation: StringName = &""
 var _recovery_animation_active: bool = false
+var _carry_support_active: bool = false
+var _carry_target_world: Vector3 = Vector3.ZERO
+var _carry_facing_world: Vector3 = Vector3.ZERO
+var _chest_physical_bone: PhysicalBone3D
+var _head_physical_bone: PhysicalBone3D
+var _chest_rest_basis_offset: Basis = Basis.IDENTITY
+var _carry_physics_active: bool = false
+var _carry_saved_angular_damp: Dictionary = {}
+var _carry_saved_chest_swing_span: float = 0.0
+var _carry_saved_chest_twist_span: float = 0.0
+var _carry_saved_head_swing_span: float = 0.0
+var _carry_saved_head_twist_span: float = 0.0
+
+# Strong, damped 6-DOF carry anchor. The Chest follows the carrier's
+# CarryAnchor position and upright facing; spring damping gives slight lag
+# without allowing the ragdoll limbs to spin the upper body away.
+const CARRY_CHEST_SPRING_N_PER_M: float = 5000.0
+const CARRY_CHEST_DAMPING_N_PER_MPS: float = 350.0
+const CARRY_CHEST_MAX_FORCE_N: float = 18000.0
+const CARRY_CHEST_ROTATION_STIFFNESS: float = 260.0
+const CARRY_CHEST_ROTATION_DAMPING: float = 48.0
+const CARRY_CHEST_MAX_TORQUE: float = 900.0
+
+# Temporary rotational damping used only while this ragdoll is being carried.
+const CARRY_TORSO_ANGULAR_DAMP: float = 4.0
+const CARRY_ARM_ANGULAR_DAMP: float = 9.0
+const CARRY_FOREARM_ANGULAR_DAMP: float = 11.0
+const CARRY_HEAD_ANGULAR_DAMP: float = 12.0
 
 func _enter_tree() -> void:
 	# An editor animation preview can be saved in the skeleton's pose. Reset
@@ -60,6 +88,13 @@ func _ready() -> void:
 				_hips_bone_index = _bone_indices[-1]
 			elif physical_bone.bone_name == "Chest":
 				_chest_bone_index = _bone_indices[-1]
+				_chest_physical_bone = physical_bone
+			elif physical_bone.bone_name == "Head":
+				_head_physical_bone = physical_bone
+	if _chest_physical_bone != null:
+		# PhysicalBone's local axes follow the skeleton bone's bind orientation,
+		# not the character's forward axis. Preserve that bind-space offset.
+		_chest_rest_basis_offset = global_basis.inverse() * _chest_physical_bone.global_basis
 
 	var self_contact_pairs: int = SELF_COLLISION.configure(physical_bones)
 
@@ -87,6 +122,7 @@ func disable_collisions() -> void:
 func begin_host_simulation() -> bool:
 	if simulator.is_simulating_physics() or _remote_active or not _has_valid_bones():
 		return false
+	end_carry_physics()
 	# Capture the standing pose before simulation overwrites it, so recovery
 	# blends back to the actual standing pose instead of the rest/T-pose.
 	if not _remote_active:
@@ -97,6 +133,7 @@ func begin_host_simulation() -> bool:
 	top_level = true
 	global_transform = world_transform
 	simulator.active = true
+	_carry_support_active = false
 	_latest_host_pose = PackedInt32Array()
 	enable_host_collisions()
 	for bone: PhysicalBone3D in physical_bones:
@@ -106,6 +143,8 @@ func begin_host_simulation() -> bool:
 	return true
 
 func stop_host_simulation() -> void:
+	end_carry_physics()
+	_carry_support_active = false
 	_pose_blend_active = false
 	_recovery_animation_active = false
 	_pending_recovery_animation = &""
@@ -154,6 +193,107 @@ func get_hips_world_position() -> Vector3:
 	if _hips_bone_index >= 0:
 		return skeleton.to_global(skeleton.get_bone_global_pose(_hips_bone_index).origin)
 	return global_position
+
+## Host-only spring support: chest follows the carrier anchor while hips,
+## head and limbs remain free to sway under gravity and joint constraints.
+func set_carry_target(target_world: Vector3, facing_world: Vector3 = Vector3.ZERO) -> void:
+	if not simulator.is_simulating_physics() or _hips_physical_bone == null or not target_world.is_finite():
+		return
+	_carry_target_world = target_world
+	if facing_world.is_finite() and Vector2(facing_world.x, facing_world.z).length_squared() > 0.0001:
+		_carry_facing_world = Vector3(facing_world.x, 0.0, facing_world.z).normalized()
+	_carry_support_active = true
+
+func stop_carry_support() -> void:
+	_carry_support_active = false
+	_carry_facing_world = Vector3.ZERO
+
+## Stabilize only the Hips-to-Chest joint while carried. The head joint and
+## every limb joint remain simulated, so the head can look around and the legs
+## can continue to dangle and limp. Original settings are restored on release.
+func begin_carry_physics() -> void:
+	if _carry_physics_active or not simulator.is_simulating_physics() or _chest_physical_bone == null:
+		return
+	_carry_saved_angular_damp.clear()
+	for physical_bone: PhysicalBone3D in physical_bones:
+		_carry_saved_angular_damp[physical_bone] = physical_bone.angular_damp
+		match String(physical_bone.bone_name):
+			"Hips", "Chest":
+				physical_bone.angular_damp = CARRY_TORSO_ANGULAR_DAMP
+			"Head":
+				physical_bone.angular_damp = CARRY_HEAD_ANGULAR_DAMP
+			"UpperArm_L", "UpperArm_R":
+				physical_bone.angular_damp = CARRY_ARM_ANGULAR_DAMP
+			"Forearm_L", "Forearm_R":
+				physical_bone.angular_damp = CARRY_FOREARM_ANGULAR_DAMP
+	_carry_saved_chest_swing_span = float(_chest_physical_bone.get("joint_constraints/swing_span"))
+	_carry_saved_chest_twist_span = float(_chest_physical_bone.get("joint_constraints/twist_span"))
+	if _head_physical_bone != null:
+		_carry_saved_head_swing_span = float(_head_physical_bone.get("joint_constraints/swing_span"))
+		_carry_saved_head_twist_span = float(_head_physical_bone.get("joint_constraints/twist_span"))
+		# Keep the head mobile, but reduce large, sudden neck swings while carried.
+		_head_physical_bone.set("joint_constraints/swing_span", 18.0)
+		_head_physical_bone.set("joint_constraints/twist_span", 14.0)
+	# Near-zero spans make the ConeJoint behave like a fixed torso connection.
+	# The Head remains a separate, freely constrained joint above the Chest.
+	_chest_physical_bone.set("joint_constraints/swing_span", 0.05)
+	_chest_physical_bone.set("joint_constraints/twist_span", 0.05)
+	_carry_physics_active = true
+
+## Restore the torso joint and every body's exact pre-carry damping values.
+func end_carry_physics() -> void:
+	if not _carry_physics_active:
+		return
+	if _chest_physical_bone != null:
+		_chest_physical_bone.set("joint_constraints/swing_span", _carry_saved_chest_swing_span)
+		_chest_physical_bone.set("joint_constraints/twist_span", _carry_saved_chest_twist_span)
+	if _head_physical_bone != null:
+		_head_physical_bone.set("joint_constraints/swing_span", _carry_saved_head_swing_span)
+		_head_physical_bone.set("joint_constraints/twist_span", _carry_saved_head_twist_span)
+	for physical_bone: PhysicalBone3D in physical_bones:
+		if _carry_saved_angular_damp.has(physical_bone):
+			physical_bone.angular_damp = float(_carry_saved_angular_damp[physical_bone])
+	_carry_saved_angular_damp.clear()
+	_carry_physics_active = false
+
+func apply_carry_support() -> void:
+	if not _carry_support_active or not simulator.is_simulating_physics() or _chest_physical_bone == null:
+		return
+	# The Chest itself is actively held at the carrier's CarryAnchor. This is
+	# deliberately much firmer than the old spring so arm/leg forces cannot
+	# drag the entire body away. All other bones remain physical.
+	var displacement: Vector3 = _carry_target_world - _chest_physical_bone.global_position
+	var force: Vector3 = displacement * CARRY_CHEST_SPRING_N_PER_M
+	force -= _chest_physical_bone.linear_velocity * CARRY_CHEST_DAMPING_N_PER_MPS
+	PhysicsServer3D.body_apply_central_force(_chest_physical_bone.get_rid(), force.limit_length(CARRY_CHEST_MAX_FORCE_N))
+	_apply_carry_chest_orientation()
+
+func _apply_carry_chest_orientation() -> void:
+	if _chest_physical_bone == null or _carry_facing_world.length_squared() < 0.0001:
+		return
+	# Keep the Chest upright and facing the carrier's requested direction.
+	# A full 3-axis spring resists pitch/roll as well as yaw, with damping
+	# preserving a small delayed response when the carrier turns.
+	var character_facing_basis: Basis = Basis.looking_at(_carry_facing_world.normalized(), Vector3.UP)
+	# Apply the character-facing rotation plus the Chest bone's original bind
+	# orientation, so the visual torso faces forward instead of tilting sideways.
+	var target_basis: Basis = character_facing_basis * _chest_rest_basis_offset
+	var target_rotation: Quaternion = target_basis.get_rotation_quaternion().normalized()
+	var current_rotation: Quaternion = _chest_physical_bone.global_basis.get_rotation_quaternion().normalized()
+	var rotation_error: Quaternion = (target_rotation * current_rotation.inverse()).normalized()
+	if rotation_error.w < 0.0:
+		rotation_error = Quaternion(-rotation_error.x, -rotation_error.y, -rotation_error.z, -rotation_error.w)
+	var angular_error: Vector3 = rotation_error.get_axis() * rotation_error.get_angle()
+	var torque: Vector3 = angular_error * CARRY_CHEST_ROTATION_STIFFNESS
+	torque -= _chest_physical_bone.angular_velocity * CARRY_CHEST_ROTATION_DAMPING
+	PhysicsServer3D.body_apply_torque(_chest_physical_bone.get_rid(), torque.limit_length(CARRY_CHEST_MAX_TORQUE))
+
+func release_carry(linear: Vector3, angular: Vector3) -> void:
+	_carry_support_active = false
+	if not simulator.is_simulating_physics() or _hips_physical_bone == null:
+		return
+	_hips_physical_bone.linear_velocity = linear
+	_hips_physical_bone.angular_velocity = angular
 
 func get_head_eye_transform() -> Transform3D:
 	# The attachment follows the simulated host head or the interpolated client pose.
