@@ -28,6 +28,8 @@ security secret.
 | `net/status` | core/network.gd | offline, hosting, connecting, connected, disconnected, or failed. |
 | `net/peers` | core/network.gd | Locally known connected peer IDs, including local ID once connected. |
 | `net/player_count` | arena/test_arena.gd | Spawned players in this arena instance. |
+| `net/hand_poke_sent` | core/network.gd | Host count of accepted cosmetic hand-poke broadcasts sent. |
+| `net/hand_poke_received` | core/network.gd | Count of remote world-hand pokes played on this instance. |
 | `interact/focused/<name>` | player/focus.gd | Prompt text for the local player's focused target, or blank. |
 | `interact/device/<name>/active` | interaction/debug_use_device.gd | Toggle state of the M1 test USE device. |
 | `props/<name>/pickup_allowed` | props/prop.gd | Whether the prop's assigned profile allows pickup. |
@@ -82,6 +84,7 @@ Automated checks cover Enter/Run signal wiring, category toggles, feedback with 
 | M1/M3 | 2 | Press E or run `interact_use_<name>`: `interact: Interaction accepted peer=<id> action=use`; host logs `<device> active=true/false`, clients log `<device> replicated active=true/false`. |
 | M1 | 3 | Aim at the GRAB prop: `props/<name>/pickup_allowed=true`; press E and see `props: <name> grab accepted; carry is deferred to M6`. |
 | M2 | 1 | Hand registration shows `hands/<name>/state`; `hand_status_<name>` reports world/hover/guard/carry/limp state. |
+| M2/M3 | 1 | On an accepted USE/GRAB interaction, the initiating player sees the immediate first-person poke; other peers see that player's world right hand poke toward the target. `net/hand_poke_sent` increases on host; `net/hand_poke_received` increases on peers that animate a remote hand. Rejected interactions do not broadcast a poke. |
 | M6 | 1 | Aim at a free prop or limp body: `props/<name>/pickup_allowed=true` or `player/<name>/limp_interactable_enabled=true`; press interact → `carry: Player <name> picked up <item>` on host and `carry/<name>/holding=<item>` watch appears. |
 | M6 | 2 | Press punch once and release quickly: `carry: Player <name> released <item>` and `props/<name> set carried=false`. |
 | M6 | 3 | Hold punch past auto-fire: `carry: Player <name> released <item>`; prop/body flies at `THROW_SPEED_MPS` (props) or `THROW_SPEED_LIMP_MPS` (limp bodies). |
