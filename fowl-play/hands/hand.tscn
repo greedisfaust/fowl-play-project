@@ -1,0 +1,117 @@
+[gd_scene format=3 uid="uid://d2b5kkylkuxn2"]
+
+[ext_resource type="PackedScene" uid="uid://0yy2u1xx3kti" path="res://hands/finger.tscn" id="1_f3c5w"]
+[ext_resource type="Script" uid="uid://gx2v6obqo08t" path="res://hands/hand.gd" id="1_l7rxg"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_x7ga8"]
+albedo_color = Color(0.8666667, 0.8352941, 0.77254903, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="BoxMesh_g4v7s"]
+size = Vector3(0.42, 0.14, 0.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_f3c5w"]
+albedo_color = Color(0.8666667, 0.8352941, 0.77254903, 1)
+roughness = 0.85
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_vkdv4"]
+radius = 0.053
+height = 0.21
+radial_segments = 12
+rings = 4
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_l7rxg"]
+albedo_color = Color(0.8666667, 0.8352941, 0.77254903, 1)
+roughness = 0.85
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_or6wd"]
+radius = 0.048
+height = 0.16
+radial_segments = 12
+rings = 4
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7482u"]
+albedo_color = Color(0.8666667, 0.8352941, 0.77254903, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="BoxMesh_yf5fn"]
+size = Vector3(0.26, 0.12, 0.15)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mx1oa"]
+albedo_color = Color(0.54509807, 0.50980395, 0.45490196, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="BoxMesh_57qmd"]
+size = Vector3(0.3, 0.16, 0.09)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5qdtc"]
+albedo_color = Color(0.8666667, 0.8352941, 0.77254903, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="BoxMesh_d0u6y"]
+size = Vector3(0.23, 0.115, 0.28)
+
+[node name="Hand" type="Node3D" unique_id=1049811483]
+script = ExtResource("1_l7rxg")
+
+[node name="PoseRoot" type="Node3D" parent="." unique_id=171550106]
+
+[node name="Palm" type="MeshInstance3D" parent="PoseRoot" unique_id=1415618850]
+visible = false
+material_override = SubResource("StandardMaterial3D_x7ga8")
+mesh = SubResource("BoxMesh_g4v7s")
+
+[node name="IndexAim" type="Node3D" parent="PoseRoot" unique_id=1852232926]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 0, -0.18)
+
+[node name="Index" parent="PoseRoot/IndexAim" unique_id=528499401 instance=ExtResource("1_f3c5w")]
+transform = Transform3D(0.92, 0, 0, 0, 0.92, 0, 0, 0, 0.92, 0, 0, 0)
+
+[node name="Middle" parent="PoseRoot" unique_id=786594186 instance=ExtResource("1_f3c5w")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.05, 0, -0.2)
+
+[node name="Ring" parent="PoseRoot" unique_id=1017589843 instance=ExtResource("1_f3c5w")]
+transform = Transform3D(0.94, 0, 0, 0, 0.94, 0, 0, 0, 0.94, 0.05, 0, -0.185)
+
+[node name="Pinky" parent="PoseRoot" unique_id=1445735131 instance=ExtResource("1_f3c5w")]
+transform = Transform3D(0.72, 0, 0, 0, 0.72, 0, 0, 0, 0.72, 0.15, 0, -0.155)
+
+[node name="ThumbRoot" type="Node3D" parent="PoseRoot" unique_id=958673588]
+transform = Transform3D(0.70710677, 0, 0.70710677, 0, 1, 0, -0.70710677, 0, 0.70710677, -0.18, -0.015, 0.08)
+
+[node name="ThumbJoint1" type="Node3D" parent="PoseRoot/ThumbRoot" unique_id=481255431]
+
+[node name="ThumbSegment1" type="MeshInstance3D" parent="PoseRoot/ThumbRoot/ThumbJoint1" unique_id=1715786903]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, -0.08)
+material_override = SubResource("StandardMaterial3D_f3c5w")
+mesh = SubResource("CapsuleMesh_vkdv4")
+
+[node name="ThumbJoint2" type="Node3D" parent="PoseRoot/ThumbRoot/ThumbJoint1" unique_id=834336943]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.16)
+
+[node name="ThumbSegment2" type="MeshInstance3D" parent="PoseRoot/ThumbRoot/ThumbJoint1/ThumbJoint2" unique_id=1602644060]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, -0.062)
+material_override = SubResource("StandardMaterial3D_l7rxg")
+mesh = SubResource("CapsuleMesh_or6wd")
+
+[node name="Wrist" type="MeshInstance3D" parent="PoseRoot" unique_id=1241454844]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.245)
+material_override = SubResource("StandardMaterial3D_7482u")
+mesh = SubResource("BoxMesh_yf5fn")
+
+[node name="Cuff" type="MeshInstance3D" parent="PoseRoot" unique_id=632808737]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.315)
+material_override = SubResource("StandardMaterial3D_mx1oa")
+mesh = SubResource("BoxMesh_57qmd")
+
+[node name="Forearm" type="MeshInstance3D" parent="PoseRoot" unique_id=1985700725]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.485)
+visible = false
+material_override = SubResource("StandardMaterial3D_5qdtc")
+mesh = SubResource("BoxMesh_d0u6y")
+
+[node name="CSGPolygon3D" type="CSGPolygon3D" parent="PoseRoot" unique_id=295996136]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, -0.055, 0)
+material_override = SubResource("StandardMaterial3D_f3c5w")
+polygon = PackedVector2Array(-0.17, -0.2, 0.17, -0.2, 0.19414786, -0.15753213, 0.17669, 0.062466986, 0.155, 0.17, 0.13, 0.2, -0.13, 0.2, -0.155, 0.17, -0.2, 0.04, -0.21, -0.16)
+depth = 0.11
