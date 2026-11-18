@@ -10,6 +10,10 @@
 radius = 0.35
 height = 1.8
 
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_limp_proxy"]
+radius = 0.3
+height = 0.9
+
 [node name="Player" type="CharacterBody3D" unique_id=50883763]
 collision_layer = 16
 collision_mask = 103
@@ -98,11 +102,18 @@ body_offset = Transform3D(-1.0000001, -0.000117255375, -0.0002380535, -0.0002433
 [node name="Carrier" type="Node3D" parent="." unique_id=2012841287]
 script = ExtResource("4_yw30f")
 
-[node name="LimpInteractable" type="Node" parent="." unique_id=2041131228]
+[node name="Interactable" type="Node" parent="." unique_id=2041131228]
 script = ExtResource("5_qjkh3")
 kind = 1
 prompt_text = "[GRAB] Limp Body"
 metadata/_custom_type_script = "uid://dd5c04repreo1"
+
+[node name="LimpInteractionProxy" type="StaticBody3D" parent="."]
+collision_layer = 32
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="LimpInteractionProxy"]
+shape = SubResource("CapsuleShape3D_limp_proxy")
 
 [editable path="Rig"]
 [editable path="Rig/Skeleton3D/HandAttachment_L/HandMount_L/Hand"]
