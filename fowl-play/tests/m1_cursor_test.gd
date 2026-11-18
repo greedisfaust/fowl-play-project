@@ -33,6 +33,8 @@ func _run() -> void:
 	display.call("_on_focus_target_changed", null)
 	if bool(display.get("is_hovering")):
 		_fail("Cursor did not leave hover state when focus cleared")
+	if not display.has_method("set_identity_color"):
+		_fail("Cursor does not expose the future identity-color integration point")
 	var focus_script: Script = load("res://player/focus.gd") as Script
 	var focus_node: Node = focus_script.new() as Node
 	if not focus_node.has_signal("focus_target_changed"):

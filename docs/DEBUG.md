@@ -283,3 +283,13 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 - A restrained 1.8-second breathing pulse gently scales the cursor while hovering. It stops when focus clears; the idle cursor remains still.
 - The cursor listens to `Focus.focus_target_changed`. It does not perform its own raycast or affect interaction/network authority.
 - `tests/m1_cursor_test.gd` checks the cursor scene, non-blocking mouse behavior, identity-color setter, focus state, and Focus signal. Run it through `tests/run_checks.ps1`.
+
+
+### Gameplay cursor and focus animation
+
+- The center-screen cursor is a CanvasLayer under Player, and only the local player's instance is enabled while the mouse is captured.
+- Idle: a small translucent white circle with a thin dark outline.
+- Focused: it smoothly grows, blends toward its configurable identity accent, and gains three soft translucent glow rings. A gentle 1.8-second breathing pulse scales the cursor while focused.
+- The color is deliberately a temporary fallback, not a network/player-color lookup. Future lobby identity code should call GameplayCursor.set_identity_color(color) with the assigned player's color.
+- The focused Interactable outline has a separate, slower 2-second breathing glow. Only emission intensity pulses; outline width and silhouette stay stable. The existing test-arena WorldEnvironment Glow creates the soft bloom.
+- Run tests/run_checks.ps1 for the cursor contract check and tests/m1_interaction_test.gd for the interactable outline checks. Godot runtime and visual verification remain user-run.
