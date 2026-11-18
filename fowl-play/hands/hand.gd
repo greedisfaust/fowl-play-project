@@ -57,6 +57,8 @@ const AUTHORED_GUARD_THUMB_BASES: Array[Basis] = [
 @export var carry_open_curl_degrees: Vector3 = Vector3(-20.0, -32.0, -16.0)
 @export_range(0.05, 0.5) var carry_curl_small_extent_m: float = 0.15
 @export_range(0.2, 1.5) var carry_curl_large_extent_m: float = 0.90
+## Additional curl for fingers nearest the lateral edges of the prop.
+@export var carry_edge_curl_degrees: Vector3 = Vector3(-8.0, -10.0, -6.0)
 
 var _reach_elapsed: float = -1.0
 var _reach_target: Vector3
@@ -66,6 +68,7 @@ var _reach_start_amount: float = 0.0
 var _reach_preview_delay: float = -1.0
 
 var _finger_joints: Array[Node3D] = []
+var _finger_roots: Array[Node3D] = []
 var _joint_rest_rotations: Array[Vector3] = []
 var _aim_rest_rotation: Quaternion = Quaternion.IDENTITY
 var _pose_command_name: StringName
@@ -125,6 +128,10 @@ func _ready() -> void:
 func _cache_finger_joints() -> void:
 	for finger_path: String in ["IndexAim/Index", "Middle", "Ring", "Pinky"]:
 		var joint_path: String = finger_path
+		var finger_root: Node3D = null
+		if _pose_root != null:
+			finger_root = _pose_root.get_node_or_null(NodePath(finger_path)) as Node3D
+		_finger_roots.append(finger_root)
 		for joint_name: String in ["Joint1", "Joint2", "Joint3"]:
 			joint_path += "/" + joint_name
 			var joint: Node3D = null
@@ -154,7 +161,10 @@ func _process(delta: float) -> void:
 			_reach_amount = 0.0
 	var pose_state: PoseState = _resolve_pose_state()
 	var weight: float = 1.0 - exp(-pose_blend_speed * delta)
-	var carry_curl: Vector3 = _get_carry_finger_curl_degrees() if pose_state == PoseState.CARRY else Vector3.ZERO
+	var carry_finger_curls: Array[Vector3] = []
+	if pose_state == PoseState.CARRY:
+		for finger_index: int in _finger_roots.size():
+			carry_finger_curls.append(_get_carry_finger_curl_degrees(finger_index))
 	_blend_thumb_and_hand_pose(weight, delta, pose_state)
 	for index: int in _finger_joints.size():
 		var joint: Node3D = _finger_joints[index]
@@ -167,7 +177,8 @@ func _process(delta: float) -> void:
 			PoseState.GUARD:
 				curl = guard_curl_degrees
 			PoseState.CARRY:
-				curl = carry_curl
+				var finger_index: int = index / 3
+				curl = carry_finger_curls[finger_index] if finger_index < carry_finger_curls.size() else carry_tight_curl_degrees
 			PoseState.POINT, PoseState.REACH:
 				curl = Vector3.ZERO if index < 3 else point_curl_degrees
 		var target: Vector3 = _joint_rest_rotations[index]
@@ -308,9 +319,9 @@ func set_carrying(on: bool, item: Node3D = null, side: float = 0.0) -> void:
 	carry_side = clampf(side, -1.0, 1.0) if on else 0.0
 	_debug_log("Carrying %s side=%.1f" % ["on" if on else "off", carry_side])
 
-## Adapt the three finger-joint bends to the prop's actual thickness along
-## the palm normal. Thin props get a tighter curl; thick props stay more open.
-func _get_carry_finger_curl_degrees() -> Vector3:
+## Adapt each finger's three joint bends to prop thickness and lateral position.
+## Fingers near the prop's lateral edges curl slightly farther to hook around it.
+func _get_carry_finger_curl_degrees(finger_index: int = 1) -> Vector3:
 	if not is_instance_valid(carry_item):
 		return carry_tight_curl_degrees
 	var grip_position: Vector3 = _get_carry_pose_position()
@@ -326,7 +337,18 @@ func _get_carry_finger_curl_degrees() -> Vector3:
 		maximum_projection = maxf(maximum_projection, projection)
 	var prop_thickness: float = maxf(maximum_projection - minimum_projection, 0.0)
 	var open_weight: float = clampf(inverse_lerp(carry_curl_small_extent_m, carry_curl_large_extent_m, prop_thickness), 0.0, 1.0)
-	return carry_tight_curl_degrees.lerp(carry_open_curl_degrees, open_weight)
+	var curl: Vector3 = carry_tight_curl_degrees.lerp(carry_open_curl_degrees, open_weight)
+	if finger_index < 0 or finger_index >= _finger_roots.size():
+		return curl
+	var finger_root: Node3D = _finger_roots[finger_index]
+	if not is_instance_valid(finger_root):
+		return curl
+	var finger_item_local: Vector3 = carry_item.to_local(finger_root.global_position)
+	var lateral_center: float = local_bounds.position.x + local_bounds.size.x * 0.5
+	var lateral_half_extent: float = maxf(local_bounds.size.x * 0.5, 0.001)
+	var lateral_ratio: float = absf(finger_item_local.x - lateral_center) / lateral_half_extent
+	var edge_weight: float = clampf(inverse_lerp(0.35, 1.0, lateral_ratio), 0.0, 1.0)
+	return curl + carry_edge_curl_degrees * edge_weight
 
 ## Convert the detected prop bounds into a world-space side grip target.
 ## Collision shape debug meshes provide a shape-agnostic bounds source, so boxes,
