@@ -236,6 +236,16 @@ func accept_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pit
 func is_carrying() -> bool:
 	return carrier != null and bool(carrier.call("is_holding"))
 
+## Applies a replicated hover pose to this player's visible world right hand.
+## The local owner uses its first-person viewmodel instead.
+func set_world_hand_hover(active: bool, world_point: Vector3) -> bool:
+	if is_local_player or not is_instance_valid(world_right_hand):
+		return false
+	if active and (is_limp or is_recovering or is_carrying() or not world_point.is_finite()):
+		return false
+	world_right_hand.set_hover(active, world_point)
+	return true
+
 ## Plays a host-approved poke on this player's visible world right hand.
 ## The local owner already sees the first-person poke, so only remote copies animate.
 func play_world_hand_poke(world_point: Vector3) -> bool:
