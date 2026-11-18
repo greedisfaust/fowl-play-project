@@ -184,7 +184,7 @@ The carry thumb's two joints now blend between exported tight and open curl pres
 
 The hand controller resolves one pose state, then drives the same authored finger hierarchy and `PoseRoot`. Hover pointing now moves the whole hand a small amount toward the target and rotates the wrist/hand toward it within an exported angular limit; the index finger supplies the remaining fine aim. Target tracking uses exponential pose blending, so target changes do not restart an animation or allocate per-frame objects.
 
-A local interaction starts an `EXTENDING → CONTACT` action immediately. The authoritative host result (accepted or rejected) transitions the local viewmodel hand into `RETURNING`; a failed submission also requests recovery locally. Remote world hands only play the host-approved poke. If no result arrives, the short built-in lifecycle still returns the hand automatically. Guard, carry, and limp cancel the cosmetic action and keep their existing priority.
+A local interaction starts an `EXTENDING → CONTACT` action immediately. The authoritative host result (accepted or rejected) confirms the action result; the hand completes its extension/contact phase before entering `RETURNING`; a failed submission also requests recovery locally. Remote world hands only play the host-approved poke. If no result arrives, the short built-in lifecycle still returns the hand automatically. Guard, carry, and limp cancel the cosmetic action and keep their existing priority.
 
 - `hand_status_<name>` now reports the resolved pose, action phase, hover, guard, carry, limp, and reach blend.
 - `hands/<name>/state` reports the same live state through the watch.
