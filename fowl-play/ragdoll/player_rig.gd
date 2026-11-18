@@ -4,6 +4,7 @@ extends Node3D
 const LAYERS = preload("res://core/layers.gd")
 const TUNING = preload("res://core/tuning.gd")
 const SELF_COLLISION = preload("res://ragdoll/self_collision_policy.gd")
+const ARM_IK = preload("res://ragdoll/procedural_arm_ik.gd")
 const EXPECTED_PHYSICAL_BONES: int = 11
 const POSE_VALUES_PER_BONE: int = 7
 const POSITION_QUANTIZATION: float = 1000.0
@@ -26,6 +27,11 @@ var _last_remote_host_time_ms: int = -1
 var _latest_host_pose: PackedInt32Array = PackedInt32Array()
 var _hips_bone_index: int = -1
 var _chest_bone_index: int = -1
+var _right_upper_arm_bone_index: int = -1
+var _right_forearm_bone_index: int = -1
+var _right_hand_bone_index: int = -1
+var _right_arm_ik_watch_name: StringName
+var _right_arm_ik_active: bool = false
 var _hips_physical_bone: PhysicalBone3D
 var _pose_blend_active: bool = false
 var _pose_blend_elapsed: float = 0.0
@@ -62,6 +68,8 @@ const CARRY_CHEST_MAX_TORQUE: float = 900.0
 const CARRY_TORSO_ANGULAR_DAMP: float = 4.0
 const CARRY_ARM_ANGULAR_DAMP: float = 9.0
 const CARRY_FOREARM_ANGULAR_DAMP: float = 11.0
+const RIGHT_ARM_IK_BLEND_SPEED: float = 18.0
+const RIGHT_ARM_POLE_FORWARD_WEIGHT: float = 0.22
 const CARRY_HEAD_ANGULAR_DAMP: float = 12.0
 
 func _enter_tree() -> void:
@@ -96,6 +104,10 @@ func _ready() -> void:
 		# not the character's forward axis. Preserve that bind-space offset.
 		_chest_rest_basis_offset = global_basis.inverse() * _chest_physical_bone.global_basis
 
+	_right_upper_arm_bone_index = skeleton.find_bone("UpperArm_R")
+	_right_forearm_bone_index = skeleton.find_bone("Forearm_R")
+	_right_hand_bone_index = skeleton.find_bone("Hand_R")
+	_right_arm_ik_watch_name = StringName("rig/%s/right_arm_ik" % get_parent().name)
 	var self_contact_pairs: int = SELF_COLLISION.configure(physical_bones)
 
 	if physical_bones.size() != EXPECTED_PHYSICAL_BONES:
@@ -103,11 +115,55 @@ func _ready() -> void:
 	else:
 		debug_hub.call("log", &"ragdoll", "Rig %s prepared 11 dormant physical bones; %d selective self-contact pairs." % [get_parent().name, self_contact_pairs])
 	debug_hub.call("watch", _watch_name, func() -> int: return physical_bones.size())
+	debug_hub.call("watch", _right_arm_ik_watch_name, func() -> bool: return _right_arm_ik_active)
 	set_process(false)
 
 func _exit_tree() -> void:
 	if is_instance_valid(debug_hub):
 		debug_hub.call("unwatch", _watch_name)
+		debug_hub.call("unwatch", _right_arm_ik_watch_name)
+
+func update_procedural_right_arm(wrist_target_world: Vector3, delta: float) -> bool:
+	if _right_upper_arm_bone_index < 0 or _right_forearm_bone_index < 0 or _right_hand_bone_index < 0:
+		_right_arm_ik_active = false
+		return false
+	if simulator.is_simulating_physics() or _remote_active or _pose_blend_active or _recovery_animation_active:
+		_right_arm_ik_active = false
+		return false
+	if not wrist_target_world.is_finite():
+		_right_arm_ik_active = false
+		return false
+	skeleton.force_update_all_bone_transforms()
+	var shoulder_local: Vector3 = skeleton.get_bone_global_pose(_right_upper_arm_bone_index).origin
+	var shoulder_world: Vector3 = skeleton.to_global(shoulder_local)
+	var upper_length: float = skeleton.get_bone_rest(_right_forearm_bone_index).origin.length()
+	var forearm_length: float = skeleton.get_bone_rest(_right_hand_bone_index).origin.length()
+	var pole_world: Vector3 = (global_basis * (Vector3.DOWN + Vector3.BACK * RIGHT_ARM_POLE_FORWARD_WEIGHT)).normalized()
+	var solution: Dictionary = ARM_IK.solve_two_bone(shoulder_world, wrist_target_world, pole_world, upper_length, forearm_length)
+	if solution.is_empty():
+		_right_arm_ik_active = false
+		return false
+	var elbow_world: Vector3 = solution["elbow"]
+	var parent_index: int = skeleton.get_bone_parent(_right_upper_arm_bone_index)
+	var chest_world_basis: Basis = skeleton.global_basis * skeleton.get_bone_global_pose(parent_index).basis
+	var upper_direction_parent: Vector3 = chest_world_basis.inverse() * (elbow_world - shoulder_world).normalized()
+	var upper_rest_axis: Vector3 = skeleton.get_bone_rest(_right_forearm_bone_index).origin.normalized()
+	var upper_target_rotation: Quaternion = Quaternion(upper_rest_axis, upper_direction_parent.normalized())
+	var blend_weight: float = 1.0 - exp(-RIGHT_ARM_IK_BLEND_SPEED * maxf(delta, 0.0))
+	var upper_current: Quaternion = skeleton.get_bone_pose_rotation(_right_upper_arm_bone_index)
+	skeleton.set_bone_pose_rotation(_right_upper_arm_bone_index, upper_current.slerp(upper_target_rotation, blend_weight))
+	skeleton.force_update_all_bone_transforms()
+	var elbow_local: Vector3 = skeleton.get_bone_global_pose(_right_forearm_bone_index).origin
+	var elbow_actual_world: Vector3 = skeleton.to_global(elbow_local)
+	var upper_world_basis: Basis = skeleton.global_basis * skeleton.get_bone_global_pose(_right_upper_arm_bone_index).basis
+	var forearm_direction_local: Vector3 = upper_world_basis.inverse() * (wrist_target_world - elbow_actual_world).normalized()
+	var forearm_rest_axis: Vector3 = skeleton.get_bone_rest(_right_hand_bone_index).origin.normalized()
+	var forearm_target_rotation: Quaternion = Quaternion(forearm_rest_axis, forearm_direction_local.normalized())
+	var forearm_current: Quaternion = skeleton.get_bone_pose_rotation(_right_forearm_bone_index)
+	skeleton.set_bone_pose_rotation(_right_forearm_bone_index, forearm_current.slerp(forearm_target_rotation, blend_weight))
+	skeleton.force_update_all_bone_transforms()
+	_right_arm_ik_active = true
+	return true
 
 func enable_host_collisions() -> void:
 	for physical_bone: PhysicalBone3D in physical_bones:
