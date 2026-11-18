@@ -230,6 +230,7 @@ func begin_host_simulation() -> bool:
 	# blends back to the actual standing pose instead of the rest/T-pose.
 	if not _remote_active:
 		_standing_pose = _capture_skeleton_pose()
+	_set_right_arm_ik_active(false)
 	_set_right_rig_hand_visual_visible(true)
 	# The Player capsule can move independently; the simulated rig must not
 	# inherit that transform or feed its own movement back through the parent.
@@ -257,6 +258,7 @@ func stop_host_simulation() -> void:
 	if recovery_animation_player != null:
 		recovery_animation_player.stop()
 	simulator.physical_bones_stop_simulation()
+	_set_right_arm_ik_active(false)
 	_set_right_rig_hand_visual_visible(false)
 	disable_collisions()
 	skeleton.reset_bone_poses()
@@ -457,6 +459,7 @@ func begin_remote_pose(world_transform: Transform3D, initial_pose: PackedInt32Ar
 	global_transform = world_transform if world_transform.is_finite() else previous_transform
 	simulator.active = false
 	_remote_active = true
+	_set_right_arm_ik_active(false)
 	_set_right_rig_hand_visual_visible(true)
 	_last_remote_sequence = 0
 	_last_remote_host_time_ms = -1
@@ -499,6 +502,7 @@ func end_remote_pose() -> void:
 	if recovery_animation_player != null:
 		recovery_animation_player.stop()
 	_remote_active = false
+	_set_right_arm_ik_active(false)
 	_set_right_rig_hand_visual_visible(false)
 	_remote_samples.clear()
 	set_process(false)
