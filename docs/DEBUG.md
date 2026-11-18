@@ -231,6 +231,6 @@ Important: these counters and automated receive-handler tests are diagnostic sup
 
 ### Longer pokes and moving ragdoll carry grips
 
-The procedural poke reach distance is now 0.65 hand-local units (previously 0.20). Extension, contact, and return timings are unchanged, including the existing 0.18-second return. Because the first-person Viewmodel hands are scaled, this increases their visible travel without slowing the animation.
+The procedural poke reach distance is now 0.28 world-space metres (previously 0.20 hand-local units). The controller converts that distance through each hand's transform, so scaled first-person Viewmodel hands and unscaled world hands travel the same visible distance. Extension, contact, and return timings are unchanged, including the existing 0.18-second return.
 
 When the carried target is a limp player, the hand grip now uses that player's live ragdoll hips position instead of the stationary CharacterBody3D root and standing capsule bounds. The two hands approach opposite sides of the hips, use a relaxed carry curl, and skip static-box fingertip contact correction. Ordinary props retain their existing collision-bound grip solver. M2 checks verify the ragdoll grip follows a moving hips target and the longer poke distance. Godot execution and in-game visual confirmation remain user-run.
