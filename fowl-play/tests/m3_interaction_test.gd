@@ -48,8 +48,10 @@ func _run() -> void:
 	for frame: int in 30:
 		await process_frame
 	check(world_hand._resolve_pose_state() == Hand.PoseState.POINT, "Remote world hand should resolve its procedural point pose")
+	var world_index: Node3D = world_hand.get_node("PoseRoot/IndexAim/Index/Joint1") as Node3D
 	var world_middle: Node3D = world_hand.get_node("PoseRoot/Middle/Joint1") as Node3D
-	check(absf(world_middle.rotation_degrees.x) < 2.0, "Remote world hand should procedurally straighten its middle finger while pointing")
+	check(absf(world_index.rotation_degrees.x) < 2.0, "Remote world hand should procedurally straighten its index finger while pointing")
+	check(absf(world_middle.rotation_degrees.x + 75.0) < 2.0, "Remote world hand should curl its other fingers while pointing")
 	network.call("_receive_hand_hover", 77, false, Vector3.ZERO)
 	for frame: int in 30:
 		await process_frame
