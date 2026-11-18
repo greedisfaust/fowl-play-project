@@ -39,6 +39,7 @@ var _carry_support_active: bool = false
 var _carry_target_world: Vector3 = Vector3.ZERO
 var _carry_facing_world: Vector3 = Vector3.ZERO
 var _chest_physical_bone: PhysicalBone3D
+var _chest_rest_basis_offset: Basis = Basis.IDENTITY
 var _carry_physics_active: bool = false
 var _carry_saved_angular_damp: Dictionary = {}
 var _carry_saved_chest_swing_span: float = 0.0
@@ -85,6 +86,10 @@ func _ready() -> void:
 			elif physical_bone.bone_name == "Chest":
 				_chest_bone_index = _bone_indices[-1]
 				_chest_physical_bone = physical_bone
+	if _chest_physical_bone != null:
+		# PhysicalBone's local axes follow the skeleton bone's bind orientation,
+		# not the character's forward axis. Preserve that bind-space offset.
+		_chest_rest_basis_offset = global_basis.inverse() * _chest_physical_bone.global_basis
 
 	var self_contact_pairs: int = SELF_COLLISION.configure(physical_bones)
 
@@ -255,7 +260,10 @@ func _apply_carry_chest_orientation() -> void:
 	# Keep the Chest upright and facing the carrier's requested direction.
 	# A full 3-axis spring resists pitch/roll as well as yaw, with damping
 	# preserving a small delayed response when the carrier turns.
-	var target_basis: Basis = Basis.looking_at(_carry_facing_world.normalized(), Vector3.UP)
+	var character_facing_basis: Basis = Basis.looking_at(_carry_facing_world.normalized(), Vector3.UP)
+	# Apply the character-facing rotation plus the Chest bone's original bind
+	# orientation, so the visual torso faces forward instead of tilting sideways.
+	var target_basis: Basis = character_facing_basis * _chest_rest_basis_offset
 	var target_rotation: Quaternion = target_basis.get_rotation_quaternion().normalized()
 	var current_rotation: Quaternion = _chest_physical_bone.global_basis.get_rotation_quaternion().normalized()
 	var rotation_error: Quaternion = (target_rotation * current_rotation.inverse()).normalized()
