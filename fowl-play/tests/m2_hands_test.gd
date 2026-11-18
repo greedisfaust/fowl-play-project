@@ -5,9 +5,12 @@ extends SceneTree
 
 class MockRagdollCarryTarget:
 	extends Node3D
-	var hips_world_position: Vector3 = Vector3.ZERO
-	func get_carry_world_position() -> Vector3:
-		return hips_world_position
+	var chest_world_position: Vector3 = Vector3.ZERO
+	var chest_world_basis: Basis = Basis.IDENTITY
+	func get_carry_hand_target_position() -> Vector3:
+		return chest_world_position
+	func get_carry_hand_target_basis() -> Basis:
+		return chest_world_basis
 
 var _failed: bool = false
 
@@ -105,19 +108,19 @@ func _run() -> void:
 
 func _check_ragdoll_follow_grip(hand: Hand) -> void:
 	var ragdoll_target: MockRagdollCarryTarget = MockRagdollCarryTarget.new()
-	ragdoll_target.hips_world_position = Vector3(1.0, 0.8, -2.0)
+	ragdoll_target.chest_world_position = Vector3(1.0, 1.2, -2.0)
 	root.add_child(ragdoll_target)
 	hand.set_carrying(true, ragdoll_target, 1.0)
 	var first_grip_world: Vector3 = hand.to_global(hand._get_carry_pose_position())
-	ragdoll_target.hips_world_position += Vector3(2.0, 0.5, -1.0)
+	ragdoll_target.chest_world_position += Vector3(2.0, 0.5, -1.0)
 	var second_grip_world: Vector3 = hand.to_global(hand._get_carry_pose_position())
 	if not second_grip_world.is_equal_approx(first_grip_world + Vector3(2.0, 0.5, -1.0)):
-		_fail("Ragdoll hand grip target must follow the live hips position, not the stationary player root")
+		_fail("Ragdoll hand grip target must follow the live chest position, not the stationary player root or hips")
 	var right_grip: Vector3 = second_grip_world
 	hand.set_carrying(true, ragdoll_target, -1.0)
 	var left_grip: Vector3 = hand.to_global(hand._get_carry_pose_position())
 	if right_grip.distance_to(left_grip) < 0.5:
-		_fail("Ragdoll left and right hand grip targets should approach opposite sides of the hips")
+		_fail("Ragdoll left and right hand grip targets should approach opposite sides of the chest")
 	hand.set_carrying(false)
 	ragdoll_target.free()
 
