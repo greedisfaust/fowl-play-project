@@ -256,9 +256,9 @@ func _set_carry_hand_pose(active: bool, item: Node3D = null) -> void:
 	var left_hand: Hand = viewmodel_left_hand if is_local_player else world_left_hand
 	var right_hand: Hand = viewmodel_right_hand if is_local_player else world_right_hand
 	if is_instance_valid(left_hand):
-		left_hand.set_carrying(active, item)
+		left_hand.set_carrying(active, item, -1.0)
 	if is_instance_valid(right_hand):
-		right_hand.set_carrying(active, item)
+		right_hand.set_carrying(active, item, 1.0)
 
 ## Applies a replicated hover pose to this player's visible world right hand.
 ## The local owner uses its first-person viewmodel instead.
