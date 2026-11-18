@@ -16,6 +16,8 @@ const FOCUSED_OUTLINE_COLOR: Color = Color(1.0, 0.72, 0.18, 1.0)
 const IDLE_OUTLINE_WIDTH: float = 0.008
 const FOCUSED_OUTLINE_WIDTH: float = 0.018
 const FOCUSED_GLOW_STRENGTH: float = 1.8
+const GLOW_PULSE_PERIOD_SECONDS: float = 2.0
+const GLOW_PULSE_AMOUNT: float = 0.20
 const TRANSITION_SECONDS: float = 0.18
 
 @export var kind: InteractionKind = InteractionKind.USE
@@ -34,12 +36,14 @@ var _original_overlays: Array[Material] = []
 var _outline_materials: Array[ShaderMaterial] = []
 var _highlight_amount: float = 0.0
 var _highlight_tween: Tween = null
+var _glow_pulse_elapsed: float = 0.0
 var _debug_hub: Node = null
 var _debug_watch_name: StringName = &""
 
 func _ready() -> void:
 	_debug_hub = get_node_or_null("/root/DebugHub")
 	_setup_highlight()
+	set_process(false)
 	if is_instance_valid(_debug_hub):
 		_debug_watch_name = StringName("interact/highlight/%s/state" % str(get_path()))
 		_debug_hub.call(
@@ -83,6 +87,11 @@ func set_focused(focused: bool) -> void:
 	if is_focused == focused:
 		return
 	is_focused = focused
+	if focused:
+		_glow_pulse_elapsed = 0.0
+		set_process(true)
+	else:
+		set_process(false)
 	if _highlight_tween != null and _highlight_tween.is_running():
 		_highlight_tween.kill()
 	_highlight_tween = create_tween()
@@ -97,6 +106,12 @@ func set_focused(focused: bool) -> void:
 	if is_instance_valid(_debug_hub) and _debug_hub.call("is_on", &"interact"):
 		_debug_hub.call("log", &"interact", "%s highlight %s" % [name, "focused" if is_focused else "idle"])
 	focused_changed.emit(is_focused)
+
+func _process(delta: float) -> void:
+	if not is_focused:
+		return
+	_glow_pulse_elapsed += delta
+	_set_highlight_amount(_highlight_amount)
 
 func _setup_highlight() -> void:
 	var target: Node = get_parent()
@@ -120,7 +135,10 @@ func _set_highlight_amount(amount: float) -> void:
 	_highlight_amount = clampf(amount, 0.0, 1.0)
 	var outline_color: Color = IDLE_OUTLINE_COLOR.lerp(FOCUSED_OUTLINE_COLOR, _highlight_amount)
 	var outline_width: float = lerpf(IDLE_OUTLINE_WIDTH, FOCUSED_OUTLINE_WIDTH, _highlight_amount)
-	var glow_strength: float = FOCUSED_GLOW_STRENGTH * _highlight_amount
+	var pulse: float = 1.0
+	if is_focused:
+		pulse += sin(_glow_pulse_elapsed * TAU / GLOW_PULSE_PERIOD_SECONDS) * GLOW_PULSE_AMOUNT
+	var glow_strength: float = FOCUSED_GLOW_STRENGTH * _highlight_amount * pulse
 	for material: ShaderMaterial in _outline_materials:
 		if not is_instance_valid(material):
 			continue

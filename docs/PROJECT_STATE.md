@@ -229,3 +229,11 @@ The test arena now includes a WorldEnvironment with restrained Godot Glow post-p
 - Added a subtle 1.8-second breathing pulse while hovering. The pulse stops when focus clears; no additional cursor shapes or raycasts were introduced.
 - The default accent is temporary until the player identity/color foundation supplies a per-player color. Added a headless cursor check to `tests/run_checks.ps1`.
 - Godot execution and in-game visual verification remain user-run.
+
+
+## 2026-11-19 — cursor and interactable glow polish
+
+- Restored the earlier cursor's more expressive visual language: a translucent white center, dark outline, smooth radius growth on focus, player-accent color blend, and three soft translucent glow rings.
+- Kept the 1.8-second cursor breathing pulse. The accent remains a temporary exported fallback and a public set_identity_color(Color) integration point for the future lobby identity system; no Network.player_color() dependency was added.
+- Added a separate 2-second breathing pulse to focused Interactable outlines. The gold silhouette width remains stable; only HDR emission intensity pulses, feeding the existing WorldEnvironment Glow.
+- Updated cursor checks and debug documentation. Godot headless checks and in-game visual verification have not been run by the assistant.
