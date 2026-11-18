@@ -53,8 +53,13 @@ func _run() -> void:
 	interactable._set_highlight_amount(1.0)
 	if not interactable.is_focused:
 		_fail("Focus state did not enable")
-	if is_equal_approx(float(idle_material.get_shader_parameter("glow_strength")), 0.0):
+	var initial_glow: float = float(idle_material.get_shader_parameter("glow_strength"))
+	if is_equal_approx(initial_glow, 0.0):
 		_fail("Focused outline did not enable its glow")
+	interactable._process(0.5)
+	var pulsed_glow: float = float(idle_material.get_shader_parameter("glow_strength"))
+	if pulsed_glow <= initial_glow:
+		_fail("Focused outline emission did not breathe independently")
 	if not Color(idle_material.get_shader_parameter("outline_color")).is_equal_approx(Interactable.FOCUSED_OUTLINE_COLOR):
 		_fail("Focused outline did not transition to gold")
 
