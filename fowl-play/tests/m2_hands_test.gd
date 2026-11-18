@@ -268,6 +268,10 @@ func _check_isolation_and_aim() -> void:
 	var aim: Node3D = first.get_node("PoseRoot/IndexAim") as Node3D
 	first.set_hover(true, aim.global_position + Vector3(10, 10, -1))
 	first._process(0.016)
+	var pose_root: Node3D = first.get_node("PoseRoot") as Node3D
+	var hand_rotation_delta: float = first._pose_rest_rotation.angle_to(pose_root.quaternion)
+	if hand_rotation_delta <= 0.0 or hand_rotation_delta > deg_to_rad(first.target_rotation_limit_degrees) + 0.001:
+		_fail("Whole-hand pointing should track the target within its wrist rotation limit")
 	var initial_angle: float = aim.quaternion.angle_to(Quaternion.IDENTITY)
 	if initial_angle <= 0.0 or initial_angle >= deg_to_rad(first.index_aim_limit_degrees):
 		_fail("Aim snapped or did not move")
