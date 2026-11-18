@@ -248,8 +248,9 @@ func accept_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pit
 func is_carrying() -> bool:
 	return carrier != null and bool(carrier.call("is_holding"))
 
-## Carrier signals drive the hands on every peer: owners see viewmodel hands,
-## while other peers see the attached world hands.
+## Carrier signals drive the camera-attached Viewmodel hands on every peer.
+## Remote observers therefore see the same hand instances used for pointing/poking;
+## ragdoll Rig hands remain dedicated to physical/ragdoll presentation.
 func _on_carry_started(item: Node3D) -> void:
 	_set_carry_hand_pose(true, item)
 
@@ -257,12 +258,10 @@ func _on_carry_ended() -> void:
 	_set_carry_hand_pose(false)
 
 func _set_carry_hand_pose(active: bool, item: Node3D = null) -> void:
-	var left_hand: Hand = viewmodel_left_hand if is_local_player else world_left_hand
-	var right_hand: Hand = viewmodel_right_hand if is_local_player else world_right_hand
-	if is_instance_valid(left_hand):
-		left_hand.set_carrying(active, item, -1.0)
-	if is_instance_valid(right_hand):
-		right_hand.set_carrying(active, item, 1.0)
+	if is_instance_valid(viewmodel_left_hand):
+		viewmodel_left_hand.set_carrying(active, item, -1.0)
+	if is_instance_valid(viewmodel_right_hand):
+		viewmodel_right_hand.set_carrying(active, item, 1.0)
 
 ## Applies replicated pointing to this player's camera-attached Viewmodel right hand.
 ## The local owner already drives that hand directly through Focus.
@@ -331,6 +330,14 @@ func set_carry_target(target_world: Vector3, facing_world: Vector3 = Vector3.ZER
 
 func get_carry_world_position() -> Vector3:
 	return Vector3(rig.call("get_hips_world_position")) if is_limp and rig != null else global_position
+
+## Cosmetic hand grips follow the actively stabilised chest, not the hips.
+## Gameplay interaction and recovery continue using get_carry_world_position().
+func get_carry_hand_target_position() -> Vector3:
+	return Vector3(rig.call("get_chest_world_position")) if is_limp and rig != null else global_position
+
+func get_carry_hand_target_basis() -> Basis:
+	return Basis(rig.call("get_chest_world_basis")).orthonormalized() if is_limp and rig != null else global_basis.orthonormalized()
 
 func get_interaction_world_position() -> Vector3:
 	return get_carry_world_position()
