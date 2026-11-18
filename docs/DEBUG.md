@@ -271,3 +271,5 @@ Every `Interactable` component automatically adds an inverted-hull silhouette ov
 - `interact/highlight/<node-path>/state` reports `idle` or `focused`.
 - The `interact` log reports focus-driven highlight state changes.
 - `tests/m1_interaction_test.gd` checks automatic idle outlines, no outline on a sibling mesh without an Interactable, gold/glow focus state, return to idle, and restoration of the original overlay.
+
+The outline shader now feathers its silhouette edge using a view-angle falloff, giving focused objects a localized soft-halo appearance without enabling project-wide Environment Glow. This is a restrained shader-local approximation, not full-screen post-processing bloom. `glow_strength` continues to control emission; `halo_softness` controls the feather width. Check the result in the running arena because the visual appearance depends on the mesh and camera angle.

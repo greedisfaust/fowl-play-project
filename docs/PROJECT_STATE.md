@@ -217,3 +217,6 @@ The Rig hand visibility collectors explicitly exclude the `Forearm` MeshInstance
 - The original material overlay is preserved and restored when the Interactable leaves the scene tree.
 - Focus detection, interaction validation, and networking remain unchanged. The outline is presentation-only.
 - Added an M1 headless assertion for idle/focused visuals, non-interactable exclusion, and original-overlay restoration. Godot execution and in-game visual verification remain pending user testing.
+
+
+The interactable outline shader has a first localized halo pass: a view-angle feather on the inverted-hull silhouette plus the existing focused emission. It does not enable project-wide Environment Glow or post-processing; rendered visual tuning remains user-verified.
