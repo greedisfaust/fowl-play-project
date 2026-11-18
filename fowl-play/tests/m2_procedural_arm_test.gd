@@ -51,10 +51,13 @@ func _check_rig_arm_target() -> void:
 	var skeleton: Skeleton3D = rig.get_node("Skeleton3D") as Skeleton3D
 	var upper_index: int = skeleton.find_bone("UpperArm_L")
 	var hand_index: int = skeleton.find_bone("Hand_L")
+	var rig_hand_visual: Node3D = rig.get_node("Skeleton3D/HandAttachment_L/HandMount_L/Hand") as Node3D
 	if upper_index < 0 or hand_index < 0:
 		_fail("Right arm bone chain is incomplete")
 		rig.free()
 		return
+	if rig_hand_visual.visible:
+		_fail("Duplicate positive-X Rig hand should be hidden while the Viewmodel hand owns standing presentation")
 	var target: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(upper_index).origin) + Vector3(0.18, -0.06, -0.38)
 	var before: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(hand_index).origin)
 	var applied: bool = bool(rig.call("update_procedural_right_arm", target, 1.0))
@@ -67,11 +70,15 @@ func _check_rig_arm_target() -> void:
 	var started: bool = bool(rig.call("begin_host_simulation"))
 	if not started:
 		_fail("Player Rig should enter ragdoll for ownership test")
+	if not rig_hand_visual.visible:
+		_fail("Rig hand visual should return when ragdoll physics takes ownership")
 	var frozen_rotation: Quaternion = skeleton.get_bone_pose_rotation(upper_index)
 	rig.call("update_procedural_right_arm", target + Vector3(0.1, 0.0, 0.0), 1.0)
 	if skeleton.get_bone_pose_rotation(upper_index).angle_to(frozen_rotation) > 0.001:
 		_fail("Procedural IK must yield immediately when ragdoll physics owns the arm")
 	rig.call("stop_host_simulation")
+	if rig_hand_visual.visible:
+		_fail("Duplicate Rig hand should hide again after ragdoll simulation stops")
 	rig.free()
 
 func _fail(message: String) -> void:
