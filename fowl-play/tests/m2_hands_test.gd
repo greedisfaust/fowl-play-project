@@ -288,6 +288,8 @@ func _check_isolation_and_aim() -> void:
 	first._process(1.0)
 	if aim.quaternion.angle_to(Quaternion.IDENTITY) > 0.001:
 		_fail("Aim failed to return to rest")
+	if pose_root.quaternion.angle_to(first._pose_rest_rotation) > 0.001 or pose_root.position.distance_to(first._pose_rest_position) > 0.001:
+		_fail("Whole-hand pointing failed to return to its authored rest transform")
 	first.free()
 	if not hub.get_command_names().has(second_command):
 		_fail("Removing one hand removed another hand's command")
