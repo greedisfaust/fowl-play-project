@@ -109,6 +109,7 @@ func _run() -> void:
 func _check_ragdoll_follow_grip(hand: Hand) -> void:
 	var ragdoll_target: MockRagdollCarryTarget = MockRagdollCarryTarget.new()
 	ragdoll_target.chest_world_position = Vector3(1.0, 1.2, -2.0)
+	ragdoll_target.chest_world_basis = Basis(Vector3.UP, PI * 0.5)
 	root.add_child(ragdoll_target)
 	hand.set_carrying(true, ragdoll_target, 1.0)
 	var first_grip_world: Vector3 = hand.to_global(hand._get_carry_pose_position())
@@ -119,8 +120,9 @@ func _check_ragdoll_follow_grip(hand: Hand) -> void:
 	var right_grip: Vector3 = second_grip_world
 	hand.set_carrying(true, ragdoll_target, -1.0)
 	var left_grip: Vector3 = hand.to_global(hand._get_carry_pose_position())
-	if right_grip.distance_to(left_grip) < 0.5:
-		_fail("Ragdoll left and right hand grip targets should approach opposite sides of the chest")
+	var chest_side_axis: Vector3 = ragdoll_target.chest_world_basis.x.normalized()
+	if (right_grip - left_grip).normalized().dot(chest_side_axis) < 0.95:
+		_fail("Ragdoll left/right grip targets should use the live chest orientation for opposite sides")
 	hand.set_carrying(false)
 	ragdoll_target.free()
 
