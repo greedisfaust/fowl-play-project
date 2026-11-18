@@ -46,7 +46,7 @@ const AUTHORED_GUARD_THUMB_BASES: Array[Basis] = [
 @export var relaxed_thumb_curl_degrees: Vector2 = Vector2(-10.0, -15.0)
 @export var point_thumb_root_degrees: Vector3 = Vector3(-15.0, -40.0, 0.0)
 @export var point_thumb_curl_degrees: Vector2 = Vector2(-18.0, -25.0)
-@export_range(0.0, 0.5) var reach_distance: float = 0.20
+@export_range(0.0, 1.0) var reach_distance: float = 0.65
 ## Action timing is a small lifecycle, not a per-click animation clip.
 @export_range(0.02, 0.5) var action_extend_seconds: float = 0.11
 @export_range(0.0, 0.3) var action_contact_seconds: float = 0.05
@@ -437,6 +437,8 @@ func _cache_carry_collision_shapes() -> void:
 ## Use each finger's box contact target to nudge its three bend joints toward
 ## the surface. This is deliberately a restrained directional assist, not full IK.
 func _get_contact_adjusted_finger_curl(finger_index: int, base_curl: Vector3) -> Vector3:
+	if _is_dynamic_ragdoll_carry_target():
+		return base_curl
 	if not is_instance_valid(carry_item) or finger_index < 0 or finger_index >= _finger_roots.size():
 		return base_curl
 	var finger_root: Node3D = _finger_roots[finger_index]
@@ -463,7 +465,7 @@ func _get_carry_thumb_root_rotation() -> Quaternion:
 	if not is_instance_valid(thumb_root):
 		return _thumb_rest_rotations[0]
 	var thumb_base_world: Vector3 = _pose_root.to_global(thumb_root.position)
-	var target_direction_world: Vector3 = carry_item.global_position - thumb_base_world
+	var target_direction_world: Vector3 = _get_carry_target_world_position() - thumb_base_world
 	if target_direction_world.length_squared() < 0.0001:
 		return _thumb_rest_rotations[0]
 	var target_direction_local: Vector3 = _pose_root.global_basis.orthonormalized().inverse() * target_direction_world.normalized()
@@ -477,6 +479,8 @@ func _get_carry_thumb_root_rotation() -> Quaternion:
 func _get_carry_thumb_curl_degrees() -> Vector2:
 	if not is_instance_valid(carry_item):
 		return carry_thumb_tight_curl_degrees
+	if _is_dynamic_ragdoll_carry_target():
+		return carry_thumb_open_curl_degrees
 	var grip_position: Vector3 = _get_carry_pose_position()
 	var grip_rotation: Quaternion = _get_carry_pose_rotation(grip_position)
 	var palm_normal_world: Vector3 = (global_basis.orthonormalized() * (grip_rotation * Vector3.DOWN)).normalized()
@@ -497,6 +501,8 @@ func _get_carry_thumb_curl_degrees() -> Vector2:
 func _get_carry_finger_curl_degrees(finger_index: int = 1) -> Vector3:
 	if not is_instance_valid(carry_item):
 		return carry_tight_curl_degrees
+	if _is_dynamic_ragdoll_carry_target():
+		return carry_open_curl_degrees
 	var grip_position: Vector3 = _get_carry_pose_position()
 	var grip_rotation: Quaternion = _get_carry_pose_rotation(grip_position)
 	var palm_normal_world: Vector3 = (global_basis.orthonormalized() * (grip_rotation * Vector3.DOWN)).normalized()
@@ -596,9 +602,26 @@ func _closest_point_on_box_surface(local_point: Vector3, half_extents: Vector3, 
 ## Collision shape debug meshes provide a shape-agnostic bounds source, so boxes,
 ## spheres, capsules, cylinders, and compound collision props share this path.
 ## Mesh bounds are used only when no usable collision shape is present.
+func _is_dynamic_ragdoll_carry_target() -> bool:
+	return is_instance_valid(carry_item) and carry_item.has_method("get_carry_world_position")
+
+## Player ragdolls move independently of their CharacterBody3D root. Use their
+## live hips position as the grip center instead of the standing capsule bounds.
+func _get_carry_target_world_position() -> Vector3:
+	if _is_dynamic_ragdoll_carry_target():
+		return Vector3(carry_item.call("get_carry_world_position"))
+	return carry_item.global_position
+
 func _get_carry_pose_position() -> Vector3:
 	if not is_instance_valid(carry_item):
 		return _pose_rest_position
+	if _is_dynamic_ragdoll_carry_target():
+		var ragdoll_center: Vector3 = _get_carry_target_world_position()
+		var ragdoll_basis: Basis = carry_item.global_basis.orthonormalized()
+		var ragdoll_grip_world: Vector3 = ragdoll_center
+		ragdoll_grip_world += ragdoll_basis.x * carry_side * 0.30
+		ragdoll_grip_world += Vector3.UP * carry_height_offset_m
+		return to_local(ragdoll_grip_world)
 	var local_bounds: AABB = _get_carry_local_bounds()
 	var item_basis: Basis = carry_item.global_basis.orthonormalized()
 	var minimums: Vector3 = Vector3(INF, INF, INF)
@@ -628,7 +651,7 @@ func _get_carry_pose_rotation(grip_position: Vector3) -> Quaternion:
 	if not is_instance_valid(carry_item):
 		return _pose_rest_rotation
 	var grip_world: Vector3 = to_global(grip_position)
-	var toward_item_world: Vector3 = carry_item.global_position - grip_world
+	var toward_item_world: Vector3 = _get_carry_target_world_position() - grip_world
 	if toward_item_world.length_squared() < 0.000001:
 		return _pose_rest_rotation
 	var hand_basis: Basis = global_basis.orthonormalized()
