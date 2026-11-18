@@ -200,6 +200,11 @@ func _process(delta: float) -> void:
 		if rig != null and not bool(rig.call("is_pose_blending")):
 			_finish_recovery()
 		return
+	# The camera-attached Viewmodel hand is the pose source for remote-visible arms.
+	# Its authored wrist pivot sits 0.32 hand-local units behind the palm.
+	if rig != null and is_instance_valid(viewmodel_right_hand):
+		var wrist_target_world: Vector3 = viewmodel_right_hand.to_global(Vector3(0.0, 0.0, 0.32))
+		rig.call("update_procedural_right_arm", wrist_target_world, delta)
 	if is_local_player:
 		_send_elapsed += delta
 		if _send_elapsed >= 1.0 / TUNING.MOVE_SEND_HZ:
