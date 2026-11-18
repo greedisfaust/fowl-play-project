@@ -55,8 +55,16 @@ func _run() -> void:
 		_fail("First hand reach was unexpectedly throttled")
 	if hand._resolve_pose_state() != Hand.PoseState.REACH:
 		_fail("Active poke must resolve above point and idle")
-	if hand.reach(Vector3.ZERO):
-		_fail("An active hand action should not restart from a second request")
+	hand._process(hand.action_extend_seconds * 0.5)
+	var partial_reach_amount: float = hand._reach_amount
+	if partial_reach_amount <= 0.0 or partial_reach_amount >= 1.0:
+		_fail("Hand action should have a blended mid-extension amount before retrigger")
+	if not hand.reach(Vector3(0.5, 0.0, -2.0)):
+		_fail("A new poke should retrigger while the previous poke is active")
+	if absf(hand._reach_start_amount - partial_reach_amount) > 0.001:
+		_fail("A retrigger should continue from the current blend amount without snapping")
+	if absf(hand._reach_amount - partial_reach_amount) > 0.001:
+		_fail("A retrigger should preserve the current pose amount at its start")
 	hand.finish_action(false)
 	if hand._action_phase != Hand.HandActionPhase.EXTENDING:
 		_fail("Interaction result should not cancel the visible reach extension")
