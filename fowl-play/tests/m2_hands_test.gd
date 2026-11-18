@@ -56,7 +56,13 @@ func _run() -> void:
 	if hand._resolve_pose_state() != Hand.PoseState.REACH:
 		_fail("Active poke must resolve above point and idle")
 	if hand.reach(Vector3.ZERO):
-		_fail("Hand reach cooldown did not throttle a repeated reach")
+		_fail("An active hand action should not restart from a second request")
+	hand.finish_action(false)
+	if hand._action_phase != Hand.HandActionPhase.RETURNING:
+		_fail("Rejected interaction should transition the hand into recovery")
+	hand._process(hand.action_return_seconds + 0.1)
+	if hand._action_phase != Hand.HandActionPhase.NONE or hand._reach_amount > 0.001:
+		_fail("Hand action recovery should return to its resting amount")
 	if hand.get_node_or_null("MissingNode") != null:
 		_fail("Unexpected hand test node exists")
 	if not hand.get_node("/root/DebugHub").get_command_names().has(&"hand_status_M2TestHand"):
