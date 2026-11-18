@@ -2,7 +2,7 @@
 
 **Status:** D0, M0, and M1 interaction/prop slices verified. M2 hand integration and M6 carry/drop/throw are implemented; M6 is user visual-playtested, with automated and full two-instance host/client verification pending. The highlight/accessibility branch adds the gameplay cursor and animated interactable focus presentation; its automated checks and runtime verification remain pending.
 
-## Last verified (2026-11-19)
+## Last updated (2026-11-19; highlight/accessibility runtime verification pending)
 
 - Current branch: `features/highlight-and-accessibility` (gameplay cursor and interactable focus presentation).
 - Godot 4.7 project: `fowl-play/`, using Jolt Physics, Forward+, and D3D12.
