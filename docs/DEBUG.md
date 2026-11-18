@@ -217,3 +217,8 @@ The box-surface contact bend is now applied to all four fingers (index, middle, 
 See [HAND_RIG_MULTIPLAYER_MILESTONE.md](HAND_RIG_MULTIPLAYER_MILESTONE.md) for the complete host/client verification matrix and implementation order. The current hand diagnostics are listed there, including `hand_status_<name>`, `hands/<name>/state`, `net/hand_poke_sent`, and `net/hand_poke_received`.
 
 Important: these counters and automated receive-handler tests are diagnostic support, not proof of live RPC delivery. Verify each action with two running instances and test both host-as-actor and client-as-actor. Record sender, relay/authority, receiver, and rendered-hand results separately. Do not mark the hand rig multiplayer-ready until the full matrix passes.
+
+
+#### Hover replication counter semantics
+
+`net/hand_hover_sent` counts host broadcasts of hover state. `net/hand_hover_received` counts successful applications to a remote world right hand on the instance doing the application. This includes the host applying a connected client's hover to that client's world rig; it intentionally does not count the owning peer's hidden world-hand copy, because the owner uses the first-person viewmodel. A received counter should therefore be interpreted alongside the local role and which player's remote rig is visible.
