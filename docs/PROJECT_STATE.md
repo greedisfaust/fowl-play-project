@@ -182,7 +182,7 @@ Removed the action-phase gate from procedural poke starts. A new poke can now re
 ## 2026-11-19 — first procedural arm integration
 
 - Added a small two-bone IK position solver with fixed-length geometry and a reachable-distance clamp.
-- Connected the remote-visible Rig positive-X UpperArm_L/Forearm_L chain to the camera-attached Viewmodel right hand world-space wrist target. The existing Viewmodel hand remains the pose owner.
+- Connected the remote-visible Rig positive-X UpperArm_L/Forearm_L chain to the camera-attached Viewmodel right hand PoseRoot wrist target. The existing Viewmodel hand remains the pose owner.
 - The Player calls the solver only in its standing update path. The Rig yields while ragdoll physics, remote ragdoll playback, or recovery blending owns the skeleton.
 - Added rig/<player-id>/right_arm_ik and headless test coverage for bone lengths, reach clamping, wrist movement, and physics ownership. Tests are registered in run_checks.ps1 but have not been run by the assistant.
 - Scope is intentionally one arm only. Left arm, wrist orientation, and visual tuning are next after user verification.
