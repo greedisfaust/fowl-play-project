@@ -81,8 +81,8 @@ const CARRY_CHEST_MAX_TORQUE: float = 900.0
 const CARRY_TORSO_ANGULAR_DAMP: float = 4.0
 const CARRY_ARM_ANGULAR_DAMP: float = 9.0
 const CARRY_FOREARM_ANGULAR_DAMP: float = 11.0
-const RIGHT_ARM_IK_BLEND_SPEED: float = 18.0
-const RIGHT_ARM_POLE_FORWARD_WEIGHT: float = 0.22
+const ARM_IK_BLEND_SPEED: float = 18.0
+const ARM_IK_POLE_FORWARD_WEIGHT: float = 0.22
 const CARRY_HEAD_ANGULAR_DAMP: float = 12.0
 
 func _enter_tree() -> void:
@@ -239,7 +239,7 @@ func _update_procedural_arm_chain(
 	var shoulder_world: Vector3 = skeleton.to_global(shoulder_local)
 	var upper_length: float = skeleton.get_bone_rest(forearm_index).origin.length()
 	var forearm_length: float = skeleton.get_bone_rest(hand_index).origin.length()
-	var pole_world: Vector3 = (global_basis * (Vector3.DOWN + Vector3.BACK * RIGHT_ARM_POLE_FORWARD_WEIGHT)).normalized()
+	var pole_world: Vector3 = (global_basis * (Vector3.DOWN + Vector3.BACK * ARM_IK_POLE_FORWARD_WEIGHT)).normalized()
 	var solution: Dictionary = ARM_IK.solve_two_bone(shoulder_world, wrist_target_world, pole_world, upper_length, forearm_length)
 	if solution.is_empty():
 		return false
@@ -249,7 +249,7 @@ func _update_procedural_arm_chain(
 	var upper_direction_parent: Vector3 = chest_world_basis.inverse() * (elbow_world - shoulder_world).normalized()
 	var upper_rest_axis: Vector3 = skeleton.get_bone_rest(forearm_index).origin.normalized()
 	var upper_target_rotation: Quaternion = Quaternion(upper_rest_axis, upper_direction_parent.normalized())
-	var blend_weight: float = 1.0 - exp(-RIGHT_ARM_IK_BLEND_SPEED * maxf(delta, 0.0))
+	var blend_weight: float = 1.0 - exp(-ARM_IK_BLEND_SPEED * maxf(delta, 0.0))
 	var upper_current: Quaternion = skeleton.get_bone_pose_rotation(upper_index)
 	skeleton.set_bone_pose_rotation(upper_index, upper_current.slerp(upper_target_rotation, blend_weight))
 	skeleton.force_update_all_bone_transforms()
