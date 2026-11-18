@@ -41,9 +41,14 @@ var _carry_facing_world: Vector3 = Vector3.ZERO
 var _chest_physical_bone: PhysicalBone3D
 
 # Soft yaw-only guide: chest turns toward carrier while pitch/roll remain physical.
-const CARRY_CHEST_YAW_STIFFNESS: float = 32.0
-const CARRY_CHEST_YAW_DAMPING: float = 7.0
-const CARRY_CHEST_MAX_TORQUE: float = 24.0
+# The chest is the carry anchor now: firm enough to stay in front of the
+# carrier, but spring-damped so the torso can still sway instead of locking.
+const CARRY_CHEST_SPRING_N_PER_M: float = 1150.0
+const CARRY_CHEST_DAMPING_N_PER_MPS: float = 115.0
+const CARRY_CHEST_MAX_FORCE_N: float = 4200.0
+const CARRY_CHEST_YAW_STIFFNESS: float = 105.0
+const CARRY_CHEST_YAW_DAMPING: float = 22.0
+const CARRY_CHEST_MAX_TORQUE: float = 95.0
 
 func _enter_tree() -> void:
 	# An editor animation preview can be saved in the skeleton's pose. Reset
@@ -167,8 +172,8 @@ func get_hips_world_position() -> Vector3:
 		return skeleton.to_global(skeleton.get_bone_global_pose(_hips_bone_index).origin)
 	return global_position
 
-## Host-only spring support: hips follow the carrier anchor while the other
-## physical bones remain free to dangle under gravity and joint constraints.
+## Host-only spring support: chest follows the carrier anchor while hips,
+## head and limbs remain free to sway under gravity and joint constraints.
 func set_carry_target(target_world: Vector3, facing_world: Vector3 = Vector3.ZERO) -> void:
 	if not simulator.is_simulating_physics() or _hips_physical_bone == null or not target_world.is_finite():
 		return
@@ -184,10 +189,15 @@ func stop_carry_support() -> void:
 func apply_carry_support() -> void:
 	if not _carry_support_active or not simulator.is_simulating_physics() or _hips_physical_bone == null:
 		return
-	var displacement: Vector3 = _carry_target_world - _hips_physical_bone.global_position
-	var force: Vector3 = displacement * TUNING.CARRY_RAGDOLL_SPRING_N_PER_M
-	force -= _hips_physical_bone.linear_velocity * TUNING.CARRY_RAGDOLL_DAMPING_N_PER_MPS
-	PhysicsServer3D.body_apply_central_force(_hips_physical_bone.get_rid(), force.limit_length(TUNING.CARRY_RAGDOLL_MAX_FORCE_N))
+	# Keep the chest in the carrier's view. The hips are deliberately NOT
+	# position-driven anymore; they hang below the supported chest through the
+	# ragdoll joints, along with the freely simulated arms and legs.
+	if _chest_physical_bone == null:
+		return
+	var displacement: Vector3 = _carry_target_world - _chest_physical_bone.global_position
+	var force: Vector3 = displacement * CARRY_CHEST_SPRING_N_PER_M
+	force -= _chest_physical_bone.linear_velocity * CARRY_CHEST_DAMPING_N_PER_MPS
+	PhysicsServer3D.body_apply_central_force(_chest_physical_bone.get_rid(), force.limit_length(CARRY_CHEST_MAX_FORCE_N))
 	_apply_carry_chest_facing()
 
 func _apply_carry_chest_facing() -> void:
