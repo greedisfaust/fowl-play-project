@@ -74,7 +74,7 @@ var _reach_amount: float = 0.0
 var _reach_start_amount: float = 0.0
 var _action_phase: HandActionPhase = HandActionPhase.NONE
 var _action_elapsed: float = 0.0
-var _action_result: bool = false
+var _action_result_received: bool = false
 var _reach_preview_delay: float = -1.0
 
 var _finger_joints: Array[Node3D] = []
@@ -207,7 +207,7 @@ func _advance_action(delta: float) -> void:
 				_action_elapsed = 0.0
 		HandActionPhase.CONTACT:
 			_reach_amount = 1.0
-			if _action_elapsed >= action_contact_seconds:
+			if _action_elapsed >= action_contact_seconds or _action_result_received:
 				_begin_action_return()
 		HandActionPhase.RETURNING:
 			var return_weight: float = smoothstep(0.0, action_return_seconds, _action_elapsed)
@@ -340,7 +340,7 @@ func begin_action(world_point: Vector3) -> bool:
 	_reach_start_amount = _reach_amount
 	_action_elapsed = 0.0
 	_action_phase = HandActionPhase.EXTENDING
-	_action_result = false
+	_action_result_received = false
 	_reach_elapsed = 0.0
 	_debug_log("Action begin")
 	return true
@@ -354,9 +354,7 @@ func reach(world_point: Vector3) -> bool:
 func finish_action(accepted: bool) -> void:
 	if _action_phase == HandActionPhase.NONE:
 		return
-	_action_result = accepted
-	if _action_phase != HandActionPhase.RETURNING:
-		_begin_action_return()
+	_action_result_received = true
 	_debug_log("Action result=%s" % ("accepted" if accepted else "rejected"))
 
 func _get_target_local_offset(world_point: Vector3, distance: float) -> Vector3:
