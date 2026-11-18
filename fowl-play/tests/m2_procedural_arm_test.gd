@@ -51,7 +51,7 @@ func _check_rig_arm_target() -> void:
 	var skeleton: Skeleton3D = rig.get_node("Skeleton3D") as Skeleton3D
 	var upper_index: int = skeleton.find_bone("UpperArm_L")
 	var hand_index: int = skeleton.find_bone("Hand_L")
-	var rig_hand_visual: Node3D = rig.get_node("Skeleton3D/HandAttachment_L/HandMount_L/Hand") as Node3D
+	var rig_hand_visual: MeshInstance3D = rig.get_node("Skeleton3D/HandAttachment_L/HandMount_L/Hand/PoseRoot/Wrist") as MeshInstance3D
 	if upper_index < 0 or hand_index < 0:
 		_fail("Right arm bone chain is incomplete")
 		rig.free()
