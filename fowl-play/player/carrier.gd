@@ -143,7 +143,9 @@ func _update_held_item_position() -> void:
 				local_anchor *= safe_depth / depth
 	var target_world: Vector3 = camera.global_transform * local_anchor
 	if held_item.has_method("set_carry_target"):
-		held_item.call("set_carry_target", target_world)
+		# Player ragdolls use the carrier's backward axis as their facing target,
+		# so their chest keeps looking toward the carrier as they turn.
+		held_item.call("set_carry_target", target_world, player.global_basis.z)
 		return
 	held_item.global_position = target_world
 	# global_rotation (not global_basis) so the prop's own scale is preserved.
