@@ -129,3 +129,11 @@ Removed the action-phase gate from procedural poke starts. A new poke can now re
 - Cached the carried item's CollisionShape3D children when the item changes, avoiding a tree search during each frame's contact update.
 - Added an M2 assertion for a non-zero, bounded index-finger correction toward a transformed box surface.
 - This is the first visible response slice, not full finger IK. The remaining fingers and sphere/capsule surface solvers stay queued until this index-finger behavior is visually approved. Godot tests and in-game verification have not been run by the assistant.
+
+
+## 2026-11-19 — all-finger box contact bend
+
+- Extended the surface-directed carry bend from the index finger to all four fingers, each using its own fingertip and nearest box-surface target.
+- Kept the correction weighted, angularly limited, and integrated with existing smooth joint blending.
+- Expanded M2 coverage for finite/bounded per-finger corrections and a non-zero contact response.
+- Sphere and capsule surface solvers remain the next shape-coverage step. Godot tests and visual verification have not been run by the assistant.
