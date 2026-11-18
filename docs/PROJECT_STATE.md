@@ -35,11 +35,11 @@
 ## Open decisions (from PROJECT_OVERVIEW.md §24)
 
 1. Skeleton authoring resolved: manual Godot editor authoring, with humanoid legs.
-3. Whether punches affect already-limp bodies.
-4. Whether to include impact/wall-slam feedback.
-5. Final lobby, nickname, and color flow.
-6. Per-bone ragdoll masses (M4 spike).
-7. Rebuilding the casino/economy layer, and when.
+2. Whether punches affect already-limp bodies.
+3. Whether to include impact/wall-slam feedback.
+4. Final lobby, nickname, and color flow.
+5. Per-bone ragdoll masses (M4 spike).
+6. Rebuilding the casino/economy layer, and when.
 
 Late join is decided: allowed during the rest of a day, not during casino/elevator gameplay. Throw power is decided: fixed full power with auto-fire at one second.
 
