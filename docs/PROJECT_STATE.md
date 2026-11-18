@@ -188,3 +188,8 @@ Removed the action-phase gate from procedural poke starts. A new poke can now re
 - Scope is intentionally one arm only. Left arm, wrist orientation, and visual tuning are next after user verification.
 
 - Side mapping note: the Viewmodel right hand is on positive X, while the current Rig names its positive-X chain with the `_L` suffix. The solver intentionally maps by spatial side rather than matching suffixes.
+
+
+### M2 procedural right-arm visual connection — first cleanup slice
+
+The positive-X Rig hand scene (`HandAttachment_L/HandMount_L/Hand`) is now hidden during standing presentation so the camera-attached Viewmodel right hand remains the single visible hand. The Rig hand scene is restored for host ragdoll simulation and remote ragdoll pose playback, then hidden again when physics ends and recovery owns the skeleton. The attachment, skeleton bone, and physical-bone bodies are not removed or disabled. The positive-X forearm render capsule is lengthened to 0.34 m and centered at 0.14 m to overlap the Viewmodel wrist/forearm silhouette; its PhysicalBone collision shape is unchanged. `rig/<player-id>/right_rig_hand_visible` reports visibility. Automated checks assert the visual handoff; Godot execution and rendered seam confirmation remain user-run.
