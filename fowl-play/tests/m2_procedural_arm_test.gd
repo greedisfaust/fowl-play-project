@@ -74,8 +74,18 @@ func _check_rig_arm_target() -> void:
 	var after: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(hand_index).origin)
 	if not applied:
 		_fail("Standing Player Rig should accept a valid right wrist target")
+	var stretched_scale: Vector3 = skeleton.get_bone_pose_scale(upper_index)
+	if stretched_scale.is_equal_approx(Vector3.ONE):
+		_fail("A wrist target just beyond normal reach should apply a small visual arm stretch")
 	if after.distance_to(target) >= before.distance_to(target):
 		_fail("Right wrist should move closer to the requested Viewmodel wrist target")
+	var extended_target: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(upper_index).origin) + Vector3(0.0, 0.0, -0.60)
+	rig.call("update_procedural_right_arm", extended_target, 1.0)
+	var extended_scale: Vector3 = skeleton.get_bone_pose_scale(upper_index)
+	if extended_scale.is_equal_approx(Vector3.ONE):
+		_fail("Right arm should apply a limited bone-axis scale when the wrist target exceeds normal reach")
+	if extended_scale.x > 1.121 or extended_scale.y > 1.121 or extended_scale.z > 1.121:
+		_fail("Procedural arm stretch must remain within the 12 percent limit")
 	var left_target: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(left_upper_index).origin) + Vector3(-0.18, -0.06, -0.38)
 	var left_before: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(left_hand_index).origin)
 	var left_applied: bool = bool(rig.call("update_procedural_left_arm", left_target, 1.0))
