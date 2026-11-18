@@ -30,6 +30,17 @@ func _run() -> void:
 	if hand._resolve_pose_state() != Hand.PoseState.CARRY:
 		_fail("Carry must override guard and hover")
 	hand.set_carrying(false)
+	var grip_item: Node3D = Node3D.new()
+	root.add_child(grip_item)
+	grip_item.global_position = Vector3(1.0, 0.5, -2.0)
+	hand.set_carrying(true, grip_item, -1.0)
+	var left_grip: Vector3 = hand._get_carry_pose_position()
+	hand.set_carrying(true, grip_item, 1.0)
+	var right_grip: Vector3 = hand._get_carry_pose_position()
+	if left_grip.distance_to(right_grip) < 0.3:
+		_fail("Left and right carry targets should approach opposite sides of the prop")
+	hand.set_carrying(false)
+	grip_item.free()
 	if hand._resolve_pose_state() != Hand.PoseState.GUARD:
 		_fail("Guard must override hover")
 	hand.set_guard(false)
