@@ -42,6 +42,7 @@ func _run() -> void:
 	hand.set_carrying(false)
 	grip_item.free()
 	_check_shape_aware_grip(hand)
+	_check_individual_carry_finger_curls()
 	if hand._resolve_pose_state() != Hand.PoseState.GUARD:
 		_fail("Guard must override hover")
 	hand.set_guard(false)
@@ -136,6 +137,28 @@ func _check_shape_aware_grip(hand: Hand) -> void:
 		_fail("Capsule grip did not use its collision radius")
 	hand.set_carrying(false)
 	capsule_prop.free()
+
+func _check_individual_carry_finger_curls() -> void:
+	var hand_scene: PackedScene = load("res://hands/hand.tscn") as PackedScene
+	var hand: Hand = hand_scene.instantiate() as Hand
+	root.add_child(hand)
+	var box: BoxShape3D = BoxShape3D.new()
+	box.size = Vector3(0.8, 0.8, 0.8)
+	var prop: Node3D = Node3D.new()
+	root.add_child(prop)
+	var collision: CollisionShape3D = CollisionShape3D.new()
+	collision.shape = box
+	prop.add_child(collision)
+	hand.set_carrying(true, prop, -1.0)
+	var index_curl: Vector3 = hand._get_carry_finger_curl_degrees(0)
+	var middle_curl: Vector3 = hand._get_carry_finger_curl_degrees(1)
+	var ring_curl: Vector3 = hand._get_carry_finger_curl_degrees(2)
+	var pinky_curl: Vector3 = hand._get_carry_finger_curl_degrees(3)
+	if index_curl.x >= middle_curl.x or pinky_curl.x >= ring_curl.x:
+		_fail("Outer fingers should receive a slightly tighter edge-hook curl than inner fingers")
+	hand.set_carrying(false)
+	hand.free()
+	prop.free()
 
 func _make_grip_test_prop(shape: Shape3D, collision_scale: Vector3) -> Node3D:
 	var prop: Node3D = Node3D.new()
