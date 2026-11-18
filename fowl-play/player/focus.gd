@@ -86,7 +86,6 @@ func _set_hands_hover(active: bool, world_point: Vector3) -> void:
 	if is_instance_valid(right_hand):
 		right_hand.set_hover(active, world_point)
 
-
 func _clear_focus() -> void:
 	if is_instance_valid(_focused):
 		_focused.set_focused(false)
@@ -108,14 +107,14 @@ func _try_interact(input_action: StringName) -> bool:
 		_debug_log("Interaction rejected: target does not accept %s" % input_action)
 		return false
 
-	var requested: bool = bool(
-		get_node("/root/Network").call("request_interaction", _focused.get_path(), action)
-	)
-
-	if requested and is_instance_valid(right_hand) and focus_ray.is_colliding():
+	# The local poke is cosmetic feedback for every valid click; the host still
+	# applies its own interaction request throttle and gameplay validation.
+	if is_instance_valid(right_hand) and focus_ray.is_colliding():
 		right_hand.reach(focus_ray.get_collision_point())
 
-	return requested
+	return bool(
+		get_node("/root/Network").call("request_interaction", _focused.get_path(), action)
+	)
 
 func _debug_use_focused(_args: Array[Variant]) -> String:
 	return "Interaction requested; check interact logs for host result." if _try_interact(&"interact") else "Interaction rejected."
