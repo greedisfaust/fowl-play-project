@@ -72,3 +72,8 @@ Code and documentation have been committed directly to the feature branch with c
 ## 2026-11-19 — procedural hand carry-state integration
 
 Carrier `carry_started` / `carry_ended` signals now drive both hands on each peer. The local owner receives the two-handed carry pose on first-person viewmodel hands; remote observers receive it on the two world-rig hands. The M3 interaction test covers carry start/end for both presentation paths. Godot execution and rendered multiplayer verification remain user-run checks.
+
+
+## 2026-11-19 — target-driven procedural grip foundation
+
+The hand controller now derives a local PoseRoot grip target from the carried prop transform. Left and right hands approach opposite sides using their explicit side values; the stable hand attachment roots remain untouched and the existing blend response smooths the movement. Automated checks cover distinct left/right targets and opposite-side assignment on remote hands. This is the first target-driven grip foundation; palm orientation and object-specific finger wrapping remain visual tuning work. Godot tests and rendered playtesting have not been run by the assistant.
