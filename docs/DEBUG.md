@@ -34,6 +34,7 @@ security secret.
 | `interact/device/<name>/active` | interaction/debug_use_device.gd | Toggle state of the M1 test USE device. |
 | `props/<name>/pickup_allowed` | props/prop.gd | Whether the prop's assigned profile allows pickup. |
 | `hands/<name>/state` | hands/hand.gd | World mode, hover, guard, carry, limp, and speed state. |
+| Carry pose | hands/hand.gd | While carrying, the palm's local +Y normal smoothly turns toward the carried prop; finger curl is still the shared carry pose. |
 | `ragdoll_test.simulating` | ragdoll/player_ragdoll_test.gd | Whether the isolated PhysicalBoneSimulator3D is simulating. |
 | `player/<name>/wall_clearance` | player/player.gd | Whether recovery placement had to move away from a wall/prop during limp recovery. |
 | `player/<name>/carrying` | player/player.gd | Whether this player currently holds a carried item (prop or limp body). |
