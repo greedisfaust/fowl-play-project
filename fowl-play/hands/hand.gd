@@ -6,6 +6,8 @@ extends Node3D
 
 ## A single resolved pose drives every procedural hand channel.
 ## Higher-priority gameplay states always win over cosmetic hover/reach.
+enum HandActionPhase { NONE, EXTENDING, CONTACT, RETURNING }
+
 enum PoseState {
 	IDLE,
 	POINT,
@@ -45,10 +47,13 @@ const AUTHORED_GUARD_THUMB_BASES: Array[Basis] = [
 @export var point_thumb_root_degrees: Vector3 = Vector3(-15.0, -40.0, 0.0)
 @export var point_thumb_curl_degrees: Vector2 = Vector2(-18.0, -25.0)
 @export_range(0.0, 0.5) var reach_distance: float = 0.20
-## A short extension makes repeated clicks feel responsive.
-@export_range(0.02, 1.0) var reach_extend_seconds: float = 0.07
-## The longer recovery keeps the hand from snapping back after the final click.
-@export_range(0.02, 1.0) var reach_return_seconds: float = 0.22
+## Action timing is a small lifecycle, not a per-click animation clip.
+@export_range(0.02, 0.5) var action_extend_seconds: float = 0.11
+@export_range(0.0, 0.3) var action_contact_seconds: float = 0.05
+@export_range(0.02, 0.8) var action_return_seconds: float = 0.18
+@export_range(0.0, 0.15) var point_hand_offset: float = 0.035
+@export_range(1.0, 24.0) var target_rotation_response: float = 12.0
+@export_range(1.0, 80.0) var target_rotation_limit_degrees: float = 42.0
 ## Small world-space clearance added beyond the detected prop collision bounds.
 @export_range(0.0, 0.2) var carry_side_offset_m: float = 0.04
 @export_range(-0.5, 0.5) var carry_height_offset_m: float = 0.02
@@ -63,11 +68,14 @@ const AUTHORED_GUARD_THUMB_BASES: Array[Basis] = [
 @export var carry_thumb_tight_curl_degrees: Vector2 = Vector2(-24.0, -32.0)
 @export var carry_thumb_open_curl_degrees: Vector2 = Vector2(-4.0, -8.0)
 
-var _reach_elapsed: float = -1.0
-var _reach_target: Vector3
+var _reach_elapsed: float = -1.0 # Kept as a diagnostic compatibility value.
+var _reach_target: Vector3 = Vector3.ZERO
 var _reach_offset: Vector3 = Vector3.ZERO
 var _reach_amount: float = 0.0
 var _reach_start_amount: float = 0.0
+var _action_phase: HandActionPhase = HandActionPhase.NONE
+var _action_elapsed: float = 0.0
+var _action_result: bool = false
 var _reach_preview_delay: float = -1.0
 
 var _finger_joints: Array[Node3D] = []
@@ -147,21 +155,8 @@ func _process(delta: float) -> void:
 	if _reach_preview_delay >= 0.0:
 		_reach_preview_delay -= delta
 		if _reach_preview_delay < 0.0:
-			reach(global_position - global_basis.z * 2.0)
-	if is_guarding or is_limp or is_carrying:
-		_reach_elapsed = -1.0
-		_reach_amount = 0.0
-	elif _reach_elapsed >= 0.0:
-		_reach_elapsed += delta
-		if _reach_elapsed < reach_extend_seconds:
-			var extend_weight: float = smoothstep(0.0, reach_extend_seconds, _reach_elapsed)
-			_reach_amount = lerpf(_reach_start_amount, 1.0, extend_weight)
-		else:
-			var return_elapsed: float = _reach_elapsed - reach_extend_seconds
-			_reach_amount = 1.0 - smoothstep(0.0, reach_return_seconds, return_elapsed)
-		if _reach_elapsed >= reach_extend_seconds + reach_return_seconds:
-			_reach_elapsed = -1.0
-			_reach_amount = 0.0
+			begin_action(global_position - global_basis.z * 2.0)
+	_advance_action(delta)
 	var pose_state: PoseState = _resolve_pose_state()
 	var weight: float = 1.0 - exp(-pose_blend_speed * delta)
 	var carry_finger_curls: Array[Vector3] = []
@@ -193,6 +188,49 @@ func _process(delta: float) -> void:
 		else:
 			_aim_node.quaternion = _aim_node.quaternion.slerp(_aim_rest_rotation, weight)
 
+## Advance one compact action lifecycle. The animation controller owns timing;
+## gameplay reports the result and can request an early recovery transition.
+func _advance_action(delta: float) -> void:
+	if is_guarding or is_limp or is_carrying:
+		_cancel_action()
+		return
+	if _action_phase == HandActionPhase.NONE:
+		_reach_elapsed = -1.0
+		return
+	_action_elapsed += delta
+	_reach_elapsed = _action_elapsed
+	match _action_phase:
+		HandActionPhase.EXTENDING:
+			var extend_weight: float = smoothstep(0.0, action_extend_seconds, _action_elapsed)
+			_reach_amount = lerpf(_reach_start_amount, 1.0, extend_weight)
+			if _action_elapsed >= action_extend_seconds:
+				_action_phase = HandActionPhase.CONTACT
+				_action_elapsed = 0.0
+		HandActionPhase.CONTACT:
+			_reach_amount = 1.0
+			if _action_elapsed >= action_contact_seconds:
+				_begin_action_return()
+		HandActionPhase.RETURNING:
+			var return_weight: float = smoothstep(0.0, action_return_seconds, _action_elapsed)
+			_reach_amount = lerpf(_reach_start_amount, 0.0, return_weight)
+			if _action_elapsed >= action_return_seconds:
+				_action_phase = HandActionPhase.NONE
+				_action_elapsed = 0.0
+				_reach_elapsed = -1.0
+				_reach_amount = 0.0
+				_debug_log("Action complete result=%s" % ("accepted" if _action_result else "unconfirmed"))
+
+func _begin_action_return() -> void:
+	_action_phase = HandActionPhase.RETURNING
+	_action_elapsed = 0.0
+	_reach_start_amount = _reach_amount
+
+func _cancel_action() -> void:
+	_action_phase = HandActionPhase.NONE
+	_action_elapsed = 0.0
+	_reach_elapsed = -1.0
+	_reach_amount = 0.0
+
 ## Resolve one authoritative pose before touching any joint or transform.
 ## Priority: limp > carry > guard > reach > point > idle.
 func _resolve_pose_state() -> PoseState:
@@ -202,7 +240,7 @@ func _resolve_pose_state() -> PoseState:
 		return PoseState.CARRY
 	if is_guarding:
 		return PoseState.GUARD
-	if _reach_elapsed >= 0.0:
+	if _action_phase != HandActionPhase.NONE:
 		return PoseState.REACH
 	if is_hovering:
 		return PoseState.POINT
@@ -252,10 +290,16 @@ func _blend_thumb_and_hand_pose(weight: float, delta: float, pose_state: PoseSta
 		rotation_offset = guard_rotation_degrees * PI / 180.0
 	elif pose_state == PoseState.REACH:
 		position_target += _reach_offset * _reach_amount
+	elif pose_state == PoseState.POINT:
+		position_target += _get_target_local_offset(hover_point, point_hand_offset)
 	_sway *= exp(-10.0 * delta)
 	if not is_limp:
 		rotation_offset += Vector3(_sway.y, _sway.x, 0.0)
 	var rotation_target: Quaternion = _pose_rest_rotation * Quaternion.from_euler(rotation_offset)
+	if pose_state == PoseState.POINT:
+		rotation_target = _get_target_pose_rotation(hover_point)
+	elif pose_state == PoseState.REACH:
+		rotation_target = _get_target_pose_rotation(_reach_target)
 	if pose_state == PoseState.CARRY and is_instance_valid(carry_item):
 		rotation_target = _get_carry_pose_rotation(position_target)
 	_pose_root.position = _pose_root.position.lerp(position_target, weight)
@@ -284,8 +328,8 @@ func set_hover(on: bool, world_point: Vector3) -> void:
 func update_hover_point(world_point: Vector3) -> void:
 	hover_point = world_point
 
-func reach(world_point: Vector3) -> bool:
-	if is_guarding or is_limp or is_carrying:
+func begin_action(world_point: Vector3) -> bool:
+	if is_guarding or is_limp or is_carrying or _action_phase != HandActionPhase.NONE:
 		return false
 	if not world_point.is_finite():
 		return false
@@ -294,11 +338,55 @@ func reach(world_point: Vector3) -> bool:
 		return false
 	_reach_target = world_point
 	_reach_offset = local_direction.normalized() * minf(reach_distance, local_direction.length())
-	# Restart the extension from the current blend amount, never from a snapped rest pose.
 	_reach_start_amount = _reach_amount
+	_action_elapsed = 0.0
+	_action_phase = HandActionPhase.EXTENDING
+	_action_result = false
 	_reach_elapsed = 0.0
-	_debug_log("Reach")
+	_debug_log("Action begin")
 	return true
+
+## Backwards-compatible entry point used by existing gameplay and remote cosmetics.
+func reach(world_point: Vector3) -> bool:
+	return begin_action(world_point)
+
+## Called by the interaction result path. The hand always recovers smoothly,
+## whether the host accepted or rejected the gameplay request.
+func finish_action(accepted: bool) -> void:
+	if _action_phase == HandActionPhase.NONE:
+		return
+	_action_result = accepted
+	if _action_phase != HandActionPhase.RETURNING:
+		_begin_action_return()
+	_debug_log("Action result=%s" % ("accepted" if accepted else "rejected"))
+
+func _get_target_local_offset(world_point: Vector3, distance: float) -> Vector3:
+	if not world_point.is_finite() or _pose_root == null:
+		return Vector3.ZERO
+	var parent: Node3D = _pose_root.get_parent() as Node3D
+	if parent == null:
+		return Vector3.ZERO
+	var direction: Vector3 = parent.to_local(world_point) - _pose_rest_position
+	if direction.length_squared() < 0.000001:
+		return Vector3.ZERO
+	return direction.normalized() * distance
+
+func _get_target_pose_rotation(world_point: Vector3) -> Quaternion:
+	if not world_point.is_finite() or _pose_root == null:
+		return _pose_rest_rotation
+	var parent: Node3D = _pose_root.get_parent() as Node3D
+	if parent == null:
+		return _pose_rest_rotation
+	var direction: Vector3 = _pose_rest_rotation.inverse() * (parent.to_local(world_point) - _pose_rest_position)
+	if direction.length_squared() < 0.000001:
+		return _pose_rest_rotation
+	direction = direction.normalized()
+	var angle: float = acos(clampf(Vector3.FORWARD.dot(direction), -1.0, 1.0))
+	var axis: Vector3 = Vector3.FORWARD.cross(direction)
+	if axis.length_squared() < 0.000001:
+		return _pose_rest_rotation
+	var limited_rotation: Quaternion = Quaternion(axis.normalized(), minf(angle, deg_to_rad(target_rotation_limit_degrees)))
+	return _pose_rest_rotation * limited_rotation
 
 func set_guard(active: bool) -> void:
 	if is_guarding == active:
@@ -525,8 +613,7 @@ func _debug_pose(args: Array[Variant]) -> String:
 	if args.size() != 1 or str(args[0]) not in ["idle", "point", "guard", "limp", "reach"]:
 		return "Usage: %s idle|point|guard|limp|reach" % _pose_command_name
 	var pose: String = str(args[0])
-	_reach_elapsed = -1.0
-	_reach_amount = 0.0
+	_cancel_action()
 	_reach_preview_delay = -1.0
 	set_limp(pose == "limp")
 	set_guard(pose == "guard")
@@ -568,9 +655,10 @@ func _debug_status(_args: Array[Variant]) -> String:
 	return _debug_state()
 
 func _debug_state() -> String:
-	return "world=%s pose=%s hover=%s guard=%s carrying=%s limp=%s reach=%.2f speed_mps=%.2f" % [
+	return "world=%s pose=%s action=%s hover=%s guard=%s carrying=%s limp=%s reach=%.2f speed_mps=%.2f" % [
 		world_mode,
 		_pose_state_name(_resolve_pose_state()),
+		_action_phase,
 		is_hovering,
 		is_guarding,
 		is_carrying,
