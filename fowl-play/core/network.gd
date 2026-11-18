@@ -516,12 +516,13 @@ func _submit_interaction(target_path: NodePath, action: StringName) -> void:
 func _receive_interaction(owner_id: int, target_path: NodePath, action: StringName) -> bool:
 	var now: float = Time.get_ticks_msec() / 1000.0
 	var reason: String = ""
+	var target: Interactable = null
 	if now - float(_interaction_times.get(owner_id, -INF)) < TUNING.INTERACT_REQUEST_INTERVAL_S:
 		reason = "request cooldown"
 	else:
 		_interaction_times[owner_id] = now
 		var actor: Node3D = movement_players.get(owner_id) as Node3D
-		var target: Interactable = get_node_or_null(target_path) as Interactable
+		target = get_node_or_null(target_path) as Interactable
 		reason = _interaction_rejection(actor, target, action)
 		if reason.is_empty() and not target.interact(actor, action):
 			reason = "target state changed"
