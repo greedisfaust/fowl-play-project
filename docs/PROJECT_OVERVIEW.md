@@ -143,7 +143,7 @@ Inputs are InputMap actions only (never raw keycodes). The full action table is 
 
 **Rules**
 - Limp begins on the host (charged hit, parried charged punch) and is replicated reliably to everyone through **one entry point**.
-- **Recovery rule (RECOMMENDED):** the limp timer (`LIMP_SECONDS`, **3.5 s**, DECIDED) must have elapsed **and** the body must be settled (speed below `LIMP_SETTLED_SPEED_MPS`); a hard cap (`LIMP_MAX_SECONDS`, 6.0 s of free tumbling) forces recovery. The timer **pauses while carried** and **restarts on drop/throw**. **The host owns the one timer**; no machine runs its own.
+- **Recovery rule (DECIDED):** the limp timer (`LIMP_SECONDS`, **3.5 s**) must have elapsed **and** the body must be settled (speed below `LIMP_SETTLED_SPEED_MPS`); a hard cap (`LIMP_MAX_SECONDS`, 6.0 s) forces recovery. The timer is suspended while carried. **Every drop or throw resets a fresh 3.5-second countdown**; no elapsed progress from before that release is retained. **The host owns the one timer**; no machine runs its own.
 - Input and interaction are locked while limp. A limp player can still look around.
 - Exactly one cleanup path ends a ragdoll (see §14, G8).
 
@@ -153,11 +153,11 @@ Inputs are InputMap actions only (never raw keycodes). The full action table is 
 |---|---|---|---|---|
 | STANDING | animated (procedural legs) | capsule (owner) | first person | knockdown → GROUND |
 | GROUND | simulated | hips body, host-simulated | head eye point and rotation, mouse look | pickup → CARRIED, timer+settled → RECOVERY |
-| CARRIED | hips pinned to carry anchor, limbs **dangle** (simulated) | carry anchor | head eye point and rotation, mouse look still works | drop → GROUND, throw → THROWN, carrier forced-ends → GROUND |
+| CARRIED | hips spring-supported at the chest/hip carry anchor; limbs **dangle** under gravity and joint constraints | host-simulated hips follow the carry anchor; Player root remains fixed | head eye point and rotation, mouse look still works | drop → GROUND, throw → THROWN, carrier forced-ends → GROUND |
 | THROWN | simulated with launch impulse | hips body, host-simulated | head eye point and rotation, mouse look | settles → GROUND |
 | RECOVERY | blend ragdoll → standing pose over ~0.5 s | capsule re-placed at hips ground position | blends back to first person | → STANDING |
 
-- **OPEN:** dangling limbs (above) feel more like the references; confirm.
+- Carried limp bodies use host-only spring support on the hips; the other physical bones remain simulated so arms and legs dangle naturally. Remote peers render the normal host pose stream and use a query-only StaticBody3D at the replicated hips for interaction focus, without local ragdoll collision.
 - **Forced exits** (disconnect, teleport/room change, run reset, host leaves) always route to the single cleanup path, then STANDING.
 - **Authority of position while limp (RECOMMENDED):** the host-simulated hips body is the single truth. The capsule is dormant and is re-placed at handback. Clients drive the root from the interpolated hips pose. **The body drives the root, never the reverse** (see §22).
 
@@ -426,7 +426,7 @@ res://
 
 **Decided (2026-11-15):**
 - Throw: auto-fires at full charge (1.0 s); early release after the tap window drops the item; tap drops; throw power is fixed.
-- Limp lasts `LIMP_SECONDS` = 3.5 s (hard cap 6.0 s).
+- Limp lasts `LIMP_SECONDS` = 3.5 s (hard cap 6.0 s); every drop/throw starts a fresh 3.5 s recovery countdown after any carried interval.
 - Budget: up to 4 full ragdolls, up to 70 awake bodies, to be proven by the spike.
 - A parried charged punch makes the attacker limp; a parried jab is recoil only.
 - Movement authority: owner-authoritative standing movement with host sanity checks was approved at the M3 gate (2026-11-16). Host validates and relays owner snapshots; remote peers interpolate. Gameplay outcomes remain host-authoritative.
@@ -437,10 +437,8 @@ res://
 - A player node is never reparented (it breaks every RPC path).
 
 **Open (ask before building):**
-1. Skeleton authoring gate resolved: manual Godot editor authoring selected; no longer open.
-2. Dangling limbs while carried (confirm).
-3. Whether punches affect already-limp bodies.
-4. Whether to include impact/wall-slam feedback.
-5. Final lobby, nickname and color flow.
-6. Per-bone ragdoll masses (spike).
-7. Rebuilding the casino/economy layer, and when.
+1. Whether punches affect already-limp bodies.
+2. Whether to include impact/wall-slam feedback.
+3. Final lobby, nickname and color flow.
+4. Per-bone ragdoll masses (spike).
+5. Rebuilding the casino/economy layer, and when.
