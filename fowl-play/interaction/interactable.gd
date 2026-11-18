@@ -15,7 +15,7 @@ const IDLE_OUTLINE_COLOR: Color = Color(0.015, 0.015, 0.02, 1.0)
 const FOCUSED_OUTLINE_COLOR: Color = Color(1.0, 0.72, 0.18, 1.0)
 const IDLE_OUTLINE_WIDTH: float = 0.008
 const FOCUSED_OUTLINE_WIDTH: float = 0.018
-const FOCUSED_GLOW_STRENGTH: float = 0.65
+const FOCUSED_GLOW_STRENGTH: float = 1.8
 const TRANSITION_SECONDS: float = 0.18
 
 @export var kind: InteractionKind = InteractionKind.USE

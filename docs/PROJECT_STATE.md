@@ -219,4 +219,4 @@ The Rig hand visibility collectors explicitly exclude the `Forearm` MeshInstance
 - Added an M1 headless assertion for idle/focused visuals, non-interactable exclusion, and original-overlay restoration. Godot execution and in-game visual verification remain pending user testing.
 
 
-The interactable outline shader has a first localized halo pass: a view-angle feather on the inverted-hull silhouette plus the existing focused emission. It does not enable project-wide Environment Glow or post-processing; rendered visual tuning remains user-verified.
+The test arena now includes a WorldEnvironment with restrained Godot Glow post-processing. Focused interactable outlines emit HDR gold (increased focused emission) so the engine can bloom those pixels into a soft halo. The setup is intentionally local to test_arena.tscn until a shared production world/environment is established. Godot import/runtime checks and visual tuning remain user-verified.

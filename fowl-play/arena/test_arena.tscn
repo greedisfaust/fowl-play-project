@@ -37,8 +37,21 @@ radius = 0.35
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_57qmd"]
 radius = 0.35
 
+[sub_resource type="Environment" id="Environment_interaction_glow"]
+glow_enabled = true
+glow_intensity = 0.8
+glow_strength = 1.2
+glow_bloom = 0.12
+glow_blend_mode = 1
+glow_hdr_threshold = 1.0
+glow_hdr_scale = 2.0
+glow_levels = PackedByteArray(1, 1, 1, 0, 0, 0, 0)
+
 [node name="TestArena" type="Node3D" unique_id=2059650083]
 script = ExtResource("1_555b8")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_interaction_glow")
 
 [node name="World" type="StaticBody3D" parent="." unique_id=865268742]
 
