@@ -9,11 +9,28 @@ func _initialize() -> void:
 func _run() -> void:
 	_check_solver_geometry()
 	_check_rig_arm_target()
+	_check_viewmodel_visibility_toggle()
 	if _failed:
 		quit(1)
 		return
 	print("M2 procedural two-arm checks passed")
 	quit(0)
+
+func _check_viewmodel_visibility_toggle() -> void:
+	var scene: PackedScene = load("res://player/player.tscn") as PackedScene
+	if scene == null:
+		_fail("Could not load Player scene for Viewmodel visibility check")
+		return
+	var player: Node3D = scene.instantiate() as Node3D
+	root.add_child(player)
+	var viewmodel_hands: Node3D = player.get_node("Head/Camera3D/ViewmodelHands") as Node3D
+	player.call("_set_viewmodel_hands_visible", false)
+	if viewmodel_hands.visible:
+		_fail("Ragdoll presentation should hide the camera-attached Viewmodel hands")
+	player.call("_set_viewmodel_hands_visible", true)
+	if not viewmodel_hands.visible:
+		_fail("Recovery completion should restore the camera-attached Viewmodel hands")
+	player.queue_free()
 
 func _check_solver_geometry() -> void:
 	var shoulder: Vector3 = Vector3.ZERO
