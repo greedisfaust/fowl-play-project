@@ -165,3 +165,8 @@ Run `tests/run_m5_recovery_checks.ps1 -GodotExecutable <path>` for the host time
 Wall-clearance search runs after floor placement: if the standing capsule overlaps world/elevator/prop/player/limp geometry, it spirals outward in 0.15 m steps (8 angles per step, up to 1.5 m radius) and sets `player/<name>/wall_clearance` true when it finds a clear spot.
 
 **G8 forced-exit cleanup:** On the host, when a limp player disconnects, `_on_peer_disconnected` calls `stop_ragdoll_spike(peer_id, "disconnect")` before erasing the peer's ragdoll epoch. This broadcasts the reliable `_ragdoll_end` event to remaining clients so their limp bodies complete a get-up blend instead of vanishing silently. The host restores the departing player's rig locally before the arena despawns the player node.
+
+
+### Procedural grip diagnostics
+
+While carrying, run `hand_status_<name>` for each hand. The status reports `pose=carry`; the hand controller stores a side value of -1 for the left hand and +1 for the right. The grip target follows the carried prop transform in world space, then converts it into the hand-local PoseRoot target. The attachment root remains fixed.
