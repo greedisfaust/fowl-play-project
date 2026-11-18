@@ -339,7 +339,7 @@ func _get_carry_local_bounds() -> AABB:
 	var found_collision_bounds: bool = false
 	for candidate: Node in carry_item.find_children("*", "CollisionShape3D", true, false):
 		var collision_shape: CollisionShape3D = candidate as CollisionShape3D
-		if collision_shape == null or collision_shape.shape == null:
+		if collision_shape == null or collision_shape.disabled or collision_shape.shape == null:
 			continue
 		var debug_mesh: Mesh = collision_shape.shape.get_debug_mesh()
 		if debug_mesh == null:
