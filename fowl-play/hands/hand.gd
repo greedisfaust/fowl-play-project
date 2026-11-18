@@ -52,7 +52,6 @@ const AUTHORED_GUARD_THUMB_BASES: Array[Basis] = [
 @export_range(0.0, 0.3) var action_contact_seconds: float = 0.05
 @export_range(0.02, 0.8) var action_return_seconds: float = 0.18
 @export_range(0.0, 0.15) var point_hand_offset: float = 0.035
-@export_range(1.0, 24.0) var target_rotation_response: float = 12.0
 @export_range(1.0, 80.0) var target_rotation_limit_degrees: float = 42.0
 ## Small world-space clearance added beyond the detected prop collision bounds.
 @export_range(0.0, 0.2) var carry_side_offset_m: float = 0.04
@@ -218,7 +217,7 @@ func _advance_action(delta: float) -> void:
 				_action_elapsed = 0.0
 				_reach_elapsed = -1.0
 				_reach_amount = 0.0
-				_debug_log("Action complete result=%s" % ("accepted" if _action_result else "unconfirmed"))
+				_debug_log("Action cycle complete")
 
 func _begin_action_return() -> void:
 	_action_phase = HandActionPhase.RETURNING
@@ -658,7 +657,7 @@ func _debug_state() -> String:
 	return "world=%s pose=%s action=%s hover=%s guard=%s carrying=%s limp=%s reach=%.2f speed_mps=%.2f" % [
 		world_mode,
 		_pose_state_name(_resolve_pose_state()),
-		_action_phase,
+		_action_phase_name(),
 		is_hovering,
 		is_guarding,
 		is_carrying,
@@ -666,6 +665,18 @@ func _debug_state() -> String:
 		_reach_amount,
 		speed_mps,
 	]
+
+func _action_phase_name() -> String:
+	match _action_phase:
+		HandActionPhase.NONE:
+			return "none"
+		HandActionPhase.EXTENDING:
+			return "extending"
+		HandActionPhase.CONTACT:
+			return "contact"
+		HandActionPhase.RETURNING:
+			return "returning"
+	return "unknown"
 
 func _pose_state_name(state: PoseState) -> String:
 	match state:
