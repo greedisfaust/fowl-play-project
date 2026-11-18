@@ -31,7 +31,9 @@ var _right_viewmodel_upper_arm_bone_index: int = -1
 var _right_viewmodel_forearm_bone_index: int = -1
 var _right_viewmodel_hand_bone_index: int = -1
 var _right_arm_ik_watch_name: StringName
+var _right_arm_ik_command_name: StringName
 var _right_arm_ik_active: bool = false
+var _right_arm_ik_target_world: Vector3 = Vector3.ZERO
 var _hips_physical_bone: PhysicalBone3D
 var _pose_blend_active: bool = false
 var _pose_blend_elapsed: float = 0.0
@@ -108,6 +110,7 @@ func _ready() -> void:
 	_right_viewmodel_forearm_bone_index = skeleton.find_bone("Forearm_L")
 	_right_viewmodel_hand_bone_index = skeleton.find_bone("Hand_L")
 	_right_arm_ik_watch_name = StringName("rig/%s/right_arm_ik" % get_parent().name)
+	_right_arm_ik_command_name = StringName("arm_ik_status_%s" % get_parent().name)
 	var self_contact_pairs: int = SELF_COLLISION.configure(physical_bones)
 
 	if physical_bones.size() != EXPECTED_PHYSICAL_BONES:
@@ -116,17 +119,33 @@ func _ready() -> void:
 		debug_hub.call("log", &"ragdoll", "Rig %s prepared 11 dormant physical bones; %d selective self-contact pairs." % [get_parent().name, self_contact_pairs])
 	debug_hub.call("watch", _watch_name, func() -> int: return physical_bones.size())
 	debug_hub.call("watch", _right_arm_ik_watch_name, func() -> bool: return _right_arm_ik_active)
+	debug_hub.call("command", _right_arm_ik_command_name, _debug_right_arm_ik_status, "Report the procedural Viewmodel right-arm target and ownership state.", false, false)
 	set_process(false)
 
 func _exit_tree() -> void:
 	if is_instance_valid(debug_hub):
 		debug_hub.call("unwatch", _watch_name)
 		debug_hub.call("unwatch", _right_arm_ik_watch_name)
+		debug_hub.call("unregister_command", _right_arm_ik_command_name)
 
 ## Viewmodel right is positive X; the current Rig labels that side with the L bone suffix.
+func _set_right_arm_ik_active(active: bool) -> void:
+	if _right_arm_ik_active == active:
+		return
+	_right_arm_ik_active = active
+	debug_hub.call("log", &"hands", "Rig %s Viewmodel-right arm IK %s." % [
+		get_parent().name, "active" if active else "yielded"
+	])
+
+func _debug_right_arm_ik_status(_args: Array[Variant]) -> String:
+	return "active=%s target=%s bones=UpperArm_L/Forearm_L/Hand_L" % [
+		_right_arm_ik_active, _right_arm_ik_target_world
+	]
+
+
 func update_procedural_right_arm(wrist_target_world: Vector3, delta: float) -> bool:
 	if _right_viewmodel_upper_arm_bone_index < 0 or _right_viewmodel_forearm_bone_index < 0 or _right_viewmodel_hand_bone_index < 0:
-		_right_arm_ik_active = false
+		_set_right_arm_ik_active(false)
 		return false
 	if simulator.is_simulating_physics() or _remote_active or _pose_blend_active or _recovery_animation_active:
 		_right_arm_ik_active = false
@@ -163,7 +182,8 @@ func update_procedural_right_arm(wrist_target_world: Vector3, delta: float) -> b
 	var forearm_current: Quaternion = skeleton.get_bone_pose_rotation(_right_viewmodel_forearm_bone_index)
 	skeleton.set_bone_pose_rotation(_right_viewmodel_forearm_bone_index, forearm_current.slerp(forearm_target_rotation, blend_weight))
 	skeleton.force_update_all_bone_transforms()
-	_right_arm_ik_active = true
+	_right_arm_ik_target_world = wrist_target_world
+	_set_right_arm_ik_active(true)
 	return true
 
 func enable_host_collisions() -> void:
