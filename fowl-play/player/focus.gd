@@ -124,14 +124,17 @@ func _try_interact(input_action: StringName) -> bool:
 		_debug_log("Interaction rejected: target does not accept %s" % input_action)
 		return false
 
-	# The local poke is cosmetic feedback for every valid click; the host still
-	# applies its own interaction request throttle and gameplay validation.
+	# Start immediately for responsive local feedback. The authoritative result
+	# (accepted or rejected) will tell the hand when to begin its recovery.
+	var action_started: bool = false
 	if is_instance_valid(right_hand) and focus_ray.is_colliding():
-		right_hand.reach(focus_ray.get_collision_point())
-
-	return bool(
+		action_started = right_hand.begin_action(focus_ray.get_collision_point())
+	var submitted: bool = bool(
 		get_node("/root/Network").call("request_interaction", _focused.get_path(), action)
 	)
+	if not submitted and action_started:
+		right_hand.finish_action(false)
+	return submitted
 
 func _debug_use_focused(_args: Array[Variant]) -> String:
 	return "Interaction requested; check interact logs for host result." if _try_interact(&"interact") else "Interaction rejected."
