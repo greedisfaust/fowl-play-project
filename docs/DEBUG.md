@@ -222,3 +222,8 @@ Important: these counters and automated receive-handler tests are diagnostic sup
 #### Hover replication counter semantics
 
 `net/hand_hover_sent` counts host broadcasts of hover state. `net/hand_hover_received` counts successful applications to a remote world right hand on the instance doing the application. This includes the host applying a connected client's hover to that client's world rig; it intentionally does not count the owning peer's hidden world-hand copy, because the owner uses the first-person viewmodel. A received counter should therefore be interpreted alongside the local role and which player's remote rig is visible.
+
+
+### Per-player hand instance diagnostics
+- Run `player_hands_<peer_id>` to print FPS-left, FPS-right, world-left, and world-right hand instances for one player.
+- Each entry reports its node name, instance ID, `world_mode`, and current cosmetic state. Use this before comparing hand commands so the FPS and world instances cannot be confused.
