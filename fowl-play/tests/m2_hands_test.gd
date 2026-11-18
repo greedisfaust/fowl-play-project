@@ -81,8 +81,8 @@ func _check_shape_aware_grip(hand: Hand) -> void:
 	var full_size_span: float = full_size_left.distance_to(full_size_right)
 	var left_rotation: Quaternion = hand._get_carry_pose_rotation(full_size_left)
 	var right_rotation: Quaternion = hand._get_carry_pose_rotation(full_size_right)
-	var left_normal: Vector3 = hand.global_basis * (left_rotation * Vector3.UP)
-	var right_normal: Vector3 = hand.global_basis * (right_rotation * Vector3.UP)
+	var left_normal: Vector3 = hand.global_basis * (left_rotation * Vector3.DOWN)
+	var right_normal: Vector3 = hand.global_basis * (right_rotation * Vector3.DOWN)
 	var left_toward_item: Vector3 = (box_prop.global_position - hand.to_global(full_size_left)).normalized()
 	var right_toward_item: Vector3 = (box_prop.global_position - hand.to_global(full_size_right)).normalized()
 	if left_normal.dot(left_toward_item) < 0.99 or right_normal.dot(right_toward_item) < 0.99:
