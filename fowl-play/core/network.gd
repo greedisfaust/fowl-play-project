@@ -27,6 +27,8 @@ var _carry_times: Dictionary = {}
 var interaction_accepted: int = 0
 var hand_poke_sent: int = 0
 var hand_poke_received: int = 0
+var hand_hover_sent: int = 0
+var hand_hover_received: int = 0
 var _interaction_times: Dictionary = {}
 var _ragdoll_epochs: Dictionary = {}
 var _pending_ragdoll_starts: Dictionary = {}
@@ -55,6 +57,8 @@ func _bootstrap() -> void:
 	hub.call("watch", &"net/interaction_accepted", func() -> int: return interaction_accepted)
 	hub.call("watch", &"net/hand_poke_sent", func() -> int: return hand_poke_sent)
 	hub.call("watch", &"net/hand_poke_received", func() -> int: return hand_poke_received)
+	hub.call("watch", &"net/hand_hover_sent", func() -> int: return hand_hover_sent)
+	hub.call("watch", &"net/hand_hover_received", func() -> int: return hand_hover_received)
 	hub.call("watch", &"net/ragdoll_pose_sent", func() -> int: return ragdoll_pose_sent)
 	hub.call("watch", &"net/ragdoll_pose_received", func() -> int: return ragdoll_pose_received)
 	hub.call("watch", &"net/ragdoll_pose_data_bytes_sent", func() -> int: return ragdoll_pose_data_bytes_sent)
@@ -150,6 +154,8 @@ func shutdown() -> void:
 	interaction_accepted = 0
 	hand_poke_sent = 0
 	hand_poke_received = 0
+	hand_hover_sent = 0
+	hand_hover_received = 0
 	_interaction_times.clear()
 	_ragdoll_epochs.clear()
 	_pending_ragdoll_starts.clear()
@@ -567,6 +573,7 @@ func _receive_hand_hover(owner_id: int, active: bool, world_point: Vector3) -> v
 		return
 	player.call("set_world_hand_hover", active, world_point)
 	if peer != null and is_host:
+		hand_hover_sent += 1
 		_hand_hover.rpc(owner_id, active, world_point)
 
 @rpc("authority", "call_remote", "unreliable_ordered", 1)
@@ -577,7 +584,8 @@ func _hand_hover(owner_id: int, active: bool, world_point: Vector3) -> void:
 		return
 	var player: Node = movement_players.get(owner_id)
 	if is_instance_valid(player) and not player.is_queued_for_deletion():
-		player.call("set_world_hand_hover", active, world_point)
+		if bool(player.call("set_world_hand_hover", active, world_point)):
+			hand_hover_received += 1
 
 func _interaction_rejection(actor: Node3D, target: Interactable, action: StringName) -> String:
 	if not is_instance_valid(actor) or actor.is_queued_for_deletion():
