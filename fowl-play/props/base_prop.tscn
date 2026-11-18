@@ -1,0 +1,27 @@
+[gd_scene format=3 uid="uid://330xhwqju48a"]
+
+[ext_resource type="Script" uid="uid://dyw4wgr3svwvg" path="res://props/prop.gd" id="1_vjebb"]
+[ext_resource type="Resource" uid="uid://cs0jm65kihqf7" path="res://props/profiles/test_light_prop.tres" id="2_cbkc4"]
+[ext_resource type="Script" uid="uid://dd5c04repreo1" path="res://interaction/interactable.gd" id="3_50vx6"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_57qmd"]
+size = Vector3(0.8, 0.8, 0.8)
+
+[sub_resource type="BoxMesh" id="BoxMesh_57qmd"]
+size = Vector3(0.8, 0.8, 0.8)
+
+[node name="TestGrabProp" type="RigidBody3D" unique_id=1566184061]
+collision_layer = 4
+script = ExtResource("1_vjebb")
+profile = ExtResource("2_cbkc4")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1075079509]
+shape = SubResource("BoxShape3D_57qmd")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1806579521]
+mesh = SubResource("BoxMesh_57qmd")
+
+[node name="Interactable" type="Node" parent="." unique_id=1472636194]
+script = ExtResource("3_50vx6")
+kind = 1
+prompt_text = "Grab Test Prop"
