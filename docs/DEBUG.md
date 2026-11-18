@@ -63,6 +63,7 @@ Automated checks cover Enter/Run signal wiring, category toggles, feedback with 
 | `net_disconnect` | none | no | no | Disconnects this instance and clears its players. On the host, ends the session for clients. Use net_host/net_join afterward. |
 | `interact_use_<name>` | none | no | no | Submits the local player's focused interaction to the host. Remote-player commands reject locally. Submission is not acceptance; see interact logs. |
 | `hand_status_<name>` | none | no | no | Reports this hand's cosmetic state. |
+| `arm_ik_status_<player>` | none | no | no | Reports the Viewmodel-right arm IK target, active state, and mapped Rig bone chain. |
 | `ragdoll_test_start` | none | no | yes | Starts the isolated player ragdoll simulation. |
 | `ragdoll_test_stop` | none | no | yes | Stops the isolated player ragdoll simulation. |
 | `ragdoll_test_reset` | none | no | yes | Stops the isolated simulation and restores the skeleton rest pose. |
