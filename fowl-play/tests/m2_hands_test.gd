@@ -3,6 +3,12 @@
 
 extends SceneTree
 
+class MockRagdollCarryTarget:
+	extends Node3D
+	var hips_world_position: Vector3 = Vector3.ZERO
+	func get_carry_world_position() -> Vector3:
+		return hips_world_position
+
 var _failed: bool = false
 
 func _initialize() -> void:
@@ -42,6 +48,7 @@ func _run() -> void:
 	hand.set_carrying(false)
 	grip_item.free()
 	_check_shape_aware_grip(hand)
+	_check_ragdoll_follow_grip(hand)
 	_check_individual_carry_finger_curls()
 	_check_box_surface_contact()
 	if hand._resolve_pose_state() != Hand.PoseState.GUARD:
@@ -56,6 +63,8 @@ func _run() -> void:
 		_fail("First hand reach was unexpectedly throttled")
 	if hand._resolve_pose_state() != Hand.PoseState.REACH:
 		_fail("Active poke must resolve above point and idle")
+	if absf(hand._reach_offset.length() - hand.reach_distance) > 0.001 or hand.reach_distance < 0.6:
+		_fail("Poke reach should use the increased travel distance")
 	hand._process(hand.action_extend_seconds * 0.5)
 	var partial_reach_amount: float = hand._reach_amount
 	if partial_reach_amount <= 0.0 or partial_reach_amount >= 1.0:
@@ -91,6 +100,25 @@ func _run() -> void:
 		return
 	print("M2 hand checks passed")
 	quit(0)
+
+
+func _check_ragdoll_follow_grip(hand: Hand) -> void:
+	var ragdoll_target: MockRagdollCarryTarget = MockRagdollCarryTarget.new()
+	ragdoll_target.hips_world_position = Vector3(1.0, 0.8, -2.0)
+	root.add_child(ragdoll_target)
+	hand.set_carrying(true, ragdoll_target, 1.0)
+	var first_grip_world: Vector3 = hand.to_global(hand._get_carry_pose_position())
+	ragdoll_target.hips_world_position += Vector3(2.0, 0.5, -1.0)
+	var second_grip_world: Vector3 = hand.to_global(hand._get_carry_pose_position())
+	if not second_grip_world.is_equal_approx(first_grip_world + Vector3(2.0, 0.5, -1.0)):
+		_fail("Ragdoll hand grip target must follow the live hips position, not the stationary player root")
+	var right_grip: Vector3 = second_grip_world
+	hand.set_carrying(true, ragdoll_target, -1.0)
+	var left_grip: Vector3 = hand.to_global(hand._get_carry_pose_position())
+	if right_grip.distance_to(left_grip) < 0.5:
+		_fail("Ragdoll left and right hand grip targets should approach opposite sides of the hips")
+	hand.set_carrying(false)
+	ragdoll_target.free()
 
 func _check_shape_aware_grip(hand: Hand) -> void:
 	var box: BoxShape3D = BoxShape3D.new()
