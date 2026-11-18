@@ -609,21 +609,26 @@ func _closest_point_on_box_surface(local_point: Vector3, half_extents: Vector3, 
 ## spheres, capsules, cylinders, and compound collision props share this path.
 ## Mesh bounds are used only when no usable collision shape is present.
 func _is_dynamic_ragdoll_carry_target() -> bool:
-	return is_instance_valid(carry_item) and carry_item.has_method("get_carry_world_position")
+	return is_instance_valid(carry_item) and carry_item.has_method("get_carry_hand_target_position")
 
-## Player ragdolls move independently of their CharacterBody3D root. Use their
-## live hips position as the grip center instead of the standing capsule bounds.
+## Player ragdolls move independently of their CharacterBody3D root. Use the
+## live Chest PhysicalBone transform for cosmetic grip placement.
 func _get_carry_target_world_position() -> Vector3:
 	if _is_dynamic_ragdoll_carry_target():
-		return Vector3(carry_item.call("get_carry_world_position"))
+		return Vector3(carry_item.call("get_carry_hand_target_position"))
 	return carry_item.global_position
+
+func _get_carry_target_basis() -> Basis:
+	if _is_dynamic_ragdoll_carry_target():
+		return Basis(carry_item.call("get_carry_hand_target_basis")).orthonormalized()
+	return carry_item.global_basis.orthonormalized()
 
 func _get_carry_pose_position() -> Vector3:
 	if not is_instance_valid(carry_item):
 		return _pose_rest_position
 	if _is_dynamic_ragdoll_carry_target():
 		var ragdoll_center: Vector3 = _get_carry_target_world_position()
-		var ragdoll_basis: Basis = carry_item.global_basis.orthonormalized()
+		var ragdoll_basis: Basis = _get_carry_target_basis()
 		var ragdoll_grip_world: Vector3 = ragdoll_center
 		ragdoll_grip_world += ragdoll_basis.x * carry_side * 0.30
 		ragdoll_grip_world += Vector3.UP * carry_height_offset_m
