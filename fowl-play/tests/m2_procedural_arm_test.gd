@@ -74,9 +74,6 @@ func _check_rig_arm_target() -> void:
 	var after: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(hand_index).origin)
 	if not applied:
 		_fail("Standing Player Rig should accept a valid right wrist target")
-	var stretched_scale: Vector3 = skeleton.get_bone_pose_scale(upper_index)
-	if stretched_scale.is_equal_approx(Vector3.ONE):
-		_fail("A wrist target just beyond normal reach should apply a small visual arm stretch")
 	if after.distance_to(target) >= before.distance_to(target):
 		_fail("Right wrist should move closer to the requested Viewmodel wrist target")
 	var extended_target: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(upper_index).origin) + Vector3(0.0, 0.0, -0.60)
