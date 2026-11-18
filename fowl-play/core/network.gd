@@ -25,6 +25,8 @@ var interaction_rejected: int = 0
 var carry_rejected: int = 0
 var _carry_times: Dictionary = {}
 var interaction_accepted: int = 0
+var hand_poke_sent: int = 0
+var hand_poke_received: int = 0
 var _interaction_times: Dictionary = {}
 var _ragdoll_epochs: Dictionary = {}
 var _pending_ragdoll_starts: Dictionary = {}
@@ -51,6 +53,8 @@ func _bootstrap() -> void:
 	hub.call("watch", &"net/movement_rejected", func() -> int: return movement_rejected)
 	hub.call("watch", &"net/interaction_rejected", func() -> int: return interaction_rejected)
 	hub.call("watch", &"net/interaction_accepted", func() -> int: return interaction_accepted)
+	hub.call("watch", &"net/hand_poke_sent", func() -> int: return hand_poke_sent)
+	hub.call("watch", &"net/hand_poke_received", func() -> int: return hand_poke_received)
 	hub.call("watch", &"net/ragdoll_pose_sent", func() -> int: return ragdoll_pose_sent)
 	hub.call("watch", &"net/ragdoll_pose_received", func() -> int: return ragdoll_pose_received)
 	hub.call("watch", &"net/ragdoll_pose_data_bytes_sent", func() -> int: return ragdoll_pose_data_bytes_sent)
@@ -144,6 +148,8 @@ func shutdown() -> void:
 	movement_rejected = 0
 	interaction_rejected = 0
 	interaction_accepted = 0
+	hand_poke_sent = 0
+	hand_poke_received = 0
 	_interaction_times.clear()
 	_ragdoll_epochs.clear()
 	_pending_ragdoll_starts.clear()
@@ -522,6 +528,7 @@ func _receive_interaction(owner_id: int, target_path: NodePath, action: StringNa
 	var accepted: bool = reason.is_empty()
 	if accepted:
 		interaction_accepted += 1
+		_publish_hand_poke(owner_id, target)
 	else:
 		interaction_rejected += 1
 	var message: String = "Interaction %s peer=%d action=%s%s" % ["accepted" if accepted else "rejected", owner_id, action, "" if accepted else ": " + reason]
@@ -574,6 +581,40 @@ func _interaction_rejection(actor: Node3D, target: Interactable, action: StringN
 func _interaction_result(message: String) -> void:
 	if validate_rpc(TUNING.PEER_ID_HOST):
 		_interaction_log(message)
+
+## Host broadcasts a cosmetic poke only after the gameplay interaction is accepted.
+func _publish_hand_poke(owner_id: int, target: Interactable) -> void:
+	if peer == null or not is_host or not is_instance_valid(target):
+		return
+	var body: Node3D = target.get_parent() as Node3D
+	if not is_instance_valid(body):
+		return
+	var point: Vector3 = body.global_position
+	if body.has_method("get_interaction_world_position"):
+		point = Vector3(body.call("get_interaction_world_position"))
+	if not point.is_finite():
+		return
+	_receive_hand_poke(owner_id, point)
+	hand_poke_sent += 1
+	_hand_poke.rpc(owner_id, point)
+
+@rpc("authority", "call_remote", "reliable", 0)
+func _hand_poke(owner_id: int, world_point: Vector3) -> void:
+	if not validate_rpc(TUNING.PEER_ID_HOST) or not world_point.is_finite():
+		return
+	_receive_hand_poke(owner_id, world_point)
+
+func _receive_hand_poke(owner_id: int, world_point: Vector3) -> void:
+	if not world_point.is_finite():
+		return
+	var player: Node = movement_players.get(owner_id)
+	if not is_instance_valid(player) or player.is_queued_for_deletion():
+		return
+	if bool(player.get("is_limp")) or bool(player.get("is_recovering")) or bool(player.call("is_carrying")):
+		return
+	if bool(player.call("play_world_hand_poke", world_point)):
+		hand_poke_received += 1
+		_debug_log("Hand poke mirrored for peer %d" % owner_id)
 
 func _interaction_log(message: String) -> void:
 	get_node("/root/DebugHub").call("log", &"interact", message)
