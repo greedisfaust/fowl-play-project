@@ -259,3 +259,15 @@ When the carried target is a limp player, cosmetic hand grips use the live Chest
 - Standing arm IK permits up to 12% visual bone-axis extension when a wrist target exceeds normal combined reach. It returns to authored scale as the target comes back into range and resets to unit scale before ragdoll/recovery ownership; PhysicalBone collision shapes and ragdoll simulation are unchanged.
 - Debug watches: `rig/<player-id>/right_arm_ik`, `rig/<player-id>/left_arm_ik`, `rig/<player-id>/right_rig_hand_visible`, and `rig/<player-id>/left_rig_hand_visible`. Commands: `arm_ik_status_<player>` and `arm_ik_status_left_<player>`.
 - `tests/m2_procedural_arm_test.gd` checks both wrist targets, the Viewmodel visibility toggle, hidden world-hand forearm meshes, the 12% stretch cap, and ragdoll ownership. Run `tests/run_checks.ps1`; Godot execution and rendered two-instance verification remain user-run.
+
+
+### Interactable silhouette outline
+
+Every `Interactable` component automatically adds an inverted-hull silhouette overlay to all descendant `GeometryInstance3D` nodes of its owning target. It preserves each mesh's previous `material_overlay` and restores it when the component leaves the scene tree.
+
+- Idle: thin near-black outline, no glow.
+- Focused: smoothly transitions to a wider warm-gold outline with restrained emission.
+- Focus is still owned by `player/focus.gd`; the outline does not perform raycasts or change interaction authority.
+- `interact/highlight/<node-path>/state` reports `idle` or `focused`.
+- The `interact` log reports focus-driven highlight state changes.
+- `tests/m1_interaction_test.gd` checks automatic idle outlines, no outline on a sibling mesh without an Interactable, gold/glow focus state, return to idle, and restoration of the original overlay.

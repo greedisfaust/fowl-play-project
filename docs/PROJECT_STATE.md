@@ -206,3 +206,14 @@ The Rig hand visibility collectors explicitly exclude the `Forearm` MeshInstance
 - Hide the camera-attached `Head/Camera3D/ViewmodelHands` group as soon as host ragdoll simulation or remote ragdoll playback begins. Restore it after the recovery pose blend finishes; this applies to both the local owner and remote Player copies.
 - Add reach-aware visual arm extension to both standing IK chains. Each upper-arm and forearm bone scales only along its child-chain axis, with a hard 12% maximum extension. The scale eases back to one as the target returns to normal reach and is reset when IK yields to ragdoll/recovery. The existing two-bone solver still clamps beyond the extended limit.
 - No PhysicalBone collision shape, physical bone body, or ragdoll simulation setting is changed. Automated M2 checks cover the stretch cap and existing IK handoff; Godot tests and rendered host/client verification remain user-run.
+
+
+## 2026-11-19 — automatic interactable silhouette outline
+
+- Replaced the focus-only flat material overlay with an inverted-hull silhouette shader owned by the existing `Interactable` component.
+- Every descendant `GeometryInstance3D` under an interactable target receives a subtle near-black idle outline automatically; unrelated meshes remain untouched.
+- Focus transitions the same outline smoothly to warm gold, widens it, and adds restrained emission. Clearing focus returns it to the idle state without removing the outline.
+- Each mesh receives its own ShaderMaterial instance so per-target focus transitions cannot leak to another interactable.
+- The original material overlay is preserved and restored when the Interactable leaves the scene tree.
+- Focus detection, interaction validation, and networking remain unchanged. The outline is presentation-only.
+- Added an M1 headless assertion for idle/focused visuals, non-interactable exclusion, and original-overlay restoration. Godot execution and in-game visual verification remain pending user testing.
