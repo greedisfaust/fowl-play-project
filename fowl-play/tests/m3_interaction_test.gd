@@ -25,6 +25,8 @@ func _run() -> void:
 	hub.call("execute_command", StringName("interact_use_%s" % actor.name), [])
 	check(bool(device.get("is_active")), "Local focus command must use shared host path")
 	check(int(network.get("interaction_accepted")) == 1, "Host acceptance watch")
+	var local_right_hand: Hand = actor.get_node("Head/Camera3D/ViewmodelHands/RightHand") as Hand
+	check(local_right_hand._action_phase == Hand.HandActionPhase.RETURNING, "Authoritative interaction acceptance should start local hand recovery")
 	check(network.call("_interaction_rejection", actor, target, &"grab") != "", "USE target must reject GRAB")
 	target.enabled = false
 	check(network.call("_interaction_rejection", actor, target, &"use") != "", "Disabled target")
