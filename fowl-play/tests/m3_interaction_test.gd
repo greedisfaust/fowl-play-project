@@ -57,6 +57,26 @@ func _run() -> void:
 		await process_frame
 	check(not world_hand.is_hovering, "Remote player's world right hand should return to idle after hover clears")
 	check(absf(world_middle.rotation_degrees.x + 12.0) < 2.0, "Remote world hand should procedurally relax its middle finger after hover clears")
+	# Carry events must drive both hands on the correct presentation rig.
+	var remote_carrier: Carrier = remote_player.get_node("Carrier") as Carrier
+	var held_test_item: Node3D = Node3D.new()
+	remote_carrier.attach_item(held_test_item)
+	for frame: int in 30:
+		await process_frame
+	var world_left_hand: Hand = remote_player.get_node("Rig/Skeleton3D/HandAttachment_L/HandMount_L/Hand") as Hand
+	check(world_left_hand.is_carrying and world_hand.is_carrying, "Remote carry event should activate both world hands")
+	check(world_left_hand._resolve_pose_state() == Hand.PoseState.CARRY and world_hand._resolve_pose_state() == Hand.PoseState.CARRY, "Remote world hands should resolve the carry pose")
+	remote_carrier.detach_item()
+	check(not world_left_hand.is_carrying and not world_hand.is_carrying, "Remote carry end should clear both world hands")
+	remote_player.set("is_local_player", true)
+	var local_test_item: Node3D = Node3D.new()
+	remote_carrier.attach_item(local_test_item)
+	var viewmodel_left_hand: Hand = remote_player.get_node("Head/Camera3D/ViewmodelHands/LeftHand") as Hand
+	var viewmodel_right_hand: Hand = remote_player.get_node("Head/Camera3D/ViewmodelHands/RightHand") as Hand
+	check(viewmodel_left_hand.is_carrying and viewmodel_right_hand.is_carrying, "Local carry event should activate both first-person hands")
+	remote_carrier.detach_item()
+	check(not viewmodel_left_hand.is_carrying and not viewmodel_right_hand.is_carrying, "Local carry end should clear both first-person hands")
+	remote_player.set("is_local_player", false)
 	var previous_poke_count: int = int(network.get("hand_poke_received"))
 	network.call("_receive_hand_poke", 77, remote_point)
 	check(world_hand._reach_elapsed >= 0.0, "Remote player's world right hand should begin a poke")
