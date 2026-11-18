@@ -35,6 +35,8 @@ var _pose_blend_target: Array[Transform3D] = []
 var _standing_pose: Array[Transform3D] = []
 var _pending_recovery_animation: StringName = &""
 var _recovery_animation_active: bool = false
+var _carry_support_active: bool = false
+var _carry_target_world: Vector3 = Vector3.ZERO
 
 func _enter_tree() -> void:
 	# An editor animation preview can be saved in the skeleton's pose. Reset
@@ -97,6 +99,7 @@ func begin_host_simulation() -> bool:
 	top_level = true
 	global_transform = world_transform
 	simulator.active = true
+	_carry_support_active = false
 	_latest_host_pose = PackedInt32Array()
 	enable_host_collisions()
 	for bone: PhysicalBone3D in physical_bones:
@@ -106,6 +109,7 @@ func begin_host_simulation() -> bool:
 	return true
 
 func stop_host_simulation() -> void:
+	_carry_support_active = false
 	_pose_blend_active = false
 	_recovery_animation_active = false
 	_pending_recovery_animation = &""
@@ -154,6 +158,32 @@ func get_hips_world_position() -> Vector3:
 	if _hips_bone_index >= 0:
 		return skeleton.to_global(skeleton.get_bone_global_pose(_hips_bone_index).origin)
 	return global_position
+
+## Host-only spring support: hips follow the carrier anchor while the other
+## physical bones remain free to dangle under gravity and joint constraints.
+func set_carry_target(target_world: Vector3) -> void:
+	if not simulator.is_simulating_physics() or _hips_physical_bone == null or not target_world.is_finite():
+		return
+	_carry_target_world = target_world
+	_carry_support_active = true
+
+func stop_carry_support() -> void:
+	_carry_support_active = false
+
+func apply_carry_support() -> void:
+	if not _carry_support_active or not simulator.is_simulating_physics() or _hips_physical_bone == null:
+		return
+	var displacement: Vector3 = _carry_target_world - _hips_physical_bone.global_position
+	var force: Vector3 = displacement * TUNING.CARRY_RAGDOLL_SPRING_N_PER_M
+	force -= _hips_physical_bone.linear_velocity * TUNING.CARRY_RAGDOLL_DAMPING_N_PER_MPS
+	PhysicsServer3D.body_apply_central_force(_hips_physical_bone.get_rid(), force.limit_length(TUNING.CARRY_RAGDOLL_MAX_FORCE_N))
+
+func release_carry(linear: Vector3, angular: Vector3) -> void:
+	_carry_support_active = false
+	if not simulator.is_simulating_physics() or _hips_physical_bone == null:
+		return
+	_hips_physical_bone.linear_velocity = linear
+	_hips_physical_bone.angular_velocity = angular
 
 func get_head_eye_transform() -> Transform3D:
 	# The attachment follows the simulated host head or the interpolated client pose.
