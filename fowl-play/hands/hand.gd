@@ -4,7 +4,6 @@
 class_name Hand
 extends Node3D
 
-const TUNING = preload("res://core/tuning.gd")
 ## Approved local guard rotations from hands/hand_pose_study.tscn.
 ## These are absolute authored rotations, not offsets from the neutral pose.
 const AUTHORED_GUARD_THUMB_BASES: Array[Basis] = [
@@ -35,12 +34,16 @@ const AUTHORED_GUARD_THUMB_BASES: Array[Basis] = [
 @export var point_thumb_root_degrees: Vector3 = Vector3(-15.0, -40.0, 0.0)
 @export var point_thumb_curl_degrees: Vector2 = Vector2(-18.0, -25.0)
 @export_range(0.0, 0.5) var reach_distance: float = 0.20
-@export_range(0.02, 1.0) var reach_extend_seconds: float = 0.10
-@export_range(0.02, 1.0) var reach_return_seconds: float = 0.18
+## A short extension makes repeated clicks feel responsive.
+@export_range(0.02, 1.0) var reach_extend_seconds: float = 0.07
+## The longer recovery keeps the hand from snapping back after the final click.
+@export_range(0.02, 1.0) var reach_return_seconds: float = 0.22
 
 var _reach_elapsed: float = -1.0
 var _reach_target: Vector3
 var _reach_offset: Vector3 = Vector3.ZERO
+var _reach_amount: float = 0.0
+var _reach_start_amount: float = 0.0
 var _reach_preview_delay: float = -1.0
 
 var _finger_joints: Array[Node3D] = []
@@ -63,7 +66,6 @@ var speed_mps: float = 0.0
 var color: Color = Color.WHITE
 var hover_point: Vector3 = Vector3.ZERO
 var carry_item: Node3D = null
-var _last_reach_ms: int = -1
 var _aim_node: Node3D = null
 var _pose_root: Node3D = null
 var _debug_command_name: StringName
@@ -118,10 +120,18 @@ func _process(delta: float) -> void:
 			reach(global_position - global_basis.z * 2.0)
 	if is_guarding or is_limp or is_carrying:
 		_reach_elapsed = -1.0
+		_reach_amount = 0.0
 	elif _reach_elapsed >= 0.0:
 		_reach_elapsed += delta
+		if _reach_elapsed < reach_extend_seconds:
+			var extend_weight: float = smoothstep(0.0, reach_extend_seconds, _reach_elapsed)
+			_reach_amount = lerpf(_reach_start_amount, 1.0, extend_weight)
+		else:
+			var return_elapsed: float = _reach_elapsed - reach_extend_seconds
+			_reach_amount = 1.0 - smoothstep(0.0, reach_return_seconds, return_elapsed)
 		if _reach_elapsed >= reach_extend_seconds + reach_return_seconds:
 			_reach_elapsed = -1.0
+			_reach_amount = 0.0
 	var weight: float = 1.0 - exp(-pose_blend_speed * delta)
 	_blend_thumb_and_hand_pose(weight, delta)
 	for index: int in _finger_joints.size():
@@ -183,12 +193,7 @@ func _blend_thumb_and_hand_pose(weight: float, delta: float) -> void:
 		position_target += guard_position_offset
 		rotation_offset = guard_rotation_degrees * PI / 180.0
 	elif _reach_elapsed >= 0.0:
-		var amount: float
-		if _reach_elapsed < reach_extend_seconds:
-			amount = smoothstep(0.0, reach_extend_seconds, _reach_elapsed)
-		else:
-			amount = 1.0 - smoothstep(0.0, reach_return_seconds, _reach_elapsed - reach_extend_seconds)
-		position_target += _reach_offset * amount
+		position_target += _reach_offset * _reach_amount
 	_sway *= exp(-10.0 * delta)
 	if not is_limp:
 		rotation_offset += Vector3(_sway.y, _sway.x, 0.0)
@@ -220,19 +225,17 @@ func update_hover_point(world_point: Vector3) -> void:
 	hover_point = world_point
 
 func reach(world_point: Vector3) -> bool:
-	if is_guarding or is_limp or is_carrying or _reach_elapsed >= 0.0:
+	if is_guarding or is_limp or is_carrying:
 		return false
 	if not world_point.is_finite():
 		return false
 	var local_direction: Vector3 = to_local(world_point) - _pose_rest_position
 	if local_direction.length_squared() < 0.000001:
 		return false
-	var now_ms: int = Time.get_ticks_msec()
-	if _last_reach_ms >= 0 and now_ms - _last_reach_ms < int(TUNING.HAND_REACH_COOLDOWN_S * 1000.0):
-		return false
-	_last_reach_ms = now_ms
 	_reach_target = world_point
 	_reach_offset = local_direction.normalized() * minf(reach_distance, local_direction.length())
+	# Restart the extension from the current blend amount, never from a snapped rest pose.
+	_reach_start_amount = _reach_amount
 	_reach_elapsed = 0.0
 	_debug_log("Reach")
 	return true
@@ -287,6 +290,7 @@ func _debug_pose(args: Array[Variant]) -> String:
 		return "Usage: %s idle|point|guard|limp|reach" % _pose_command_name
 	var pose: String = str(args[0])
 	_reach_elapsed = -1.0
+	_reach_amount = 0.0
 	_reach_preview_delay = -1.0
 	set_limp(pose == "limp")
 	set_guard(pose == "guard")
@@ -328,12 +332,13 @@ func _debug_status(_args: Array[Variant]) -> String:
 	return _debug_state()
 
 func _debug_state() -> String:
-	return "world=%s hover=%s guard=%s carrying=%s limp=%s speed_mps=%.2f" % [
+	return "world=%s hover=%s guard=%s carrying=%s limp=%s reach=%.2f speed_mps=%.2f" % [
 		world_mode,
 		is_hovering,
 		is_guarding,
 		is_carrying,
 		is_limp,
+		_reach_amount,
 		speed_mps,
 	]
 
