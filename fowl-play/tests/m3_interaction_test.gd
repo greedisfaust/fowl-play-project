@@ -66,6 +66,7 @@ func _run() -> void:
 	var world_left_hand: Hand = remote_player.get_node("Rig/Skeleton3D/HandAttachment_L/HandMount_L/Hand") as Hand
 	check(world_left_hand.is_carrying and world_hand.is_carrying, "Remote carry event should activate both world hands")
 	check(world_left_hand._resolve_pose_state() == Hand.PoseState.CARRY and world_hand._resolve_pose_state() == Hand.PoseState.CARRY, "Remote world hands should resolve the carry pose")
+	check(world_left_hand.carry_side < 0.0 and world_hand.carry_side > 0.0, "Remote hands should receive opposite grip sides")
 	remote_carrier.detach_item()
 	check(not world_left_hand.is_carrying and not world_hand.is_carrying, "Remote carry end should clear both world hands")
 	remote_player.set("is_local_player", true)
