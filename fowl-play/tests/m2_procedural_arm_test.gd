@@ -55,6 +55,8 @@ func _check_rig_arm_target() -> void:
 	var left_hand_index: int = skeleton.find_bone("Hand_R")
 	var rig_hand_visual: MeshInstance3D = rig.get_node("Skeleton3D/HandAttachment_L/HandMount_L/Hand/PoseRoot/Wrist") as MeshInstance3D
 	var left_rig_hand_visual: MeshInstance3D = rig.get_node("Skeleton3D/HandAttachment_R/HandMount_R/Hand/PoseRoot/Wrist") as MeshInstance3D
+	var right_world_hand_forearm: MeshInstance3D = rig.get_node("Skeleton3D/HandAttachment_L/HandMount_L/Hand/PoseRoot/Forearm") as MeshInstance3D
+	var left_world_hand_forearm: MeshInstance3D = rig.get_node("Skeleton3D/HandAttachment_R/HandMount_R/Hand/PoseRoot/Forearm") as MeshInstance3D
 	if upper_index < 0 or hand_index < 0 or left_upper_index < 0 or left_hand_index < 0:
 		_fail("One of the Rig arm bone chains is incomplete")
 		rig.free()
@@ -63,6 +65,8 @@ func _check_rig_arm_target() -> void:
 		_fail("Duplicate positive-X Rig hand should be hidden while the Viewmodel hand owns standing presentation")
 	if left_rig_hand_visual.visible:
 		_fail("Duplicate negative-X Rig hand should be hidden while the Viewmodel hand owns standing presentation")
+	if right_world_hand_forearm.visible or left_world_hand_forearm.visible:
+		_fail("Hand-scene Forearm meshes must stay hidden on both world Rig hands")
 	var target: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(upper_index).origin) + Vector3(0.18, -0.06, -0.38)
 	var before: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(hand_index).origin)
 	var applied: bool = bool(rig.call("update_procedural_right_arm", target, 1.0))
