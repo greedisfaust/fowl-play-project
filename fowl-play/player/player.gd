@@ -235,6 +235,16 @@ func accept_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pit
 func is_carrying() -> bool:
 	return carrier != null and bool(carrier.call("is_holding"))
 
+## Plays a host-approved poke on this player's visible world right hand.
+## The local owner already sees the first-person poke, so only remote copies animate.
+func play_world_hand_poke(world_point: Vector3) -> bool:
+	if is_local_player or is_limp or is_recovering or is_carrying() or not world_point.is_finite():
+		return false
+	var world_right_hand: Hand = get_node_or_null("Rig/Skeleton3D/HandAttachment_R/HandMount_R/Hand") as Hand
+	if not is_instance_valid(world_right_hand):
+		return false
+	return world_right_hand.reach(world_point)
+
 ## Returns true while another player's Carrier is holding this player (limp carry).
 func is_carried() -> bool:
 	return _is_carried
