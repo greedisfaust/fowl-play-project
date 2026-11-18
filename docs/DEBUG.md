@@ -241,12 +241,13 @@ When the carried target is a limp player, cosmetic hand grips use the live Chest
 
 
 
-### M2 procedural right-arm hand visual handoff
+### M2 procedural hand visual handoff
 
-- The positive-X Rig chain is `UpperArm_L/Forearm_L/Hand_L`, and its duplicate attached hand scene is `Skeleton3D/HandAttachment_L/HandMount_L/Hand`. While standing, the Rig hand scene is hidden so the camera-attached Viewmodel hand is the only visible right hand; the skeleton bone, attachment, and physical-bone setup remain intact.
-- The Rig hand scene becomes visible when host physical ragdoll simulation or remote ragdoll pose playback begins, then hides again when simulation ends and recovery owns the skeleton. `rig/<player-id>/right_rig_hand_visible` reports the actual visual state.
-- The positive-X forearm's render capsule is extended from 0.27 m to 0.34 m and its center nudged to 0.14 m along the forearm. This is render geometry only; the PhysicalBone collision capsule and joint lengths are unchanged. Inspect the wrist seam in-game and reduce the overlap if it looks swollen.
-- `tests/m2_procedural_arm_test.gd` checks the standing-hidden → ragdoll-visible → standing-hidden handoff. Run `tests/run_checks.ps1`; Godot execution and visual confirmation remain user-run.
+- Both camera-attached Viewmodel hands are the standing presentation owners. The duplicate positive-X and negative-X Rig hand meshes are hidden while standing; their skeleton attachments and physical-bone setup remain intact.
+- Both Rig hand scenes become visible when host physical ragdoll simulation or remote ragdoll pose playback begins, then hide again when simulation ends and recovery owns the skeleton. `rig/<player-id>/right_rig_hand_visible` and `rig/<player-id>/left_rig_hand_visible` report the visual states.
+- Both Rig forearm render capsules are extended from 0.27 m to 0.34 m and centered at mirrored ±0.14 m positions. This is render geometry only; PhysicalBone collision capsules and bone lengths are unchanged.
+- The `Forearm` MeshInstance3D inside each Rig-attached Hand scene (`Hand/PoseRoot/Forearm`) is hidden on both world hands by `player_rig.tscn` instance overrides. The camera Viewmodel Hand scenes are untouched.
+
 ### M2 procedural two-arm IK — first integration slice
 
 - The camera-attached Viewmodel right hand targets the positive-X Rig chain `UpperArm_L/Forearm_L/Hand_L`; the Viewmodel left hand targets the negative-X Rig chain `UpperArm_R/Forearm_R/Hand_R`. Mapping is spatial: Viewmodel side names do not match the Rig's suffixes.
