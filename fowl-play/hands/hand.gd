@@ -52,6 +52,11 @@ const AUTHORED_GUARD_THUMB_BASES: Array[Basis] = [
 ## Small world-space clearance added beyond the detected prop collision bounds.
 @export_range(0.0, 0.2) var carry_side_offset_m: float = 0.04
 @export_range(-0.5, 0.5) var carry_height_offset_m: float = 0.02
+## Tight and open carry curls are blended using the prop's projected thickness.
+@export var carry_tight_curl_degrees: Vector3 = Vector3(-55.0, -70.0, -45.0)
+@export var carry_open_curl_degrees: Vector3 = Vector3(-20.0, -32.0, -16.0)
+@export_range(0.05, 0.5) var carry_curl_small_extent_m: float = 0.15
+@export_range(0.2, 1.5) var carry_curl_large_extent_m: float = 0.90
 
 var _reach_elapsed: float = -1.0
 var _reach_target: Vector3
@@ -149,6 +154,7 @@ func _process(delta: float) -> void:
 			_reach_amount = 0.0
 	var pose_state: PoseState = _resolve_pose_state()
 	var weight: float = 1.0 - exp(-pose_blend_speed * delta)
+	var carry_curl: Vector3 = _get_carry_finger_curl_degrees() if pose_state == PoseState.CARRY else Vector3.ZERO
 	_blend_thumb_and_hand_pose(weight, delta, pose_state)
 	for index: int in _finger_joints.size():
 		var joint: Node3D = _finger_joints[index]
@@ -161,7 +167,7 @@ func _process(delta: float) -> void:
 			PoseState.GUARD:
 				curl = guard_curl_degrees
 			PoseState.CARRY:
-				curl = Vector3(-35.0, -50.0, -25.0)
+				curl = carry_curl
 			PoseState.POINT, PoseState.REACH:
 				curl = Vector3.ZERO if index < 3 else point_curl_degrees
 		var target: Vector3 = _joint_rest_rotations[index]
@@ -301,6 +307,26 @@ func set_carrying(on: bool, item: Node3D = null, side: float = 0.0) -> void:
 	carry_item = item if on else null
 	carry_side = clampf(side, -1.0, 1.0) if on else 0.0
 	_debug_log("Carrying %s side=%.1f" % ["on" if on else "off", carry_side])
+
+## Adapt the three finger-joint bends to the prop's actual thickness along
+## the palm normal. Thin props get a tighter curl; thick props stay more open.
+func _get_carry_finger_curl_degrees() -> Vector3:
+	if not is_instance_valid(carry_item):
+		return carry_tight_curl_degrees
+	var grip_position: Vector3 = _get_carry_pose_position()
+	var grip_rotation: Quaternion = _get_carry_pose_rotation(grip_position)
+	var palm_normal_world: Vector3 = (global_basis.orthonormalized() * (grip_rotation * Vector3.DOWN)).normalized()
+	var local_bounds: AABB = _get_carry_local_bounds()
+	var minimum_projection: float = INF
+	var maximum_projection: float = -INF
+	for corner_index: int in 8:
+		var corner_world: Vector3 = carry_item.to_global(_aabb_corner(local_bounds, corner_index))
+		var projection: float = corner_world.dot(palm_normal_world)
+		minimum_projection = minf(minimum_projection, projection)
+		maximum_projection = maxf(maximum_projection, projection)
+	var prop_thickness: float = maxf(maximum_projection - minimum_projection, 0.0)
+	var open_weight: float = clampf(inverse_lerp(carry_curl_small_extent_m, carry_curl_large_extent_m, prop_thickness), 0.0, 1.0)
+	return carry_tight_curl_degrees.lerp(carry_open_curl_degrees, open_weight)
 
 ## Convert the detected prop bounds into a world-space side grip target.
 ## Collision shape debug meshes provide a shape-agnostic bounds source, so boxes,
