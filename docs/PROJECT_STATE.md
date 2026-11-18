@@ -67,3 +67,8 @@ The local first-person focus now sends hover state and its world-space target to
 On `features/new-reactive-hands-and-viewport`, the local spam-aware poke animation is in place. The accepted-interaction path now broadcasts a reliable cosmetic hand-poke event from the host; remote peers animate the actor's existing world right hand, while the owning peer avoids duplicating its first-person animation. Debug watches `net/hand_poke_sent` and `net/hand_poke_received` were added, along with a headless check in `m3_interaction_test.gd`.
 
 Code and documentation have been committed directly to the feature branch with conventional commit messages. Godot tests and the rendered two-instance host/client visual check have **not** been run by the assistant; the user must pull the branch and verify them before this slice is marked complete.
+
+
+## 2026-11-19 — procedural hand carry-state integration
+
+Carrier `carry_started` / `carry_ended` signals now drive both hands on each peer. The local owner receives the two-handed carry pose on first-person viewmodel hands; remote observers receive it on the two world-rig hands. The M3 interaction test covers carry start/end for both presentation paths. Godot execution and rendered multiplayer verification remain user-run checks.
