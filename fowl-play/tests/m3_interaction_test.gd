@@ -44,9 +44,11 @@ func _run() -> void:
 	var remote_point: Vector3 = remote_player.global_position + Vector3(0.0, 1.0, -2.0)
 	var world_hand: Hand = remote_player.get_node("Rig/Skeleton3D/HandAttachment_R/HandMount_R/Hand") as Hand
 	var hover_point: Vector3 = remote_player.global_position + Vector3(0.5, 1.2, -1.5)
+	var hover_applied_before: int = int(network.get("hand_hover_received"))
 	network.call("_receive_hand_hover", 77, true, hover_point)
 	check(world_hand.is_hovering, "Remote player's world right hand should enter pointing pose")
 	check(world_hand.hover_point.is_equal_approx(hover_point), "Remote pointing hand should receive the hover world point")
+	check(int(network.get("hand_hover_received")) == hover_applied_before + 1, "Host-side remote world-hand hover application should increment its receive watch")
 	for frame: int in 30:
 		await process_frame
 	check(world_hand._resolve_pose_state() == Hand.PoseState.POINT, "Remote world hand should resolve its procedural point pose")
