@@ -153,9 +153,9 @@ func _process(delta: float) -> void:
 					_recovery_retry_s = 0.25
 				if bones_slow:
 					_ragdoll_slow_elapsed += delta
-					if _ragdoll_slow_elapsed >= 0.35 and not _ragdoll_settled_sent:
-					_ragdoll_sequence += 1
-					network.call("publish_settled_ragdoll_pose", input_peer_id, limp_epoch, _ragdoll_sequence, rig.call("capture_quantized_pose"))
+						if _ragdoll_slow_elapsed >= 0.35 and not _ragdoll_settled_sent:
+						_ragdoll_sequence += 1
+						network.call("publish_settled_ragdoll_pose", input_peer_id, limp_epoch, _ragdoll_sequence, rig.call("capture_quantized_pose"))
 					_ragdoll_settled_sent = true
 				else:
 					_ragdoll_slow_elapsed = 0.0
