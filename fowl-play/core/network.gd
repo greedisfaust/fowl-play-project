@@ -546,7 +546,7 @@ func _receive_interaction(owner_id: int, target_path: NodePath, action: StringNa
 		_interaction_result.rpc_id(owner_id, owner_id, accepted, message)
 	return accepted
 
-## Replicate the local owner's current hover target to other players' world hands.
+## Replicate the local owner's current hover target to other players' camera-attached Viewmodel hands.
 ## Clients submit only the hover state; the host derives the owner from the RPC sender.
 func update_hand_hover(active: bool, world_point: Vector3) -> void:
 	var owner_id: int = multiplayer.get_unique_id()
@@ -574,7 +574,7 @@ func _receive_hand_hover(owner_id: int, active: bool, world_point: Vector3) -> v
 	if not is_instance_valid(player) or player.is_queued_for_deletion():
 		return
 	# Count a hover only when this instance actually applies it to a remote
-	# world hand. The owning peer intentionally rejects its hidden world copy.
+	# Viewmodel hand. The owning peer intentionally rejects its own copy.
 	if bool(player.call("set_world_hand_hover", active, world_point)):
 		hand_hover_received += 1
 	if peer != null and is_host:
