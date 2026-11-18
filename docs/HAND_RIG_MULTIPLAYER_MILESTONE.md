@@ -54,13 +54,13 @@ Automated M2/M3 assertions exercise important pose and receive-handler paths, bu
 The next milestone is to establish reliable, correctly owned hand presentation in both directions.
 
 1. **Ownership and baseline**
-   - Identify the local first-person/viewmodel hands and the remote world-rig hands for each peer.
+   - Identify the local first-person/Viewmodel hands and the remote player's camera-attached Viewmodel hands; keep ragdoll Rig hands dedicated to physical/ragdoll presentation.
    - Confirm each peer controls only its own hand input/state.
    - Confirm remote presentation does not duplicate the owner's first-person animation.
 
 2. **Hover and pointing**
-   - Host points at a target; client sees the host's world hand point.
-   - Client points at a target; host sees the client's world hand point.
+   - Host points at a target; client sees the host's camera-attached Viewmodel hand point.
+   - Client points at a target; host sees the client's camera-attached Viewmodel hand point.
    - Move the target continuously and check that updates are smooth, bounded, and do not cause visible jitter or excessive traffic.
 
 3. **Poke**
@@ -137,3 +137,8 @@ Work in small slices and test each one before proceeding:
 5. Verify guard/limp/recovery priority and complete the regression matrix.
 
 Preserve the current feature branch history. Do not squash, force-push, merge, or reset as part of this bundle.
+
+
+## 2026-11-19 correction — remote pointing presentation target
+
+The first hover/poke relay implementation was applying remote cosmetics to the ragdoll Rig hand. The correct presentation target is the remote player's camera-attached `Head/Camera3D/ViewmodelHands/RightHand`, which remains part of that player's scene and is rendered by other peers. Local Focus continues to drive the owner's own Viewmodel hand directly. Ragdoll Rig hands remain for ragdoll/physical presentation and carry grip. M3 tests now distinguish these targets. Live two-instance rendering still needs user verification.
