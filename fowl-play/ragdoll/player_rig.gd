@@ -39,6 +39,8 @@ var _carry_support_active: bool = false
 var _carry_target_world: Vector3 = Vector3.ZERO
 var _carry_facing_world: Vector3 = Vector3.ZERO
 var _chest_physical_bone: PhysicalBone3D
+var _carry_physics_active: bool = false
+var _carry_saved_angular_damp: Dictionary = {}
 
 # Soft yaw-only guide: chest turns toward carrier while pitch/roll remain physical.
 # The chest is the carry anchor now: firm enough to stay in front of the
@@ -49,6 +51,12 @@ const CARRY_CHEST_MAX_FORCE_N: float = 4200.0
 const CARRY_CHEST_YAW_STIFFNESS: float = 105.0
 const CARRY_CHEST_YAW_DAMPING: float = 22.0
 const CARRY_CHEST_MAX_TORQUE: float = 95.0
+
+# Temporary rotational damping used only while this ragdoll is being carried.
+const CARRY_TORSO_ANGULAR_DAMP: float = 4.0
+const CARRY_ARM_ANGULAR_DAMP: float = 6.0
+const CARRY_FOREARM_ANGULAR_DAMP: float = 7.0
+const CARRY_HEAD_ANGULAR_DAMP: float = 3.0
 
 func _enter_tree() -> void:
 	# An editor animation preview can be saved in the skeleton's pose. Reset
@@ -102,6 +110,7 @@ func disable_collisions() -> void:
 func begin_host_simulation() -> bool:
 	if simulator.is_simulating_physics() or _remote_active or not _has_valid_bones():
 		return false
+	end_carry_physics()
 	# Capture the standing pose before simulation overwrites it, so recovery
 	# blends back to the actual standing pose instead of the rest/T-pose.
 	if not _remote_active:
@@ -122,6 +131,7 @@ func begin_host_simulation() -> bool:
 	return true
 
 func stop_host_simulation() -> void:
+	end_carry_physics()
 	_carry_support_active = false
 	_pose_blend_active = false
 	_recovery_animation_active = false
@@ -185,6 +195,35 @@ func set_carry_target(target_world: Vector3, facing_world: Vector3 = Vector3.ZER
 func stop_carry_support() -> void:
 	_carry_support_active = false
 	_carry_facing_world = Vector3.ZERO
+
+## Temporarily calm torso and arm rotation while carried. Original values are
+## cached so dropping or throwing restores the normal ragdoll exactly.
+func begin_carry_physics() -> void:
+	if _carry_physics_active or not simulator.is_simulating_physics():
+		return
+	_carry_saved_angular_damp.clear()
+	for physical_bone: PhysicalBone3D in physical_bones:
+		_carry_saved_angular_damp[physical_bone] = physical_bone.angular_damp
+		match String(physical_bone.bone_name):
+			"Hips", "Chest":
+				physical_bone.angular_damp = CARRY_TORSO_ANGULAR_DAMP
+			"Head":
+				physical_bone.angular_damp = CARRY_HEAD_ANGULAR_DAMP
+			"UpperArm_L", "UpperArm_R":
+				physical_bone.angular_damp = CARRY_ARM_ANGULAR_DAMP
+			"Forearm_L", "Forearm_R":
+				physical_bone.angular_damp = CARRY_FOREARM_ANGULAR_DAMP
+	_carry_physics_active = true
+
+## Restore every body's exact pre-carry angular damping value.
+func end_carry_physics() -> void:
+	if not _carry_physics_active:
+		return
+	for physical_bone: PhysicalBone3D in physical_bones:
+		if _carry_saved_angular_damp.has(physical_bone):
+			physical_bone.angular_damp = float(_carry_saved_angular_damp[physical_bone])
+	_carry_saved_angular_damp.clear()
+	_carry_physics_active = false
 
 func apply_carry_support() -> void:
 	if not _carry_support_active or not simulator.is_simulating_physics() or _hips_physical_bone == null:
