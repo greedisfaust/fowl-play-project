@@ -264,24 +264,24 @@ func _set_carry_hand_pose(active: bool, item: Node3D = null) -> void:
 	if is_instance_valid(right_hand):
 		right_hand.set_carrying(active, item, 1.0)
 
-## Applies a replicated hover pose to this player's visible world right hand.
-## The local owner uses its first-person viewmodel instead.
+## Applies replicated pointing to this player's camera-attached Viewmodel right hand.
+## The local owner already drives that hand directly through Focus.
 func set_world_hand_hover(active: bool, world_point: Vector3) -> bool:
-	if is_local_player or not is_instance_valid(world_right_hand):
+	if is_local_player or not is_instance_valid(viewmodel_right_hand):
 		return false
 	if active and (is_limp or is_recovering or is_carrying() or not world_point.is_finite()):
 		return false
-	world_right_hand.set_hover(active, world_point)
+	viewmodel_right_hand.set_hover(active, world_point)
 	return true
 
-## Plays a host-approved poke on this player's visible world right hand.
+## Plays a host-approved poke on this player's camera-attached Viewmodel right hand.
 ## The local owner already sees the first-person poke, so only remote copies animate.
 func play_world_hand_poke(world_point: Vector3) -> bool:
 	if is_local_player or is_limp or is_recovering or is_carrying() or not world_point.is_finite():
 		return false
-	if not is_instance_valid(world_right_hand):
+	if not is_instance_valid(viewmodel_right_hand):
 		return false
-	return world_right_hand.reach(world_point)
+	return viewmodel_right_hand.reach(world_point)
 
 ## Interaction authority reports the final result to the local first-person hand.
 func finish_local_hand_action(accepted: bool) -> void:
