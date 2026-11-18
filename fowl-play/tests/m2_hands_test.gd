@@ -20,15 +20,28 @@ func _run() -> void:
 	hand.set_limp(true)
 	if not hand.is_hovering or not hand.is_guarding or not hand.is_carrying or not hand.is_limp:
 		_fail("Hand state API did not apply state changes")
+	if hand._resolve_pose_state() != Hand.PoseState.LIMP:
+		_fail("Limp must have the highest procedural pose priority")
 	if hand.speed_mps != 3.0:
 		_fail("Hand speed state was not stored")
 	if hand.reach(Vector3(0, 0, -2)):
 		_fail("Limp/guard/carry should reject reach")
 	hand.set_limp(false)
-	hand.set_guard(false)
+	if hand._resolve_pose_state() != Hand.PoseState.CARRY:
+		_fail("Carry must override guard and hover")
 	hand.set_carrying(false)
+	if hand._resolve_pose_state() != Hand.PoseState.GUARD:
+		_fail("Guard must override hover")
+	hand.set_guard(false)
+	if hand._resolve_pose_state() != Hand.PoseState.POINT:
+		_fail("Hover must resolve to point when no higher-priority state is active")
+	hand.set_hover(false, Vector3.ZERO)
+	if hand._resolve_pose_state() != Hand.PoseState.IDLE:
+		_fail("Cleared hover must resolve to idle")
 	if not hand.reach(Vector3(0, 0, -2)):
 		_fail("First hand reach was unexpectedly throttled")
+	if hand._resolve_pose_state() != Hand.PoseState.REACH:
+		_fail("Active poke must resolve above point and idle")
 	if hand.reach(Vector3.ZERO):
 		_fail("Hand reach cooldown did not throttle a repeated reach")
 	if hand.get_node_or_null("MissingNode") != null:
