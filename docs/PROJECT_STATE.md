@@ -158,3 +158,12 @@ Removed the action-phase gate from procedural poke starts. A new poke can now re
 
 ### Hand replication investigation diagnostics
 - Added `player_hands_<peer_id>` to report all four hand references on a player separately, including instance IDs, world mode, and live pose/hover state. This supports isolating world-hand hover application without changing the RPC path.
+
+
+## 2026-11-19 — route replicated pointing to remote Viewmodel hands
+
+- Corrected the replicated hover and host-approved poke targets: remote players now animate their camera-attached `ViewmodelHands/RightHand`, not the ragdoll `Rig/Skeleton3D/.../Hand`.
+- The local owner's Viewmodel remains driven directly by `Focus`; remote peers drive the same Viewmodel hand through the existing host-authoritative hover/poke relay.
+- Kept ragdoll Rig hands dedicated to ragdoll/physical presentation and existing carry grip behavior.
+- Updated M3 checks to assert that remote Viewmodel pointing/poking works while the Rig hand remains untouched; remote carry still targets the Rig hands.
+- Godot tests and rendered two-instance host/client verification have not been run by the assistant and must be checked in the user's local project.
