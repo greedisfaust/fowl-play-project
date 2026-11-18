@@ -75,7 +75,8 @@ func _run() -> void:
 	check(viewmodel_left_hand.is_carrying and viewmodel_right_hand.is_carrying, "Remote carry event should activate both camera-attached Viewmodel hands")
 	check(viewmodel_left_hand._resolve_pose_state() == Hand.PoseState.CARRY and viewmodel_right_hand._resolve_pose_state() == Hand.PoseState.CARRY, "Remote Viewmodel hands should resolve the carry pose")
 	check(viewmodel_left_hand.carry_side < 0.0 and viewmodel_right_hand.carry_side > 0.0, "Remote Viewmodel hands should receive opposite grip sides")
-	check(not remote_player.get_node("Rig/Skeleton3D/HandAttachment_L/HandMount_L/Hand").is_carrying and not rig_world_hand.is_carrying, "Remote carry should leave ragdoll Rig hands untouched")
+	var rig_world_left_hand: Hand = remote_player.get_node("Rig/Skeleton3D/HandAttachment_L/HandMount_L/Hand") as Hand
+	check(not rig_world_left_hand.is_carrying and not rig_world_hand.is_carrying, "Remote carry should leave both ragdoll Rig hands untouched")
 	remote_carrier.detach_item()
 	check(not viewmodel_left_hand.is_carrying and not viewmodel_right_hand.is_carrying, "Remote carry end should clear both Viewmodel hands")
 	remote_player.set("is_local_player", true)
