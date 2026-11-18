@@ -211,14 +211,19 @@ func _check_box_surface_contact() -> void:
 	prop.global_position = fingertip + Vector3(0.35, 0.35, 0.0)
 	hand.set_carrying(true, prop, -1.0)
 	var contact_world: Vector3 = hand._get_carry_finger_contact_world(0)
+	var adjusted_finger_count: int = 0
 	for finger_index: int in 4:
 		var base_finger_curl: Vector3 = hand.carry_tight_curl_degrees
 		var adjusted_finger_curl: Vector3 = hand._get_contact_adjusted_finger_curl(finger_index, base_finger_curl)
 		var correction: Vector3 = adjusted_finger_curl - base_finger_curl
+		if correction.length() > 0.1:
+			adjusted_finger_count += 1
 		if correction.length() > hand.carry_contact_bend_limit_degrees + 0.1:
 			_fail("Finger %d contact bend correction should respect its exported angular limit" % finger_index)
 		if not correction.is_finite():
 			_fail("Finger %d contact bend correction should remain finite" % finger_index)
+	if adjusted_finger_count == 0:
+		_fail("At least one finger should respond to the transformed box surface target")
 	var contact_local: Vector3 = collision.to_local(contact_world)
 	var half_extents: Vector3 = box.size * 0.5
 	var on_surface: bool = (
