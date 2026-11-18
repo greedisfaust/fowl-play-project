@@ -107,7 +107,15 @@ func _try_interact(input_action: StringName) -> bool:
 	if action == &"":
 		_debug_log("Interaction rejected: target does not accept %s" % input_action)
 		return false
-	return bool(get_node("/root/Network").call("request_interaction", _focused.get_path(), action))
+
+	var requested: bool = bool(
+		get_node("/root/Network").call("request_interaction", _focused.get_path(), action)
+	)
+
+	if requested and is_instance_valid(right_hand) and focus_ray.is_colliding():
+		right_hand.reach(focus_ray.get_collision_point())
+
+	return requested
 
 func _debug_use_focused(_args: Array[Variant]) -> String:
 	return "Interaction requested; check interact logs for host result." if _try_interact(&"interact") else "Interaction rejected."
