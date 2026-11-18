@@ -77,7 +77,10 @@ func _ready() -> void:
 	_debug_command_name = StringName("player_status_%s" % name)
 	if limp_interactable != null:
 		limp_interactable.enabled = false
+		limp_interactable.availability_check = _can_be_carried
 		limp_interactable.interacted.connect(_on_limp_interacted)
+	if limp_interaction_proxy != null:
+		limp_interaction_proxy.collision_layer = 0
 	_debug_speed_watch_name = StringName("player/%s/speed_mps" % name)
 	_debug_floor_watch_name = StringName("player/%s/on_floor" % name)
 	_debug_limp_watch_name = StringName("player/%s/limp" % name)
