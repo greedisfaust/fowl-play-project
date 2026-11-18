@@ -232,6 +232,8 @@ func _blend_thumb_and_hand_pose(weight: float, delta: float, pose_state: PoseSta
 	if not is_limp:
 		rotation_offset += Vector3(_sway.y, _sway.x, 0.0)
 	var rotation_target: Quaternion = _pose_rest_rotation * Quaternion.from_euler(rotation_offset)
+	if pose_state == PoseState.CARRY and is_instance_valid(carry_item):
+		rotation_target = _get_carry_pose_rotation(position_target)
 	_pose_root.position = _pose_root.position.lerp(position_target, weight)
 	_pose_root.quaternion = _pose_root.quaternion.slerp(rotation_target, weight)
 
@@ -327,6 +329,21 @@ func _get_carry_pose_position() -> Vector3:
 	grip_world += item_basis.y * (center.y + carry_height_offset_m)
 	grip_world += item_basis.z * center.z
 	return to_local(grip_world)
+
+## Rotate the palm's thin axis (local +Y) toward the prop center while
+## preserving the authored wrist roll. Finger curling remains a separate pass.
+func _get_carry_pose_rotation(grip_position: Vector3) -> Quaternion:
+	if not is_instance_valid(carry_item):
+		return _pose_rest_rotation
+	var grip_world: Vector3 = to_global(grip_position)
+	var toward_item_world: Vector3 = carry_item.global_position - grip_world
+	if toward_item_world.length_squared() < 0.000001:
+		return _pose_rest_rotation
+	var hand_basis: Basis = global_basis.orthonormalized()
+	var toward_item_local: Vector3 = (hand_basis.inverse() * toward_item_world).normalized()
+	var rest_palm_normal: Vector3 = (_pose_rest_rotation * Vector3.UP).normalized()
+	var facing_delta: Quaternion = Quaternion(rest_palm_normal, toward_item_local)
+	return facing_delta * _pose_rest_rotation
 
 ## Build one prop-local AABB from every usable collision shape. Transforming each
 ## debug-mesh corner handles shape-node offsets, rotation, and scale, including
