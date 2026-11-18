@@ -172,7 +172,8 @@ Removed the action-phase gate from procedural poke starts. A new poke can now re
 ## 2026-11-19 — longer pokes and moving limp-player grip targets
 
 - Increased procedural poke travel to 0.28 world-space metres (previously 0.20 hand-local units), converting through each hand's transform so scaled Viewmodel hands and unscaled world hands move the same visible distance. Extension, contact, and return timing remain unchanged.
-- Added a special carry target path for limp players: grip position follows the live ragdoll hips world position instead of the stationary CharacterBody3D root/capsule bounds.
-- Left/right ragdoll grips approach opposite sides of the hips; ragdoll carry uses a relaxed finger/thumb curl and skips static collision-box contact correction. Normal prop grip behavior is unchanged.
-- Added M2 coverage for the increased reach distance and a moving ragdoll hips target.
+- Added a special carry target path for limp players: cosmetic grip placement now follows the live Chest PhysicalBone3D position and orientation, matching the existing chest carry-support anchor rather than the hips or stationary CharacterBody3D root.
+- Added separate Player/Rig accessors for the chest hand target; the existing hips-based gameplay interaction/recovery position remains unchanged.
+- Carrier signals now drive the camera-attached Viewmodel hands on both the owner and remote observers. Remote carry no longer animates the ragdoll Rig hands; prop collision-bound grip behavior is unchanged.
+- M2 coverage follows a moving chest target; M3 coverage asserts remote carry activates both Viewmodel hands and leaves both Rig hands untouched.
 - Godot tests and two-instance visual verification have not been run by the assistant.
