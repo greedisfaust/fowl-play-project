@@ -45,8 +45,16 @@ func _run() -> void:
 	network.call("_receive_hand_hover", 77, true, hover_point)
 	check(world_hand.is_hovering, "Remote player's world right hand should enter pointing pose")
 	check(world_hand.hover_point.is_equal_approx(hover_point), "Remote pointing hand should receive the hover world point")
+	for frame: int in 30:
+		await process_frame
+	check(world_hand._resolve_pose_state() == Hand.PoseState.POINT, "Remote world hand should resolve its procedural point pose")
+	var world_middle: Node3D = world_hand.get_node("PoseRoot/Middle/Joint1") as Node3D
+	check(absf(world_middle.rotation_degrees.x) < 2.0, "Remote world hand should procedurally straighten its middle finger while pointing")
 	network.call("_receive_hand_hover", 77, false, Vector3.ZERO)
+	for frame: int in 30:
+		await process_frame
 	check(not world_hand.is_hovering, "Remote player's world right hand should return to idle after hover clears")
+	check(absf(world_middle.rotation_degrees.x + 12.0) < 2.0, "Remote world hand should procedurally relax its middle finger after hover clears")
 	var previous_poke_count: int = int(network.get("hand_poke_received"))
 	network.call("_receive_hand_poke", 77, remote_point)
 	check(world_hand._reach_elapsed >= 0.0, "Remote player's world right hand should begin a poke")
