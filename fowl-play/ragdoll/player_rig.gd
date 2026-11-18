@@ -33,7 +33,7 @@ var _right_viewmodel_hand_bone_index: int = -1
 var _right_arm_ik_watch_name: StringName
 var _right_arm_ik_command_name: StringName
 var _right_rig_hand_visible_watch_name: StringName
-var _right_rig_hand_visual: Node3D
+var _right_rig_hand_visuals: Array[VisualInstance3D] = []
 var _right_arm_ik_active: bool = false
 var _right_arm_ik_target_world: Vector3 = Vector3.ZERO
 var _hips_physical_bone: PhysicalBone3D
@@ -111,7 +111,13 @@ func _ready() -> void:
 	_right_viewmodel_upper_arm_bone_index = skeleton.find_bone("UpperArm_L")
 	_right_viewmodel_forearm_bone_index = skeleton.find_bone("Forearm_L")
 	_right_viewmodel_hand_bone_index = skeleton.find_bone("Hand_L")
-	_right_rig_hand_visual = get_node_or_null("Skeleton3D/HandAttachment_L/HandMount_L/Hand") as Node3D
+	var right_rig_hand_root: Node = get_node_or_null("Skeleton3D/HandAttachment_L/HandMount_L/Hand")
+	_right_rig_hand_visuals.clear()
+	if right_rig_hand_root != null:
+		for visual_node: Node in right_rig_hand_root.find_children("*", "VisualInstance3D", true, false):
+			var visual_instance: VisualInstance3D = visual_node as VisualInstance3D
+			if visual_instance != null:
+				_right_rig_hand_visuals.append(visual_instance)
 	_right_rig_hand_visible_watch_name = StringName("rig/%s/right_rig_hand_visible" % get_parent().name)
 	_set_right_rig_hand_visual_visible(false)
 	_right_arm_ik_watch_name = StringName("rig/%s/right_arm_ik" % get_parent().name)
@@ -124,7 +130,7 @@ func _ready() -> void:
 		debug_hub.call("log", &"ragdoll", "Rig %s prepared 11 dormant physical bones; %d selective self-contact pairs." % [get_parent().name, self_contact_pairs])
 	debug_hub.call("watch", _watch_name, func() -> int: return physical_bones.size())
 	debug_hub.call("watch", _right_arm_ik_watch_name, func() -> bool: return _right_arm_ik_active)
-	debug_hub.call("watch", _right_rig_hand_visible_watch_name, func() -> bool: return is_instance_valid(_right_rig_hand_visual) and _right_rig_hand_visual.visible)
+	debug_hub.call("watch", _right_rig_hand_visible_watch_name, func() -> bool: return not _right_rig_hand_visuals.is_empty() and _right_rig_hand_visuals[0].visible)
 	debug_hub.call("command", _right_arm_ik_command_name, _debug_right_arm_ik_status, "Report the procedural Viewmodel right-arm target and ownership state.", false, false)
 	set_process(false)
 
@@ -138,8 +144,9 @@ func _exit_tree() -> void:
 ## The positive-X Rig hand is a duplicate of the camera-attached Viewmodel hand while standing.
 ## Keep its node and skeleton attachment intact; only its rendered hand instance changes visibility.
 func _set_right_rig_hand_visual_visible(visible: bool) -> void:
-	if is_instance_valid(_right_rig_hand_visual):
-		_right_rig_hand_visual.visible = visible
+	for visual_instance: VisualInstance3D in _right_rig_hand_visuals:
+		if is_instance_valid(visual_instance):
+			visual_instance.visible = visible
 
 ## Viewmodel right is positive X; the current Rig labels that side with the L bone suffix.
 func _set_right_arm_ik_active(active: bool) -> void:
