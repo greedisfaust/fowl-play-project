@@ -112,3 +112,11 @@ The previous one-off reach timer has been replaced by a small action lifecycle: 
 ## 2026-11-19 — spam-friendly hand pokes
 
 Removed the action-phase gate from procedural poke starts. A new poke can now retrigger during extension, contact, or recovery, taking its starting blend amount from the current reach amount and easing toward the new target. This keeps rapid clicks responsive without snapping to rest or stacking competing animation timers. When input stops, the normal contact/recovery lifecycle blends the hand back to hover pointing or idle. Gameplay interaction validation and host-side request throttling remain unchanged; only the cosmetic animation is freely retriggerable. M2 and M3 assertions cover local and remote repeated pokes. Godot tests and two-instance visual checks remain user-run.
+
+
+## 2026-11-19 — Advanced finger contact foundation
+
+- Added a distal fingertip position helper based on the third finger joint and the authored fingertip offset.
+- Added the first surface-contact solver for `BoxShape3D`: outside points clamp to the box surface, inside points select the nearest face, and transformed/scaled collision children are evaluated in their own local space. Compound props select the nearest box contact candidate.
+- Added M2 checks for outside/inside surface projection and a translated, rotated, non-uniformly scaled box collision shape.
+- This is a tested-by-code foundation only: contact targets are not yet driving visible finger bends. Next implementation slice will connect a contact target to one finger's smooth procedural bend before expanding shape support.
