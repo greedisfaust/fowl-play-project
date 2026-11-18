@@ -63,8 +63,10 @@ func _run() -> void:
 		_fail("First hand reach was unexpectedly throttled")
 	if hand._resolve_pose_state() != Hand.PoseState.REACH:
 		_fail("Active poke must resolve above point and idle")
-	if absf(hand._reach_offset.length() - hand.reach_distance) > 0.001 or hand.reach_distance < 0.6:
-		_fail("Poke reach should use the increased travel distance")
+	hand.scale = Vector3(0.3, 0.3, 0.3)
+	if absf((hand.global_basis * hand._reach_offset).length() - hand.reach_distance) > 0.001 or hand.reach_distance < 0.25:
+		_fail("Poke reach should preserve the increased world-space travel distance on scaled Viewmodel hands")
+	hand.scale = Vector3.ONE
 	hand._process(hand.action_extend_seconds * 0.5)
 	var partial_reach_amount: float = hand._reach_amount
 	if partial_reach_amount <= 0.0 or partial_reach_amount >= 1.0:
