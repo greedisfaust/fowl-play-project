@@ -71,6 +71,7 @@ var _debug_camera_follow_watch_name: StringName
 var _debug_wall_clearance_watch_name: StringName
 var _debug_carrying_watch_name: StringName
 var _debug_limp_target_watch_name: StringName
+var _debug_hands_command_name: StringName
 
 func _ready() -> void:
 	accepted_position = global_position
@@ -91,6 +92,7 @@ func _ready() -> void:
 		if carrier.is_holding():
 			_on_carry_started(carrier.held_item)
 	_debug_command_name = StringName("player_status_%s" % name)
+	_debug_hands_command_name = StringName("player_hands_%s" % name)
 	if limp_interactable != null:
 		limp_interactable.enabled = false
 		limp_interactable.availability_check = _can_be_carried
@@ -132,6 +134,7 @@ func _ready() -> void:
 		false,
 		false
 	)
+	debug_hub.call("command", _debug_hands_command_name, _debug_hands_status, "Report this player FPS and world hands separately.", false, false)
 	if is_local_player and not bool(debug_hub.call("is_console_open")):
 		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	network.call("apply_pending_ragdoll_start", input_peer_id, self)
@@ -145,6 +148,7 @@ func _exit_tree() -> void:
 		return
 	# Use the original registration names even if the node was renamed.
 	debug_hub.call("unregister_command", _debug_command_name)
+	debug_hub.call("unregister_command", _debug_hands_command_name)
 	debug_hub.call("unwatch", _debug_speed_watch_name)
 	debug_hub.call("unwatch", _debug_floor_watch_name)
 	debug_hub.call("unwatch", _debug_limp_watch_name)
@@ -709,6 +713,26 @@ func _rotate_limp_view(mouse_delta: Vector2) -> void:
 		-LIMP_LOOK_PITCH_LIMIT,
 		LIMP_LOOK_PITCH_LIMIT
 	)
+
+func _debug_hands_status(_args: Array[Variant]) -> String:
+	return "player=%s local=%s\nFPS left: %s\nFPS right: %s\nWORLD left: %s\nWORLD right: %s" % [
+		name,
+		is_local_player,
+		_hand_debug_line(viewmodel_left_hand),
+		_hand_debug_line(viewmodel_right_hand),
+		_hand_debug_line(world_left_hand),
+		_hand_debug_line(world_right_hand),
+	]
+
+func _hand_debug_line(hand: Hand) -> String:
+	if not is_instance_valid(hand):
+		return "missing"
+	return "name=%s id=%d world_mode=%s %s" % [
+		hand.name,
+		hand.get_instance_id(),
+		hand.world_mode,
+		hand.call("_debug_state"),
+	]
 
 func _debug_status(_args: Array[Variant]) -> String:
 	return "position=%s velocity=%s on_floor=%s" % [
