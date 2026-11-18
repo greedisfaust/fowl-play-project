@@ -135,6 +135,14 @@ M2 hand names: the first instance retains its node-name command/watch suffix. Co
 - A wall blocks focus and host validation. Disabled targets and pickup-disabled props reject before emitting interaction. GRAB still only logs acceptance; physical carry and prop physics replication remain deferred.
 - Tests cover the saved-scene focus command, state/action/reach/occlusion rejection, separate-process client requests and reliable results, and current device state on late join/reconnect.
 
+### M2 advanced finger contact — first solver slice
+
+- `Hand._get_carry_fingertip_world(finger_index)` resolves each distal tip from its third finger joint and the authored fingertip offset.
+- `Hand._get_carry_finger_contact_world(finger_index)` currently solves nearest surface points for `BoxShape3D` collision children, including collision-node translation, rotation, and non-uniform scale. Compound props choose the nearest box candidate.
+- Points outside a box clamp to its surface; points inside are moved to the nearest face using scaled world distances. Other shape types intentionally retain the current grip behavior until their own contact solvers are added.
+- This slice calculates and tests contact targets only; it does not yet drive visible finger IK. Next: use the target to bend one finger smoothly, then generalize to the remaining fingers and sphere/capsule surfaces.
+- `tests/m2_hands_test.gd` checks outside/inside box points and a transformed, non-uniformly scaled collision shape.
+
 ### M2/M3 replicated hand cosmetics
 
 - The local first-person right hand points at the focused interactable. The host relays the hover state and world target to remote world hands; the left hand remains relaxed.
