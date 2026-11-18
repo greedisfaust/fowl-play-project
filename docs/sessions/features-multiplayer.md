@@ -57,3 +57,13 @@ Roster verification: full run_checks.ps1 passed (exit 0), including all three ro
 - Pokes are not sent for rejected interactions; the host still owns interaction validation and gameplay effects. Limp, recovering, and carrying actors are excluded from cosmetic playback.
 - Added `net/hand_poke_sent` and `net/hand_poke_received` watches, reset with the network session. No scene edits.
 - Added a headless check for remote world-hand poke playback and suppression of duplicate local-owner world-hand playback. Full ENet two-instance visual playtest is still required; assistant cannot run Godot here.
+
+
+## M2/M3 replicated hover pointing slice (2026-11-19)
+
+- Local focus continues to drive the first-person right hand immediately.
+- Local hover state and world-space collision point are sent to the host. Client identity is derived from the RPC sender; the host applies the pose to its remote Player instance and relays it to all clients.
+- Remote Player instances apply hover to their existing world right hand. The local owner skips its hidden world rig and keeps using the first-person viewmodel.
+- Hover state transitions send immediately; target movement updates are throttled to 20 Hz over an unreliable-ordered RPC channel.
+- Added `net/hand_hover_sent` and `net/hand_hover_received` watches and headless assertions for remote pointing, target point delivery, and return to idle.
+- Full Godot test runner and two-instance rendered host/client verification remain pending.
