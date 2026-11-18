@@ -220,3 +220,12 @@ The Rig hand visibility collectors explicitly exclude the `Forearm` MeshInstance
 
 
 The test arena now includes a WorldEnvironment with restrained Godot Glow post-processing. Focused interactable outlines emit HDR gold (increased focused emission) so the engine can bloom those pixels into a soft halo. The setup is intentionally local to test_arena.tscn until a shared production world/environment is established. Godot import/runtime checks and visual tuning remain user-verified.
+
+
+## 2026-11-19 — center-screen gameplay cursor
+
+- Added a reusable cursor scene under `fowl-play/ui/` and instanced it from the Player scene. It is visible only for the local player and only while the mouse is captured.
+- Idle state is a white circle with a thin dark outline. Existing Focus now emits `focus_target_changed`; the cursor smoothly widens and blends toward its configurable identity accent when an Interactable is focused.
+- Added a subtle 1.8-second breathing pulse while hovering. The pulse stops when focus clears; no additional cursor shapes or raycasts were introduced.
+- The default accent is temporary until the player identity/color foundation supplies a per-player color. Added a headless cursor check to `tests/run_checks.ps1`.
+- Godot execution and in-game visual verification remain user-run.

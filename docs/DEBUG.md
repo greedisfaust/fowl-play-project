@@ -273,3 +273,13 @@ Every `Interactable` component automatically adds an inverted-hull silhouette ov
 - `tests/m1_interaction_test.gd` checks automatic idle outlines, no outline on a sibling mesh without an Interactable, gold/glow focus state, return to idle, and restoration of the original overlay.
 
 The test arena now has an editor-authored `WorldEnvironment` with restrained Glow enabled. The interactable outline emits HDR gold while focused so Godot's Glow post-process can create a real soft halo. Glow is scene-wide as a rendering pass, but only bright pixels (including focused outline emission) should contribute significantly. The environment is currently attached to `test_arena.tscn`; when a shared production world/environment is introduced, move or reuse these settings there rather than duplicating per-level environments. The outline remains an inverted-hull shader and does not depend on custom post-process code.
+
+
+### Gameplay cursor
+
+- The center-screen cursor lives in `ui/gameplay_cursor.tscn` and is instanced by the Player scene; it is enabled only for the local player and hidden while the mouse is released.
+- Idle appearance: a small white circle with a thin near-black outline.
+- On focus: the same circle smoothly widens and blends toward the player's identity accent color. The current blue accent is a temporary default; the future player identity/color system can supply the real color through `set_identity_color`.
+- A restrained 1.8-second breathing pulse gently scales the cursor while hovering. It stops when focus clears; the idle cursor remains still.
+- The cursor listens to `Focus.focus_target_changed`. It does not perform its own raycast or affect interaction/network authority.
+- `tests/m1_cursor_test.gd` checks the cursor scene, non-blocking mouse behavior, identity-color setter, focus state, and Focus signal. Run it through `tests/run_checks.ps1`.
