@@ -178,3 +178,17 @@ The M2 hand test checks full-size and half-scale box collision bounds plus spher
 ### Size-adaptive carry thumb
 
 The carry thumb's two joints now blend between exported tight and open curl presets using the carried prop's projected thickness along the palm normal. Smaller props keep the tighter opposition curl; larger props leave the thumb more extended so it does not fold inward across the object. The M2 hand test compares thumb curl on full-size and quarter-scale box collision shapes. This remains a geometry-guided pose heuristic, not exact thumb surface-contact solving.
+
+
+### Procedural hand action controller
+
+The hand controller resolves one pose state, then drives the same authored finger hierarchy and `PoseRoot`. Hover pointing now moves the whole hand a small amount toward the target and rotates the wrist/hand toward it within an exported angular limit; the index finger supplies the remaining fine aim. Target tracking uses exponential pose blending, so target changes do not restart an animation or allocate per-frame objects.
+
+A local interaction starts an `EXTENDING → CONTACT` action immediately. The authoritative host result (accepted or rejected) transitions the local viewmodel hand into `RETURNING`; a failed submission also requests recovery locally. Remote world hands only play the host-approved poke. If no result arrives, the short built-in lifecycle still returns the hand automatically. Guard, carry, and limp cancel the cosmetic action and keep their existing priority.
+
+- `hand_status_<name>` now reports the resolved pose, action phase, hover, guard, carry, limp, and reach blend.
+- `hands/<name>/state` reports the same live state through the watch.
+- `hand_pose_<name> idle|point|guard|limp|reach` previews the procedural poses; reach preview starts after one second.
+- M2 checks cover rejected-action recovery and rest-state completion. M3 checks cover the accepted local interaction result entering recovery and remote host-approved poke presentation.
+
+The action controller is cosmetic only. Host interaction validation remains responsible for acceptance/rejection, and no hand pose can authorize an interaction. Godot tests and rendered two-instance visual checks must be run by the user; they have not been executed by the assistant.
