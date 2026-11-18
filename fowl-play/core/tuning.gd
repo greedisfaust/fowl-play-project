@@ -35,7 +35,7 @@ const GET_UP_BLEND_SECONDS: float = 0.5
 
 const THROW_AUTO_FIRE_SECONDS: float = 1.0
 const THROW_SPEED_MPS: float = 14.0
-const THROW_SPEED_LIMP_MPS: float = 10.0
+const THROW_SPEED_LIMP_MPS: float = 38.0
 const REACH_M: float = 3.2
 const HAND_REACH_COOLDOWN_S: float = 0.12
 const CARRY_ACTION_INTERVAL_S: float = 0.15
