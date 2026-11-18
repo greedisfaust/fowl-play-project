@@ -260,9 +260,9 @@ func set_carried(carried: bool, by: Node3D = null) -> void:
 		_set_limp_interaction_proxy(true)
 	debug_hub.call("log", &"carry", "%s was released by %s" % [name, by.name if by != null else "unknown"])
 
-func set_carry_target(target_world: Vector3) -> void:
+func set_carry_target(target_world: Vector3, facing_world: Vector3 = Vector3.ZERO) -> void:
 	if _is_carried and is_limp and rig != null and _has_host_authority():
-		rig.call("set_carry_target", target_world)
+		rig.call("set_carry_target", target_world, facing_world)
 
 func get_carry_world_position() -> Vector3:
 	return Vector3(rig.call("get_hips_world_position")) if is_limp and rig != null else global_position
