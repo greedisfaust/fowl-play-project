@@ -4,6 +4,17 @@
 class_name Hand
 extends Node3D
 
+## A single resolved pose drives every procedural hand channel.
+## Higher-priority gameplay states always win over cosmetic hover/reach.
+enum PoseState {
+	IDLE,
+	POINT,
+	REACH,
+	GUARD,
+	CARRY,
+	LIMP,
+}
+
 ## Approved local guard rotations from hands/hand_pose_study.tscn.
 ## These are absolute authored rotations, not offsets from the neutral pose.
 const AUTHORED_GUARD_THUMB_BASES: Array[Basis] = [
@@ -132,43 +143,60 @@ func _process(delta: float) -> void:
 		if _reach_elapsed >= reach_extend_seconds + reach_return_seconds:
 			_reach_elapsed = -1.0
 			_reach_amount = 0.0
+	var pose_state: PoseState = _resolve_pose_state()
 	var weight: float = 1.0 - exp(-pose_blend_speed * delta)
-	_blend_thumb_and_hand_pose(weight, delta)
+	_blend_thumb_and_hand_pose(weight, delta, pose_state)
 	for index: int in _finger_joints.size():
 		var joint: Node3D = _finger_joints[index]
 		if not is_instance_valid(joint):
 			continue
 		var curl: Vector3 = relaxed_curl_degrees
-		if is_limp:
-			curl = Vector3(-8.0, -12.0, -8.0)
-		elif is_guarding:
-			curl = guard_curl_degrees
-		elif is_carrying:
-			curl = Vector3(-35.0, -50.0, -25.0)
-		elif is_hovering or _reach_elapsed >= 0.0:
-			curl = Vector3.ZERO if index < 3 else point_curl_degrees
+		match pose_state:
+			PoseState.LIMP:
+				curl = Vector3(-8.0, -12.0, -8.0)
+			PoseState.GUARD:
+				curl = guard_curl_degrees
+			PoseState.CARRY:
+				curl = Vector3(-35.0, -50.0, -25.0)
+			PoseState.POINT, PoseState.REACH:
+				curl = Vector3.ZERO if index < 3 else point_curl_degrees
 		var target: Vector3 = _joint_rest_rotations[index]
 		target.x += deg_to_rad(curl[index % 3])
 		joint.rotation = joint.rotation.lerp(target, weight)
 	if _aim_node != null:
-		if (is_hovering or _reach_elapsed >= 0.0) and not (is_guarding or is_carrying or is_limp):
-			_update_aim(_reach_target if _reach_elapsed >= 0.0 else hover_point, weight)
+		if pose_state == PoseState.POINT or pose_state == PoseState.REACH:
+			_update_aim(_reach_target if pose_state == PoseState.REACH else hover_point, weight)
 		else:
 			_aim_node.quaternion = _aim_node.quaternion.slerp(_aim_rest_rotation, weight)
 
-func _blend_thumb_and_hand_pose(weight: float, delta: float) -> void:
-	var guard_active: bool = is_guarding and not is_limp
-	var point_active: bool = (is_hovering or _reach_elapsed >= 0.0) and not (is_limp or is_guarding or is_carrying)
+## Resolve one authoritative pose before touching any joint or transform.
+## Priority: limp > carry > guard > reach > point > idle.
+func _resolve_pose_state() -> PoseState:
+	if is_limp:
+		return PoseState.LIMP
+	if is_carrying:
+		return PoseState.CARRY
+	if is_guarding:
+		return PoseState.GUARD
+	if _reach_elapsed >= 0.0:
+		return PoseState.REACH
+	if is_hovering:
+		return PoseState.POINT
+	return PoseState.IDLE
+
+func _blend_thumb_and_hand_pose(weight: float, delta: float, pose_state: PoseState) -> void:
+	var guard_active: bool = pose_state == PoseState.GUARD
+	var point_active: bool = pose_state == PoseState.POINT or pose_state == PoseState.REACH
 	var thumb_root_degrees: Vector3 = relaxed_thumb_root_degrees
 	var thumb_curl_degrees: Vector2 = relaxed_thumb_curl_degrees
-	if is_limp or is_carrying and not guard_active:
+	if pose_state == PoseState.LIMP or pose_state == PoseState.CARRY:
 		# Preserve the existing authored thumb for these unfinished poses.
 		thumb_root_degrees = Vector3.ZERO
 		thumb_curl_degrees = Vector2.ZERO
 	elif guard_active:
 		thumb_root_degrees = guard_thumb_root_degrees
 		thumb_curl_degrees = guard_thumb_curl_degrees
-	elif is_hovering or _reach_elapsed >= 0.0:
+	elif point_active:
 		thumb_root_degrees = point_thumb_root_degrees
 		thumb_curl_degrees = point_thumb_curl_degrees
 	for index: int in _thumb_nodes.size():
@@ -192,7 +220,7 @@ func _blend_thumb_and_hand_pose(weight: float, delta: float) -> void:
 	if guard_active:
 		position_target += guard_position_offset
 		rotation_offset = guard_rotation_degrees * PI / 180.0
-	elif _reach_elapsed >= 0.0:
+	elif pose_state == PoseState.REACH:
 		position_target += _reach_offset * _reach_amount
 	_sway *= exp(-10.0 * delta)
 	if not is_limp:
@@ -332,8 +360,9 @@ func _debug_status(_args: Array[Variant]) -> String:
 	return _debug_state()
 
 func _debug_state() -> String:
-	return "world=%s hover=%s guard=%s carrying=%s limp=%s reach=%.2f speed_mps=%.2f" % [
+	return "world=%s pose=%s hover=%s guard=%s carrying=%s limp=%s reach=%.2f speed_mps=%.2f" % [
 		world_mode,
+		_pose_state_name(_resolve_pose_state()),
 		is_hovering,
 		is_guarding,
 		is_carrying,
@@ -341,6 +370,22 @@ func _debug_state() -> String:
 		_reach_amount,
 		speed_mps,
 	]
+
+func _pose_state_name(state: PoseState) -> String:
+	match state:
+		PoseState.IDLE:
+			return "idle"
+		PoseState.POINT:
+			return "point"
+		PoseState.REACH:
+			return "reach"
+		PoseState.GUARD:
+			return "guard"
+		PoseState.CARRY:
+			return "carry"
+		PoseState.LIMP:
+			return "limp"
+	return "unknown"
 
 func _debug_log(message: String) -> void:
 	if debug_hub.call("is_on", &"hands"):
