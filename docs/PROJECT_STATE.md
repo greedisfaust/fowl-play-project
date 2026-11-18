@@ -97,3 +97,8 @@ Each of the four fingers now receives its own carry curl target. The existing pr
 ## 2026-11-19 — procedural carry thumb opposition
 
 During carry, the thumb root now aims its authored segment direction from the thumb mount toward the carried prop center. The two thumb joints receive a modest carry curl while idle/point/guard/limp thumb behavior remains unchanged. The M2 test checks the thumb root's aim direction toward a test prop. This is an initial opposition pose, not yet surface-contact solving or exact thumb placement around each shape. Godot tests and rendered playtesting remain user-run checks.
+
+
+## 2026-11-19 — size-adaptive carry thumb
+
+The carry thumb joints now blend between tight and open curl presets using the same projected prop-thickness measurement as the fingers. Larger props leave the thumb more extended, avoiding the previous inward curl; smaller props retain the tighter opposition pose. The M2 test checks that a smaller box produces a tighter thumb curl than a larger box. Godot execution and rendered playtesting remain user-run checks.
