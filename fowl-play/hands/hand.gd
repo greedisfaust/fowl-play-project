@@ -66,8 +66,8 @@ const AUTHORED_GUARD_THUMB_BASES: Array[Basis] = [
 ## The thumb opens as prop thickness increases, preventing large props from forcing an inward curl.
 ## Local distal fingertip offset from the third finger joint; matches finger.tscn's final capsule.
 @export var carry_fingertip_offset: Vector3 = Vector3(0.0, 0.0, -0.113)
-## First contact-driven bend slice: the index finger receives a small directional
-## correction toward its nearest box surface target. Joint blending stays in _process.
+## Each finger receives a restrained directional correction toward its nearest
+## box surface target. Joint blending stays in _process.
 @export_range(0.0, 1.0) var carry_contact_bend_weight: float = 0.35
 @export_range(0.0, 45.0) var carry_contact_bend_limit_degrees: float = 24.0
 @export var carry_thumb_tight_curl_degrees: Vector2 = Vector2(-24.0, -32.0)
@@ -183,8 +183,7 @@ func _process(delta: float) -> void:
 			PoseState.CARRY:
 				var finger_index: int = index / 3
 				curl = carry_finger_curls[finger_index] if finger_index < carry_finger_curls.size() else carry_tight_curl_degrees
-				if finger_index == 0:
-					curl = _get_contact_adjusted_index_curl(curl)
+				curl = _get_contact_adjusted_finger_curl(finger_index, curl)
 			PoseState.POINT, PoseState.REACH:
 				curl = Vector3.ZERO if index < 3 else point_curl_degrees
 		var target: Vector3 = _joint_rest_rotations[index]
@@ -435,16 +434,16 @@ func _cache_carry_collision_shapes() -> void:
 		if collision_shape != null:
 			_carry_collision_shapes.append(collision_shape)
 
-## Use the box contact target to nudge only the index finger's bend toward the
-## surface. This is deliberately a restrained directional assist, not full IK.
-func _get_contact_adjusted_index_curl(base_curl: Vector3) -> Vector3:
-	if not is_instance_valid(carry_item) or _finger_roots.is_empty():
+## Use each finger's box contact target to nudge its three bend joints toward
+## the surface. This is deliberately a restrained directional assist, not full IK.
+func _get_contact_adjusted_finger_curl(finger_index: int, base_curl: Vector3) -> Vector3:
+	if not is_instance_valid(carry_item) or finger_index < 0 or finger_index >= _finger_roots.size():
 		return base_curl
-	var index_root: Node3D = _finger_roots[0]
-	if not is_instance_valid(index_root):
+	var finger_root: Node3D = _finger_roots[finger_index]
+	if not is_instance_valid(finger_root):
 		return base_curl
-	var contact_world: Vector3 = _get_carry_finger_contact_world(0)
-	var target_direction_local: Vector3 = index_root.global_basis.orthonormalized().inverse() * (contact_world - index_root.global_position)
+	var contact_world: Vector3 = _get_carry_finger_contact_world(finger_index)
+	var target_direction_local: Vector3 = finger_root.global_basis.orthonormalized().inverse() * (contact_world - finger_root.global_position)
 	if target_direction_local.length_squared() < 0.000001:
 		return base_curl
 	var target_angle_degrees: float = rad_to_deg(atan2(target_direction_local.y, -target_direction_local.z))
