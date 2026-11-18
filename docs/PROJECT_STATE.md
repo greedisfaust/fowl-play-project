@@ -77,3 +77,8 @@ Carrier `carry_started` / `carry_ended` signals now drive both hands on each pee
 ## 2026-11-19 — target-driven procedural grip foundation
 
 The hand controller now derives a local PoseRoot grip target from the carried prop transform. Left and right hands approach opposite sides using their explicit side values; the stable hand attachment roots remain untouched and the existing blend response smooths the movement. Automated checks cover distinct left/right targets and opposite-side assignment on remote hands. This is the first target-driven grip foundation; palm orientation and object-specific finger wrapping remain visual tuning work. Godot tests and rendered playtesting have not been run by the assistant.
+
+
+## 2026-11-19 — shape-aware procedural carry targets
+
+Procedural carry targets now derive their side spacing from the carried prop's collision geometry instead of a fixed center offset. Enabled `CollisionShape3D` nodes contribute their debug-mesh bounds after node transforms; compound shapes are combined in prop-local space, then projected onto the prop's oriented world axes. This accounts for collision-node offsets, rotations, and scale beneath an unscaled prop root. Visible mesh bounds are a fallback when no usable collision debug mesh is available, with a small last-resort target for invisible props. The M2 hand test now checks full/half-scale boxes and sphere/capsule bounds. Godot execution and rendered visual/multiplayer verification remain user-run checks. Palm orientation and object-specific finger wrapping are not yet implemented.
