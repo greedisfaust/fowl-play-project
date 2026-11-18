@@ -210,10 +210,12 @@ func _blend_thumb_and_hand_pose(weight: float, delta: float, pose_state: PoseSta
 	var point_active: bool = pose_state == PoseState.POINT or pose_state == PoseState.REACH
 	var thumb_root_degrees: Vector3 = relaxed_thumb_root_degrees
 	var thumb_curl_degrees: Vector2 = relaxed_thumb_curl_degrees
-	if pose_state == PoseState.LIMP or pose_state == PoseState.CARRY:
-		# Preserve the existing authored thumb for these unfinished poses.
+	if pose_state == PoseState.LIMP:
 		thumb_root_degrees = Vector3.ZERO
 		thumb_curl_degrees = Vector2.ZERO
+	elif pose_state == PoseState.CARRY:
+		thumb_root_degrees = Vector3.ZERO
+		thumb_curl_degrees = Vector2(-24.0, -32.0)
 	elif guard_active:
 		thumb_root_degrees = guard_thumb_root_degrees
 		thumb_curl_degrees = guard_thumb_curl_degrees
@@ -230,6 +232,8 @@ func _blend_thumb_and_hand_pose(weight: float, delta: float, pose_state: PoseSta
 		else:
 			offset_degrees.x = thumb_curl_degrees[index - 1]
 		var target: Quaternion = _thumb_rest_rotations[index] * Quaternion.from_euler(offset_degrees * PI / 180.0)
+		if pose_state == PoseState.CARRY and index == 0 and is_instance_valid(carry_item):
+			target = _get_carry_thumb_root_rotation()
 		if (guard_active and use_authored_guard_thumb) or (point_active and use_authored_point_thumb):
 			# Text scene matrices list rows; Basis(Vector3, Vector3, Vector3) takes columns.
 			target = AUTHORED_GUARD_THUMB_BASES[index].transposed().orthonormalized().get_rotation_quaternion()
@@ -318,6 +322,23 @@ func set_carrying(on: bool, item: Node3D = null, side: float = 0.0) -> void:
 	carry_item = item if on else null
 	carry_side = clampf(side, -1.0, 1.0) if on else 0.0
 	_debug_log("Carrying %s side=%.1f" % ["on" if on else "off", carry_side])
+
+## Aim the thumb base from its authored mount toward the carried prop center.
+## Only the thumb root is redirected; the palm and finger joints are untouched.
+func _get_carry_thumb_root_rotation() -> Quaternion:
+	if not is_instance_valid(carry_item) or _pose_root == null or _thumb_nodes.is_empty():
+		return _thumb_rest_rotations[0] if not _thumb_rest_rotations.is_empty() else Quaternion.IDENTITY
+	var thumb_root: Node3D = _thumb_nodes[0]
+	if not is_instance_valid(thumb_root):
+		return _thumb_rest_rotations[0]
+	var thumb_base_world: Vector3 = _pose_root.to_global(thumb_root.position)
+	var target_direction_world: Vector3 = carry_item.global_position - thumb_base_world
+	if target_direction_world.length_squared() < 0.0001:
+		return _thumb_rest_rotations[0]
+	var target_direction_local: Vector3 = _pose_root.global_basis.orthonormalized().inverse() * target_direction_world.normalized()
+	var rest_direction_local: Vector3 = _thumb_rest_rotations[0] * Vector3.FORWARD
+	var aim_delta: Quaternion = Quaternion(rest_direction_local.normalized(), target_direction_local.normalized())
+	return aim_delta * _thumb_rest_rotations[0]
 
 ## Adapt each finger's three joint bends to prop thickness and lateral position.
 ## Fingers near the prop's lateral edges curl slightly farther to hook around it.
