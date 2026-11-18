@@ -43,6 +43,7 @@ func _run() -> void:
 	grip_item.free()
 	_check_shape_aware_grip(hand)
 	_check_individual_carry_finger_curls()
+	_check_box_surface_contact()
 	if hand._resolve_pose_state() != Hand.PoseState.GUARD:
 		_fail("Guard must override hover")
 	hand.set_guard(false)
@@ -188,6 +189,47 @@ func _check_individual_carry_finger_curls() -> void:
 		_fail("Carry thumb root should aim toward the prop from its authored mount")
 	if index_curl.x >= middle_curl.x or pinky_curl.x >= ring_curl.x:
 		_fail("Outer fingers should receive a slightly tighter edge-hook curl than inner fingers")
+	hand.set_carrying(false)
+	hand.free()
+	prop.free()
+
+func _check_box_surface_contact() -> void:
+	var scene: PackedScene = load("res://hands/hand.tscn") as PackedScene
+	var hand: Hand = scene.instantiate() as Hand
+	root.add_child(hand)
+	var box: BoxShape3D = BoxShape3D.new()
+	box.size = Vector3(0.8, 0.8, 0.8)
+	var prop: Node3D = Node3D.new()
+	root.add_child(prop)
+	var collision: CollisionShape3D = CollisionShape3D.new()
+	collision.shape = box
+	collision.position = Vector3(0.2, -0.1, 0.15)
+	collision.rotation = Vector3(0.2, 0.4, -0.15)
+	collision.scale = Vector3(0.5, 1.5, 0.75)
+	prop.add_child(collision)
+	var fingertip: Vector3 = hand._get_carry_fingertip_world(0)
+	prop.global_position = fingertip + Vector3(0.35, 0.0, 0.0)
+	hand.set_carrying(true, prop, -1.0)
+	var contact_world: Vector3 = hand._get_carry_finger_contact_world(0)
+	var contact_local: Vector3 = collision.to_local(contact_world)
+	var half_extents: Vector3 = box.size * 0.5
+	var on_surface: bool = (
+		absf(absf(contact_local.x) - half_extents.x) < 0.001
+		or absf(absf(contact_local.y) - half_extents.y) < 0.001
+		or absf(absf(contact_local.z) - half_extents.z) < 0.001
+	)
+	if not on_surface:
+		_fail("Transformed box finger contact should land on an actual box face")
+	var outside_contact: Vector3 = hand._closest_point_on_box_surface(
+		Vector3(1.0, 0.1, 0.1), half_extents, Vector3.ONE
+	)
+	if outside_contact.distance_to(Vector3(0.4, 0.1, 0.1)) > 0.001:
+		_fail("Outside fingertip should clamp to the nearest box surface point")
+	var inside_contact: Vector3 = hand._closest_point_on_box_surface(
+		Vector3(0.1, 0.1, 0.1), half_extents, Vector3(0.5, 2.0, 1.5)
+	)
+	if absf(inside_contact.x - 0.4) > 0.001:
+		_fail("Inside fingertip should choose the nearest face after non-uniform scaling")
 	hand.set_carrying(false)
 	hand.free()
 	prop.free()
