@@ -331,8 +331,9 @@ func _get_carry_pose_position() -> Vector3:
 	return to_local(grip_world)
 
 ## Turn the palm toward the prop while preserving the authored forearm axis.
-## The rig's fingers extend along local -Z, forearm along +Z, palm normal +Y,
-## and thumb mounts on -X. Avoid an unconstrained shortest-path wrist roll.
+## The rig's fingers extend along local -Z, forearm along +Z, palm surface
+## normal is local -Y (from the CSG palm extrusion), and thumb mounts on -X.
+## Avoid an unconstrained shortest-path wrist roll.
 func _get_carry_pose_rotation(grip_position: Vector3) -> Quaternion:
 	if not is_instance_valid(carry_item):
 		return _pose_rest_rotation
@@ -342,7 +343,7 @@ func _get_carry_pose_rotation(grip_position: Vector3) -> Quaternion:
 		return _pose_rest_rotation
 	var hand_basis: Basis = global_basis.orthonormalized()
 	var toward_item_local: Vector3 = (hand_basis.inverse() * toward_item_world).normalized()
-	var rest_palm_normal: Vector3 = (_pose_rest_rotation * Vector3.UP).normalized()
+	var rest_palm_normal: Vector3 = (_pose_rest_rotation * Vector3.DOWN).normalized()
 	var facing_delta: Quaternion = Quaternion(rest_palm_normal, toward_item_local)
 	var facing_rotation: Quaternion = facing_delta * _pose_rest_rotation
 	var rest_forearm_axis: Vector3 = (_pose_rest_rotation * Vector3.BACK).normalized()
