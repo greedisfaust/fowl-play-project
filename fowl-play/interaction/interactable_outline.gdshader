@@ -12,5 +12,4 @@ void vertex() {
 void fragment() {
 	ALBEDO = outline_color.rgb;
 	EMISSION = outline_color.rgb * glow_strength;
-	ALPHA = outline_color.a;
 }

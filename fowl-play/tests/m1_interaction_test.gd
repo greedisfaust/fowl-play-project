@@ -13,15 +13,21 @@ func _run() -> void:
 	root.add_child(target)
 	var mesh: MeshInstance3D = MeshInstance3D.new()
 	mesh.mesh = BoxMesh.new()
+	var original_overlay: StandardMaterial3D = StandardMaterial3D.new()
+	mesh.material_overlay = original_overlay
 	target.add_child(mesh)
-	var non_interactable: MeshInstance3D = MeshInstance3D.new()
-	non_interactable.mesh = BoxMesh.new()
-	non_interactable.name = "NonInteractableMesh"
-	target.add_child(non_interactable)
 	var interactable: Interactable = Interactable.new()
 	interactable.kind = Interactable.InteractionKind.BOTH
 	interactable.prompt_text = "Test target"
 	target.add_child(interactable)
+
+	var unrelated_target: Node3D = Node3D.new()
+	unrelated_target.name = "UnrelatedTarget"
+	root.add_child(unrelated_target)
+	var non_interactable: MeshInstance3D = MeshInstance3D.new()
+	non_interactable.mesh = BoxMesh.new()
+	unrelated_target.add_child(non_interactable)
+
 	var actor: Node3D = Node3D.new()
 	root.add_child(actor)
 	interactable.interacted.connect(_on_interacted)
@@ -38,7 +44,7 @@ func _run() -> void:
 	if mesh.material_overlay == null:
 		_fail("Interactable mesh did not receive its idle outline")
 	if non_interactable.material_overlay != null:
-		_fail("Non-interactable mesh unexpectedly received an outline")
+		_fail("Unrelated non-interactable mesh unexpectedly received an outline")
 	var idle_material: ShaderMaterial = mesh.material_overlay as ShaderMaterial
 	if idle_material == null or idle_material.shader != load("res://interaction/interactable_outline.gdshader"):
 		_fail("Idle outline is not using the silhouette shader")
@@ -62,10 +68,11 @@ func _run() -> void:
 		_fail("Outline did not return to its idle black state")
 
 	target.remove_child(interactable)
-	if mesh.material_overlay != null:
+	if mesh.material_overlay != original_overlay:
 		_fail("Original overlay was not restored when Interactable left the tree")
 	interactable.free()
 	target.free()
+	unrelated_target.free()
 	actor.free()
 	if _failed:
 		quit(1)
