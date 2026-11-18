@@ -171,7 +171,7 @@ Removed the action-phase gate from procedural poke starts. A new poke can now re
 
 ## 2026-11-19 — longer pokes and moving limp-player grip targets
 
-- Increased procedural reach distance from 0.20 to 0.65 hand-local units while leaving extension, contact, and return timing unchanged.
+- Increased procedural poke travel to 0.28 world-space metres (previously 0.20 hand-local units), converting through each hand's transform so scaled Viewmodel hands and unscaled world hands move the same visible distance. Extension, contact, and return timing remain unchanged.
 - Added a special carry target path for limp players: grip position follows the live ragdoll hips world position instead of the stationary CharacterBody3D root/capsule bounds.
 - Left/right ragdoll grips approach opposite sides of the hips; ragdoll carry uses a relaxed finger/thumb curl and skips static collision-box contact correction. Normal prop grip behavior is unchanged.
 - Added M2 coverage for the increased reach distance and a moving ragdoll hips target.
