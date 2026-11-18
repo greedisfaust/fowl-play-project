@@ -18,6 +18,9 @@ var _focused: Interactable = null
 var _active: bool = false
 var _debug_command_name: StringName
 var _debug_focus_watch_name: StringName
+var _hover_sync_elapsed: float = 0.0
+var _last_hover_sync_active: bool = false
+var _last_hover_sync_point: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	_actor = get_node_or_null(actor_path) as Node3D
@@ -54,9 +57,10 @@ func set_active(active: bool) -> void:
 	if not active:
 		_clear_focus()
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if not _active:
 		return
+	_hover_sync_elapsed += delta
 	_update_focus()
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -80,17 +84,30 @@ func _update_focus() -> void:
 	var collision_point: Vector3 = Vector3.ZERO
 	if is_instance_valid(candidate) and focus_ray.is_colliding():
 		collision_point = focus_ray.get_collision_point()
-	_set_hands_hover(is_instance_valid(candidate), collision_point)
+	var hovering: bool = is_instance_valid(candidate)
+	_set_hands_hover(hovering, collision_point)
+	_sync_world_hand_hover(hovering, collision_point)
 
 func _set_hands_hover(active: bool, world_point: Vector3) -> void:
 	if is_instance_valid(right_hand):
 		right_hand.set_hover(active, world_point)
+
+func _sync_world_hand_hover(active: bool, world_point: Vector3) -> void:
+	var state_changed: bool = active != _last_hover_sync_active
+	var point_changed: bool = active and _last_hover_sync_point.distance_squared_to(world_point) >= 0.0009
+	if not state_changed and (not active or (not point_changed and _hover_sync_elapsed < 0.05)):
+		return
+	_hover_sync_elapsed = 0.0
+	_last_hover_sync_active = active
+	_last_hover_sync_point = world_point if active else Vector3.ZERO
+	get_node("/root/Network").call("update_hand_hover", active, world_point)
 
 func _clear_focus() -> void:
 	if is_instance_valid(_focused):
 		_focused.set_focused(false)
 	_focused = null
 	_set_hands_hover(false, Vector3.ZERO)
+	_sync_world_hand_hover(false, Vector3.ZERO)
 
 func _try_interact(input_action: StringName) -> bool:
 	if not _active:
