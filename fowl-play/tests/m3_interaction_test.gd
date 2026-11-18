@@ -34,8 +34,8 @@ func _run() -> void:
 	check(network.call("_interaction_rejection", null, target, &"use") != "", "Missing actor")
 	check(network.call("_interaction_rejection", actor, null, &"use") != "", "Missing target")
 
-	# A remote player's world hand should animate, while the local owner relies
-	# on the first-person viewmodel and must not double-play the world hand.
+	# A remote player's camera-attached Viewmodel hand should animate, while the local owner relies
+	# on its directly-driven first-person Viewmodel and must not double-play.
 	var player_scene: PackedScene = load("res://player/player.tscn") as PackedScene
 	var remote_player: Node3D = player_scene.instantiate() as Node3D
 	remote_player.set("input_peer_id", 77)
@@ -50,7 +50,7 @@ func _run() -> void:
 	check(world_hand.is_hovering, "Remote player's Viewmodel right hand should enter pointing pose")
 	check(world_hand.hover_point.is_equal_approx(hover_point), "Remote Viewmodel pointing hand should receive the hover world point")
 	check(not rig_world_hand.is_hovering, "Ragdoll Rig hand must not receive ordinary hover pointing")
-	check(int(network.get("hand_hover_received")) == hover_applied_before + 1, "Host-side remote world-hand hover application should increment its receive watch")
+	check(int(network.get("hand_hover_received")) == hover_applied_before + 1, "Host-side remote Viewmodel hover application should increment its receive watch")
 	for frame: int in 30:
 		await process_frame
 	check(world_hand._resolve_pose_state() == Hand.PoseState.POINT, "Remote Viewmodel hand should resolve its procedural point pose")
@@ -89,7 +89,7 @@ func _run() -> void:
 	network.call("_receive_hand_poke", 77, remote_point)
 	check(world_hand._reach_elapsed >= 0.0, "Remote player's Viewmodel right hand should begin a poke")
 	check(rig_world_hand._reach_elapsed < 0.0, "Ragdoll Rig hand must not play the replicated Viewmodel poke")
-	check(int(network.get("hand_poke_received")) == previous_poke_count + 1, "Remote world-hand poke should increment its receive watch")
+	check(int(network.get("hand_poke_received")) == previous_poke_count + 1, "Remote Viewmodel poke should increment its receive watch")
 	network.call("_receive_hand_poke", 77, remote_point + Vector3(0.1, 0.0, 0.0))
 	check(world_hand._action_phase == Hand.HandActionPhase.EXTENDING, "Remote Viewmodel hand should accept a second poke while the first is active")
 	check(int(network.get("hand_poke_received")) == previous_poke_count + 2, "Rapid remote pokes should both be presented")
