@@ -31,6 +31,24 @@ func _run() -> void:
 	target.enabled = true
 	check(network.call("_interaction_rejection", null, target, &"use") != "", "Missing actor")
 	check(network.call("_interaction_rejection", actor, null, &"use") != "", "Missing target")
+
+	# A remote player's world hand should animate, while the local owner relies
+	# on the first-person viewmodel and must not double-play the world hand.
+	var player_scene: PackedScene = load("res://player/player.tscn") as PackedScene
+	var remote_player: Node3D = player_scene.instantiate() as Node3D
+	remote_player.set("input_peer_id", 77)
+	root.add_child(remote_player)
+	await process_frame
+	var remote_point: Vector3 = remote_player.global_position + Vector3(0.0, 1.0, -2.0)
+	var world_hand: Hand = remote_player.get_node("Rig/Skeleton3D/HandAttachment_R/HandMount_R/Hand") as Hand
+	network.call("_receive_hand_poke", 77, remote_point)
+	check(world_hand._reach_elapsed >= 0.0, "Remote player's world right hand should begin a poke")
+	var previous_poke_count: int = int(network.get("hand_poke_received"))
+	remote_player.set("is_local_player", true)
+	check(not bool(remote_player.call("play_world_hand_poke", remote_point)), "Local owner must not double-play its hidden world hand")
+	check(int(network.get("hand_poke_received")) == previous_poke_count, "Local owner must not count a world-hand poke")
+	remote_player.queue_free()
+	await process_frame
 	var prop: Prop = arena.get_node("TestGrabProp")
 	prop.profile = prop.profile.duplicate() as PropProfile
 	prop.profile.pickup_allowed = false
