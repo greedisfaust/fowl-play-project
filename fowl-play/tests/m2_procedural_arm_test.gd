@@ -33,10 +33,12 @@ func _check_solver_geometry() -> void:
 	var too_far: Dictionary = ProceduralArmIK.solve_two_bone(shoulder, Vector3(0.0, 0.0, -2.0), Vector3.DOWN, 0.28, 0.25)
 	if not bool(too_far.get("clamped", false)):
 		_fail("Targets beyond arm length must be clamped instead of stretching the bones")
-	if absf(Vector3(too_far["target"]).length() - 0.529) > 0.002:
+	var too_far_target: Vector3 = too_far["target"]
+	if absf(too_far_target.length() - 0.529) > 0.002:
 		_fail("Reach clamp should preserve total arm length with a small safety margin")
 	var too_close: Dictionary = ProceduralArmIK.solve_two_bone(shoulder, Vector3(0.0, 0.0, -0.01), Vector3.DOWN, 0.28, 0.25)
-	if float(Vector3(too_close["target"]).length()) < 0.031:
+	var too_close_target: Vector3 = too_close["target"]
+	if too_close_target.length() < 0.031:
 		_fail("Unreachable close targets must respect minimum two-bone separation")
 
 func _check_rig_arm_target() -> void:
@@ -47,8 +49,8 @@ func _check_rig_arm_target() -> void:
 	var rig: Node3D = scene.instantiate() as Node3D
 	root.add_child(rig)
 	var skeleton: Skeleton3D = rig.get_node("Skeleton3D") as Skeleton3D
-	var upper_index: int = skeleton.find_bone("UpperArm_R")
-	var hand_index: int = skeleton.find_bone("Hand_R")
+	var upper_index: int = skeleton.find_bone("UpperArm_L")
+	var hand_index: int = skeleton.find_bone("Hand_L")
 	if upper_index < 0 or hand_index < 0:
 		_fail("Right arm bone chain is incomplete")
 		rig.free()
@@ -62,13 +64,14 @@ func _check_rig_arm_target() -> void:
 		_fail("Standing Player Rig should accept a valid right wrist target")
 	if after.distance_to(target) >= before.distance_to(target):
 		_fail("Right wrist should move closer to the requested Viewmodel wrist target")
-	var simulator: PhysicalBoneSimulator3D = rig.get_node("Skeleton3D/PhysicalBoneSimulator3D") as PhysicalBoneSimulator3D
-	simulator.physical_bones_start_simulation()
+	var started: bool = bool(rig.call("begin_host_simulation"))
+	if not started:
+		_fail("Player Rig should enter ragdoll for ownership test")
 	var frozen_rotation: Quaternion = skeleton.get_bone_pose_rotation(upper_index)
 	rig.call("update_procedural_right_arm", target + Vector3(0.1, 0.0, 0.0), 1.0)
 	if skeleton.get_bone_pose_rotation(upper_index).angle_to(frozen_rotation) > 0.001:
 		_fail("Procedural IK must yield immediately when ragdoll physics owns the arm")
-	simulator.physical_bones_stop_simulation()
+	rig.call("stop_host_simulation")
 	rig.free()
 
 func _fail(message: String) -> void:
