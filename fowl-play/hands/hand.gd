@@ -64,6 +64,8 @@ const AUTHORED_GUARD_THUMB_BASES: Array[Basis] = [
 ## Additional curl for fingers nearest the lateral edges of the prop.
 @export var carry_edge_curl_degrees: Vector3 = Vector3(-8.0, -10.0, -6.0)
 ## The thumb opens as prop thickness increases, preventing large props from forcing an inward curl.
+## Local distal fingertip offset from the third finger joint; matches finger.tscn's final capsule.
+@export var carry_fingertip_offset: Vector3 = Vector3(0.0, 0.0, -0.113)
 @export var carry_thumb_tight_curl_degrees: Vector2 = Vector2(-24.0, -32.0)
 @export var carry_thumb_open_curl_degrees: Vector2 = Vector2(-4.0, -8.0)
 
@@ -481,6 +483,76 @@ func _get_carry_finger_curl_degrees(finger_index: int = 1) -> Vector3:
 	var lateral_ratio: float = absf(finger_item_local.x - lateral_center) / lateral_half_extent
 	var edge_weight: float = clampf(inverse_lerp(0.35, 1.0, lateral_ratio), 0.0, 1.0)
 	return curl + carry_edge_curl_degrees * edge_weight
+
+## Return a finger's current distal tip in world space.
+## The offset ends at the distal capsule tip in hands/finger.tscn.
+func _get_carry_fingertip_world(finger_index: int) -> Vector3:
+	if finger_index < 0 or finger_index >= _finger_roots.size():
+		return global_position
+	var distal_joint_index: int = finger_index * 3 + 2
+	if distal_joint_index < 0 or distal_joint_index >= _finger_joints.size():
+		return global_position
+	var distal_joint: Node3D = _finger_joints[distal_joint_index]
+	if not is_instance_valid(distal_joint):
+		return global_position
+	return distal_joint.to_global(carry_fingertip_offset)
+
+## First surface-contact solver slice: find the nearest real BoxShape3D surface
+## to a finger tip. Shape-local transforms preserve collision-node offsets,
+## rotation, and scale; compound props choose the nearest box candidate.
+func _get_carry_finger_contact_world(finger_index: int) -> Vector3:
+	var fingertip_world: Vector3 = _get_carry_fingertip_world(finger_index)
+	if not is_instance_valid(carry_item):
+		return fingertip_world
+	var best_contact: Vector3 = fingertip_world
+	var best_distance_squared: float = INF
+	for candidate: Node in carry_item.find_children("*", "CollisionShape3D", true, false):
+		var collision_shape: CollisionShape3D = candidate as CollisionShape3D
+		if collision_shape == null or collision_shape.disabled or not (collision_shape.shape is BoxShape3D):
+			continue
+		var box_shape: BoxShape3D = collision_shape.shape as BoxShape3D
+		var half_extents: Vector3 = box_shape.size * 0.5
+		var world_scale: Vector3 = Vector3(
+			collision_shape.global_basis.x.length(),
+			collision_shape.global_basis.y.length(),
+			collision_shape.global_basis.z.length()
+		)
+		var tip_local: Vector3 = collision_shape.to_local(fingertip_world)
+		var contact_local: Vector3 = _closest_point_on_box_surface(tip_local, half_extents, world_scale)
+		var contact_world: Vector3 = collision_shape.to_global(contact_local)
+		var distance_squared: float = fingertip_world.distance_squared_to(contact_world)
+		if distance_squared < best_distance_squared:
+			best_distance_squared = distance_squared
+			best_contact = contact_world
+	return best_contact
+
+## Clamp an outside point to the box. For a point inside the box, move it to
+## the nearest face, comparing face distances after non-uniform shape scaling.
+func _closest_point_on_box_surface(local_point: Vector3, half_extents: Vector3, world_scale: Vector3) -> Vector3:
+	var clamped: Vector3 = Vector3(
+		clampf(local_point.x, -half_extents.x, half_extents.x),
+		clampf(local_point.y, -half_extents.y, half_extents.y),
+		clampf(local_point.z, -half_extents.z, half_extents.z)
+	)
+	var outside: bool = (
+		absf(local_point.x) > half_extents.x
+		or absf(local_point.y) > half_extents.y
+		or absf(local_point.z) > half_extents.z
+	)
+	if outside:
+		return clamped
+	var face_distances: Vector3 = Vector3(
+		(half_extents.x - absf(local_point.x)) * world_scale.x,
+		(half_extents.y - absf(local_point.y)) * world_scale.y,
+		(half_extents.z - absf(local_point.z)) * world_scale.z
+	)
+	if face_distances.x <= face_distances.y and face_distances.x <= face_distances.z:
+		clamped.x = half_extents.x if local_point.x >= 0.0 else -half_extents.x
+	elif face_distances.y <= face_distances.z:
+		clamped.y = half_extents.y if local_point.y >= 0.0 else -half_extents.y
+	else:
+		clamped.z = half_extents.z if local_point.z >= 0.0 else -half_extents.z
+	return clamped
 
 ## Convert the detected prop bounds into a world-space side grip target.
 ## Collision shape debug meshes provide a shape-agnostic bounds source, so boxes,
