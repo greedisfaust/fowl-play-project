@@ -200,3 +200,8 @@ A local interaction starts an `EXTENDING → CONTACT` action immediately. The au
 - M2 checks cover mid-animation retriggering without snapping, rejected-action recovery, and rest-state completion. M3 checks cover accepted local interaction results and repeated remote world-hand pokes.
 
 The action controller is cosmetic only. Host interaction validation remains responsible for acceptance/rejection, and no hand pose can authorize an interaction. Godot tests and rendered two-instance visual checks must be run by the user; they have not been executed by the assistant.
+
+
+### M2 surface-directed index carry bend
+
+The first visible contact-response slice now uses the index fingertip's nearest BoxShape3D surface target to add a restrained directional correction to its three bend joints. The correction is weighted and clamped by `carry_contact_bend_weight` and `carry_contact_bend_limit_degrees`, then uses the existing exponential pose blend; the other fingers keep their established size/edge curl until this technique is visually approved. CollisionShape3D children are cached when the carried item changes, rather than rediscovered during the frame loop. This is a directional bend assist, not full inverse kinematics or guaranteed physical contact. M2 checks that a transformed box produces a non-zero, bounded index correction. Godot execution and visual confirmation remain user-run.
