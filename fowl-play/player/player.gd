@@ -47,6 +47,13 @@ var _is_carried: bool = false
 var _pitch_radians: float = 0.0
 var _limp_look_yaw: float = 0.0
 var _limp_look_pitch: float = 0.0
+var _carry_camera_smoothing_initialized: bool = false
+var _carry_camera_smoothed_origin: Vector3 = Vector3.ZERO
+var _carry_camera_smoothed_rotation: Quaternion = Quaternion.IDENTITY
+
+# Smooth only the ragdoll-head contribution; mouse look and dynamic FOV stay untouched.
+const CARRY_CAMERA_ROTATION_RESPONSE: float = 9.0
+const CARRY_CAMERA_POSITION_RESPONSE: float = 14.0
 var _recovery_elapsed_s: float = 0.0
 var _recovery_camera_start: Transform3D
 var _recovery_camera_target: Transform3D
@@ -240,6 +247,7 @@ func set_carried(carried: bool, by: Node3D = null) -> void:
 		if _is_carried or not is_limp or is_recovering:
 			return
 		_is_carried = true
+		_carry_camera_smoothing_initialized = false
 		_set_limp_interaction_proxy(false)
 		if _has_host_authority() and rig != null:
 			rig.call("disable_collisions")
@@ -253,6 +261,7 @@ func set_carried(carried: bool, by: Node3D = null) -> void:
 	if not _is_carried:
 		return
 	_is_carried = false
+	_carry_camera_smoothing_initialized = false
 	if _has_host_authority() and is_limp and rig != null:
 		rig.call("end_carry_physics")
 		rig.call("stop_carry_support")
@@ -596,15 +605,32 @@ func _finish_recovery() -> void:
 		focus.call("set_active", is_local_player)
 	debug_hub.call("log", &"limp", "Player %s finished get-up blend." % name)
 
-func _update_limp_camera(_delta: float) -> void:
+func _update_limp_camera(delta: float) -> void:
 	if not is_local_player or rig == null:
 		return
 	var eye_transform: Transform3D = rig.call("get_head_eye_transform")
 	if not eye_transform.is_finite():
 		return
+	var head_rotation: Quaternion = eye_transform.basis.get_rotation_quaternion().normalized()
+	var camera_origin: Vector3 = eye_transform.origin
+	if _is_carried:
+		# Follow the head-mounted eye point with a little inertia, filtering
+		# physics jolts without detaching the view or smoothing player mouse-look.
+		if not _carry_camera_smoothing_initialized:
+			_carry_camera_smoothed_origin = camera_origin
+			_carry_camera_smoothed_rotation = head_rotation
+			_carry_camera_smoothing_initialized = true
+		var rotation_weight: float = 1.0 - exp(-CARRY_CAMERA_ROTATION_RESPONSE * delta)
+		var position_weight: float = 1.0 - exp(-CARRY_CAMERA_POSITION_RESPONSE * delta)
+		_carry_camera_smoothed_rotation = _carry_camera_smoothed_rotation.slerp(head_rotation, rotation_weight).normalized()
+		_carry_camera_smoothed_origin = _carry_camera_smoothed_origin.lerp(camera_origin, position_weight)
+		head_rotation = _carry_camera_smoothed_rotation
+		camera_origin = _carry_camera_smoothed_origin
+	else:
+		_carry_camera_smoothing_initialized = false
 	var look_yaw: Basis = Basis(Vector3.UP, _limp_look_yaw)
 	var look_pitch: Basis = Basis(Vector3.RIGHT, _limp_look_pitch)
-	camera.global_transform = Transform3D(eye_transform.basis * look_yaw * look_pitch, eye_transform.origin)
+	camera.global_transform = Transform3D(Basis(head_rotation) * look_yaw * look_pitch, camera_origin)
 
 func _rotate_view(mouse_delta: Vector2) -> void:
 	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
