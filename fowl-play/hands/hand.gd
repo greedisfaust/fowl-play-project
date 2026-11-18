@@ -46,7 +46,7 @@ const AUTHORED_GUARD_THUMB_BASES: Array[Basis] = [
 @export var relaxed_thumb_curl_degrees: Vector2 = Vector2(-10.0, -15.0)
 @export var point_thumb_root_degrees: Vector3 = Vector3(-15.0, -40.0, 0.0)
 @export var point_thumb_curl_degrees: Vector2 = Vector2(-18.0, -25.0)
-@export_range(0.0, 1.0) var reach_distance: float = 0.65
+@export_range(0.0, 1.0) var reach_distance: float = 0.28
 ## Action timing is a small lifecycle, not a per-click animation clip.
 @export_range(0.02, 0.5) var action_extend_seconds: float = 0.11
 @export_range(0.0, 0.3) var action_contact_seconds: float = 0.05
@@ -344,7 +344,12 @@ func begin_action(world_point: Vector3) -> bool:
 	if local_direction.length_squared() < 0.000001:
 		return false
 	_reach_target = world_point
-	_reach_offset = local_direction.normalized() * minf(reach_distance, local_direction.length())
+	# reach_distance is a world-space distance. Convert it through this hand's
+	# inverse basis so scaled Viewmodel hands travel the same visible distance
+	# as unscaled remote/world hand instances.
+	var world_direction: Vector3 = (global_basis * local_direction).normalized()
+	var world_travel: float = minf(reach_distance, global_position.distance_to(world_point))
+	_reach_offset = global_basis.inverse() * (world_direction * world_travel)
 	# Retrigger from the current blend amount so rapid pokes take over smoothly.
 	# Never snap back to rest or wait for the previous action to finish.
 	_reach_start_amount = _reach_amount
