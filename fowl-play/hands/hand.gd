@@ -330,8 +330,9 @@ func _get_carry_pose_position() -> Vector3:
 	grip_world += item_basis.z * center.z
 	return to_local(grip_world)
 
-## Rotate the palm's thin axis (local +Y) toward the prop center while
-## preserving the authored wrist roll. Finger curling remains a separate pass.
+## Turn the palm toward the prop while preserving the authored forearm axis.
+## The rig's fingers extend along local -Z, forearm along +Z, palm normal +Y,
+## and thumb mounts on -X. Avoid an unconstrained shortest-path wrist roll.
 func _get_carry_pose_rotation(grip_position: Vector3) -> Quaternion:
 	if not is_instance_valid(carry_item):
 		return _pose_rest_rotation
@@ -343,7 +344,17 @@ func _get_carry_pose_rotation(grip_position: Vector3) -> Quaternion:
 	var toward_item_local: Vector3 = (hand_basis.inverse() * toward_item_world).normalized()
 	var rest_palm_normal: Vector3 = (_pose_rest_rotation * Vector3.UP).normalized()
 	var facing_delta: Quaternion = Quaternion(rest_palm_normal, toward_item_local)
-	return facing_delta * _pose_rest_rotation
+	var facing_rotation: Quaternion = facing_delta * _pose_rest_rotation
+	var rest_forearm_axis: Vector3 = (_pose_rest_rotation * Vector3.BACK).normalized()
+	var facing_forearm_axis: Vector3 = (facing_rotation * Vector3.BACK).normalized()
+	var desired_forearm_flat: Vector3 = rest_forearm_axis - toward_item_local * rest_forearm_axis.dot(toward_item_local)
+	var facing_forearm_flat: Vector3 = facing_forearm_axis - toward_item_local * facing_forearm_axis.dot(toward_item_local)
+	if desired_forearm_flat.length_squared() < 0.0001 or facing_forearm_flat.length_squared() < 0.0001:
+		return facing_rotation
+	desired_forearm_flat = desired_forearm_flat.normalized()
+	facing_forearm_flat = facing_forearm_flat.normalized()
+	var wrist_roll: float = facing_forearm_flat.signed_angle_to(desired_forearm_flat, toward_item_local)
+	return Quaternion(toward_item_local, wrist_roll) * facing_rotation
 
 ## Build one prop-local AABB from every usable collision shape. Transforming each
 ## debug-mesh corner handles shape-node offsets, rotation, and scale, including
