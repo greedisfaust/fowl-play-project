@@ -1,6 +1,7 @@
 # Active session files
 
-- **Active feature:** Procedural Character Animation (hands first; combat presentation, legs, and body coordination planned) → [session](features-procedural-character-animation.md).
+- **Active feature:** Highlight and Accessibility (gameplay cursor + interactable focus animation) → [session](features-highlight-and-accessibility.md).
+- Prior active work: Procedural Character Animation (hands first; combat presentation, legs, and body coordination planned) → [session](features-procedural-character-animation.md).
 - **Completed implementation:** features/carry-drop-throw -> [session](features-carry-drop-throw.md) (M6 carry/drop/throw is implemented and user visual-playtested; automated M6 test and full two-instance host/client verification remain pending).
 - Prior reference: features/player-rig-and-physics-implementation -> [session](features-player-rig-and-physics-implementation.md) (M4 ragdoll network checks and M5 recovery implementation; user visual check and get-up blend remain).
 - Prior reference: features/multiplayer -> [session](features-multiplayer.md) (multiplayer slice committed and verified; remaining M3 integration deferred).

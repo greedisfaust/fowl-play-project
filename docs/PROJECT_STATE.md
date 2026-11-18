@@ -1,10 +1,10 @@
 # Fowl Play — Project State
 
-**Status:** D0, M0, and M1 interaction/prop slices verified. Console overflow fix user-playtested. M2 hands has started with the scene-backed hand API. M6 limp-body carry/drop/throw is implemented on `features/carry-drop-throw` and user visual-playtested; automated and full two-instance host/client verification remain pending.
+**Status:** D0, M0, and M1 interaction/prop slices verified. M2 hand integration and M6 carry/drop/throw are implemented; M6 is user visual-playtested, with automated and full two-instance host/client verification pending. The highlight/accessibility branch adds the gameplay cursor and animated interactable focus presentation; its automated checks and runtime verification remain pending.
 
-## Last verified (2026-11-17)
+## Last verified (2026-11-19)
 
-- Current branch: `features/carry-drop-throw` (M6 implementation). Base HEAD before this M6 change: `316b0bca` (working prop carry/drop/throw; limb-body pickup explicitly unfinished).
+- Current branch: `features/highlight-and-accessibility` (gameplay cursor and interactable focus presentation).
 - Godot 4.7 project: `fowl-play/`, using Jolt Physics, Forward+, and D3D12.
 - `fowl-play/project.godot` contains the project settings, input actions, and four autoload entries.
 - Foundation scripts exist in `fowl-play/core/`: `layers.gd`, `tuning.gd`, `network.gd`, and `debug_hub.gd`.
@@ -54,7 +54,9 @@ Late join is decided: allowed during the rest of a day, not during casino/elevat
 
 ## Next action
 
-M6 carry/drop/throw implementation is complete and its core carried-ragdoll presentation has been user visual-playtested. Remaining M6 validation: run `fowl-play/tests/run_checks.ps1` (including `m6_carry_test.gd`) and complete the two-instance host/client checklist in [the carry session](sessions/features-carry-drop-throw.md). Do not mark those checks passed until actually run. M5 wall-clearance and recovery visual checks also remain as previously noted.
+On `features/highlight-and-accessibility`, run `fowl-play/tests/run_checks.ps1` (including the M1 interaction and cursor checks), then complete the in-game cursor/focus visual check and a two-instance host/client check. These checks have not been run by the assistant; do not mark them passed until verified. The M6 carry/drop/throw automated and two-instance checks remain pending on its branch.
+
+## Historical verification notes
 
 USER VERIFIED: two-instance movement works and looks smooth. Host-published roster and three-process late-join/reconnect checks now pass. USER VERIFIED: roster/late-join/disconnect/rejoin checklist works. USER VERIFIED: host/client device use and client device state after reconnect (active=true). Next: user checkpoint of the multiplayer slice, then M4 skeleton-authoring preparation. Remaining M3 hand integration and gameplay-dependent validation stay deferred; M3 is not fully complete. Reliable host-validated interaction intents now pass automation, including action/state/reach/obstruction/cooldown rejection and late-join state. See sessions/features-multiplayer.md. Movement rejection-counter and falling-with-console checks were not separately confirmed. Movement authority was approved. M2 was committed as d722c96; remaining hand integration/polish is deferred. Current checkout is features/multiplayer, recovered from the M2 baseline with user authorization; older branches remain intact. First M3 movement changes are uncommitted. Keep carry/throw deferred to M6.
 
