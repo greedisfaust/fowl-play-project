@@ -92,6 +92,8 @@ func _check_rig_arm_target() -> void:
 		_fail("Rig hand visual should return when ragdoll physics takes ownership")
 	if not left_rig_hand_visual.visible:
 		_fail("Left Rig hand visual should return when ragdoll physics takes ownership")
+	if right_world_hand_forearm.visible or left_world_hand_forearm.visible:
+		_fail("World Hand Forearm meshes must remain hidden even while ragdoll Rig hands are visible")
 	var frozen_rotation: Quaternion = skeleton.get_bone_pose_rotation(upper_index)
 	var left_frozen_rotation: Quaternion = skeleton.get_bone_pose_rotation(left_upper_index)
 	rig.call("update_procedural_right_arm", target + Vector3(0.1, 0.0, 0.0), 1.0)
