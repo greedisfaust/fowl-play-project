@@ -41,12 +41,13 @@ func _run() -> void:
 	await process_frame
 	var remote_point: Vector3 = remote_player.global_position + Vector3(0.0, 1.0, -2.0)
 	var world_hand: Hand = remote_player.get_node("Rig/Skeleton3D/HandAttachment_R/HandMount_R/Hand") as Hand
+	var previous_poke_count: int = int(network.get("hand_poke_received"))
 	network.call("_receive_hand_poke", 77, remote_point)
 	check(world_hand._reach_elapsed >= 0.0, "Remote player's world right hand should begin a poke")
-	var previous_poke_count: int = int(network.get("hand_poke_received"))
+	check(int(network.get("hand_poke_received")) == previous_poke_count + 1, "Remote world-hand poke should increment its receive watch")
 	remote_player.set("is_local_player", true)
 	check(not bool(remote_player.call("play_world_hand_poke", remote_point)), "Local owner must not double-play its hidden world hand")
-	check(int(network.get("hand_poke_received")) == previous_poke_count, "Local owner must not count a world-hand poke")
+	check(int(network.get("hand_poke_received")) == previous_poke_count + 1, "Local owner must not count a world-hand poke")
 	remote_player.queue_free()
 	await process_frame
 	var prop: Prop = arena.get_node("TestGrabProp")
