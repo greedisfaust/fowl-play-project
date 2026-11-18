@@ -279,6 +279,12 @@ func play_world_hand_poke(world_point: Vector3) -> bool:
 		return false
 	return world_right_hand.reach(world_point)
 
+## Interaction authority reports the final result to the local first-person hand.
+func finish_local_hand_action(accepted: bool) -> void:
+	if not is_local_player or not is_instance_valid(viewmodel_right_hand):
+		return
+	viewmodel_right_hand.finish_action(accepted)
+
 ## Returns true while another player's Carrier is holding this player (limp carry).
 func is_carried() -> bool:
 	return _is_carried
