@@ -154,3 +154,7 @@ Removed the action-phase gate from procedural poke starts. A new poke can now re
 - The existing client-side relay receiver uses the same applied-to-world-hand meaning; the owning peer's hidden world-hand copy is intentionally not counted because its first-person viewmodel is the visible hand.
 - M3 interaction coverage now asserts the host-side remote world-hand application counter.
 - This improves diagnosis of client-to-host hover delivery but does not prove live RPC delivery. Real two-instance host/client visual verification remains required. Godot tests have not been run by the assistant.
+
+
+### Hand replication investigation diagnostics
+- Added `player_hands_<peer_id>` to report all four hand references on a player separately, including instance IDs, world mode, and live pose/hover state. This supports isolating world-hand hover application without changing the RPC path.
