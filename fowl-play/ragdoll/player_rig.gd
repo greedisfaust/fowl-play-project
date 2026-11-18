@@ -194,6 +194,22 @@ func get_hips_world_position() -> Vector3:
 		return skeleton.to_global(skeleton.get_bone_global_pose(_hips_bone_index).origin)
 	return global_position
 
+## Return the live Chest PhysicalBone transform while simulating. The animated
+## skeleton pose is the fallback before/after physics ownership.
+func get_chest_world_position() -> Vector3:
+	if simulator.is_simulating_physics() and _chest_physical_bone != null:
+		return _chest_physical_bone.global_position
+	if _chest_bone_index >= 0:
+		return skeleton.to_global(skeleton.get_bone_global_pose(_chest_bone_index).origin)
+	return get_hips_world_position()
+
+func get_chest_world_basis() -> Basis:
+	if simulator.is_simulating_physics() and _chest_physical_bone != null:
+		return _chest_physical_bone.global_basis.orthonormalized()
+	if _chest_bone_index >= 0:
+		return (skeleton.global_basis * skeleton.get_bone_global_pose(_chest_bone_index).basis).orthonormalized()
+	return global_basis.orthonormalized()
+
 ## Host-only spring support: chest follows the carrier anchor while hips,
 ## head and limbs remain free to sway under gravity and joint constraints.
 func set_carry_target(target_world: Vector3, facing_world: Vector3 = Vector3.ZERO) -> void:
