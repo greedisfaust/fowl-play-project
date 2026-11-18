@@ -348,7 +348,8 @@ func begin_action(world_point: Vector3) -> bool:
 	# inverse basis so scaled Viewmodel hands travel the same visible distance
 	# as unscaled remote/world hand instances.
 	var world_direction: Vector3 = (global_basis * local_direction).normalized()
-	var world_travel: float = minf(reach_distance, global_position.distance_to(world_point))
+	var reach_origin_world: Vector3 = to_global(_pose_rest_position)
+	var world_travel: float = minf(reach_distance, reach_origin_world.distance_to(world_point))
 	_reach_offset = global_basis.inverse() * (world_direction * world_travel)
 	# Retrigger from the current blend amount so rapid pokes take over smoothly.
 	# Never snap back to rest or wait for the previous action to finish.
