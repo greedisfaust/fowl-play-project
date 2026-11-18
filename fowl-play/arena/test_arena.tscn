@@ -7,6 +7,12 @@
 [ext_resource type="Script" uid="uid://dyw4wgr3svwvg" path="res://props/prop.gd" id="5_5fshk"]
 [ext_resource type="Script" uid="uid://bw1bicstmeec7" path="res://props/prop_profile.gd" id="6_w7fvv"]
 
+[sub_resource type="Environment" id="Environment_interaction_glow"]
+glow_enabled = true
+glow_intensity = 0.8
+glow_strength = 1.2
+glow_bloom = 0.12
+
 [sub_resource type="BoxShape3D" id="BoxShape3D_g4v7s"]
 size = Vector3(20, 1, 20)
 
@@ -37,20 +43,14 @@ radius = 0.35
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_57qmd"]
 radius = 0.35
 
-[sub_resource type="Environment" id="Environment_interaction_glow"]
-glow_enabled = true
-glow_intensity = 0.8
-glow_strength = 1.2
-glow_bloom = 0.12
-glow_blend_mode = 1
-glow_hdr_threshold = 1.0
-glow_hdr_scale = 2.0
-glow_levels = PackedByteArray(1, 1, 1, 0, 0, 0, 0)
-
 [node name="TestArena" type="Node3D" unique_id=2059650083]
 script = ExtResource("1_555b8")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1645614701]
+transform = Transform3D(1, 0, 0, 0, 0.66412145, 0.74762475, 0, -0.74762475, 0.66412145, 0, 9.354715, 7.996682)
+sky_mode = 2
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=794614696]
 environment = SubResource("Environment_interaction_glow")
 
 [node name="World" type="StaticBody3D" parent="." unique_id=865268742]

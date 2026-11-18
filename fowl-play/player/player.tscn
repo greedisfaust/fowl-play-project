@@ -116,7 +116,7 @@ collision_mask = 0
 [node name="CollisionShape3D" type="CollisionShape3D" parent="LimpInteractionProxy" unique_id=1773732524]
 shape = SubResource("CapsuleShape3D_limp_proxy")
 
-[node name="GameplayCursor" parent="." instance=ExtResource("6_cursor")]
+[node name="GameplayCursor" parent="." unique_id=284158454 instance=ExtResource("6_cursor")]
 
 [editable path="Head/Camera3D/ViewmodelHands/LeftHand"]
 [editable path="Head/Camera3D/ViewmodelHands/RightHand"]
