@@ -37,6 +37,13 @@ var _pending_recovery_animation: StringName = &""
 var _recovery_animation_active: bool = false
 var _carry_support_active: bool = false
 var _carry_target_world: Vector3 = Vector3.ZERO
+var _carry_facing_world: Vector3 = Vector3.ZERO
+var _chest_physical_bone: PhysicalBone3D
+
+# Soft yaw-only guide: chest turns toward carrier while pitch/roll remain physical.
+const CARRY_CHEST_YAW_STIFFNESS: float = 32.0
+const CARRY_CHEST_YAW_DAMPING: float = 7.0
+const CARRY_CHEST_MAX_TORQUE: float = 24.0
 
 func _enter_tree() -> void:
 	# An editor animation preview can be saved in the skeleton's pose. Reset
@@ -62,6 +69,7 @@ func _ready() -> void:
 				_hips_bone_index = _bone_indices[-1]
 			elif physical_bone.bone_name == "Chest":
 				_chest_bone_index = _bone_indices[-1]
+				_chest_physical_bone = physical_bone
 
 	var self_contact_pairs: int = SELF_COLLISION.configure(physical_bones)
 
@@ -161,14 +169,17 @@ func get_hips_world_position() -> Vector3:
 
 ## Host-only spring support: hips follow the carrier anchor while the other
 ## physical bones remain free to dangle under gravity and joint constraints.
-func set_carry_target(target_world: Vector3) -> void:
+func set_carry_target(target_world: Vector3, facing_world: Vector3 = Vector3.ZERO) -> void:
 	if not simulator.is_simulating_physics() or _hips_physical_bone == null or not target_world.is_finite():
 		return
 	_carry_target_world = target_world
+	if facing_world.is_finite() and Vector2(facing_world.x, facing_world.z).length_squared() > 0.0001:
+		_carry_facing_world = Vector3(facing_world.x, 0.0, facing_world.z).normalized()
 	_carry_support_active = true
 
 func stop_carry_support() -> void:
 	_carry_support_active = false
+	_carry_facing_world = Vector3.ZERO
 
 func apply_carry_support() -> void:
 	if not _carry_support_active or not simulator.is_simulating_physics() or _hips_physical_bone == null:
@@ -177,6 +188,22 @@ func apply_carry_support() -> void:
 	var force: Vector3 = displacement * TUNING.CARRY_RAGDOLL_SPRING_N_PER_M
 	force -= _hips_physical_bone.linear_velocity * TUNING.CARRY_RAGDOLL_DAMPING_N_PER_MPS
 	PhysicsServer3D.body_apply_central_force(_hips_physical_bone.get_rid(), force.limit_length(TUNING.CARRY_RAGDOLL_MAX_FORCE_N))
+	_apply_carry_chest_facing()
+
+func _apply_carry_chest_facing() -> void:
+	if _chest_physical_bone == null or _carry_facing_world.length_squared() < 0.0001:
+		return
+	# Only steer around world-up. The chest can still pitch, roll, and react to
+	# gravity/collisions; the arms, head, and legs receive no direct motor force.
+	var current_forward: Vector3 = -_chest_physical_bone.global_basis.z
+	current_forward.y = 0.0
+	if current_forward.length_squared() < 0.0001:
+		return
+	current_forward = current_forward.normalized()
+	var yaw_error: float = current_forward.signed_angle_to(_carry_facing_world, Vector3.UP)
+	var yaw_speed: float = _chest_physical_bone.angular_velocity.dot(Vector3.UP)
+	var torque: Vector3 = Vector3.UP * (yaw_error * CARRY_CHEST_YAW_STIFFNESS - yaw_speed * CARRY_CHEST_YAW_DAMPING)
+	PhysicsServer3D.body_apply_torque(_chest_physical_bone.get_rid(), torque.limit_length(CARRY_CHEST_MAX_TORQUE))
 
 func release_carry(linear: Vector3, angular: Vector3) -> void:
 	_carry_support_active = false
