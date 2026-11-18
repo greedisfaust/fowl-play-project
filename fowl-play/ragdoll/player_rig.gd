@@ -41,6 +41,8 @@ var _carry_facing_world: Vector3 = Vector3.ZERO
 var _chest_physical_bone: PhysicalBone3D
 var _carry_physics_active: bool = false
 var _carry_saved_angular_damp: Dictionary = {}
+var _carry_saved_chest_swing_span: float = 0.0
+var _carry_saved_chest_twist_span: float = 0.0
 
 # Soft yaw-only guide: chest turns toward carrier while pitch/roll remain physical.
 # The chest is the carry anchor now: firm enough to stay in front of the
@@ -196,10 +198,11 @@ func stop_carry_support() -> void:
 	_carry_support_active = false
 	_carry_facing_world = Vector3.ZERO
 
-## Temporarily calm torso and arm rotation while carried. Original values are
-## cached so dropping or throwing restores the normal ragdoll exactly.
+## Stabilize only the Hips-to-Chest joint while carried. The head joint and
+## every limb joint remain simulated, so the head can look around and the legs
+## can continue to dangle and limp. Original settings are restored on release.
 func begin_carry_physics() -> void:
-	if _carry_physics_active or not simulator.is_simulating_physics():
+	if _carry_physics_active or not simulator.is_simulating_physics() or _chest_physical_bone == null:
 		return
 	_carry_saved_angular_damp.clear()
 	for physical_bone: PhysicalBone3D in physical_bones:
@@ -213,12 +216,21 @@ func begin_carry_physics() -> void:
 				physical_bone.angular_damp = CARRY_ARM_ANGULAR_DAMP
 			"Forearm_L", "Forearm_R":
 				physical_bone.angular_damp = CARRY_FOREARM_ANGULAR_DAMP
+	_carry_saved_chest_swing_span = float(_chest_physical_bone.get("joint_constraints/swing_span"))
+	_carry_saved_chest_twist_span = float(_chest_physical_bone.get("joint_constraints/twist_span"))
+	# Near-zero spans make the ConeJoint behave like a fixed torso connection.
+	# The Head remains a separate, freely constrained joint above the Chest.
+	_chest_physical_bone.set("joint_constraints/swing_span", 0.05)
+	_chest_physical_bone.set("joint_constraints/twist_span", 0.05)
 	_carry_physics_active = true
 
-## Restore every body's exact pre-carry angular damping value.
+## Restore the torso joint and every body's exact pre-carry damping values.
 func end_carry_physics() -> void:
 	if not _carry_physics_active:
 		return
+	if _chest_physical_bone != null:
+		_chest_physical_bone.set("joint_constraints/swing_span", _carry_saved_chest_swing_span)
+		_chest_physical_bone.set("joint_constraints/twist_span", _carry_saved_chest_twist_span)
 	for physical_bone: PhysicalBone3D in physical_bones:
 		if _carry_saved_angular_damp.has(physical_bone):
 			physical_bone.angular_damp = float(_carry_saved_angular_damp[physical_bone])
