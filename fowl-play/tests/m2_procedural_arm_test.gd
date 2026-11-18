@@ -1,4 +1,4 @@
-## Headless checks for the first procedural arm IK slice.
+## Headless checks for procedural two-arm IK.
 extends SceneTree
 
 var _failed: bool = false
@@ -12,7 +12,7 @@ func _run() -> void:
 	if _failed:
 		quit(1)
 		return
-	print("M2 procedural right arm checks passed")
+	print("M2 procedural two-arm checks passed")
 	quit(0)
 
 func _check_solver_geometry() -> void:
@@ -93,9 +93,13 @@ func _check_rig_arm_target() -> void:
 	if not left_rig_hand_visual.visible:
 		_fail("Left Rig hand visual should return when ragdoll physics takes ownership")
 	var frozen_rotation: Quaternion = skeleton.get_bone_pose_rotation(upper_index)
+	var left_frozen_rotation: Quaternion = skeleton.get_bone_pose_rotation(left_upper_index)
 	rig.call("update_procedural_right_arm", target + Vector3(0.1, 0.0, 0.0), 1.0)
+	rig.call("update_procedural_left_arm", left_target + Vector3(-0.1, 0.0, 0.0), 1.0)
 	if skeleton.get_bone_pose_rotation(upper_index).angle_to(frozen_rotation) > 0.001:
-		_fail("Procedural IK must yield immediately when ragdoll physics owns the arm")
+		_fail("Right procedural IK must yield immediately when ragdoll physics owns the arm")
+	if skeleton.get_bone_pose_rotation(left_upper_index).angle_to(left_frozen_rotation) > 0.001:
+		_fail("Left procedural IK must yield immediately when ragdoll physics owns the arm")
 	rig.call("stop_host_simulation")
 	if rig_hand_visual.visible:
 		_fail("Duplicate Rig hand should hide again after ragdoll simulation stops")
