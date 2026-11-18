@@ -154,6 +154,12 @@ func _check_individual_carry_finger_curls() -> void:
 	var middle_curl: Vector3 = hand._get_carry_finger_curl_degrees(1)
 	var ring_curl: Vector3 = hand._get_carry_finger_curl_degrees(2)
 	var pinky_curl: Vector3 = hand._get_carry_finger_curl_degrees(3)
+	var large_thumb_curl: Vector2 = hand._get_carry_thumb_curl_degrees()
+	collision.scale = Vector3.ONE * 0.25
+	var small_thumb_curl: Vector2 = hand._get_carry_thumb_curl_degrees()
+	if small_thumb_curl.length() <= large_thumb_curl.length():
+		_fail("Smaller props should produce a tighter thumb curl than large props")
+	collision.scale = Vector3.ONE
 	var thumb_rotation: Quaternion = hand._get_carry_thumb_root_rotation()
 	var thumb_direction: Vector3 = thumb_rotation * Vector3.FORWARD
 	var thumb_base: Node3D = hand._thumb_nodes[0]
