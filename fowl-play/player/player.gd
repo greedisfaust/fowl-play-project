@@ -19,6 +19,9 @@ var limp_epoch: int = 0
 @onready var camera: Camera3D = $Head/Camera3D
 @onready var rig: Node3D = get_node_or_null("Rig") as Node3D
 @onready var world_right_hand: Hand = get_node_or_null("Rig/Skeleton3D/HandAttachment_R/HandMount_R/Hand") as Hand
+@onready var world_left_hand: Hand = get_node_or_null("Rig/Skeleton3D/HandAttachment_L/HandMount_L/Hand") as Hand
+@onready var viewmodel_left_hand: Hand = get_node_or_null("Head/Camera3D/ViewmodelHands/LeftHand") as Hand
+@onready var viewmodel_right_hand: Hand = get_node_or_null("Head/Camera3D/ViewmodelHands/RightHand") as Hand
 @onready var carrier: Carrier = get_node_or_null("Carrier") as Carrier
 @onready var limp_interactable: Interactable = get_node_or_null("Interactable") as Interactable
 @onready var limp_interaction_proxy: StaticBody3D = get_node_or_null("LimpInteractionProxy") as StaticBody3D
@@ -82,6 +85,11 @@ func _ready() -> void:
 	set_physics_process(is_local_player)
 	if focus != null:
 		focus.call("set_active", is_local_player)
+	if carrier != null:
+		carrier.carry_started.connect(_on_carry_started)
+		carrier.carry_ended.connect(_on_carry_ended)
+		if carrier.is_holding():
+			_on_carry_started(carrier.held_item)
 	_debug_command_name = StringName("player_status_%s" % name)
 	if limp_interactable != null:
 		limp_interactable.enabled = false
@@ -235,6 +243,22 @@ func accept_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pit
 ## Returns true while this player holds a carried item (prop or limp body).
 func is_carrying() -> bool:
 	return carrier != null and bool(carrier.call("is_holding"))
+
+## Carrier signals drive the hands on every peer: owners see viewmodel hands,
+## while other peers see the attached world hands.
+func _on_carry_started(item: Node3D) -> void:
+	_set_carry_hand_pose(true, item)
+
+func _on_carry_ended() -> void:
+	_set_carry_hand_pose(false)
+
+func _set_carry_hand_pose(active: bool, item: Node3D = null) -> void:
+	var left_hand: Hand = viewmodel_left_hand if is_local_player else world_left_hand
+	var right_hand: Hand = viewmodel_right_hand if is_local_player else world_right_hand
+	if is_instance_valid(left_hand):
+		left_hand.set_carrying(active, item)
+	if is_instance_valid(right_hand):
+		right_hand.set_carrying(active, item)
 
 ## Applies a replicated hover pose to this player's visible world right hand.
 ## The local owner uses its first-person viewmodel instead.
