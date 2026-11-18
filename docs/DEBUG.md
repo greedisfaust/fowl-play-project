@@ -239,7 +239,7 @@ When the carried target is a limp player, cosmetic hand grips use the live Chest
 
 ### M2 procedural right-arm IK — first integration slice
 
-- The remote-visible Player Rig right upper arm and forearm solve toward the camera-attached Viewmodel right hand world-space wrist target. The Viewmodel hand remains the pose/presentation owner; the body rig supplies the connected shoulder-to-wrist silhouette.
+- The remote-visible Player Rig positive-X upper arm and forearm (the Rig currently names this chain UpperArm_L/Forearm_L) solve toward the camera-attached Viewmodel right hand world-space wrist target. The Viewmodel hand remains the pose/presentation owner; the body rig supplies the connected shoulder-to-wrist silhouette.
 - The first solver is two-bone position IK using the authored 0.28 m upper arm and 0.25 m forearm lengths. Targets outside the reachable envelope are clamped; a downward/forward pole keeps the elbow bend predictable. Exponential blending smooths target changes.
 - IK is called only during standing Player processing. PlayerRig refuses to write arm bones while PhysicalBoneSimulator3D, remote ragdoll pose playback, or recovery blending owns the skeleton. No gameplay authority or network messages were added.
 - Debug watch: rig/<player-id>/right_arm_ik reports whether the standing right-arm solver is active. Run tests/m2_procedural_arm_test.gd through tests/run_checks.ps1 for reach geometry, wrist movement, and ragdoll ownership assertions.
