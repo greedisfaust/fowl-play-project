@@ -79,6 +79,7 @@ func _check_shape_aware_grip(hand: Hand) -> void:
 	hand.set_carrying(true, box_prop, 1.0)
 	var full_size_right: Vector3 = hand._get_carry_pose_position()
 	var full_size_span: float = full_size_left.distance_to(full_size_right)
+	var full_size_curl: Vector3 = hand._get_carry_finger_curl_degrees()
 	var left_rotation: Quaternion = hand._get_carry_pose_rotation(full_size_left)
 	var right_rotation: Quaternion = hand._get_carry_pose_rotation(full_size_right)
 	var left_normal: Vector3 = hand.global_basis * (left_rotation * Vector3.DOWN)
@@ -103,6 +104,9 @@ func _check_shape_aware_grip(hand: Hand) -> void:
 	hand.set_carrying(true, box_prop, 1.0)
 	var half_size_right: Vector3 = hand._get_carry_pose_position()
 	var half_size_span: float = half_size_left.distance_to(half_size_right)
+	var half_size_curl: Vector3 = hand._get_carry_finger_curl_degrees()
+	if half_size_curl.length() <= full_size_curl.length():
+		_fail("Smaller props should produce a tighter carry finger curl")
 	if full_size_span <= half_size_span + 0.2:
 		_fail("Scaled box collision bounds did not move the grip targets inward")
 	if absf(full_size_span - 0.88) > 0.03 or absf(half_size_span - 0.48) > 0.03:
