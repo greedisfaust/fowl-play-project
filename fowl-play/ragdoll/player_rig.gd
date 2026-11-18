@@ -39,11 +39,14 @@ var _carry_support_active: bool = false
 var _carry_target_world: Vector3 = Vector3.ZERO
 var _carry_facing_world: Vector3 = Vector3.ZERO
 var _chest_physical_bone: PhysicalBone3D
+var _head_physical_bone: PhysicalBone3D
 var _chest_rest_basis_offset: Basis = Basis.IDENTITY
 var _carry_physics_active: bool = false
 var _carry_saved_angular_damp: Dictionary = {}
 var _carry_saved_chest_swing_span: float = 0.0
 var _carry_saved_chest_twist_span: float = 0.0
+var _carry_saved_head_swing_span: float = 0.0
+var _carry_saved_head_twist_span: float = 0.0
 
 # Strong, damped 6-DOF carry anchor. The Chest follows the carrier's
 # CarryAnchor position and upright facing; spring damping gives slight lag
@@ -57,9 +60,9 @@ const CARRY_CHEST_MAX_TORQUE: float = 900.0
 
 # Temporary rotational damping used only while this ragdoll is being carried.
 const CARRY_TORSO_ANGULAR_DAMP: float = 4.0
-const CARRY_ARM_ANGULAR_DAMP: float = 6.0
-const CARRY_FOREARM_ANGULAR_DAMP: float = 7.0
-const CARRY_HEAD_ANGULAR_DAMP: float = 3.0
+const CARRY_ARM_ANGULAR_DAMP: float = 9.0
+const CARRY_FOREARM_ANGULAR_DAMP: float = 11.0
+const CARRY_HEAD_ANGULAR_DAMP: float = 12.0
 
 func _enter_tree() -> void:
 	# An editor animation preview can be saved in the skeleton's pose. Reset
@@ -86,6 +89,8 @@ func _ready() -> void:
 			elif physical_bone.bone_name == "Chest":
 				_chest_bone_index = _bone_indices[-1]
 				_chest_physical_bone = physical_bone
+			elif physical_bone.bone_name == "Head":
+				_head_physical_bone = physical_bone
 	if _chest_physical_bone != null:
 		# PhysicalBone's local axes follow the skeleton bone's bind orientation,
 		# not the character's forward axis. Preserve that bind-space offset.
@@ -223,6 +228,12 @@ func begin_carry_physics() -> void:
 				physical_bone.angular_damp = CARRY_FOREARM_ANGULAR_DAMP
 	_carry_saved_chest_swing_span = float(_chest_physical_bone.get("joint_constraints/swing_span"))
 	_carry_saved_chest_twist_span = float(_chest_physical_bone.get("joint_constraints/twist_span"))
+	if _head_physical_bone != null:
+		_carry_saved_head_swing_span = float(_head_physical_bone.get("joint_constraints/swing_span"))
+		_carry_saved_head_twist_span = float(_head_physical_bone.get("joint_constraints/twist_span"))
+		# Keep the head mobile, but reduce large, sudden neck swings while carried.
+		_head_physical_bone.set("joint_constraints/swing_span", 18.0)
+		_head_physical_bone.set("joint_constraints/twist_span", 14.0)
 	# Near-zero spans make the ConeJoint behave like a fixed torso connection.
 	# The Head remains a separate, freely constrained joint above the Chest.
 	_chest_physical_bone.set("joint_constraints/swing_span", 0.05)
@@ -236,6 +247,9 @@ func end_carry_physics() -> void:
 	if _chest_physical_bone != null:
 		_chest_physical_bone.set("joint_constraints/swing_span", _carry_saved_chest_swing_span)
 		_chest_physical_bone.set("joint_constraints/twist_span", _carry_saved_chest_twist_span)
+	if _head_physical_bone != null:
+		_head_physical_bone.set("joint_constraints/swing_span", _carry_saved_head_swing_span)
+		_head_physical_bone.set("joint_constraints/twist_span", _carry_saved_head_twist_span)
 	for physical_bone: PhysicalBone3D in physical_bones:
 		if _carry_saved_angular_damp.has(physical_bone):
 			physical_bone.angular_damp = float(_carry_saved_angular_damp[physical_bone])
