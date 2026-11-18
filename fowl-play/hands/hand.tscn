@@ -106,6 +106,7 @@ mesh = SubResource("BoxMesh_57qmd")
 
 [node name="Forearm" type="MeshInstance3D" parent="PoseRoot" unique_id=1985700725]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.485)
+visible = false
 material_override = SubResource("StandardMaterial3D_5qdtc")
 mesh = SubResource("BoxMesh_d0u6y")
 

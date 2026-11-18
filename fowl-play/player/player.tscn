@@ -53,6 +53,12 @@ transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0.25, -0.25, -0.55)
 
 [node name="Rig" parent="." unique_id=695809982 instance=ExtResource("3_g1dw6")]
 
+[node name="ForearmLMesh" parent="Rig/Skeleton3D/ForearmAttachment_L" parent_id_path=PackedInt32Array(695809982, 628518846) index="0" unique_id=1122780713]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0.125, 0, 0)
+
+[node name="ForearmRMesh" parent="Rig/Skeleton3D/ForearmAttachment_R" parent_id_path=PackedInt32Array(695809982, 236525658) index="0" unique_id=1748494854]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, -0.125, 0, 0)
+
 [node name="Physical Bone Hips" parent="Rig/Skeleton3D/PhysicalBoneSimulator3D" parent_id_path=PackedInt32Array(695809982, 1180662878) index="0" unique_id=1493760396]
 transform = Transform3D(0.9999999, -0.00028892615, 0.00042408146, 0.00042385556, -0.0007813795, -0.99999964, 0.00028925744, 0.99999964, -0.000781257, 4.2507243e-05, 0.18840206, 4.455447e-06)
 joint_offset = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.150112e-05, 4.9004797e-05, 0.06840201)
@@ -109,6 +115,8 @@ collision_mask = 0
 [node name="CollisionShape3D" type="CollisionShape3D" parent="LimpInteractionProxy" unique_id=1773732524]
 shape = SubResource("CapsuleShape3D_limp_proxy")
 
+[editable path="Head/Camera3D/ViewmodelHands/LeftHand"]
+[editable path="Head/Camera3D/ViewmodelHands/RightHand"]
 [editable path="Rig"]
 [editable path="Rig/Skeleton3D/HandAttachment_L/HandMount_L/Hand"]
 [editable path="Rig/Skeleton3D/HandAttachment_R/HandMount_R/Hand"]
