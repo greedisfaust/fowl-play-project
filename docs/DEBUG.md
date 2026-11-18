@@ -238,6 +238,14 @@ Carry pose events now drive the camera-attached Viewmodel left/right hands on bo
 
 When the carried target is a limp player, cosmetic hand grips use the live Chest PhysicalBone3D position and orientation, matching the existing chest spring-damper carry anchor instead of the stationary CharacterBody3D root or hips. The two hands approach opposite sides of the chest, use a relaxed carry curl, and skip static-box fingertip contact correction. The existing hips target remains unchanged for gameplay interaction/recovery. Ordinary props retain their existing collision-bound grip solver. M2 checks verify the grip follows a moving chest target and the longer poke distance; M3 checks verify remote carry drives Viewmodel hands and leaves Rig hands untouched. Godot execution and in-game visual confirmation remain user-run.
 
+
+
+### M2 procedural right-arm hand visual handoff
+
+- The positive-X Rig chain is `UpperArm_L/Forearm_L/Hand_L`, and its duplicate attached hand scene is `Skeleton3D/HandAttachment_L/HandMount_L/Hand`. While standing, the Rig hand scene is hidden so the camera-attached Viewmodel hand is the only visible right hand; the skeleton bone, attachment, and physical-bone setup remain intact.
+- The Rig hand scene becomes visible when host physical ragdoll simulation or remote ragdoll pose playback begins, then hides again when simulation ends and recovery owns the skeleton. `rig/<player-id>/right_rig_hand_visible` reports the actual visual state.
+- The positive-X forearm's render capsule is extended from 0.27 m to 0.34 m and its center nudged to 0.14 m along the forearm. This is render geometry only; the PhysicalBone collision capsule and joint lengths are unchanged. Inspect the wrist seam in-game and reduce the overlap if it looks swollen.
+- `tests/m2_procedural_arm_test.gd` checks the standing-hidden → ragdoll-visible → standing-hidden handoff. Run `tests/run_checks.ps1`; Godot execution and visual confirmation remain user-run.
 ### M2 procedural right-arm IK — first integration slice
 
 - The remote-visible Player Rig positive-X upper arm and forearm (the Rig currently names this chain UpperArm_L/Forearm_L) solve toward the camera-attached Viewmodel right hand world-space wrist target. The Viewmodel hand remains the pose/presentation owner; the body rig supplies the connected shoulder-to-wrist silhouette.
