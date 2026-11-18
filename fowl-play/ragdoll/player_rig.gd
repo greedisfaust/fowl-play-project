@@ -32,6 +32,8 @@ var _right_viewmodel_forearm_bone_index: int = -1
 var _right_viewmodel_hand_bone_index: int = -1
 var _right_arm_ik_watch_name: StringName
 var _right_arm_ik_command_name: StringName
+var _right_rig_hand_visible_watch_name: StringName
+var _right_rig_hand_visual: Node3D
 var _right_arm_ik_active: bool = false
 var _right_arm_ik_target_world: Vector3 = Vector3.ZERO
 var _hips_physical_bone: PhysicalBone3D
@@ -109,6 +111,9 @@ func _ready() -> void:
 	_right_viewmodel_upper_arm_bone_index = skeleton.find_bone("UpperArm_L")
 	_right_viewmodel_forearm_bone_index = skeleton.find_bone("Forearm_L")
 	_right_viewmodel_hand_bone_index = skeleton.find_bone("Hand_L")
+	_right_rig_hand_visual = get_node_or_null("Skeleton3D/HandAttachment_L/HandMount_L/Hand") as Node3D
+	_right_rig_hand_visible_watch_name = StringName("rig/%s/right_rig_hand_visible" % get_parent().name)
+	_set_right_rig_hand_visual_visible(false)
 	_right_arm_ik_watch_name = StringName("rig/%s/right_arm_ik" % get_parent().name)
 	_right_arm_ik_command_name = StringName("arm_ik_status_%s" % get_parent().name)
 	var self_contact_pairs: int = SELF_COLLISION.configure(physical_bones)
@@ -119,6 +124,7 @@ func _ready() -> void:
 		debug_hub.call("log", &"ragdoll", "Rig %s prepared 11 dormant physical bones; %d selective self-contact pairs." % [get_parent().name, self_contact_pairs])
 	debug_hub.call("watch", _watch_name, func() -> int: return physical_bones.size())
 	debug_hub.call("watch", _right_arm_ik_watch_name, func() -> bool: return _right_arm_ik_active)
+	debug_hub.call("watch", _right_rig_hand_visible_watch_name, func() -> bool: return is_instance_valid(_right_rig_hand_visual) and _right_rig_hand_visual.visible)
 	debug_hub.call("command", _right_arm_ik_command_name, _debug_right_arm_ik_status, "Report the procedural Viewmodel right-arm target and ownership state.", false, false)
 	set_process(false)
 
@@ -126,7 +132,14 @@ func _exit_tree() -> void:
 	if is_instance_valid(debug_hub):
 		debug_hub.call("unwatch", _watch_name)
 		debug_hub.call("unwatch", _right_arm_ik_watch_name)
+		debug_hub.call("unwatch", _right_rig_hand_visible_watch_name)
 		debug_hub.call("unregister_command", _right_arm_ik_command_name)
+
+## The positive-X Rig hand is a duplicate of the camera-attached Viewmodel hand while standing.
+## Keep its node and skeleton attachment intact; only its rendered hand instance changes visibility.
+func _set_right_rig_hand_visual_visible(visible: bool) -> void:
+	if is_instance_valid(_right_rig_hand_visual):
+		_right_rig_hand_visual.visible = visible
 
 ## Viewmodel right is positive X; the current Rig labels that side with the L bone suffix.
 func _set_right_arm_ik_active(active: bool) -> void:
@@ -204,6 +217,7 @@ func begin_host_simulation() -> bool:
 	# blends back to the actual standing pose instead of the rest/T-pose.
 	if not _remote_active:
 		_standing_pose = _capture_skeleton_pose()
+	_set_right_rig_hand_visual_visible(true)
 	# The Player capsule can move independently; the simulated rig must not
 	# inherit that transform or feed its own movement back through the parent.
 	var world_transform: Transform3D = global_transform
@@ -230,6 +244,7 @@ func stop_host_simulation() -> void:
 	if recovery_animation_player != null:
 		recovery_animation_player.stop()
 	simulator.physical_bones_stop_simulation()
+	_set_right_rig_hand_visual_visible(false)
 	disable_collisions()
 	skeleton.reset_bone_poses()
 	top_level = false
@@ -429,6 +444,7 @@ func begin_remote_pose(world_transform: Transform3D, initial_pose: PackedInt32Ar
 	global_transform = world_transform if world_transform.is_finite() else previous_transform
 	simulator.active = false
 	_remote_active = true
+	_set_right_rig_hand_visual_visible(true)
 	_last_remote_sequence = 0
 	_last_remote_host_time_ms = -1
 	_remote_samples.clear()
@@ -470,6 +486,7 @@ func end_remote_pose() -> void:
 	if recovery_animation_player != null:
 		recovery_animation_player.stop()
 	_remote_active = false
+	_set_right_rig_hand_visual_visible(false)
 	_remote_samples.clear()
 	set_process(false)
 	disable_collisions()
