@@ -119,6 +119,7 @@ func _run() -> void:
 	_check(lettering.position.is_equal_approx(Vector3(0.27, 0.0, 0.049)), "TextMesh lettering should sit on the identification plate")
 
 	controller.display_size = Vector2(3.0, 1.6875)
+	_check(lettering.scale.is_equal_approx(Vector3(1.5, 1.5, 1.5)), "TextMesh lettering should scale proportionally with the display")
 	_check(screen_node.display_size == Vector2(3.0, 1.6875), "WorldScreen content should receive the new display size")
 	_check((glass.mesh as PlaneMesh).size == Vector2(3.0, 1.6875), "Glass should resize with the display")
 	_check(is_equal_approx(shell.polygon[0].x, -1.60), "Outer shell should expand with the display and retain its clipped corner")

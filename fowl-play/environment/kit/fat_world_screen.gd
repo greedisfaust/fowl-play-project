@@ -29,6 +29,12 @@ const GLASS_SHADER: Shader = preload("res://environment/kit/slim_world_screen_gl
 		corner_cut = clampf(value, 0.02, 0.3)
 		_apply_configuration()
 
+@export_group("Identification")
+@export_range(0.25, 4.0, 0.05) var identification_text_scale: float = 1.0:
+	set(value):
+		identification_text_scale = clampf(value, 0.25, 4.0)
+		_apply_configuration()
+
 @export_group("Glass Finish")
 @export_range(0.0, 0.15, 0.005) var glass_base_opacity: float = 0.035:
 	set(value):
@@ -48,9 +54,15 @@ const GLASS_SHADER: Shader = preload("res://environment/kit/slim_world_screen_gl
 		_apply_configuration()
 
 var _glass_material: ShaderMaterial
+var _lettering_base_scale: Vector3 = Vector3.ONE
+var _lettering_scale_captured: bool = false
 var _warning_sent: bool = false
 
 func _ready() -> void:
+	var lettering: MeshInstance3D = get_node_or_null("Chassis/ControlPanel/IdentificationPlate/EngravedText") as MeshInstance3D
+	if lettering != null:
+		_lettering_base_scale = lettering.scale
+		_lettering_scale_captured = true
 	_apply_configuration()
 
 func set_display_size(value: Vector2) -> void:
@@ -277,7 +289,11 @@ func _layout_control_panel(group: Node3D) -> void:
 			plate.position = Vector3(display_size.x * 0.135, 0.0, 0.04)
 		var lettering: MeshInstance3D = plate_group.get_node_or_null("EngravedText") as MeshInstance3D
 		if lettering != null:
+			if not _lettering_scale_captured:
+				_lettering_base_scale = lettering.scale
+				_lettering_scale_captured = true
 			lettering.position = Vector3(display_size.x * 0.135, 0.0, 0.049)
+			lettering.scale = _lettering_base_scale * (display_size.x / 2.0) * identification_text_scale
 
 func _layout_fasteners(group: Node3D) -> void:
 	group.position = Vector3.ZERO
