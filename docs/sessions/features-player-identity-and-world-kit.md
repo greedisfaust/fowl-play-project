@@ -3,7 +3,7 @@
 Branch: features/player-identity-and-world-kit
 Base commit: abb3643d4f9326f0c32a31bfe2ba9b9b46c00b83
 Goal: Establish host-authoritative player identities and reusable physical world interaction/display components, then integrate identity presentation into gameplay.
-Status: IN PROGRESS — Player Identity Core, Physical USE Button, and reusable ScreenText code/tests implemented; Godot verification pending; FAT/SLIM screen housing and editor fixture remain.
+Status: IN PROGRESS — Player Identity Core, Physical USE Button, reusable WorldScreen content, FAT/SLIM housing controllers, and shared optical glass shader are implemented in code; Godot/editor verification pending.
 Last updated: 2026-11-19 by GPT-6 (session #1)
 Base docs: CLAUDE.md, docs/PROJECT_OVERVIEW.md, docs/PROJECT_STATE.md
 
@@ -13,6 +13,9 @@ Base docs: CLAUDE.md, docs/PROJECT_OVERVIEW.md, docs/PROJECT_STATE.md
 - No scenes or node trees were changed.
 - Player Identity Core and Physical USE Button code are present; user has editor-authored and playtested the physical button fixture. The saved viewport texture Local to Scene fix still needs confirmation in the pushed scene file.
 - Reusable ScreenText is implemented as a RichTextLabel subclass for SubViewport-based world displays.
+- Latest pushed FAT and SLIM scenes both place WorldScreen, Chassis, and Glass as direct children of their housing roots. The housing controllers now target those direct-child paths.
+- Added `slim_world_screen.gd`, revised `fat_world_screen.gd`, and shared `world_screen_glass.gdshader`. Both controllers resize the display/glass and authored chassis details from `display_size`; the shader adds subtle smoked tint, view-angle Fresnel, diagonal sheen, and edge glints.
+- The two housing `.tscn` root nodes currently do NOT have their controller scripts attached. User must attach `slim_world_screen.gd` to SlimWorldScreen and `fat_world_screen.gd` to FatWorldScreen in the Inspector. Scene files were intentionally left untouched because scene-open status was not confirmed.
 - The existing gameplay cursor exposes `GameplayCursor.set_identity_color(Color)`; identity integration must call this existing seam when the assigned color becomes available.
 - `Network.player_color()` does not exist and must not be assumed or introduced without an explicit design need.
 - Peer ID remains the stable networking identifier; display labels combine nickname and peer ID.
@@ -81,13 +84,13 @@ Base docs: CLAUDE.md, docs/PROJECT_OVERVIEW.md, docs/PROJECT_STATE.md
 ## In progress
 - [x] Player Identity Core — implementation added; Godot and two-instance host/client verification pending.
 - [x] Reusable Physical USE Button — reusable presentation script and automated test added; editor-authored scene fixture and runtime verification remain.
-- [ ] Reusable World Screen Housing — screen content script exists; FAT/SLIM housing and editor-authored SubViewport fixture remain.
+- [x] Reusable World Screen Housing — FAT/SLIM responsive controllers and shared optical glass shader added; attach scripts to scene roots and verify in Godot.
 - [x] Dynamic Screen Content — ScreenText script and focused test added; Godot execution pending.
 - [ ] Registration Terminal — not started.
 - [ ] Gameplay Integration — not started.
 
 ## Exact next step
-User: create an editor-authored screen fixture for ScreenText: a SubViewport containing a RichTextLabel with screen_text.gd, then apply the SubViewportTexture to the 3D screen surface material emission. Enable restrained Glow in the containing WorldEnvironment. Keep the housing mesh and node tree editor-authored. Run the screen-text test stage and visually tune the result. FAT/SLIM reusable housing remains the next code/editor slice.
+User: pull the latest controller/glass commit. In the Godot editor, attach `slim_world_screen.gd` to the `SlimWorldScreen` root and `fat_world_screen.gd` to the `FatWorldScreen` root (do not rebuild or rename the existing child hierarchies). Then run the `slim-world-screen` and `fat-world-screen` test stages and visually inspect glass readability, reflections, and resize behavior. No Godot execution or visual verification has been performed by the assistant.
 
 ## Verification requirements
 - Add focused automated tests for identity data validation, host authority, unique color assignment, duplicate nickname suffixing, peer ID preservation, and display-label formatting.
@@ -149,3 +152,11 @@ User: create an editor-authored screen fixture for ScreenText: a SubViewport con
 - Added focused m3_screen_text_test.gd, registered the screen-text test stage, and added the screen DebugHub category plus a rendered-line-count watch.
 - Documented the separation between crisp text rendering and actual bloom: the later 3D screen material must use the SubViewport texture as emission, and the containing WorldEnvironment must enable Glow.
 - Not done: Godot tests/import have not been run; no scenes, SubViewport nodes, meshes, materials, or WorldEnvironment settings were authored. FAT/SLIM housing remains.
+
+
+### Session 5 — 2026-11-19 — GPT-6
+- Did: fetched and reviewed the user's latest pushed FAT/SLIM scenes at commit `61409bf`. Confirmed both scenes now have direct-child `WorldScreen`, `Chassis`, and `Glass` nodes. Found the FAT controller's old nested-chassis paths, a missing referenced shader file, no SLIM controller file, and stale tests.
+- Added the responsive SLIM controller, rewrote the FAT controller for the corrected hierarchy, and introduced a shared optical glass shader with smoked tint, view-angle Fresnel, a soft diagonal reflection band, and subtle edge glints. Updated the FAT/SLIM contract tests to instantiate the real authored scenes.
+- Changed: `fowl-play/environment/kit/slim_world_screen.gd`, `fat_world_screen.gd`, `world_screen_glass.gdshader`, both housing tests, and this session file.
+- Not changed: no `.tscn` files or authored node trees were edited because scene-open status was not confirmed. Both housing root nodes still need their matching controller scripts attached in the Inspector.
+- Not done: Godot import, headless tests, and rendered visual checks have not been run by the assistant.

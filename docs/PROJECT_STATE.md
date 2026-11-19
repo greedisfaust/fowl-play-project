@@ -1,6 +1,6 @@
 # Fowl Play — Project State
 
-**Status:** Player Identity Core, reusable Physical USE Button code, and a size-adaptive reusable WorldScreen foundation are implemented on `features/player-identity-and-world-kit`; automated Godot checks and visual verification are pending. SLIM/FAT physical housings and registration-terminal integration remain in progress.
+**Status:** Player Identity Core, reusable Physical USE Button, reusable WorldScreen content, FAT/SLIM housing controllers, and shared optical glass shader are implemented on `features/player-identity-and-world-kit`; Godot checks and visual verification are pending. Registration-terminal integration remains in progress.
 
 ## Last updated (2026-11-19; identity and Physical USE Button implementation pending verification)
 
@@ -26,7 +26,7 @@
 | M3 Networking slice 1 | Movement authority gate, roster, remote smoothing, intent RPC, validation helper | Gate approved; first standing movement snapshot/validation/interpolation slice implemented. Two-process movement tests pass; user verified movement works and looks smooth in two instances. Remaining M3 work deferred to subsequent slices. |
 | M4 Ragdoll spike | Skeleton, 11 physical bones, Jolt joints, sync measurements at 15/30/60 Hz | User verified both peers see the ragdoll and approved the head camera/look limit. Two-process checks pass for host/client targets, mid-limp and already-settled late joins, reliable settled pose, and latest-snapshot hips error <0.25 m with 40 ms interpolation. One-client host ENet send rates at 15/30/60 Hz were roughly 4–7/8–12/21–22 KB/s across runs (natural settling and other game traffic affect totals). A new 10-pair selective self-contact policy passes exception-map, multiplayer, and four-ragdoll 7-second headless checks; remote peers render replicated bones without local collision shapes. Symmetric ragdoll contact remains a host-authoritative design task; the attempted remote-bone collision experiment was rolled back after inconsistent hard-obstacle/phasing behavior. 30 Hz remains the default. |
 | M5 Limp lifecycle | Knockdown → ground → recovery (G1–G3, G8) | PARTIAL: host timer recovers after 3.5 s plus slow bones or at 6 s hard cap. Host plants capsule under final hips and reliably sends both standing position, final ragdoll pose, and the selected face-up/face-down recovery variant to clients. Wall-clearance search (floor + capsule overlap + spiral outward to 1.5 m) is implemented; forced-exit G8 cleanup broadcasts a reliable `_ragdoll_end` when a limp peer disconnects so remaining clients complete a get-up blend. PUNCH_HITBOX ↔ LIMP_BODIES collision is now bidirectional. |
-| World kit — WorldScreen | Reusable size-adaptive 3D screen and CMD-style text renderer | Implemented in code: exported physical display size drives PlaneMesh and SubViewport resolution; responsive font sizing, per-instance text scale, local-to-scene render resources, and independent content API. Focused tests registered but not run. Text-only glow, SLIM/FAT housings, and visual verification remain pending. |
+| World kit — WorldScreen | Reusable size-adaptive 3D screen, CMD-style text renderer, and FAT/SLIM housings | WorldScreen content sizing is implemented. FAT and SLIM controllers now resize their editor-authored chassis and shared glass PlaneMesh; shared optical glass shader adds view-angle Fresnel, a soft diagonal sheen, and subtle edge highlights. Focused housing tests are registered but not run. Controller scripts still need attaching to both scene roots in the Inspector; rendered verification remains pending. |
 | M6 Carry and throw | Props and limp bodies, auto-fire throw, dangling limbs | IMPLEMENTED; USER VISUAL-PLAYTESTED: host-authoritative carry/drop/throw; Chest spring/torque stabilisation at the carrier anchor; selective opposite-side limb self-collision; carried-only head/arm damping and narrower neck joint limits; smoothed head-mounted first-person camera while preserving mouse-look and dynamic FOV. Player root stays fixed, remote peers render host poses without local ragdoll collision, recovery pauses while carried, and each release resets a fresh 3.5 s countdown. Automated M6 test and full two-instance host/client verification remain pending. |
 | M7 Combat | Jab/recoil, charged punch, lunge, parry outcomes | Not started |
 | M8 Procedural legs | Cosmetic legs, zero network traffic | Not started |
@@ -55,7 +55,7 @@ Late join is decided: allowed during the rest of a day, not during casino/elevat
 
 ## Next action
 
-On `features/player-identity-and-world-kit`, create the first Physical USE Button fixture in the Godot editor using the session handoff. Then run `fowl-play/tests/run_checks.ps1` (including the `identity` and `physical-button` stages), and complete two-instance host/client checks for identity roster and button animation. These checks have not been run by the assistant; do not mark them passed until verified.
+On `features/player-identity-and-world-kit`, pull the latest commit, attach `slim_world_screen.gd` to the `SlimWorldScreen` scene root and `fat_world_screen.gd` to the `FatWorldScreen` scene root, then run the `slim-world-screen` and `fat-world-screen` stages in `fowl-play/tests/run_checks.ps1`. Visually inspect both glass treatments and verify resizing. These checks have not been run by the assistant; do not mark them passed until verified.
 
 ## Historical verification notes
 
@@ -305,3 +305,8 @@ The test arena now includes a WorldEnvironment with restrained Godot Glow post-p
 
 
 - SLIM Precision Cyber Industrial foundation: extended the existing controller to populate optional authored detail groups with generated machined trim, emissive perimeter/corner lighting, status indicators, side vent inserts, an identification plate, and micro-fasteners. Added adjustable trim/light widths, cyan/amber colors, and emissive energy. The existing WorldScreen, glass orientation, and core housing nodes remain unchanged. Contract checks and editor verification are pending.
+
+
+## 2026-11-19 — FAT/SLIM housing and optical glass controller update
+
+The latest user-authored FAT and SLIM scenes were inspected at commit `61409bf`. Both now use direct-child `WorldScreen`, `Chassis`, and `Glass` nodes. Added a responsive SLIM controller, corrected the FAT controller to use the direct-child hierarchy, and created a shared smoked-glass shader with view-angle Fresnel, a subtle diagonal sheen, and edge glints. Updated both housing tests to instantiate the actual authored scenes. The controller scripts have not yet been attached to the scene roots in the editor; the scene files were intentionally not modified because open-scene status was not confirmed. Godot tests/import and visual verification remain unrun.
