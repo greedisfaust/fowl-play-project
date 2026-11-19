@@ -263,10 +263,13 @@ The test arena now includes a WorldEnvironment with restrained Godot Glow post-p
 - No scene, mesh, or collision shape was authored by script. The first physical button fixture remains an editor task. Godot test execution and rendered host/client animation verification are UNTESTED.
 
 
-## 2026-11-19 — reusable WorldScreen HDR glow and LED matrix
+## 2026-11-19 — isolated WorldScreen text overlay and LED matrix (verification pending)
 
-- Enabled HDR 2D on the reusable WorldScreen SubViewport and routed its ViewportTexture through the 3D display material's emission texture, using the existing WorldEnvironment Glow for the halo.
-- Split the dark panel backing into its own full-viewport ColorRect. ScreenText now has a transparent stylebox so the text shader affects glyphs only, not the panel.
-- Added a reusable CanvasItem shader that boosts text RGB into HDR and optionally applies a circular LED dot mask to glyph alpha.
-- Added per-instance WorldScreen controls for glow enable/boost and LED matrix enable/dot size/gap/softness. The ShaderMaterial is local-to-scene so tuning one screen does not affect another.
-- Extended the WorldScreen headless contract test for HDR, background separation, shader defaults, and per-instance shader parameter isolation. Godot tests and rendered visual tuning have NOT been run; confirm the glow strength, dot size, and readability in the editor/game before considering this visual slice verified.
+- Reworked the reusable WorldScreen rendering path so the opaque physical panel and glowing text are separate 3D layers.
+- The editor-authored scene hierarchy now requires sibling `Display`, `TextDisplay`, and `SubViewport` nodes under WorldScreen, with `ScreenText` inside SubViewport. The TextDisplay plane must match Display's dimensions/orientation and sit slightly in front of it.
+- The SubViewport uses transparent background and HDR 2D. It contains only ScreenText; no full-screen background ColorRect is used.
+- WorldScreen creates a transparent, unshaded StandardMaterial3D for TextDisplay and routes the SubViewport texture to albedo and emission. The physical Display remains dark and non-emissive.
+- WorldScreen assigns the CanvasItem HDR/LED shader to ScreenText. The shader boosts glyph RGB and applies the LED dot mask to glyph alpha; the panel is not included in the viewport texture.
+- Both display planes resize together through `display_size`. Responsive viewport/font sizing, content helpers, and per-instance shader settings remain supported.
+- Updated the WorldScreen contract test and debug documentation for the two-layer setup. The test tolerates the committed scene while the editor-authored TextDisplay node is still local/uncommitted; overlay-specific assertions run once that node is present.
+- Godot tests and rendered visual verification have NOT been run by the assistant. The user must verify text visibility, panel darkness, dot size/readability, and bloom in the editor/game before this slice is considered complete.

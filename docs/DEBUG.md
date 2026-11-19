@@ -311,17 +311,15 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 - `tests/m3_physical_use_button_test.gd` checks USE-only activation, retrigger continuity, and return to rest. It is registered as `physical-button` in `tests/run_checks.ps1`. Godot execution and rendered multiplayer verification remain pending.
 
 
-### WorldScreen — reusable size-adaptive display
+### WorldScreen — reusable size-adaptive display and isolated text glow
 
-- Scene: `res://environment/kit/world_screen.tscn`; root script: `world_screen.gd`; text control: `ScreenText` using `screen_text.gd`.
-- Resize through the root's exported **Display Size** (`display_size`) rather than scaling the root Node3D. The controller updates the PlaneMesh dimensions and SubViewport resolution together.
-- **Pixels Per Unit** defaults to 1024. A 2.0 × 1.125 display therefore renders at 2048 × 1152. The maximum viewport dimension defaults to 4096 to cap very large custom screens while preserving their aspect ratio in normal use.
-- **Text Scaling** uses a responsive font-height ratio (default 0.0764) plus a per-instance **Text Scale** multiplier. The standard 2.0 × 1.125 display gets an 88 px font; a 3.0 × 1.6875 display gets a 132 px font. Disable Auto Scale Font Size if a screen needs a manually authored ScreenText font size.
-- ScreenText supports font sizes 8–512 and applies the selected size to normal, bold, italic, bold-italic, and monospace styles. Its content padding scales with font size.
-- Public WorldScreen methods: `append_header(text)`, `append_paragraph(text)`, `append_prompt(text)`, and `clear_screen()`. `get_screen_text()` exposes the underlying ScreenText control when a caller needs lower-level configuration.
-- ViewportTexture, StandardMaterial3D, and PlaneMesh are local-to-scene so separate instances can keep independent render resources and content.
-- The SubViewport enables HDR 2D locally (use_hdr_2d = true); no project-wide HDR 2D toggle is required for this screen. Its ViewportTexture feeds both albedo and emission on the 3D display material, allowing overbright text pixels to reach the arena's existing WorldEnvironment Glow.
-- The SubViewport uses a separate full-screen Background ColorRect. ScreenText has a transparent stylebox, so the text-only shader cannot boost or dot-pattern the dark panel.
-- Text Glow exports on the WorldScreen root: text_glow_enabled and text_glow_boost (default 2.2). LED Matrix exports: led_matrix_enabled (default on), led_dot_size (3 px), led_gap (0.28), and led_softness (0.08). These are per-instance settings; the ShaderMaterial is local-to-scene.
-- The CanvasItem shader boosts only the ScreenText draw output into HDR and masks glyph alpha with a circular dot grid. The SubViewport background is a separate node and is not affected. The existing WorldEnvironment must have Glow enabled for the HDR text halo to bloom.
-- Run `tests/run_checks.ps1` to include the WorldScreen stage in the full suite. For an isolated check, run `godot --headless --path fowl-play --script res://tests/m3_world_screen_test.gd`. The test covers default sizing, proportional custom sizing, font scaling, HDR enablement, separate background, shader configuration, per-instance shader parameter isolation, and independent content. Godot execution and in-game visual verification remain pending.
+- Scene: `res://environment/kit/world_screen.tscn`; root controller: `world_screen.gd`; text control: `SubViewport/ScreenText`.
+- Required direct children of WorldScreen: `Display` (opaque physical panel), `TextDisplay` (transparent text overlay), and `SubViewport`. Keep ScreenText inside SubViewport.
+- `Display` uses a dark, non-emissive material with no ViewportTexture. `TextDisplay` matches the Display PlaneMesh size/orientation and sits slightly in front of it; its material is configured by WorldScreen at runtime.
+- SubViewport must use Transparent Bg and HDR 2D. It contains only ScreenText; do not add a full-screen Background ColorRect. ScreenText's normal StyleBox remains transparent.
+- WorldScreen routes the SubViewport texture to TextDisplay's albedo and emission. Because the viewport background is transparent, only rendered glyphs contribute to the overlay; the physical panel is not part of the emission texture.
+- The CanvasItem shader is assigned to ScreenText by WorldScreen. It boosts glyph RGB into HDR and applies a circular dot mask to glyph alpha. It does not modify Display.
+- Text Glow exports: `text_glow_enabled`, `text_glow_boost` (default 2.2). LED Matrix exports: `led_matrix_enabled`, `led_dot_size`, `led_gap`, and `led_softness`. Dot size is measured in SubViewport pixels; smaller values create a finer matrix. A starting range of 3–5 px is recommended for the 2048 × 1152 default viewport.
+- The TextDisplay overlay uses alpha transparency, unshaded rendering, and an emission texture. The existing WorldEnvironment must have Glow enabled for HDR glyphs to bloom.
+- Resize through root `display_size`, not root Transform Scale. The controller updates both PlaneMeshes, SubViewport resolution, and responsive font size.
+- Run `tests/run_checks.ps1` to include the WorldScreen stage. Isolated: `godot --headless --path fowl-play --script res://tests/m3_world_screen_test.gd`. The test checks sizing, transparent HDR viewport, text shader settings, overlay material when the editor-authored TextDisplay exists, per-instance isolation, and independent content. Godot execution and rendered visual verification remain user-run.
