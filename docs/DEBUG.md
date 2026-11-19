@@ -333,3 +333,5 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 - Glass uses `slim_world_screen_glass.gdshader`: a faint cool tint, physically lit clearcoat/specular response, angle-based Fresnel sheen, and a restrained near-camera fade. This is a stylized sheen, not a captured real-world reflection; visible environment reflections depend on scene lighting/reflection probes.
 - `glass_base_opacity`, `glass_sheen_strength`, `glass_sheen_near_distance`, and `glass_sheen_far_distance` tune the effect. The default keeps the screen readable and the glass understated.
 - Run `tests/run_checks.ps1` stage `slim-world-screen` for the headless geometry/resizing contract. Godot execution and rendered visual tuning remain user-run.
+
+- Glass uses a default-orientation PlaneMesh (XZ plane); do not rotate it 90 degrees. The backing BoxMesh and bezel boxes are rotated 90 degrees around X because their broad faces are authored in XY.

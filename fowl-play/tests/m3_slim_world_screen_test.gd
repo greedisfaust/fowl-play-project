@@ -61,7 +61,7 @@ func _run() -> void:
 	_check((bezel.get_node("Top").mesh as BoxMesh).size == Vector3(2.16, 0.08, 0.025), "Top bezel should use the full outer width")
 	_check((glass.mesh as PlaneMesh).size == Vector2(2.0, 1.125), "Glass should match the display size")
 	_check(glass.material_override is ShaderMaterial, "Glass should receive the dedicated sheen shader")
-	_check(glass.rotation_degrees.is_equal_approx(Vector3(90.0, 0.0, 0.0)), "Glass should align to the WorldScreen display plane")
+	_check(glass.rotation_degrees.is_equal_approx(Vector3.ZERO), "Glass PlaneMesh should remain on its default XZ display plane")
 
 	controller.display_size = Vector2(3.0, 1.6875)
 	_check((housing.mesh as BoxMesh).size == Vector3(3.16, 1.8475, 0.1), "Housing should resize with the display")

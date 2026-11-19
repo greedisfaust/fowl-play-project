@@ -71,7 +71,7 @@ func _apply_configuration() -> void:
 
 	if glass != null:
 		_set_plane_mesh(glass, display_size)
-		glass.rotation_degrees = Vector3(90.0, 0.0, 0.0)
+		glass.rotation_degrees = Vector3.ZERO
 		glass.position = Vector3(0.0, 0.0, 0.012)
 		_apply_glass_material(glass)
 

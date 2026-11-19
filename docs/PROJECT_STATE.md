@@ -282,3 +282,5 @@ The test arena now includes a WorldEnvironment with restrained Godot Glow post-p
 - Corrected the authored geometry orientation in the controller to match WorldScreen's existing XZ display plane: housing and bezel group rotate 90 degrees around X, and the glass is aligned to the same plane.
 - Added restrained cool-tinted glass with PBR specular/clearcoat response, a grazing-angle Fresnel sheen, and a near-camera fade. This is not a real reflection capture; reflection probes and scene lighting determine environmental reflections.
 - Added a headless contract test and registered the `slim-world-screen` stage. Godot tests and rendered visual verification have not been run by the assistant.
+
+- Follow-up correction: Glass is a PlaneMesh and stays at zero rotation to match WorldScreen's default XZ-facing display plane; only the BoxMesh housing and bezel group rotate 90 degrees around X.
