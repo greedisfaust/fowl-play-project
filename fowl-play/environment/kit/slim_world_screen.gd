@@ -141,9 +141,9 @@ func _layout_chassis(chassis: Node3D) -> void:
 		if bottom_channel != null:
 			bottom_channel.position = Vector3(0.0, -_half_height() * 0.907, 0.13)
 		if left_channel != null:
-			left_channel.position = Vector3(-_half_width() * 0.5, 0.0, 0.13)
+			left_channel.position = Vector3(-_half_width(), 0.0, 0.13)
 		if right_channel != null:
-			right_channel.position = Vector3(_half_width() * 0.5, 0.0, 0.13)
+			right_channel.position = Vector3(_half_width(), 0.0, 0.13)
 
 	var fasteners: Node3D = chassis.get_node_or_null("Fasteners") as Node3D
 	if fasteners != null:
