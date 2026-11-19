@@ -31,14 +31,14 @@ func _ready() -> void:
 	use_interactable.interaction_requested.connect(_on_local_interaction_requested)
 	_menu.option_confirmed.connect(_on_option_confirmed)
 	if is_instance_valid(_network):
-		_network.identity_roster_changed.connect(_on_identity_roster_changed)
+		_network.connect("identity_roster_changed", _on_identity_roster_changed)
 	set_process_input(true)
 
 func _exit_tree() -> void:
 	if is_instance_valid(use_interactable) and use_interactable.interaction_requested.is_connected(_on_local_interaction_requested):
 		use_interactable.interaction_requested.disconnect(_on_local_interaction_requested)
-	if is_instance_valid(_network) and _network.identity_roster_changed.is_connected(_on_identity_roster_changed):
-		_network.identity_roster_changed.disconnect(_on_identity_roster_changed)
+	if is_instance_valid(_network) and _network.is_connected("identity_roster_changed", _on_identity_roster_changed):
+		_network.disconnect("identity_roster_changed", _on_identity_roster_changed)
 	_release_actor_lock()
 
 func open_registration_for_actor(actor: Node) -> bool:
@@ -199,15 +199,22 @@ func _on_option_confirmed(option_id: StringName, _option_label: String) -> void:
 
 func _submit_registration() -> void:
 	if not is_instance_valid(_network):
-		screen.show_layout("warning", "NETWORK UNAVAILABLE", "The identity service is not available.", "CLOSE THIS TERMINAL")
+		_menu.close()
+		screen.show_layout("warning", "NETWORK UNAVAILABLE", "The identity service is not available.", "PRESS THE BUTTON TO REOPEN")
+		_session_active = false
+		_release_actor_lock()
+		_local_actor = null
 		return
 	_pending_nickname = _requested_nickname
 	_registration_pending = true
 	var submitted: bool = bool(_network.call("request_identity", _requested_nickname, _requested_color_index))
 	if not submitted:
 		_registration_pending = false
-		screen.show_layout("warning", "REGISTRATION REJECTED", "Connect to a host and try again. The request was not submitted.", "PRESS THE BUTTON TO TRY AGAIN")
 		_menu.close()
+		screen.show_layout("warning", "REGISTRATION REJECTED", "Connect to a host and try again. The request was not submitted.", "PRESS THE BUTTON TO REOPEN")
+		_session_active = false
+		_release_actor_lock()
+		_local_actor = null
 		return
 	if _registration_pending:
 		_menu.close()
@@ -223,6 +230,7 @@ func _on_identity_roster_changed() -> void:
 	if not matches_name:
 		return
 	_registration_pending = false
+	_menu.close()
 	screen.show_layout(
 		"success",
 		"REGISTRATION COMPLETE",
