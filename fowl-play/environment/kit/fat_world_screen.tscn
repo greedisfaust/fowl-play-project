@@ -35,9 +35,9 @@ albedo_color = Color(0.10280716, 0.12345097, 0.15785909, 1)
 metallic = 0.25
 roughness = 0.8
 
-[sub_resource type="BoxMesh" id="BoxMesh_g4v7s"]
+[sub_resource type="BoxMesh" id="BoxMesh_exute"]
 material = SubResource("StandardMaterial3D_qlawu")
-size = Vector3(0.025, 0.42, 0.012)
+size = Vector3(0.025, 0.065, 0.012)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_p0dgw"]
 albedo_color = Color(0.25882354, 0.29411766, 0.3372549, 1)
@@ -146,12 +146,10 @@ radial_segments = 12
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_yb6si"]
 render_priority = 0
 shader = ExtResource("4_pb6oa")
-shader_parameter/glass_tint = Color(0.42, 0.58, 0.72, 1)
-shader_parameter/sheen_color = Color(0.92, 0.72, 0.46, 1)
-shader_parameter/base_opacity = 0.035
-shader_parameter/sheen_strength = 0.55
-shader_parameter/edge_strength = 0.28
-shader_parameter/emission_strength = 0.08
+shader_parameter/reflection_color = Color(0.72, 0.86, 1, 1)
+shader_parameter/reflection_strength = 0.55
+shader_parameter/edge_highlight_strength = 0.1
+shader_parameter/highlight_opacity = 0.035
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_7sf3j"]
 size = Vector2(2, 1.125)
@@ -202,44 +200,44 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1694, 0, 0.02)
 
 [node name="Vent1" type="MeshInstance3D" parent="Chassis/SideDetails/LeftVent" unique_id=750534057]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.24, 0)
-mesh = SubResource("BoxMesh_g4v7s")
+mesh = SubResource("BoxMesh_exute")
 
 [node name="Vent2" type="MeshInstance3D" parent="Chassis/SideDetails/LeftVent" unique_id=621629105]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.12, 0)
-mesh = SubResource("BoxMesh_g4v7s")
+mesh = SubResource("BoxMesh_exute")
 
 [node name="Vent3" type="MeshInstance3D" parent="Chassis/SideDetails/LeftVent" unique_id=906315242]
-mesh = SubResource("BoxMesh_g4v7s")
+mesh = SubResource("BoxMesh_exute")
 
 [node name="Vent4" type="MeshInstance3D" parent="Chassis/SideDetails/LeftVent" unique_id=932069470]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0)
-mesh = SubResource("BoxMesh_g4v7s")
+mesh = SubResource("BoxMesh_exute")
 
 [node name="Vent5" type="MeshInstance3D" parent="Chassis/SideDetails/LeftVent" unique_id=1688231557]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.24, 0)
-mesh = SubResource("BoxMesh_g4v7s")
+mesh = SubResource("BoxMesh_exute")
 
 [node name="RightVent" type="Node3D" parent="Chassis/SideDetails" unique_id=88088852]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1694, 0, 0.02)
 
 [node name="Vent6" type="MeshInstance3D" parent="Chassis/SideDetails/RightVent" unique_id=588788927]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.24, 0)
-mesh = SubResource("BoxMesh_g4v7s")
+mesh = SubResource("BoxMesh_exute")
 
 [node name="Vent7" type="MeshInstance3D" parent="Chassis/SideDetails/RightVent" unique_id=2034216986]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.12, 0)
-mesh = SubResource("BoxMesh_g4v7s")
+mesh = SubResource("BoxMesh_exute")
 
 [node name="Vent8" type="MeshInstance3D" parent="Chassis/SideDetails/RightVent" unique_id=1469080913]
-mesh = SubResource("BoxMesh_g4v7s")
+mesh = SubResource("BoxMesh_exute")
 
 [node name="Vent9" type="MeshInstance3D" parent="Chassis/SideDetails/RightVent" unique_id=1029671947]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0)
-mesh = SubResource("BoxMesh_g4v7s")
+mesh = SubResource("BoxMesh_exute")
 
 [node name="Vent10" type="MeshInstance3D" parent="Chassis/SideDetails/RightVent" unique_id=1561835074]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.24, 0)
-mesh = SubResource("BoxMesh_g4v7s")
+mesh = SubResource("BoxMesh_exute")
 
 [node name="CornerArmor" type="Node3D" parent="Chassis" unique_id=1518325116]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.015)
