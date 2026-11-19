@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://bohm84tw787n0"]
+
+[ext_resource type="PackedScene" uid="uid://dodi6s0eif5r0" path="res://environment/kit/world_screen.tscn" id="1_py5ij"]
+
+[node name="SlimWorldScreen" type="Node3D" unique_id=681439892]
+
+[node name="WorldScreen" parent="." unique_id=1656044326 instance=ExtResource("1_py5ij")]
