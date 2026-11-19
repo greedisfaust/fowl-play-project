@@ -346,3 +346,9 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 - Godot's CSGPolygon3D Depth mode extrudes toward negative Z, so the outer shell's front face is positioned just behind the display at Z = -0.005 and its body extends backward. The inner armor, control panel, TextMesh lettering, fasteners, and glass are layered toward the front (+Z). Glass reuses the same shader and defaults as SLIM.
 - Prefer `MeshInstance3D` with a `TextMesh` resource for crisp physical in-world lettering rather than small `Label3D` textures.
 - Run `tests/run_checks.ps1` stage `fat-world-screen`, or `godot --headless --path fowl-play --script res://tests/m3_fat_world_screen_test.gd`. Godot execution and rendered visual verification remain user-run; this implementation has not been run in Godot.
+
+
+### FAT WorldScreen
+
+- The FAT housing controller reads its chassis at `WorldScreen/Chassis`, matching the authored scene hierarchy. The four authored fasteners use the `TopLeftFastener` / `TopRightFastener` / `BottomLeftFastener` / `BottomRightFastener` names and are repositioned by the controller.
+- In the editor, changing `FatWorldScreen.display_size` should resize the WorldScreen content, CSG chassis plates, vents, control strip, identification plate/text, fasteners, and glass together. Run the `fat-world-screen` headless contract stage after pulling controller updates; visual alignment still needs editor verification.

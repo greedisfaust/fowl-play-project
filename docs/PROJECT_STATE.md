@@ -292,3 +292,10 @@ The test arena now includes a WorldEnvironment with restrained Godot Glow post-p
 - The controller places the CSG shell front face just behind the display (Depth mode extrudes toward negative Z), then lays out the clipped outer CSG shell, four inner armor polygons, four corner plates, side vent groups, lower control strip, identification plate, fasteners, WorldScreen content, and glass from one `display_size` value.
 - Existing authored materials and TextMesh lettering resources are preserved; the script updates geometry dimensions and transforms only. The same restrained glass shader/settings used by SLIM are reused.
 - Added a headless contract test and registered the `fat-world-screen` stage. Godot execution and rendered visual verification have not been run by the assistant and remain required in the local editor.
+
+
+## 2026-11-19 — FAT WorldScreen scene hierarchy compatibility correction
+
+- Audited the user's pushed editor-authored FAT scene. Its `Chassis` is correctly nested under `WorldScreen`, not directly under the `FatWorldScreen` root; the controller's original lookup and lettering-capture paths did not match that hierarchy.
+- Updated the controller to resolve `WorldScreen/Chassis` and the engraved TextMesh through that same path. Updated fastener lookup to support the authored `*Fastener` node names while retaining the shorter fixture names.
+- Updated the FAT contract test to mirror the real nested chassis and authored fastener names. This correction is code-reviewed but Godot tests and editor visuals have not been executed by the assistant.

@@ -59,7 +59,7 @@ var _lettering_scale_captured: bool = false
 var _warning_sent: bool = false
 
 func _ready() -> void:
-	var lettering: MeshInstance3D = get_node_or_null("Chassis/ControlPanel/IdentificationPlate/EngravedText") as MeshInstance3D
+	var lettering: MeshInstance3D = get_node_or_null("WorldScreen/Chassis/ControlPanel/IdentificationPlate/EngravedText") as MeshInstance3D
 	if lettering != null:
 		_lettering_base_scale = lettering.scale
 		_lettering_scale_captured = true
@@ -73,7 +73,7 @@ func _apply_configuration() -> void:
 		return
 
 	var screen: WorldScreen = get_node_or_null("WorldScreen") as WorldScreen
-	var chassis: Node3D = get_node_or_null("Chassis") as Node3D
+	var chassis: Node3D = get_node_or_null("WorldScreen/Chassis") as Node3D
 	var glass: MeshInstance3D = get_node_or_null("Glass") as MeshInstance3D
 	if screen != null:
 		screen.set_display_size(display_size)
@@ -300,6 +300,11 @@ func _layout_fasteners(group: Node3D) -> void:
 	var x_position: float = _half_width() + chassis_margin * 0.36
 	var y_position: float = _half_height() + chassis_margin * 0.58
 	var positions: Dictionary = {
+		"TopLeftFastener": Vector3(-x_position, y_position, 0.085),
+		"TopRightFastener": Vector3(x_position, y_position, 0.085),
+		"BottomLeftFastener": Vector3(-x_position, -y_position, 0.085),
+		"BottomRightFastener": Vector3(x_position, -y_position, 0.085),
+		# Keep compatibility with the shorter names used by the contract fixture.
 		"TopLeft": Vector3(-x_position, y_position, 0.085),
 		"TopRight": Vector3(x_position, y_position, 0.085),
 		"BottomLeft": Vector3(-x_position, -y_position, 0.085),

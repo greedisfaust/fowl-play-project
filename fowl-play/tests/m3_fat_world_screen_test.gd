@@ -39,7 +39,7 @@ func _run() -> void:
 
 	var chassis: Node3D = Node3D.new()
 	chassis.name = "Chassis"
-	root_node.add_child(chassis)
+	screen_node.add_child(chassis)
 	var shell: CSGPolygon3D = _add_csg(chassis, "OuterShell")
 	var inner: Node3D = Node3D.new()
 	inner.name = "InnerArmor"
@@ -49,7 +49,7 @@ func _run() -> void:
 	var corners: Node3D = Node3D.new()
 	corners.name = "CornerArmor"
 	chassis.add_child(corners)
-	for piece_name: String in ["TopLeft", "TopRight", "BottomLeft", "BottomRight"]:
+	for piece_name: String in ["TopLeftFastener", "TopRightFastener", "BottomLeftFastener", "BottomRightFastener"]:
 		_add_csg(corners, piece_name)
 	var side_details: Node3D = Node3D.new()
 	side_details.name = "SideDetails"
@@ -124,7 +124,7 @@ func _run() -> void:
 	_check((glass.mesh as PlaneMesh).size == Vector2(3.0, 1.6875), "Glass should resize with the display")
 	_check(is_equal_approx(shell.polygon[0].x, -1.60), "Outer shell should expand with the display and retain its clipped corner")
 	_check(is_equal_approx((panel_body.mesh as BoxMesh).size.x, 2.025), "Control panel should resize proportionally")
-	_check(is_equal_approx((fasteners.get_node("TopRight") as Node3D).position.x, 1.5792), "Fasteners should move outward with the display")
+	_check(is_equal_approx((fasteners.get_node("TopRightFastener") as Node3D).position.x, 1.5792), "Fasteners should move outward with the display")
 	_check(is_equal_approx((side_details.get_node("RightVent") as Node3D).position.x, 1.6694), "Side vents should move outward with the display")
 
 	root_node.queue_free()
