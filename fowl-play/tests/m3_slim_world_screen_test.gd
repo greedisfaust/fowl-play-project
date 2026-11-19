@@ -33,6 +33,8 @@ func _run() -> void:
 		return
 
 	var left_vents: Node3D = chassis.get_node("SideDetails/LeftVent") as Node3D
+	_check(is_equal_approx((chassis.get_node("LightChannels") as Node3D).position.z, -0.1), "Light-channel group authored depth should survive runtime initialization")
+	_check(is_equal_approx((chassis.get_node("Fasteners") as Node3D).position.z, -0.081), "Fastener group authored depth should survive runtime initialization")
 	var right_vents: Node3D = chassis.get_node("SideDetails/RightVent") as Node3D
 	_check(is_equal_approx((chassis.get_node("LightChannels/TopChannel") as Node3D).position.y, 0.551), "Authored top light-channel position should be preserved")
 	_check(is_equal_approx((chassis.get_node("Fasteners") as Node3D).position.y, -0.081), "Authored fastener-group offset should be preserved")
@@ -43,6 +45,7 @@ func _run() -> void:
 	_check(right_vents.get_child_count() == 5, "Right vent bank should contain five vents")
 	_check(is_equal_approx((left_vents.get_node("Vent1") as Node3D).position.y, -0.34), "First left vent should retain authored spacing")
 	_check(is_equal_approx((right_vents.get_node("Vent5") as Node3D).position.y, 0.34), "Last right vent should retain authored spacing")
+	_check(is_equal_approx((chassis.get_node("OuterArmor/CornerArmor/TopLeft") as Node3D).position.z, 0.105), "Corner armor authored depth should survive runtime initialization")
 
 	instance.display_size = Vector2(3.0, 1.6875)
 	await process_frame

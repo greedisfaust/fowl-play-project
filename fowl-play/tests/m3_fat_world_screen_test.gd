@@ -33,6 +33,9 @@ func _run() -> void:
 		return
 
 	_check((glass.mesh as PlaneMesh).size == Vector2(2.0, 1.125), "Glass should match the default display size")
+	_check(is_equal_approx((chassis.get_node("Fasteners") as Node3D).position.z, -0.05), "Fastener group authored depth should survive runtime initialization")
+	_check(is_equal_approx((chassis.get_node("SideDetails/LeftVent") as Node3D).position.x, -1.1694), "Left vent bank authored position should survive runtime initialization")
+	_check(is_equal_approx((chassis.get_node("ControlPanel") as Node3D).position.y, 0.0), "Control panel authored parent position should survive runtime initialization")
 	_check(glass.material_override is ShaderMaterial, "Glass should receive the shared optical sheen shader")
 	_check((chassis.get_node("OuterShell") as CSGPolygon3D).polygon.size() == 8, "Outer shell should retain its clipped silhouette")
 	_check(chassis.get_node("CornerArmor").get_child_count() == 4, "All four corner plates should remain present")

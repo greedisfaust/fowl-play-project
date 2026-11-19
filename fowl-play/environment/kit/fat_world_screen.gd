@@ -58,6 +58,7 @@ var _lettering_base_scale: Vector3 = Vector3.ONE
 var _lettering_scale_captured: bool = false
 var _warning_sent: bool = false
 var _authored_positions: Dictionary = {}
+var _layout_initialized: bool = false
 
 func _capture_authored_positions(node: Node) -> void:
 	if node is Node3D:
@@ -81,6 +82,7 @@ func _height_delta() -> float:
 
 func _ready() -> void:
 	_capture_authored_positions(self)
+	_layout_initialized = true
 	var lettering: MeshInstance3D = get_node_or_null("Chassis/ControlPanel/IdentificationPlate/EngravedText") as MeshInstance3D
 	if lettering != null:
 		_lettering_base_scale = lettering.scale
@@ -91,7 +93,7 @@ func set_display_size(value: Vector2) -> void:
 	display_size = value
 
 func _apply_configuration() -> void:
-	if not is_inside_tree():
+	if not is_inside_tree() or not _layout_initialized:
 		return
 
 	var screen: WorldScreen = get_node_or_null("WorldScreen") as WorldScreen
@@ -183,7 +185,6 @@ func _layout_outer_shell(shell: CSGPolygon3D) -> void:
 
 func _layout_inner_armor(group: Node3D) -> void:
 	# The controller owns the armor offsets; clear the authored parent offset before positioning each plate.
-	group.position = Vector3.ZERO
 	var half_width: float = _half_width()
 	var half_height: float = _half_height()
 	var frame: float = armor_thickness
@@ -271,11 +272,10 @@ func _layout_vent_group(group: Node3D, x_position: float) -> void:
 		if box == null:
 			box = BoxMesh.new()
 			vent.mesh = box
-		box.size = Vector3(0.025, 0.42, 0.012)
+		box.size = Vector3(0.025, 0.065, 0.012)
 		# Preserve the authored five-vent spacing within each side bank.
 
 func _layout_control_panel(group: Node3D) -> void:
-	group.position = Vector3.ZERO
 	var panel_y: float = -_half_height() - 0.10
 	var body: MeshInstance3D = group.get_node_or_null("PanelBody") as MeshInstance3D
 	if body != null:

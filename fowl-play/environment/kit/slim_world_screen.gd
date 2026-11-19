@@ -28,6 +28,7 @@ const GLASS_SHADER: Shader = preload("res://environment/kit/world_screen_glass.g
 var _glass_material: ShaderMaterial
 var _warning_sent: bool = false
 var _authored_positions: Dictionary = {}
+var _layout_initialized: bool = false
 
 func _capture_authored_positions(node: Node) -> void:
 	if node is Node3D:
@@ -51,13 +52,14 @@ func _height_delta() -> float:
 
 func _ready() -> void:
 	_capture_authored_positions(self)
+	_layout_initialized = true
 	_apply_configuration()
 
 func set_display_size(value: Vector2) -> void:
 	display_size = value
 
 func _apply_configuration() -> void:
-	if not is_inside_tree():
+	if not is_inside_tree() or not _layout_initialized:
 		return
 	var screen: WorldScreen = get_node_or_null("WorldScreen") as WorldScreen
 	var chassis: Node3D = get_node_or_null("Chassis") as Node3D
@@ -146,7 +148,9 @@ func _layout_chassis(chassis: Node3D) -> void:
 			for piece_name: String in positions:
 				var piece: Node3D = corners.get_node_or_null(piece_name) as Node3D
 				if piece != null:
-					piece.position = positions[piece_name]
+					var direction_x: float = -1.0 if piece_name.ends_with("Left") else 1.0
+				var direction_y: float = 1.0 if piece_name.begins_with("Top") else -1.0
+				piece.position = _authored_position(piece) + Vector3(direction_x * _width_delta(), direction_y * _height_delta(), 0.0)
 
 	var channels: Node3D = chassis.get_node_or_null("LightChannels") as Node3D
 	if channels != null:
@@ -220,7 +224,7 @@ func _layout_vent_group(group: Node3D, x_position: float) -> void:
 		var vent: MeshInstance3D = child as MeshInstance3D
 		if vent == null:
 			continue
-		_set_box(vent, Vector3(0.025, 0.24, 0.012))
+		_set_box(vent, Vector3(0.025, 0.10, 0.012))
 		# Preserve the five vent transforms authored in the scene.
 
 func _layout_glass(glass: MeshInstance3D) -> void:
