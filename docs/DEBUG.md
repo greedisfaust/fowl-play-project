@@ -298,3 +298,12 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 - A reliable host-published identity roster carries the authoritative records. Disconnect and shutdown remove identity records.
 - `tests/m3_identity_test.gd` checks peer IDs, display labels, nickname suffixing, blank-name fallback, palette size, color uniqueness, next-color fallback, and invalid requests. It is registered as the `identity` stage in `tests/run_checks.ps1`.
 - Godot execution and live two-instance replication/security verification have not yet been run for this slice.
+
+
+### Physical USE button
+
+- `interact/button/<node-path>/press_count` counts accepted USE events presented by a reusable physical button component.
+- The component listens to the existing `Interactable.interacted` signal. Only the authoritative host/offline instance starts the animation and sends a reliable presentation RPC to clients; clients validate the host sender before playing it.
+- `interact_use_<player>` remains the debug command for exercising the real focus and host-validation path. Aim at the button and press E to see the cap press.
+- Expected: `interact: <button> physical button pressed (<count>)` when the interact category is enabled. Repeated presses restart from the cap's current position and settle at its saved rest position.
+- `tests/m3_physical_use_button_test.gd` checks USE-only activation, retrigger continuity, and return to rest. It is registered as `physical-button` in `tests/run_checks.ps1`. Godot execution and rendered multiplayer verification remain pending.

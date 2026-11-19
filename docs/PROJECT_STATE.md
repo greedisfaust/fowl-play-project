@@ -1,10 +1,10 @@
 # Fowl Play — Project State
 
-**Status:** Player Identity Core is implemented on `features/player-identity-and-world-kit`; automated Godot checks and live host/client verification are pending. Earlier D0/M0/M1, hand, carry/drop/throw, and highlight/accessibility work remains as recorded below.
+**Status:** Player Identity Core and the reusable Physical USE Button code are implemented on `features/player-identity-and-world-kit`; automated Godot checks and live host/client verification are pending. The first button scene fixture remains an editor task.
 
-## Last updated (2026-11-19; Player Identity Core implementation pending verification)
+## Last updated (2026-11-19; identity and Physical USE Button implementation pending verification)
 
-- Current branch: `features/player-identity-and-world-kit` (host-authoritative player identity foundation; reusable world button/screens remain queued).
+- Current branch: `features/player-identity-and-world-kit` (host-authoritative player identity foundation and reusable physical USE button component; world screens/terminal remain queued).
 - Godot 4.7 project: `fowl-play/`, using Jolt Physics, Forward+, and D3D12.
 - `fowl-play/project.godot` contains the project settings, input actions, and four autoload entries.
 - Foundation scripts exist in `fowl-play/core/`: `layers.gd`, `tuning.gd`, `network.gd`, and `debug_hub.gd`.
@@ -54,7 +54,7 @@ Late join is decided: allowed during the rest of a day, not during casino/elevat
 
 ## Next action
 
-On `features/highlight-and-accessibility`, run `fowl-play/tests/run_checks.ps1` (including the M1 interaction and cursor checks), then complete the in-game cursor/focus visual check and a two-instance host/client check. These checks have not been run by the assistant; do not mark them passed until verified. The M6 carry/drop/throw automated and two-instance checks remain pending on its branch.
+On `features/player-identity-and-world-kit`, create the first Physical USE Button fixture in the Godot editor using the session handoff. Then run `fowl-play/tests/run_checks.ps1` (including the `identity` and `physical-button` stages), and complete two-instance host/client checks for identity roster and button animation. These checks have not been run by the assistant; do not mark them passed until verified.
 
 ## Historical verification notes
 
@@ -251,3 +251,12 @@ The test arena now includes a WorldEnvironment with restrained Godot Glow post-p
 - A reliable host-published identity roster supports connected and late-joining clients; disconnect and shutdown clean identity state.
 - Added `net/identities`, `identity_status`, and `identity_set` diagnostics plus focused `m3_identity_test.gd` coverage registered in `run_checks.ps1`.
 - Godot tests, actual RPC replication, and two-instance authority checks have not been run by the assistant. Do not mark this slice verified until the user runs them.
+
+
+## 2026-11-19 — reusable Physical USE Button (implementation pending verification)
+
+- Added `fowl-play/interaction/physical_use_button.gd`, a scene-backed component that references an editor-authored moving cap and existing `Interactable` node. It listens only for accepted `use` interactions; no parallel input, focus, or validation path was added.
+- The cap's rest position is captured at `_ready()`. Press travel uses a configurable local-space axis/depth, followed by a spring transition back to the exact rest position. A retrigger kills the active tween and starts from the cap's current position to avoid snapping or accumulated offsets.
+- The host/offline authority plays the local presentation and, for ENet sessions, sends a reliable presentation-only RPC. Clients validate that the sender is host before animating. Gameplay acceptance remains owned by Network/Interactable.
+- Added `fowl-play/tests/m3_physical_use_button_test.gd` and registered the `physical-button` stage in `fowl-play/tests/run_checks.ps1`. Added `interact/button/<node-path>/press_count` debug watch documentation.
+- No scene, mesh, or collision shape was authored by script. The first physical button fixture remains an editor task. Godot test execution and rendered host/client animation verification are UNTESTED.

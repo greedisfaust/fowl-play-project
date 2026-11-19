@@ -3,7 +3,7 @@
 Branch: features/player-identity-and-world-kit
 Base commit: abb3643d4f9326f0c32a31bfe2ba9b9b46c00b83
 Goal: Establish host-authoritative player identities and reusable physical world interaction/display components, then integrate identity presentation into gameplay.
-Status: IN PROGRESS — Player Identity Core implemented; Godot and live multiplayer verification pending.
+Status: IN PROGRESS — Player Identity Core implemented (verification pending); reusable Physical USE Button script/test implemented (verification pending).
 Last updated: 2026-11-19 by GPT-6 (session #1)
 Base docs: CLAUDE.md, docs/PROJECT_OVERVIEW.md, docs/PROJECT_STATE.md
 
@@ -79,14 +79,14 @@ Base docs: CLAUDE.md, docs/PROJECT_OVERVIEW.md, docs/PROJECT_STATE.md
 
 ## In progress
 - [x] Player Identity Core — implementation added; Godot and two-instance host/client verification pending.
-- [ ] Reusable Physical USE Button — not started.
+- [x] Reusable Physical USE Button — reusable presentation script and automated test added; editor-authored scene fixture and runtime verification remain.
 - [ ] Reusable World Screen Housing — not started.
 - [ ] Dynamic Screen Content — not started.
 - [ ] Registration Terminal — not started.
 - [ ] Gameplay Integration — not started.
 
 ## Exact next step
-Run `fowl-play/tests/run_checks.ps1` with Godot 4.7, including the new identity stage, then run the two-instance host/client identity verification checklist. After that, begin the reusable Physical USE Button slice. Do not edit scenes or construct node trees; follow CLAUDE.md scene ownership rules.
+User: create the first editor-authored physical USE button fixture following the EDITOR TASK handoff. Then run `fowl-play/tests/run_checks.ps1` with Godot 4.7 and verify host/client button animation. After this, begin the reusable World Screen Housing slice. Do not edit scenes or construct node trees; follow CLAUDE.md scene ownership rules.
 
 ## Verification requirements
 - Add focused automated tests for identity data validation, host authority, unique color assignment, duplicate nickname suffixing, peer ID preservation, and display-label formatting.
@@ -133,3 +133,9 @@ Run `fowl-play/tests/run_checks.ps1` with Godot 4.7, including the new identity 
 - Did: implemented the first Player Identity Core slice using the existing Network autoload; added the reusable identity type, host-authoritative identity requests/assignment, duplicate-name suffixing, unique palette fallback, reliable identity roster replication, cleanup, diagnostics, and focused tests.
 - Changed: `fowl-play/core/player_identity.gd`, `fowl-play/core/network.gd`, `fowl-play/tests/m3_identity_test.gd`, `fowl-play/tests/run_checks.ps1`, `docs/DEBUG.md`, `docs/PROJECT_STATE.md`, and this session file.
 - Not done: no scenes or node trees changed; Godot test execution and two-instance multiplayer verification remain pending.
+
+
+### Session 3 — 2026-11-19 — GPT-6
+- Did: added `PhysicalUseButton`, a reusable presentation component that listens to the existing `Interactable.interacted` signal, plays a local-space cap press/spring return, safely retriggers from the current position, and relays the visual event from host to clients through a reliable presentation RPC. Added a focused test and debug watch documentation.
+- Changed: `fowl-play/interaction/physical_use_button.gd`, `fowl-play/tests/m3_physical_use_button_test.gd`, `fowl-play/tests/run_checks.ps1`, `docs/DEBUG.md`, and this session file.
+- Not done: no scene/node tree authored; Godot execution and rendered host/client verification remain pending. The user must create the first button fixture in the editor.
