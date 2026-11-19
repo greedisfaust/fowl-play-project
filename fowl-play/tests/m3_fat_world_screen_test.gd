@@ -52,7 +52,8 @@ func _run() -> void:
 	_check(chassis.get_node("SideDetails/LeftVent").get_child_count() == 5, "Left vent bank should retain five authored vents")
 	_check(chassis.get_node("SideDetails/RightVent").get_child_count() == 5, "Right vent bank should retain five authored vents")
 	_check(is_equal_approx((chassis.get_node("SideDetails/RightVent") as Node3D).position.x, 1.6694), "Right vent bank should follow the resized outer edge")
-	_check(is_equal_approx((chassis.get_node("SideDetails/RightVent/Vent5") as Node3D).position.y, 0.24), "Authored vent spacing should remain intact")
+	_check(is_equal_approx((chassis.get_node("SideDetails/RightVent/Vent5") as Node3D).position.y, 0.36), "Vent spacing should scale with resized screen height")
+	_check(is_equal_approx((chassis.get_node("CornerArmor") as Node3D).position.x, 0.0), "Corner armor group should stay centered")
 
 	instance.queue_free()
 	await process_frame

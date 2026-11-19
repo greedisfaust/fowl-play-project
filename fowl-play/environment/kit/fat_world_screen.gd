@@ -161,7 +161,7 @@ func _set_polygon(node: CSGPolygon3D, points: PackedVector2Array, depth: float, 
 	node.use_collision = false
 	node.polygon = points
 	node.depth = depth
-	node.position = Vector3(node.position.x, node.position.y, z_position)
+	node.position = Vector3(0.0, 0.0, z_position)
 
 func _layout_chassis(chassis: Node3D) -> void:
 	var outer_shell: CSGPolygon3D = chassis.get_node_or_null("OuterShell") as CSGPolygon3D
@@ -249,6 +249,7 @@ func _layout_corner_armor(group: Node3D) -> void:
 	var inner_y: float = outer_y - plate_height
 	var depth: float = 0.035
 	var z_position: float = 0.045
+	group.position = Vector3(0.0, 0.0, _authored_position(group).z)
 
 	_set_polygon(group.get_node_or_null("TopLeft") as CSGPolygon3D, PackedVector2Array([
 		Vector2(-outer_x + 0.02, outer_y - cut),
@@ -284,17 +285,18 @@ func _layout_vent_group(group: Node3D, x_position: float) -> void:
 	if group == null:
 		return
 	group.position = _authored_position(group) + Vector3(signf(x_position) * _width_delta(), 0.0, 0.0)
-	var vent_index: int = 0
+	var height_scale: float = display_size.y / 1.125
 	for child: Node in group.get_children():
 		var vent: MeshInstance3D = child as MeshInstance3D
 		if vent == null:
 			continue
+		var authored_vent_position: Vector3 = _authored_position(vent)
+		vent.position = Vector3(authored_vent_position.x, authored_vent_position.y * height_scale, authored_vent_position.z)
 		var box: BoxMesh = vent.mesh as BoxMesh
 		if box == null:
 			box = BoxMesh.new()
 			vent.mesh = box
-		box.size = Vector3(0.025, 0.065, 0.012)
-		# Preserve the authored five-vent spacing within each side bank.
+		box.size = Vector3(0.025, 0.065 * height_scale, 0.012)
 
 func _layout_control_panel(group: Node3D) -> void:
 	var panel_y: float = -_half_height() - 0.10

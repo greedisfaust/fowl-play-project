@@ -60,6 +60,11 @@ var _missing_overlay_warning_sent: bool = false
 		_apply_configuration()
 
 @export_group("Text Scaling")
+@export_range(0.0, 1.5, 0.05) var content_padding_ratio: float = 0.70:
+	set(value):
+		content_padding_ratio = clampf(value, 0.0, 1.5)
+		_apply_configuration()
+
 @export var auto_scale_font_size: bool = true:
 	set(value):
 		auto_scale_font_size = value
@@ -121,6 +126,7 @@ func _apply_configuration() -> void:
 		viewport.transparent_bg = true
 
 	if terminal != null:
+		terminal.content_padding_ratio = content_padding_ratio
 		_ensure_text_shader(terminal)
 		_update_text_shader_parameters()
 

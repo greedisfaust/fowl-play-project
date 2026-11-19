@@ -6,6 +6,7 @@ const PlayerIdentity = preload("res://core/player_identity.gd")
 
 @export var screen: WorldScreen
 @export var use_interactable: Interactable
+@export_range(0.5, 10.0, 0.25) var interaction_break_distance: float = 3.0
 
 var _menu: ScreenMenu = ScreenMenu.new()
 var _network: Node = null
@@ -33,13 +34,13 @@ func _ready() -> void:
 	if is_instance_valid(_network):
 		_network.connect("identity_roster_changed", _on_identity_roster_changed)
 	set_process_input(true)
+	set_process(true)
 
 func _exit_tree() -> void:
 	if is_instance_valid(use_interactable) and use_interactable.interaction_requested.is_connected(_on_local_interaction_requested):
 		use_interactable.interaction_requested.disconnect(_on_local_interaction_requested)
 	if is_instance_valid(_network) and _network.is_connected("identity_roster_changed", _on_identity_roster_changed):
 		_network.disconnect("identity_roster_changed", _on_identity_roster_changed)
-	_release_actor_lock()
 
 func open_registration_for_actor(actor: Node) -> bool:
 	if not is_instance_valid(screen) or not is_instance_valid(use_interactable) or not is_instance_valid(actor):
@@ -50,8 +51,6 @@ func open_registration_for_actor(actor: Node) -> bool:
 	_session_active = true
 	_editing_nickname = false
 	_registration_pending = false
-	if actor.has_method("set_registration_terminal_active"):
-		actor.call("set_registration_terminal_active", true)
 	var current_identity: PlayerIdentity = null
 	if is_instance_valid(_network):
 		current_identity = _network.call("get_local_player_identity") as PlayerIdentity
@@ -76,7 +75,6 @@ func close_registration_session() -> void:
 		_menu.close()
 	_editing_nickname = false
 	_session_active = false
-	_release_actor_lock()
 	_local_actor = null
 
 func _on_local_interaction_requested(actor: Node, action: StringName) -> void:
@@ -87,6 +85,18 @@ func _on_local_interaction_requested(actor: Node, action: StringName) -> void:
 			_menu.handle_action(ScreenMenu.ACTION_CONFIRM)
 		return
 	open_registration_for_actor(actor)
+
+func _process(_delta: float) -> void:
+	if not _session_active or _registration_pending or not is_instance_valid(_local_actor):
+		return
+	if not _local_actor is Node3D:
+		return
+	var actor_position: Vector3 = (_local_actor as Node3D).global_position
+	var actor_flat: Vector2 = Vector2(actor_position.x, actor_position.z)
+	var terminal_flat: Vector2 = Vector2(global_position.x, global_position.z)
+	if actor_flat.distance_to(terminal_flat) > interaction_break_distance:
+		close_registration_session()
+		screen.show_layout("warning", "CONNECTION LOST", "You moved too far from the terminal. Registration was reset.", "RETURN TO THE TERMINAL TO RECONNECT")
 
 func _input(event: InputEvent) -> void:
 	if not _session_active or not event is InputEventKey:
@@ -202,7 +212,6 @@ func _submit_registration() -> void:
 		_menu.close()
 		screen.show_layout("warning", "NETWORK UNAVAILABLE", "The identity service is not available.", "PRESS THE BUTTON TO REOPEN")
 		_session_active = false
-		_release_actor_lock()
 		_local_actor = null
 		return
 	_pending_nickname = _requested_nickname
@@ -213,7 +222,6 @@ func _submit_registration() -> void:
 		_menu.close()
 		screen.show_layout("warning", "REGISTRATION REJECTED", "Connect to a host and try again. The request was not submitted.", "PRESS THE BUTTON TO REOPEN")
 		_session_active = false
-		_release_actor_lock()
 		_local_actor = null
 		return
 	if _registration_pending:
@@ -238,9 +246,5 @@ func _on_identity_roster_changed() -> void:
 		"IDENTITY ASSIGNED BY HOST"
 	)
 	_session_active = false
-	_release_actor_lock()
 	_local_actor = null
 
-func _release_actor_lock() -> void:
-	if is_instance_valid(_local_actor) and _local_actor.has_method("set_registration_terminal_active"):
-		_local_actor.call("set_registration_terminal_active", false)
