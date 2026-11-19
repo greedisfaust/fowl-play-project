@@ -1,25 +1,16 @@
 [gd_scene format=3 uid="uid://dodi6s0eif5r0"]
 
 [ext_resource type="Script" uid="uid://cqa1s7x63ko24" path="res://ui/screen_text.gd" id="1_screen_text"]
-[ext_resource type="Script" path="res://environment/kit/world_screen.gd" id="2_world_screen"]
-[ext_resource type="Shader" path="res://environment/kit/world_screen_text.shader" id="3_world_screen_text"]
+[ext_resource type="Script" uid="uid://cqy6ibl5xgikq" path="res://environment/kit/world_screen.gd" id="2_world_screen"]
+[ext_resource type="FontFile" uid="uid://ws0yv8acsgcw" path="res://assets/fonts/JetBrainsMonoNL-Regular.ttf" id="3_vx1u1"]
 
 [sub_resource type="ViewportTexture" id="ViewportTexture_world_screen"]
-resource_local_to_scene = true
 viewport_path = NodePath("SubViewport")
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_world_screen_text"]
-resource_local_to_scene = true
-shader = ExtResource("3_world_screen_text")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_world_screen"]
 resource_local_to_scene = true
-texture_filter = 1
 albedo_texture = SubResource("ViewportTexture_world_screen")
-emission_enabled = true
-emission = Color(1, 1, 1, 1)
-emission_energy_multiplier = 1.0
-emission_texture = SubResource("ViewportTexture_world_screen")
+texture_filter = 1
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_world_screen"]
 resource_local_to_scene = true
@@ -28,25 +19,17 @@ size = Vector2(2, 1.125)
 
 [node name="WorldScreen" type="Node3D" unique_id=1656044326]
 script = ExtResource("2_world_screen")
+led_dot_size = 16.0
 
 [node name="Display" type="MeshInstance3D" parent="." unique_id=541727026]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
 mesh = SubResource("PlaneMesh_world_screen")
 
 [node name="SubViewport" type="SubViewport" parent="." unique_id=73501419]
-use_hdr_2d = true
 msaa_2d = 1
+use_hdr_2d = true
 size = Vector2i(2048, 1152)
 render_target_update_mode = 4
-
-[node name="Background" type="ColorRect" parent="SubViewport"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.031, 0.051, 0.094, 1)
-mouse_filter = 2
 
 [node name="ScreenText" type="RichTextLabel" parent="SubViewport" unique_id=374298792]
 anchors_preset = 15
@@ -54,7 +37,13 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-text = ""
-material = SubResource("ShaderMaterial_world_screen_text")
+text = "HI!!!!
+IM BURNINCE
+WHAT CAN I GET FOR YOU
+A DRINK?
+A SNACK?
+OR A LITTLE FLAME"
 script = ExtResource("1_screen_text")
+terminal_font = ExtResource("3_vx1u1")
+terminal_font_size = 88
 metadata/_edit_group_ = true
