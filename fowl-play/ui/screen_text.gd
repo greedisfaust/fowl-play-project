@@ -116,7 +116,8 @@ func show_menu(header: String, description: String, options: Array[Dictionary], 
 func get_menu_option_at_position(local_position: Vector2) -> int:
 	if _menu_option_lines.is_empty() or _menu_option_end_line < 0:
 		return -1
-	var vertical_scroll: float = float(get_v_scroll())
+	var vertical_scroll_bar: VScrollBar = get_v_scroll_bar()
+	var vertical_scroll: float = vertical_scroll_bar.value if vertical_scroll_bar != null else 0.0
 	for option_index: int in _menu_option_lines.size():
 		var line_index: int = _menu_option_lines[option_index]
 		var end_line: int = _menu_option_end_line
