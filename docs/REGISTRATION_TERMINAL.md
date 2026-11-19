@@ -35,3 +35,8 @@ Run:
 godot --headless --path fowl-play --script res://tests/m3_registration_terminal_test.gd
 
 Then wire the editor-authored terminal and verify locally and with two instances: nickname entry, duplicate nickname suffixing, occupied-color fallback, host/client roster agreement, and movement lock/unlock. Automated checks do not replace rendered or multiplayer verification.
+
+
+## Direct mouse selection
+
+When a local registration session opens, the terminal temporarily makes the mouse cursor visible and remembers the previous mouse mode. A left click is projected from the local player's Camera3D onto the WorldScreen plane, converted to SubViewport pixels, and matched against the rendered ScreenText menu row. Clicking a valid row selects and activates that option in one click. Clicks outside option rows are ignored. When the session closes or registration completes/rejects, the previous mouse mode is restored. Keyboard navigation, Enter, and physical USE/M1 confirmation remain available.

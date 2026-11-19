@@ -217,7 +217,7 @@ func _show_main_menu() -> void:
 			PlayerIdentity.color_name_for_index(_requested_color_index).to_upper()
 		],
 		options,
-		"ARROWS NAVIGATE  •  BUTTON / ENTER SELECT"
+		"CLICK OPTION  •  ARROWS MOVE  •  USE / ENTER SELECT"
 	)
 
 func _show_color_menu() -> void:
@@ -313,4 +313,5 @@ func _on_identity_roster_changed() -> void:
 	)
 	_session_active = false
 	_local_actor = null
+	_restore_mouse_mode()
 

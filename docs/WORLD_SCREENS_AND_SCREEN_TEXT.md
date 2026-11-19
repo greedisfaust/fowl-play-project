@@ -329,3 +329,8 @@ The reusable WorldScreen exposes `content_padding_ratio` (default `0.70`) in its
 ## Responsive FAT details
 
 The FAT controller lays CornerArmor polygons out in chassis-local coordinates and keeps their parent group centered, preventing a second parent offset from being added to generated geometry. The two SideDetails vent banks preserve their authored spacing at the default display size, then scale vertical positions and vent height with display height. Width changes move the banks with the outer housing edge.
+
+
+## Clicking rendered menu options
+
+RegistrationTerminal supports direct left-click selection on the physical 3D screen. It projects the local player's camera ray onto the WorldScreen plane, maps the hit into SubViewport pixels, and asks ScreenText which menu row occupies that vertical position. A valid row click selects and confirms the option. The cursor is shown only while the local registration session is active; the previous mouse mode is restored when the session ends. Hit testing uses the actual screen dimensions and rendered line offsets, so it follows display resizing and text wrapping.

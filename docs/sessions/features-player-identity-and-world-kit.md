@@ -198,3 +198,10 @@ Pull the Registration Terminal implementation. In the editor, create the termina
 - M1 was already supported by Focus/Interactable: primary maps to use, and the terminal treats that local interaction as confirmation of the highlighted option. Direct clicking of individual screen text rows remains a separate future feature.
 - Added focused checks for proximity reset and responsive FAT vent scaling. Updated Registration Terminal, WorldScreen, debug, and project-state documentation.
 - No scenes were edited. Godot execution and rendered/multiplayer verification have not been run by the assistant.
+
+
+### Session 12 — 2026-11-20 — GPT-6
+- Added direct mouse selection for rendered WorldScreen menu rows. RegistrationTerminal projects the local camera ray onto the 3D screen plane, converts the hit into SubViewport pixels, and resolves the clicked rendered option line. Clicking an option selects and confirms it in one click; clicks outside option rows are ignored.
+- Registration opens the mouse cursor and restores its previous mode when the session closes or completes/rejects. Arrow-key navigation, Enter, and physical USE/M1 confirmation remain intact.
+- Added ScreenText row hit testing and focused test coverage for row lookup and cursor-mode restoration. Updated registration, screen, debug, project-state, and session documentation.
+- No scenes or InputMap actions changed. Godot execution and in-world mouse click verification remain pending.

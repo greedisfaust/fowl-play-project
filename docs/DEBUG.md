@@ -392,3 +392,6 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 - The local interaction-request signal is only a local presentation/input hook. Host-side range, actor, and Interactable validation remain in Network.
 - Focused check: godot --headless --path fowl-play --script res://tests/m3_registration_terminal_test.gd.
 - Multiplayer verification: open the terminal from a client and host, submit duplicate nicknames and occupied colors, and confirm the displayed identity matches the host's net/identities roster.
+
+
+- Registration menu: while active, mouse cursor is visible. Left-click an option row on the WorldScreen to select and confirm; click elsewhere to do nothing. Keyboard arrows/Enter and physical USE/M1 remain active. Closing/completing/rejecting registration restores the prior mouse mode.

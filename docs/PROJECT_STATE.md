@@ -350,3 +350,11 @@ The latest user-authored FAT and SLIM scenes were inspected at commit `61409bf`.
 - Local menu flow supports nickname editing (16 characters), ten-color selection, registration submission, host-assigned success display, arrow-key navigation, Enter/Escape handling, physical USE confirmation, and free movement with a configurable horizontal proximity cutoff.
 - Added a presentation-only local interaction-request signal to Interactable/Focus for immediate per-player screen input. Host validation and the authoritative interacted signal remain unchanged.
 - No scene/node construction or InputMap changes were made. Focused test stage: registration-terminal. Godot execution and editor-authored scene/host-client verification remain pending.
+
+
+### Direct mouse interaction for registration
+
+- Registration sessions reveal the local mouse cursor and restore its previous mode on close/completion/rejection.
+- Left-clicks are ray-projected from the local player's Camera3D onto the WorldScreen plane, mapped to SubViewport pixels, and hit-tested against ScreenText's rendered menu option lines.
+- Clicking a valid option row selects and confirms it in one click. Clicks outside option rows are ignored. Arrow keys, Enter, and physical USE/M1 continue to work.
+- Focused checks cover ScreenText option-row hit testing and cursor-mode restoration. Godot execution and actual 3D click verification remain user-run.
