@@ -13,7 +13,7 @@ if (-not (Test-Path -LiteralPath $godot)) {
 	throw "Godot executable not found. Set FOWL_PLAY_GODOT or add godot to PATH."
 }
 $project = Join-Path $PSScriptRoot ".."
-foreach ($stage in @("import", "d0", "m1", "m1-cursor", "m2", "m2-arm-ik", "m3", "m3-interaction", "m4-handoff", "m6")) {
+foreach ($stage in @("import", "d0", "m1", "m1-cursor", "m2", "m2-arm-ik", "m3", "m3-interaction", "m4-handoff", "m6", "identity")) {
 	$checkStdout = [System.IO.Path]::GetTempFileName()
 	$checkStderr = [System.IO.Path]::GetTempFileName()
 	$arguments = @("--headless", "--path", ('"{0}"' -f $project))
@@ -26,6 +26,7 @@ foreach ($stage in @("import", "d0", "m1", "m1-cursor", "m2", "m2-arm-ik", "m3",
 	elseif ($stage -eq "m3-interaction") { $arguments += @("--script", "res://tests/m3_interaction_test.gd") }
 	elseif ($stage -eq "m4-handoff") { $arguments += @("--script", "res://tests/m4_limp_handoff_test.gd") }
 	elseif ($stage -eq "m6") { $arguments += @("--script", "res://tests/m6_carry_test.gd") }
+	elseif ($stage -eq "identity") { $arguments += @("--script", "res://tests/m3_identity_test.gd") }
 	else { $arguments += @("--script", "res://tests/m3_movement_test.gd") }
 	try {
 		$checkProcess = Start-Process -FilePath $godot -ArgumentList $arguments -WindowStyle Hidden -Wait -PassThru -RedirectStandardOutput $checkStdout -RedirectStandardError $checkStderr

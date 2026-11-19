@@ -1,10 +1,10 @@
 # Fowl Play — Project State
 
-**Status:** D0, M0, and M1 interaction/prop slices verified. M2 hand integration and M6 carry/drop/throw are implemented; M6 is user visual-playtested, with automated and full two-instance host/client verification pending. The highlight/accessibility branch adds the gameplay cursor and animated interactable focus presentation; its automated checks and runtime verification remain pending.
+**Status:** Player Identity Core is implemented on `features/player-identity-and-world-kit`; automated Godot checks and live host/client verification are pending. Earlier D0/M0/M1, hand, carry/drop/throw, and highlight/accessibility work remains as recorded below.
 
-## Last updated (2026-11-19; highlight/accessibility runtime verification pending)
+## Last updated (2026-11-19; Player Identity Core implementation pending verification)
 
-- Current branch: `features/highlight-and-accessibility` (gameplay cursor and interactable focus presentation).
+- Current branch: `features/player-identity-and-world-kit` (host-authoritative player identity foundation; reusable world button/screens remain queued).
 - Godot 4.7 project: `fowl-play/`, using Jolt Physics, Forward+, and D3D12.
 - `fowl-play/project.godot` contains the project settings, input actions, and four autoload entries.
 - Foundation scripts exist in `fowl-play/core/`: `layers.gd`, `tuning.gd`, `network.gd`, and `debug_hub.gd`.
@@ -239,3 +239,15 @@ The test arena now includes a WorldEnvironment with restrained Godot Glow post-p
 - Kept the 1.8-second cursor breathing pulse. The accent remains a temporary exported fallback and a public set_identity_color(Color) integration point for the future lobby identity system; no Network.player_color() dependency was added.
 - Added a separate 2-second breathing pulse to focused Interactable outlines. The gold silhouette width remains stable; only HDR emission intensity pulses, feeding the existing WorldEnvironment Glow.
 - Updated cursor checks and debug documentation. Godot headless checks and in-game visual verification have not been run by the assistant.
+
+
+## 2026-11-19 — Player Identity Core
+
+- Added reusable `PlayerIdentity` data with stable peer ID, nickname, palette index, resolved color/name, and `Nickname (#PeerID)` display label.
+- Added the ten-color lobby palette (Red, Orange, Yellow, Green, Cyan, Blue, Purple, Pink, Black, White).
+- Existing `Network` remains the sole network authority. The host assigns the host's initial identity and a default identity on each peer connection; clients can submit only nickname/color intent, while the host derives ownership from the RPC sender.
+- Duplicate nicknames are case-insensitive and receive numeric suffixes. Blank names become Chicken; control characters are stripped and names are limited to 16 characters.
+- Requested colors are honored when free; if occupied, assignment walks forward through the palette with wraparound and takes the first free color. Peer IDs remain unchanged.
+- A reliable host-published identity roster supports connected and late-joining clients; disconnect and shutdown clean identity state.
+- Added `net/identities`, `identity_status`, and `identity_set` diagnostics plus focused `m3_identity_test.gd` coverage registered in `run_checks.ps1`.
+- Godot tests, actual RPC replication, and two-instance authority checks have not been run by the assistant. Do not mark this slice verified until the user runs them.

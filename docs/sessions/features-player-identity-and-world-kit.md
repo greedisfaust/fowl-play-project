@@ -3,13 +3,14 @@
 Branch: features/player-identity-and-world-kit
 Base commit: abb3643d4f9326f0c32a31bfe2ba9b9b46c00b83
 Goal: Establish host-authoritative player identities and reusable physical world interaction/display components, then integrate identity presentation into gameplay.
-Status: IN PROGRESS — planning recorded; implementation not yet started.
+Status: IN PROGRESS — Player Identity Core implemented; Godot and live multiplayer verification pending.
 Last updated: 2026-11-19 by GPT-6 (session #1)
 Base docs: CLAUDE.md, docs/PROJECT_OVERVIEW.md, docs/PROJECT_STATE.md
 
 ## Current state
 - This branch starts from the merged Highlight and Accessibility work.
-- No game code, scenes, tests, or project-state documentation have been changed on this branch for this feature yet.
+- Player Identity Core code, focused tests, test-runner registration, and documentation are now prepared on this branch.
+- No scenes or node trees were changed.
 - The first implementation slice is Player Identity Core.
 - The existing gameplay cursor exposes `GameplayCursor.set_identity_color(Color)`; identity integration must call this existing seam when the assigned color becomes available.
 - `Network.player_color()` does not exist and must not be assumed or introduced without an explicit design need.
@@ -74,9 +75,10 @@ Base docs: CLAUDE.md, docs/PROJECT_OVERVIEW.md, docs/PROJECT_STATE.md
 | 6 | Physical button and screen are reusable components; screen content is independent of housing. | Supports multiple world placements and both FAT/SLIM styles without duplicating UI logic. | One-off terminal-only meshes/screens. |
 | 7 | Existing Interactable and Focus own physical interaction. | Preserves the project's interaction architecture and authority checks. | A parallel button interaction system. |
 | 8 | Casino/gameplay outcome logic stays deferred. | This branch establishes identity and reusable presentation hardware only. | Expanding scope into betting, payouts, or table logic. |
+| 9 | If a requested color is occupied, assign the next free palette color in wraparound order. | Keeps registration smooth while guaranteeing lobby color uniqueness. | Rejecting registration and forcing another manual selection. |
 
 ## In progress
-- [ ] Player Identity Core — not started.
+- [x] Player Identity Core — implementation added; Godot and two-instance host/client verification pending.
 - [ ] Reusable Physical USE Button — not started.
 - [ ] Reusable World Screen Housing — not started.
 - [ ] Dynamic Screen Content — not started.
@@ -84,7 +86,7 @@ Base docs: CLAUDE.md, docs/PROJECT_OVERVIEW.md, docs/PROJECT_STATE.md
 - [ ] Gameplay Integration — not started.
 
 ## Exact next step
-Inspect the current project files and contracts for Network, lobby roster/registration, Interactable, Focus, GameplayCursor, and existing tests. Then design the smallest Player Identity Core slice that fits the existing architecture. Do not edit scenes or construct node trees; follow CLAUDE.md scene ownership rules.
+Run `fowl-play/tests/run_checks.ps1` with Godot 4.7, including the new identity stage, then run the two-instance host/client identity verification checklist. After that, begin the reusable Physical USE Button slice. Do not edit scenes or construct node trees; follow CLAUDE.md scene ownership rules.
 
 ## Verification requirements
 - Add focused automated tests for identity data validation, host authority, unique color assignment, duplicate nickname suffixing, peer ID preservation, and display-label formatting.
@@ -110,9 +112,13 @@ Inspect the current project files and contracts for Network, lobby roster/regist
 - No automated or multiplayer verification has been performed for this branch's planned work.
 
 ## Files touched
-- `docs/sessions/features-player-identity-and-world-kit.md` — this session record.
-- `docs/sessions/_ACTIVE.md` — active session pointer.
-- No game code or scenes changed as part of this documentation-only setup.
+- `fowl-play/core/player_identity.gd` — reusable identity data and palette.
+- `fowl-play/core/network.gd` — host assignment, validation, identity roster replication, lifecycle cleanup, and diagnostics.
+- `fowl-play/tests/m3_identity_test.gd` — focused identity-core checks.
+- `fowl-play/tests/run_checks.ps1` — registers the identity test stage.
+- `docs/DEBUG.md` — identity watches/commands and verification notes.
+- `docs/PROJECT_STATE.md` — current branch state and implementation record.
+- `docs/sessions/features-player-identity-and-world-kit.md` — progress, decisions, and handoff.
 
 ## Resume prompt
 > Read CLAUDE.md, docs/PROJECT_OVERVIEW.md, docs/PROJECT_STATE.md, docs/sessions/_ACTIVE.md, and docs/sessions/features-player-identity-and-world-kit.md. Verify the current branch, status, log, and diff read-only. Recap in at most 8 lines, then wait for my explicit go before editing.
@@ -122,3 +128,8 @@ Inspect the current project files and contracts for Network, lobby roster/regist
 - Did: recorded the approved Player Identity & World Kit scope, initial identity decisions, implementation order, verification requirements, and scene/workflow constraints; pointed the active-session index to this branch.
 - Changed: documentation only (`docs/sessions/_ACTIVE.md` and this session file).
 - Not done: no game code, scenes, tests, or Project State changes; no Godot checks or multiplayer verification.
+
+### Session 2 — 2026-11-19 — GPT-6
+- Did: implemented the first Player Identity Core slice using the existing Network autoload; added the reusable identity type, host-authoritative identity requests/assignment, duplicate-name suffixing, unique palette fallback, reliable identity roster replication, cleanup, diagnostics, and focused tests.
+- Changed: `fowl-play/core/player_identity.gd`, `fowl-play/core/network.gd`, `fowl-play/tests/m3_identity_test.gd`, `fowl-play/tests/run_checks.ps1`, `docs/DEBUG.md`, `docs/PROJECT_STATE.md`, and this session file.
+- Not done: no scenes or node trees changed; Godot test execution and two-instance multiplayer verification remain pending.

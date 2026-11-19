@@ -60,6 +60,8 @@ Automated checks cover Enter/Run signal wiring, category toggles, feedback with 
 | `net_status` | none | no | no | Reports connection status, port, and known peers. |
 | `net_host` | none | no | no | Starts hosting from offline/disconnected state. Removes the offline player before spawning the host. |
 | `net_join` | optional IP | no | no | Joins an IP; defaults to 127.0.0.1. Example: `net_join 192.168.1.20`. |
+| `identity_status` | none | no | no | Lists the current authoritative/replicated player identity records. |
+| `identity_set` | nickname, optional palette index 0-9 | no | no | Requests a nickname and color for the local peer; the host sanitizes the nickname, suffixes duplicates, and falls forward to the next free color. |
 | `net_disconnect` | none | no | no | Disconnects this instance and clears its players. On the host, ends the session for clients. Use net_host/net_join afterward. |
 | `interact_use_<name>` | none | no | no | Submits the local player's focused interaction to the host. Remote-player commands reject locally. Submission is not acceptance; see interact logs. |
 | `hand_status_<name>` | none | no | no | Reports this hand's cosmetic state. |
@@ -284,3 +286,15 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 - The color is deliberately a temporary fallback, not a network/player-color lookup. Future lobby identity code should call GameplayCursor.set_identity_color(color) with the assigned player's color.
 - The focused Interactable outline has a separate, slower 2-second breathing glow. Only emission intensity pulses; outline width and silhouette stay stable. The existing test-arena WorldEnvironment Glow creates the soft bloom.
 - Run tests/run_checks.ps1 for the cursor contract check and tests/m1_interaction_test.gd for the interactable outline checks. Godot runtime and visual verification remain user-run.
+
+
+### Player identity core
+
+- `net/identities` lists identity records sorted by peer ID. Each record contains `peer_id`, `nickname`, and `color_index`; `PlayerIdentity` resolves the stable palette name and `Color`.
+- `identity_status` prints the current identity roster.
+- `identity_set <nickname> [color_index]` requests a local identity. Palette indexes are Red 0, Orange 1, Yellow 2, Green 3, Cyan 4, Blue 5, Purple 6, Pink 7, Black 8, White 9.
+- The host derives the requesting peer from the RPC sender, strips control characters/outer whitespace, limits nicknames to 16 characters, defaults blank names to Chicken, and suffixes case-insensitive duplicates (`Chicken 2`, `Chicken 3`, ...).
+- If a requested color is occupied, the host checks subsequent palette entries in wraparound order and assigns the first free color. A peer's existing color is excluded when that peer changes its own selection.
+- A reliable host-published identity roster carries the authoritative records. Disconnect and shutdown remove identity records.
+- `tests/m3_identity_test.gd` checks peer IDs, display labels, nickname suffixing, blank-name fallback, palette size, color uniqueness, next-color fallback, and invalid requests. It is registered as the `identity` stage in `tests/run_checks.ps1`.
+- Godot execution and live two-instance replication/security verification have not yet been run for this slice.

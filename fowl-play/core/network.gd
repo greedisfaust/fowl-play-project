@@ -5,10 +5,12 @@ extends Node
 
 const TUNING = preload("res://core/tuning.gd")
 const LAYERS = preload("res://core/layers.gd")
+const PlayerIdentity = preload("res://core/player_identity.gd")
 
 signal session_ended
 signal session_started
 signal roster_changed
+signal identity_roster_changed
 
 var peer: ENetMultiplayerPeer = null
 var is_host: bool = false
@@ -16,6 +18,8 @@ var is_client: bool = false
 var connected_peers: Array[int] = []
 ## Host-published session membership, separate from transport connection events.
 var roster: Array[int] = []
+## Host-authoritative identity records, keyed by the stable peer ID.
+var player_identities: Dictionary = {}
 var status: String = "offline"
 var port: int = TUNING.ENET_PORT
 var _switching_session: bool = false
@@ -52,6 +56,7 @@ func _bootstrap() -> void:
 	hub.call("watch", &"net/status", func() -> String: return status)
 	hub.call("watch", &"net/peers", func() -> Array[int]: return connected_peers.duplicate())
 	hub.call("watch", &"net/roster", func() -> Array[int]: return roster.duplicate())
+	hub.call("watch", &"net/identities", get_identity_summary)
 	hub.call("watch", &"net/movement_rejected", func() -> int: return movement_rejected)
 	hub.call("watch", &"net/interaction_rejected", func() -> int: return interaction_rejected)
 	hub.call("watch", &"net/interaction_accepted", func() -> int: return interaction_accepted)
@@ -68,6 +73,8 @@ func _bootstrap() -> void:
 	hub.call("command", &"net_disconnect", _command_disconnect, "Leave this local network session.", false, false)
 	hub.call("command", &"net_host", _command_host, "Host a game on this computer.", false, false)
 	hub.call("command", &"net_join", _command_join, "Join an IP: net_join [IP]. Default: 127.0.0.1.", false, false)
+	hub.call("command", &"identity_status", _command_identity_status, "List the current player identities.", false, false)
+	hub.call("command", &"identity_set", _command_identity_set, "Request your nickname/color: identity_set <nickname> [color_index 0-9].", false, false)
 	hub.call("command", &"ragdoll_spike_start", _command_ragdoll_start, "Host test: start a player's ragdoll by peer ID.", true, true)
 	hub.call("command", &"ragdoll_spike_stop", _command_ragdoll_stop, "Host test: restore a player's standing state by peer ID.", true, true)
 	hub.call("watch", &"net/carry_rejected", func() -> int: return carry_rejected)
@@ -116,6 +123,8 @@ func start_host() -> Error:
 	connected_peers = [TUNING.PEER_ID_HOST]
 	roster = connected_peers.duplicate()
 	roster_changed.emit()
+	_assign_player_identity(TUNING.PEER_ID_HOST, "Chicken", 0)
+	_publish_identity_roster()
 	_debug_log("Host started on port %d" % port)
 	session_started.emit()
 	return OK
@@ -147,6 +156,8 @@ func shutdown() -> void:
 	is_client = false
 	connected_peers.clear()
 	roster.clear()
+	player_identities.clear()
+	identity_roster_changed.emit()
 	roster_changed.emit()
 	movement_players.clear()
 	movement_rejected = 0
@@ -457,6 +468,7 @@ func _on_peer_connected(peer_id: int) -> void:
 		connected_peers.append(peer_id)
 	_debug_log("Peer %d connected" % peer_id)
 	if is_host:
+		_assign_player_identity(peer_id, "Chicken", 0)
 		_publish_roster()
 		_sync_active_ragdolls.call_deferred(peer_id)
 		_sync_active_carries.call_deferred(peer_id)
@@ -477,6 +489,7 @@ func _on_peer_disconnected(peer_id: int) -> void:
 			stop_ragdoll_spike(peer_id, "disconnect")
 	_pending_ragdoll_starts.erase(peer_id)
 	_ragdoll_epochs.erase(peer_id)
+	player_identities.erase(peer_id)
 	connected_peers.erase(peer_id)
 	_debug_log("Peer %d disconnected" % peer_id)
 	if is_host:
@@ -487,6 +500,7 @@ func _publish_roster() -> void:
 	roster.sort()
 	roster_changed.emit()
 	_receive_roster.rpc(roster)
+	_publish_identity_roster()
 	_debug_log("Roster updated: %s" % [roster])
 
 @rpc("authority", "call_remote", "reliable", 0)
@@ -496,6 +510,160 @@ func _receive_roster(members: Array[int]) -> void:
 	roster = members.duplicate()
 	roster_changed.emit()
 	_debug_log("Roster received: %s" % [roster])
+
+
+## Submit identity intent for this local peer. The host derives remote peer IDs
+## from the RPC sender and never accepts a client-supplied owner ID.
+func request_identity(nickname: String, requested_color_index: int) -> bool:
+	if requested_color_index < 0 or requested_color_index >= PlayerIdentity.palette_size():
+		_debug_warn("Identity request rejected: invalid color index %d" % requested_color_index)
+		return false
+	if is_host:
+		return _assign_player_identity(multiplayer.get_unique_id(), nickname, requested_color_index)
+	if peer == null or not is_client or peer.get_connection_status() != MultiplayerPeer.CONNECTION_CONNECTED:
+		_debug_warn("Identity request rejected: not connected to a host")
+		return false
+	_submit_identity_request.rpc_id(TUNING.PEER_ID_HOST, nickname, requested_color_index)
+	return true
+
+@rpc("any_peer", "call_remote", "reliable", 0)
+func _submit_identity_request(nickname: String, requested_color_index: int) -> void:
+	if not is_host or not validate_rpc():
+		return
+	var sender_id: int = multiplayer.get_remote_sender_id()
+	if not connected_peers.has(sender_id):
+		_debug_warn("Identity request rejected from unregistered peer %d" % sender_id)
+		return
+	if requested_color_index < 0 or requested_color_index >= PlayerIdentity.palette_size():
+		_debug_warn("Identity request rejected from peer %d: invalid color index" % sender_id)
+		return
+	_assign_player_identity(sender_id, nickname, requested_color_index)
+
+func _assign_player_identity(peer_id: int, requested_nickname: String, requested_color_index: int) -> bool:
+	if not is_host or peer_id <= 0 or not connected_peers.has(peer_id):
+		_debug_warn("Identity assignment rejected for peer %d: not an active host-owned peer" % peer_id)
+		return false
+	if requested_color_index < 0 or requested_color_index >= PlayerIdentity.palette_size():
+		_debug_warn("Identity assignment rejected for peer %d: invalid color index" % peer_id)
+		return false
+	var color_index: int = _next_available_identity_color(requested_color_index, peer_id)
+	if color_index < 0:
+		_debug_warn("Identity assignment rejected for peer %d: lobby color palette is full" % peer_id)
+		return false
+	var nickname: String = _unique_identity_nickname(_clean_identity_nickname(requested_nickname), peer_id)
+	var identity: PlayerIdentity = PlayerIdentity.new(peer_id, nickname, color_index)
+	player_identities[peer_id] = identity
+	identity_roster_changed.emit()
+	_debug_log("Identity assigned peer=%d nickname=%s color=%s" % [
+		peer_id,
+		nickname,
+		identity.get_color_name(),
+	])
+	_publish_identity_roster()
+	return true
+
+func _clean_identity_nickname(requested: String) -> String:
+	var cleaned: String = ""
+	for index: int in range(requested.length()):
+		var codepoint: int = requested.unicode_at(index)
+		if codepoint >= 32 and codepoint != 127:
+			cleaned += String.chr(codepoint)
+	cleaned = cleaned.strip_edges()
+	if cleaned.is_empty():
+		return "Chicken"
+	return cleaned.substr(0, PlayerIdentity.MAX_NICKNAME_LENGTH).strip_edges()
+
+func _unique_identity_nickname(base_name: String, peer_id: int) -> String:
+	var candidate: String = base_name
+	var suffix: int = 2
+	while _identity_nickname_taken(candidate, peer_id):
+		var suffix_text: String = " %d" % suffix
+		var allowed_base_length: int = PlayerIdentity.MAX_NICKNAME_LENGTH - suffix_text.length()
+		candidate = base_name.substr(0, maxi(1, allowed_base_length)).strip_edges() + suffix_text
+		suffix += 1
+	return candidate
+
+func _identity_nickname_taken(candidate: String, excluded_peer_id: int) -> bool:
+	for key: Variant in player_identities.keys():
+		var peer_id: int = int(key)
+		if peer_id == excluded_peer_id:
+			continue
+		var identity: PlayerIdentity = player_identities[peer_id] as PlayerIdentity
+		if identity != null and identity.nickname.to_lower() == candidate.to_lower():
+			return true
+	return false
+
+func _next_available_identity_color(requested_index: int, excluded_peer_id: int) -> int:
+	for offset: int in range(PlayerIdentity.palette_size()):
+		var candidate: int = (requested_index + offset) % PlayerIdentity.palette_size()
+		var taken: bool = false
+		for key: Variant in player_identities.keys():
+			var peer_id: int = int(key)
+			if peer_id == excluded_peer_id:
+				continue
+			var identity: PlayerIdentity = player_identities[peer_id] as PlayerIdentity
+			if identity != null and identity.color_index == candidate:
+				taken = true
+				break
+		if not taken:
+			return candidate
+	return -1
+
+func get_player_identity(peer_id: int) -> PlayerIdentity:
+	return player_identities.get(peer_id) as PlayerIdentity
+
+func get_local_player_identity() -> PlayerIdentity:
+	return get_player_identity(multiplayer.get_unique_id())
+
+func get_identity_summary() -> Array[Dictionary]:
+	var summary: Array[Dictionary] = []
+	var peer_ids: Array[int] = []
+	for key: Variant in player_identities.keys():
+		peer_ids.append(int(key))
+	peer_ids.sort()
+	for peer_id: int in peer_ids:
+		var identity: PlayerIdentity = player_identities[peer_id] as PlayerIdentity
+		if identity != null:
+			summary.append(identity.to_network_data())
+	return summary
+
+func _publish_identity_roster() -> void:
+	identity_roster_changed.emit()
+	if peer != null and is_host:
+		_receive_identity_roster.rpc(get_identity_summary())
+
+@rpc("authority", "call_remote", "reliable", 0)
+func _receive_identity_roster(identities: Array[Dictionary]) -> void:
+	if not validate_rpc(TUNING.PEER_ID_HOST):
+		return
+	var received: Dictionary = {}
+	var used_colors: Dictionary = {}
+	for data: Dictionary in identities:
+		var peer_id: int = int(data.get("peer_id", 0))
+		var nickname: String = str(data.get("nickname", "")).strip_edges()
+		var color_index: int = int(data.get("color_index", -1))
+		if peer_id <= 0 or nickname.is_empty() or color_index < 0 or color_index >= PlayerIdentity.palette_size():
+			_debug_warn("Rejected malformed identity roster entry")
+			return
+		if received.has(peer_id) or used_colors.has(color_index):
+			_debug_warn("Rejected duplicate peer/color in identity roster")
+			return
+		received[peer_id] = PlayerIdentity.new(peer_id, nickname, color_index)
+		used_colors[color_index] = true
+	player_identities = received
+	identity_roster_changed.emit()
+	_debug_log("Identity roster received: %d players" % player_identities.size())
+
+func _command_identity_status(_args: Array[Variant]) -> String:
+	return "identities=%s" % [get_identity_summary()]
+
+func _command_identity_set(args: Array[Variant]) -> String:
+	if args.is_empty() or args.size() > 2:
+		return "Usage: identity_set <nickname> [color_index 0-9]"
+	var color_index: int = 0 if args.size() == 1 else int(str(args[1]))
+	if args.size() == 2 and not str(args[1]).is_valid_int():
+		return "Color index must be an integer from 0 to 9."
+	return "Identity request submitted." if request_identity(str(args[0]), color_index) else "Identity request rejected."
 
 func _debug_log(message: String) -> void:
 	var debug_hub: Node = get_node_or_null("/root/DebugHub")
