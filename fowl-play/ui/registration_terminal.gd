@@ -81,7 +81,6 @@ func close_registration_session() -> void:
 	_session_active = false
 	_local_actor = null
 	_restore_mouse_mode()
-	_restore_mouse_mode()
 
 func _on_local_interaction_requested(actor: Node, action: StringName) -> void:
 	if action != &"use" or not is_instance_valid(actor):

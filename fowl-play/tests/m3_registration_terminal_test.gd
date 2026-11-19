@@ -11,6 +11,7 @@ func _initialize() -> void:
 	_run.call_deferred()
 
 func _run() -> void:
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	var terminal: Node3D = Node3D.new()
 	terminal.set_script(RegistrationTerminalScript)
 	var screen: WorldScreen = WorldScreenScene.instantiate() as WorldScreen
@@ -41,6 +42,7 @@ func _run() -> void:
 	terminal.call("_process", 0.0)
 	_check(not bool(terminal.get("_session_active")), "Walking beyond range should reset the registration session")
 	_check(screen.get_screen_text().get_parsed_text().contains("CONNECTION LOST"), "Leaving range should show a disconnect message")
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	terminal.queue_free()
 	actor.queue_free()
 	await process_frame

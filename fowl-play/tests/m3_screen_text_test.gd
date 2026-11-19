@@ -35,8 +35,25 @@ func _run() -> void:
 	var warning_text: String = terminal.get_parsed_text()
 	_check(warning_text.contains("SYSTEM WARNING") and warning_text.contains("Proceed with caution.") and warning_text.contains("CHECK STATUS"), "Warning layout should display all supplied sections")
 	_check(not warning_text.contains("NEW SESSION"), "show_layout should replace the previous layout")
+	terminal.size = Vector2(1024.0, 576.0)
+	var menu_options: Array[Dictionary] = [
+		{"id": &"first", "label": "FIRST OPTION"},
+		{"id": &"second", "label": "SECOND OPTION"}
+	]
+	terminal.show_menu("CLICK TEST", "Choose one.", menu_options, 0, "CLICK TO SELECT")
+	await process_frame
+	var option_lines: Array = terminal.get("_menu_option_lines")
+	_check(option_lines.size() == 2, "Menu should retain one rendered line index per option")
+	if option_lines.size() == 2:
+		var first_line: int = int(option_lines[0])
+		var first_y: float = float(terminal.get_line_offset(first_line)) + float(terminal.get_line_height(first_line)) * 0.5
+		_check(terminal.get_menu_option_at_position(Vector2(500.0, first_y)) == 0, "First option rendered line should resolve to its index")
+		var second_line: int = int(option_lines[1])
+		var second_y: float = float(terminal.get_line_offset(second_line)) + float(terminal.get_line_height(second_line)) * 0.5
+		_check(terminal.get_menu_option_at_position(Vector2(500.0, second_y)) == 1, "Second option rendered line should resolve to its index")
 	terminal.clear_screen()
 	_check(terminal.get_parsed_text().is_empty(), "clear_screen should remove existing content")
+	_check(terminal.get_menu_option_at_position(Vector2.ZERO) == -1, "Clearing the screen should clear menu hit targets")
 	terminal.queue_free()
 	await process_frame
 	if _failed:
