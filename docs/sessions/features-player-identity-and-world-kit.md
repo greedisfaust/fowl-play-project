@@ -3,7 +3,7 @@
 Branch: features/player-identity-and-world-kit
 Base commit: abb3643d4f9326f0c32a31bfe2ba9b9b46c00b83
 Goal: Establish host-authoritative player identities and reusable physical world interaction/display components, then integrate identity presentation into gameplay.
-Status: IN PROGRESS — Player Identity Core implemented (verification pending); reusable Physical USE Button script/test implemented (verification pending).
+Status: IN PROGRESS — Player Identity Core, Physical USE Button, and reusable ScreenText code/tests implemented; Godot verification pending; FAT/SLIM screen housing and editor fixture remain.
 Last updated: 2026-11-19 by GPT-6 (session #1)
 Base docs: CLAUDE.md, docs/PROJECT_OVERVIEW.md, docs/PROJECT_STATE.md
 
@@ -11,7 +11,8 @@ Base docs: CLAUDE.md, docs/PROJECT_OVERVIEW.md, docs/PROJECT_STATE.md
 - This branch starts from the merged Highlight and Accessibility work.
 - Player Identity Core code, focused tests, test-runner registration, and documentation are now prepared on this branch.
 - No scenes or node trees were changed.
-- The first implementation slice is Player Identity Core.
+- Player Identity Core and Physical USE Button code are present; user has editor-authored and playtested the physical button fixture. The saved viewport texture Local to Scene fix still needs confirmation in the pushed scene file.
+- Reusable ScreenText is implemented as a RichTextLabel subclass for SubViewport-based world displays.
 - The existing gameplay cursor exposes `GameplayCursor.set_identity_color(Color)`; identity integration must call this existing seam when the assigned color becomes available.
 - `Network.player_color()` does not exist and must not be assumed or introduced without an explicit design need.
 - Peer ID remains the stable networking identifier; display labels combine nickname and peer ID.
@@ -80,13 +81,13 @@ Base docs: CLAUDE.md, docs/PROJECT_OVERVIEW.md, docs/PROJECT_STATE.md
 ## In progress
 - [x] Player Identity Core — implementation added; Godot and two-instance host/client verification pending.
 - [x] Reusable Physical USE Button — reusable presentation script and automated test added; editor-authored scene fixture and runtime verification remain.
-- [ ] Reusable World Screen Housing — not started.
-- [ ] Dynamic Screen Content — not started.
+- [ ] Reusable World Screen Housing — screen content script exists; FAT/SLIM housing and editor-authored SubViewport fixture remain.
+- [x] Dynamic Screen Content — ScreenText script and focused test added; Godot execution pending.
 - [ ] Registration Terminal — not started.
 - [ ] Gameplay Integration — not started.
 
 ## Exact next step
-User: create the first editor-authored physical USE button fixture following the EDITOR TASK handoff. Then run `fowl-play/tests/run_checks.ps1` with Godot 4.7 and verify host/client button animation. After this, begin the reusable World Screen Housing slice. Do not edit scenes or construct node trees; follow CLAUDE.md scene ownership rules.
+User: create an editor-authored screen fixture for ScreenText: a SubViewport containing a RichTextLabel with screen_text.gd, then apply the SubViewportTexture to the 3D screen surface material emission. Enable restrained Glow in the containing WorldEnvironment. Keep the housing mesh and node tree editor-authored. Run the screen-text test stage and visually tune the result. FAT/SLIM reusable housing remains the next code/editor slice.
 
 ## Verification requirements
 - Add focused automated tests for identity data validation, host authority, unique color assignment, duplicate nickname suffixing, peer ID preservation, and display-label formatting.
@@ -112,6 +113,8 @@ User: create the first editor-authored physical USE button fixture following the
 - No automated or multiplayer verification has been performed for this branch's planned work.
 
 ## Files touched
+- fowl-play/ui/screen_text.gd — reusable CMD-style RichTextLabel component, configurable font/size/colors, styled append/clear API, and line-count watch.
+- fowl-play/tests/m3_screen_text_test.gd — focused layout/default/content/clear contract checks.
 - `fowl-play/core/player_identity.gd` — reusable identity data and palette.
 - `fowl-play/core/network.gd` — host assignment, validation, identity roster replication, lifecycle cleanup, and diagnostics.
 - `fowl-play/tests/m3_identity_test.gd` — focused identity-core checks.
@@ -139,3 +142,10 @@ User: create the first editor-authored physical USE button fixture following the
 - Did: added `PhysicalUseButton`, a reusable presentation component that listens to the existing `Interactable.interacted` signal, plays a local-space cap press/spring return, safely retriggers from the current position, and relays the visual event from host to clients through a reliable presentation RPC. Added a focused test and debug watch documentation.
 - Changed: `fowl-play/interaction/physical_use_button.gd`, `fowl-play/tests/m3_physical_use_button_test.gd`, `fowl-play/tests/run_checks.ps1`, `docs/DEBUG.md`, and this session file.
 - Not done: no scene/node tree authored; Godot execution and rendered host/client verification remain pending. The user must create the first button fixture in the editor.
+
+
+### Session 4 — 2026-11-19 — GPT-6
+- Did: added ScreenText, a reusable CMD-style RichTextLabel subclass for world-screen SubViewports. Defaults are a near-black blue backing, gold bold headers, bright-white body text, left alignment, and LTR direction. Font resource, font size, and colors are Inspector-configurable; methods append headers/paragraphs/prompts or clear the display.
+- Added focused m3_screen_text_test.gd, registered the screen-text test stage, and added the screen DebugHub category plus a rendered-line-count watch.
+- Documented the separation between crisp text rendering and actual bloom: the later 3D screen material must use the SubViewport texture as emission, and the containing WorldEnvironment must enable Glow.
+- Not done: Godot tests/import have not been run; no scenes, SubViewport nodes, meshes, materials, or WorldEnvironment settings were authored. FAT/SLIM housing remains.

@@ -17,6 +17,7 @@ security secret.
 | props | core/props.gd | spawn, grab, throw, interact, state |
 | ragdoll | ragdoll/player_ragdoll_test.gd | isolated physical-bone test start/stop |
 | interact | player/focus.gd and interaction/interactable.gd | focus changes, accepted/rejected interaction requests |
+| screen | ui/screen_text.gd | world-screen terminal initialization and text-content diagnostics |
 | player | player/player.gd | movement state and local camera input |
 
 ## Watches
@@ -31,6 +32,7 @@ security secret.
 | `net/hand_poke_sent` | core/network.gd | Host count of accepted cosmetic hand-poke broadcasts sent. |
 | `net/hand_poke_received` | core/network.gd | Count of remote world-hand pokes played on this instance. |
 | `interact/focused/<name>` | player/focus.gd | Prompt text for the local player's focused target, or blank. |
+| `screen/<node-path>/lines` | ui/screen_text.gd | Current rendered line count in a world-screen terminal. |
 | `interact/device/<name>/active` | interaction/debug_use_device.gd | Toggle state of the M1 test USE device. |
 | `props/<name>/pickup_allowed` | props/prop.gd | Whether the prop's assigned profile allows pickup. |
 | `hands/<name>/state` | hands/hand.gd | World mode, hover, guard, carry, limp, and speed state. |
@@ -307,3 +309,10 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 - `interact_use_<player>` remains the debug command for exercising the real focus and host-validation path. Aim at the button and press E to see the cap press.
 - Expected: `interact: <button> physical button pressed (<count>)` when the interact category is enabled. Repeated presses restart from the cap's current position and settle at its saved rest position.
 - `tests/m3_physical_use_button_test.gd` checks USE-only activation, retrigger continuity, and return to rest. It is registered as `physical-button` in `tests/run_checks.ps1`. Godot execution and rendered multiplayer verification remain pending.
+
+
+### World-screen terminal text
+
+The reusable ScreenText component is attached to an editor-created RichTextLabel inside the screen's SubViewport. It defaults to a near-black blue backing, gold bold headers, bright-white paragraphs, left alignment, and left-to-right reading. Use append_header(text), append_paragraph(text), append_prompt(text), and clear_screen() to replace or extend content. The Inspector exposes the font resource, font size, and colors.
+
+The text itself stays crisp. Bloom is produced by the 3D screen surface material using the SubViewport texture as its emission texture, with HDR emission and a WorldEnvironment Glow pass enabled in the containing world. Keep the screen background dark so only the bright glyphs bloom noticeably. This rendering setup belongs to the later screen-housing editor task, not a per-label blur effect.
