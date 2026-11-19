@@ -359,3 +359,8 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 - SlimWorldScreen now supports optional FrontTrim, LightingSystem, SideDetails, Identification, and MechanicalDetails groups. The controller creates generated child containers beneath each group and rebuilds only those generated children when dimensions or finish settings change; authored nodes outside the generated containers are preserved.
 - New exported finish controls: trim width, light width, cyan/amber light colors, and emissive energy. The controller lays out machined trim rails, perimeter/corner light channels, status indicators, side vent inserts, a model plate, and micro-fasteners relative to display_size.
 - Verify in the editor by adjusting display_size and confirming the new details follow the housing. For a headless contract check, run godot --headless --path fowl-play --script res://tests/m3_slim_world_screen_test.gd. Godot tests and rendered visual verification have not been executed by the assistant.
+
+
+### Reusable WorldScreen presentation presets
+- `WorldScreen.show_layout(layout, header, body, prompt = "")` replaces the selected screen's content using a named color treatment. Supported names: `standard`, `welcome`, `information`, `warning`, `success`, and `confirmation`.
+- `WorldScreen.set_content(header, body, prompt = "")` is the standard-color replacement shortcut. Existing append and clear methods remain available. Presets affect only text colors; they do not alter screen geometry, font, LED/glow settings, or alignment.

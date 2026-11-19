@@ -8,6 +8,13 @@ const DEFAULT_BACKGROUND: Color = Color(0.031, 0.051, 0.094, 1.0)
 const DEFAULT_HEADER: Color = Color(0.85, 0.71, 0.36, 1.0)
 const DEFAULT_BODY: Color = Color(0.96, 0.97, 1.0, 1.0)
 
+const LAYOUT_STANDARD: StringName = &"standard"
+const LAYOUT_WELCOME: StringName = &"welcome"
+const LAYOUT_INFORMATION: StringName = &"information"
+const LAYOUT_WARNING: StringName = &"warning"
+const LAYOUT_SUCCESS: StringName = &"success"
+const LAYOUT_CONFIRMATION: StringName = &"confirmation"
+
 @export_group("Terminal Appearance")
 @export var terminal_font: Font:
 	set(value):
@@ -76,6 +83,47 @@ func set_terminal_font_size(value: int) -> void:
 
 func clear_screen() -> void:
 	clear()
+
+## Replaces the current display using the configured standard terminal colors.
+func set_content(header: String, body: String, prompt: String = "") -> void:
+	show_layout(LAYOUT_STANDARD, header, body, prompt)
+
+## Replaces the display using a named presentation preset.
+## Supported presets: standard, welcome, information, warning, success, confirmation.
+func show_layout(layout: StringName, header: String, body: String, prompt: String = "") -> void:
+	var selected_header_color: Color = header_color
+	var selected_body_color: Color = body_color
+	var selected_prompt_color: Color = prompt_color
+
+	match layout:
+		LAYOUT_STANDARD:
+			pass
+		LAYOUT_WELCOME:
+			selected_header_color = Color(0.30, 0.84, 0.92, 1.0)
+			selected_prompt_color = Color(0.30, 0.84, 0.92, 1.0)
+		LAYOUT_INFORMATION:
+			selected_header_color = Color(0.42, 0.76, 0.96, 1.0)
+			selected_prompt_color = header_color
+		LAYOUT_WARNING:
+			selected_header_color = Color(1.0, 0.62, 0.24, 1.0)
+			selected_body_color = Color(1.0, 0.90, 0.78, 1.0)
+			selected_prompt_color = Color(1.0, 0.62, 0.24, 1.0)
+		LAYOUT_SUCCESS:
+			selected_header_color = Color(0.34, 0.86, 0.58, 1.0)
+			selected_prompt_color = Color(0.34, 0.86, 0.58, 1.0)
+		LAYOUT_CONFIRMATION:
+			selected_header_color = header_color
+			selected_prompt_color = Color(0.30, 0.84, 0.92, 1.0)
+		_:
+			push_warning("ScreenText received unknown layout '%s'; using standard colors." % String(layout))
+
+	clear_screen()
+	if not header.is_empty():
+		_append_styled_line(header, selected_header_color, true)
+	if not body.is_empty():
+		_append_styled_line(body, selected_body_color, false)
+	if not prompt.is_empty():
+		_append_styled_line(prompt, selected_prompt_color, false)
 
 func _append_styled_line(value: String, color: Color, bold: bool) -> void:
 	var escaped: String = _escape_bbcode(value)

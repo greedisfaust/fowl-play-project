@@ -220,3 +220,15 @@ func clear_screen() -> void:
 	var terminal: ScreenText = get_screen_text()
 	if terminal != null:
 		terminal.clear_screen()
+
+## Replaces this screen's content using the configured standard colors.
+func set_content(header: String, body: String, prompt: String = "") -> void:
+	var terminal: ScreenText = get_screen_text()
+	if terminal != null:
+		terminal.set_content(header, body, prompt)
+
+## Replaces this screen's content using a named presentation preset.
+func show_layout(layout: StringName, header: String, body: String, prompt: String = "") -> void:
+	var terminal: ScreenText = get_screen_text()
+	if terminal != null:
+		terminal.show_layout(layout, header, body, prompt)

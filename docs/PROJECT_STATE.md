@@ -318,3 +318,11 @@ The latest user-authored FAT and SLIM scenes were inspected at commit `61409bf`.
 - Existing `append_header`, `append_paragraph`, `append_prompt`, and `clear_screen` APIs remain available. Content remains instance-local; housing geometry, screen sizing, font, LED matrix, glow, and sibling screens are unaffected.
 - Added replacement and multi-line body assertions to `m3_screen_text_test.gd` and per-instance replacement assertions to `m3_world_screen_test.gd`. Registered stages remain `screen-text` and `world-screen`.
 - No scenes or node trees changed. Godot execution and rendered FAT/SLIM verification have not been performed by the assistant.
+
+
+### Reusable screen presentation presets — 2026-11-20
+
+- Restored the complete-content replacement API: `WorldScreen.set_content(header, body, prompt = "")` and `ScreenText.set_content(...)`.
+- Added named presentation presets through `show_layout(layout, header, body, prompt = "")`. Supported preset names: `standard`, `welcome`, `information`, `warning`, `success`, and `confirmation`. Presets apply per-call text colors without mutating exported default colors or changing alignment, font, LED matrix, glow, housing, or screen size.
+- Existing append and clear methods remain available. Added focused replacement/preset tests to the ScreenText and WorldScreen stages.
+- No scene files or editor-authored node trees changed. Godot test execution and rendered visual verification remain unperformed by the assistant.

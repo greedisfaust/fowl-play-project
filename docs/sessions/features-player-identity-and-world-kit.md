@@ -160,3 +160,10 @@ User: pull the latest controller/glass commit. In the Godot editor, attach `slim
 - Changed: `fowl-play/environment/kit/slim_world_screen.gd`, `fat_world_screen.gd`, `world_screen_glass.gdshader`, both housing tests, and this session file.
 - Not changed: no `.tscn` files or authored node trees were edited because scene-open status was not confirmed. Both housing root nodes still need their matching controller scripts attached in the Inspector.
 - Not done: Godot import, headless tests, and rendered visual checks have not been run by the assistant.
+
+
+### Session 7 — 2026-11-20 — GPT-6
+- Did: corrected the content API commit chain by restoring `set_content` on top of the actual latest branch tree, then added reusable named text presentation presets: standard, welcome, information, warning, success, and confirmation.
+- Presets apply per-call colors without mutating exported default colors. Existing append/clear methods and the screen's visual/rendering settings are preserved.
+- Added replacement and preset assertions to the ScreenText and WorldScreen tests; updated debugging and project-state documentation.
+- Not done: no scenes changed; Godot tests and rendered in-game verification have not been run by the assistant.
