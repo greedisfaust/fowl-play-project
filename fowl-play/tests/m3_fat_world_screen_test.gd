@@ -45,6 +45,11 @@ func _run() -> void:
 	_check(screen.display_size == Vector2(3.0, 1.6875), "WorldScreen text surface should receive the new size")
 	_check(is_equal_approx((chassis.get_node("OuterShell") as CSGPolygon3D).polygon[0].x, -1.60), "Outer shell should expand with the display")
 	_check((chassis.get_node("Fasteners/TopRightFastener") as Node3D).position.x > 1.5, "Fasteners should move outward with the display")
+	_check(is_equal_approx((chassis.get_node("Fasteners") as Node3D).position.y, -0.05), "Authored fastener-group offset should be preserved")
+	_check(chassis.get_node("SideDetails/LeftVent").get_child_count() == 5, "Left vent bank should retain five authored vents")
+	_check(chassis.get_node("SideDetails/RightVent").get_child_count() == 5, "Right vent bank should retain five authored vents")
+	_check(is_equal_approx((chassis.get_node("SideDetails/RightVent") as Node3D).position.x, 1.6694), "Right vent bank should follow the resized outer edge")
+	_check(is_equal_approx((chassis.get_node("SideDetails/RightVent/Vent5") as Node3D).position.y, 0.24), "Authored vent spacing should remain intact")
 
 	instance.queue_free()
 	await process_frame

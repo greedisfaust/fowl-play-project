@@ -57,9 +57,31 @@ var _glass_material: ShaderMaterial
 var _lettering_base_scale: Vector3 = Vector3.ONE
 var _lettering_scale_captured: bool = false
 var _warning_sent: bool = false
+var _authored_positions: Dictionary = {}
+
+func _capture_authored_positions(node: Node) -> void:
+	if node is Node3D:
+		var spatial: Node3D = node as Node3D
+		_authored_positions[String(spatial.get_path())] = spatial.position
+	for child: Node in node.get_children():
+		_capture_authored_positions(child)
+
+func _authored_position(node: Node3D) -> Vector3:
+	var key: String = String(node.get_path())
+	if _authored_positions.has(key):
+		return _authored_positions[key]
+	return node.position
+
+func _width_delta() -> float:
+	return (display_size.x - 2.0) * 0.5
+
+func _height_delta() -> float:
+	return (display_size.y - 1.125) * 0.5
+
 
 func _ready() -> void:
-	var lettering: MeshInstance3D = get_node_or_null("WorldScreen/Chassis/ControlPanel/IdentificationPlate/EngravedText") as MeshInstance3D
+	_capture_authored_positions(self)
+	var lettering: MeshInstance3D = get_node_or_null("Chassis/ControlPanel/IdentificationPlate/EngravedText") as MeshInstance3D
 	if lettering != null:
 		_lettering_base_scale = lettering.scale
 		_lettering_scale_captured = true
@@ -73,12 +95,11 @@ func _apply_configuration() -> void:
 		return
 
 	var screen: WorldScreen = get_node_or_null("WorldScreen") as WorldScreen
-	var chassis: Node3D = get_node_or_null("WorldScreen/Chassis") as Node3D
+	var chassis: Node3D = get_node_or_null("Chassis") as Node3D
 	var glass: MeshInstance3D = get_node_or_null("Glass") as MeshInstance3D
 	if screen != null:
 		screen.set_display_size(display_size)
 	if chassis != null:
-		chassis.position = Vector3.ZERO
 		_layout_chassis(chassis)
 	if glass != null:
 		_layout_glass(glass)
@@ -117,7 +138,7 @@ func _set_polygon(node: CSGPolygon3D, points: PackedVector2Array, depth: float, 
 	node.use_collision = false
 	node.polygon = points
 	node.depth = depth
-	node.position = Vector3(0.0, 0.0, z_position)
+	node.position = Vector3(node.position.x, node.position.y, z_position)
 
 func _layout_chassis(chassis: Node3D) -> void:
 	var outer_shell: CSGPolygon3D = chassis.get_node_or_null("OuterShell") as CSGPolygon3D
@@ -240,7 +261,7 @@ func _layout_side_details(group: Node3D) -> void:
 func _layout_vent_group(group: Node3D, x_position: float) -> void:
 	if group == null:
 		return
-	group.position = Vector3(x_position, 0.0, 0.02)
+	group.position = _authored_position(group) + Vector3(signf(x_position) * _width_delta(), 0.0, 0.0)
 	var vent_index: int = 0
 	for child: Node in group.get_children():
 		var vent: MeshInstance3D = child as MeshInstance3D
@@ -251,8 +272,7 @@ func _layout_vent_group(group: Node3D, x_position: float) -> void:
 			box = BoxMesh.new()
 			vent.mesh = box
 		box.size = Vector3(0.025, 0.42, 0.012)
-		vent.position = Vector3(0.0, (float(vent_index) - 2.0) * 0.12, 0.0)
-		vent_index += 1
+		# Preserve the authored five-vent spacing within each side bank.
 
 func _layout_control_panel(group: Node3D) -> void:
 	group.position = Vector3.ZERO
@@ -298,7 +318,6 @@ func _layout_control_panel(group: Node3D) -> void:
 			lettering.scale = _lettering_base_scale * (display_size.x / 2.0) * identification_text_scale
 
 func _layout_fasteners(group: Node3D) -> void:
-	group.position = Vector3.ZERO
 	var x_position: float = _half_width() + chassis_margin * 0.36
 	var y_position: float = _half_height() + chassis_margin * 0.58
 	var positions: Dictionary = {
@@ -316,8 +335,9 @@ func _layout_fasteners(group: Node3D) -> void:
 		var fastener: MeshInstance3D = group.get_node_or_null(child_name) as MeshInstance3D
 		if fastener == null:
 			continue
-		fastener.position = positions[child_name]
-		fastener.rotation_degrees = Vector3(90.0, 0.0, 0.0)
+		var direction_x: float = -1.0 if child_name.begins_with("TopLeft") or child_name.begins_with("BottomLeft") else 1.0
+		var direction_y: float = 1.0 if child_name.begins_with("Top") else -1.0
+		fastener.position = _authored_position(fastener) + Vector3(direction_x * _width_delta(), direction_y * _height_delta(), 0.0)
 
 func _layout_glass(glass: MeshInstance3D) -> void:
 	var plane: PlaneMesh = glass.mesh as PlaneMesh
@@ -325,8 +345,6 @@ func _layout_glass(glass: MeshInstance3D) -> void:
 		plane = PlaneMesh.new()
 		glass.mesh = plane
 	plane.size = display_size
-	glass.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
-	glass.position = Vector3(0.0, 0.0, 0.012)
 	_apply_glass_material(glass)
 
 func _apply_glass_material(glass: MeshInstance3D) -> void:
@@ -336,7 +354,6 @@ func _apply_glass_material(glass: MeshInstance3D) -> void:
 		_glass_material = ShaderMaterial.new()
 		glass.material_override = _glass_material
 	_glass_material.shader = GLASS_SHADER
-	_glass_material.set_shader_parameter("base_opacity", glass_base_opacity)
-	_glass_material.set_shader_parameter("sheen_strength", glass_sheen_strength)
-	_glass_material.set_shader_parameter("near_distance", glass_sheen_near_distance)
-	_glass_material.set_shader_parameter("far_distance", glass_sheen_far_distance)
+	_glass_material.set_shader_parameter("highlight_opacity", glass_base_opacity)
+	_glass_material.set_shader_parameter("reflection_strength", glass_sheen_strength)
+	_glass_material.set_shader_parameter("edge_highlight_strength", 0.10)
