@@ -166,10 +166,11 @@ func _handle_screen_click(event: InputEventMouseButton) -> bool:
 	)
 	var option_index: int = terminal_text.get_menu_option_at_position(pixel_position)
 	if option_index < 0:
-		return false
+		return true
 	if not _menu.select_index(option_index) and _menu.get_selected_index() != option_index:
-		return false
-	return _menu.confirm()
+		return true
+	_menu.confirm()
+	return true
 
 func _release_mouse_for_menu() -> void:
 	if _mouse_released_for_menu:
@@ -235,7 +236,7 @@ func _show_color_menu() -> void:
 		"SELECT PLAYER COLOR",
 		"Choose a preferred color. If occupied, the host assigns the next available color.",
 		options,
-		"ARROWS NAVIGATE  •  BUTTON / ENTER SELECT"
+		"CLICK OPTION  •  ARROWS MOVE  •  USE / ENTER SELECT"
 	)
 	_menu.select_index(_requested_color_index)
 
