@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://dd5c04repreo1" path="res://interaction/interactable.gd" id="3_555b8"]
 [ext_resource type="Script" uid="uid://dyw4wgr3svwvg" path="res://props/prop.gd" id="5_5fshk"]
 [ext_resource type="Script" uid="uid://bw1bicstmeec7" path="res://props/prop_profile.gd" id="6_w7fvv"]
+[ext_resource type="PackedScene" uid="uid://dhetiy0bpntqj" path="res://environment/kit/physical_use_button.tscn" id="7_a670p"]
 
 [sub_resource type="Environment" id="Environment_interaction_glow"]
 glow_enabled = true
@@ -136,3 +137,6 @@ mesh = SubResource("CapsuleMesh_yf5fn")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Pill1" unique_id=1120665128]
 shape = SubResource("CapsuleShape3D_57qmd")
+
+[node name="PhysicalUseButton" parent="." unique_id=1018963796 instance=ExtResource("7_a670p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85267854, -3.6852398)
