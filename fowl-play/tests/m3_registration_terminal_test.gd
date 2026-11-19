@@ -1,9 +1,10 @@
-## Headless contract checks for the RegistrationTerminal local menu flow.
+## Headless contract checks for RegistrationTerminal's InteractiveTerminal integration.
 extends SceneTree
 
 const WorldScreenScene = preload("res://environment/kit/world_screen.tscn")
 const RegistrationTerminalScript = preload("res://ui/registration_terminal.gd")
 const InteractableScript = preload("res://interaction/interactable.gd")
+const LocalActorScript = preload("res://tests/support/local_terminal_test_actor.gd")
 
 var _failed: bool = false
 
@@ -12,38 +13,50 @@ func _initialize() -> void:
 
 func _run() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-	var terminal: Node3D = Node3D.new()
-	terminal.set_script(RegistrationTerminalScript)
+	var terminal: RegistrationTerminal = RegistrationTerminalScript.new() as RegistrationTerminal
 	var screen: WorldScreen = WorldScreenScene.instantiate() as WorldScreen
-	var button_interactable: Interactable = InteractableScript.new() as Interactable
+	var sensor: Area3D = Area3D.new()
+	var screen_interactable: Interactable = InteractableScript.new() as Interactable
+	var actor: Node3D = LocalActorScript.new() as Node3D
 	terminal.add_child(screen)
-	terminal.add_child(button_interactable)
-	terminal.set("screen", screen)
-	terminal.set("use_interactable", button_interactable)
+	terminal.add_child(sensor)
+	terminal.add_child(screen_interactable)
+	terminal.screen = screen
+	terminal.proximity_area = sensor
+	terminal.screen_interactable = screen_interactable
 	root.add_child(terminal)
-	await process_frame
-	var actor: Node3D = Node3D.new()
 	root.add_child(actor)
-	_check(bool(terminal.call("open_registration_for_actor", actor)), "Terminal should open for a valid local actor")
+	await process_frame
+	_check(not terminal.is_awake(), "Terminal should start asleep")
+	screen_interactable.interaction_requested.emit(actor, &"use")
+	_check(not terminal.has_active_session(), "Screen use should not activate before proximity wake")
+	terminal.call("_on_proximity_body_entered", actor)
+	_check(terminal.is_awake(), "Local actor proximity should wake the terminal")
+	_check(not terminal.has_active_session(), "Proximity wake alone should not begin registration")
+	screen_interactable.interaction_requested.emit(actor, &"use")
+	_check(terminal.has_active_session(), "Screen interaction should begin the base terminal session")
 	var menu: ScreenMenu = terminal.get("_menu") as ScreenMenu
 	_check(menu != null and menu.is_active(), "Registration menu should become active")
 	_check(Input.get_mouse_mode() == Input.MOUSE_MODE_VISIBLE, "Opening registration should reveal the mouse cursor")
 	_check(not _has_property(actor, "registration_terminal_active"), "Registration actor should not require a movement-lock property")
 	var rendered: String = screen.get_screen_text().get_parsed_text()
 	_check(rendered.contains("PLAYER REGISTRATION") and rendered.contains("EDIT NICKNAME"), "Main menu should render")
-	_check(bool(terminal.call("handle_menu_action", ScreenMenu.ACTION_DOWN)), "Menu navigation should be forwarded")
+	_check(bool(terminal.handle_menu_action(ScreenMenu.ACTION_DOWN)), "Menu navigation should be forwarded")
 	_check(menu.get_selected_option_id() == &"choose_color", "Down action should select color settings")
-	_check(bool(terminal.call("handle_menu_action", ScreenMenu.ACTION_CONFIRM)), "Color option should open")
+	_check(bool(terminal.handle_menu_action(ScreenMenu.ACTION_CONFIRM)), "Color option should open")
 	_check(screen.get_screen_text().get_parsed_text().contains("SELECT PLAYER COLOR"), "Color choices should render")
-	terminal.call("close_registration_session")
-	_check(not menu.is_active(), "Closing the terminal should close its menu")
+	terminal.close_registration_session()
+	_check(not terminal.has_active_session() and not menu.is_active(), "Closing should end the base session and menu")
 	_check(Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED, "Closing registration should restore the previous mouse mode")
-	terminal.call("open_registration_for_actor", actor)
-	terminal.set("interaction_break_distance", 1.0)
+	screen_interactable.interaction_requested.emit(actor, &"use")
+	_check(terminal.has_active_session(), "Nearby player should be able to reopen registration")
+	terminal.interaction_distance = 1.0
 	actor.position = Vector3(2.0, 0.0, 0.0)
 	terminal.call("_process", 0.0)
-	_check(not bool(terminal.get("_session_active")), "Walking beyond range should reset the registration session")
-	_check(screen.get_screen_text().get_parsed_text().contains("CONNECTION LOST"), "Leaving range should show a disconnect message")
+	_check(not terminal.has_active_session(), "Walking beyond interaction distance should reset the session")
+	_check(screen.get_screen_text().get_parsed_text().contains("CONNECTION LOST"), "Leaving interaction range should show a disconnect message")
+	terminal.call("_on_proximity_body_exited", actor)
+	_check(not terminal.is_awake(), "Leaving the sensor should put the terminal to sleep")
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	terminal.queue_free()
 	actor.queue_free()

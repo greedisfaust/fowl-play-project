@@ -216,3 +216,10 @@ Pull the Registration Terminal implementation. In the editor, create the termina
 - Added Slice 1 of the reusable InteractiveTerminal foundation: proximity-triggered wake/sleep, local-player filtering, screen Interactable availability, active session tracking, configurable wake/interaction distances, and overridable lifecycle hooks.
 - Added `m3_interactive_terminal_test.gd` and registered `interactive-terminal` in the test runner. Updated the WorldScreen guide, project state, debug guide, and this session log.
 - No scenes or editor-authored node trees changed. RegistrationTerminal still uses its physical USE button pending Slice 2. Godot test execution and in-world verification remain pending.
+
+
+### Session 15 — 2026-11-20 — GPT-6
+- Refactored RegistrationTerminal to inherit InteractiveTerminal. The base owns proximity wake/sleep, local-player eligibility, interaction-distance gating, and session lifetime; the specialized controller owns registration UI, mouse handling, nickname/color selection, and identity submission.
+- Removed the required physical USE button reference. The screen Interactable is now the explicit E/M1 activation target; repeated E/M1 during an active session confirms the selected menu option.
+- Added the Registration Terminal setup guide with the editor-authored proximity sensor and screen Interactable wiring. Updated the registration test to cover proximity wake, explicit activation, inherited session state, range termination, and sleep.
+- No scenes, node trees, collision shapes, or meshes were changed. Godot tests and rendered host/client verification remain pending.

@@ -386,18 +386,26 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 
 ## Registration Terminal
 
-- Attach ui/registration_terminal.gd to the editor-authored terminal root.
-- Assign screen to the child WorldScreen and use_interactable to the physical USE button's Interactable node (the same Interactable referenced by PhysicalUseButton).
-- Arrow Up/Down navigate, Enter confirms, Escape closes; the physical USE button and M1 (primary) confirm the selected menu item. Players can move freely; the local session resets after exceeding interaction_break_distance (default 3 m, horizontal distance). Direct clicking of individual screen text rows is not currently supported. Nickname entry supports printable keys, Backspace, Enter, and Escape.
+- Attach `ui/registration_terminal.gd` to the existing terminal root; it inherits InteractiveTerminal.
+- Assign inherited `screen`, `screen_interactable` (on the physical screen target), and `proximity_area` references in the Inspector. The sensor CollisionShape3D should match the 5 m wake distance.
+- Arrow Up/Down navigate, Enter confirms, Escape closes; E/M1 on the screen Interactable begins the session or confirms the selected menu item. Players can move freely; the base ends the session outside interaction_distance (default 3 m, horizontal distance). Nickname entry supports printable keys, Backspace, Enter, and Escape.
 - The local interaction-request signal is only a local presentation/input hook. Host-side range, actor, and Interactable validation remain in Network.
 - Focused check: godot --headless --path fowl-play --script res://tests/m3_registration_terminal_test.gd.
 - Multiplayer verification: open the terminal from a client and host, submit duplicate nicknames and occupied colors, and confirm the displayed identity matches the host's net/identities roster.
 
 
-- Registration menu: while active, mouse cursor is visible. Left-click an option row on the WorldScreen to select and confirm; click elsewhere to do nothing. Keyboard arrows/Enter and physical USE/M1 remain active. Closing/completing/rejecting registration restores the prior mouse mode.
+- Registration menu: while active, mouse cursor is visible. Left-click an option row on the WorldScreen to select and confirm; click elsewhere to do nothing. Keyboard arrows/Enter and E/M1 on the screen Interactable remain active. Closing/completing/rejecting registration restores the prior mouse mode.
 
 
 - Player movement no longer has a `registration_terminal_active` override. Registration terminals must not freeze player movement; use session proximity/range handling instead.
 
 
 - InteractiveTerminal state can be inspected with `is_awake()`, `has_active_session()`, and `get_active_actor()`. The proximity Area3D must overlap the local player body; its CollisionShape3D should match `wake_distance`.
+
+
+## Interactive terminals
+- Inspect `InteractiveTerminal.is_awake()`, `has_active_session()`, and `get_active_actor()` while debugging a terminal.
+- The editor-authored proximity Area3D should match `wake_distance` (default 5 m); code enforces `interaction_distance` (default 3 m, horizontal by default).
+- Only local player bodies with `is_local_player == true` wake the display. Proximity alone does not begin a session.
+- E/M1 on the screen Interactable begins a session; repeated E/M1 confirms the active menu. The physical USE button is optional.
+- Focused tests: `interactive-terminal` and `registration-terminal` stages. Setup: `docs/REGISTRATION_TERMINAL_SETUP.md`.

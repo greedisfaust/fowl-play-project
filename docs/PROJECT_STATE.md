@@ -4,7 +4,7 @@
 
 ## Last updated (2026-11-19; identity and Physical USE Button implementation pending verification)
 
-- Current branch: `features/player-identity-and-world-kit` (host-authoritative player identity foundation and reusable physical USE button component; world screen housing and registration terminal remain queued).
+- Current branch: `features/player-identity-and-world-kit` (host-authoritative player identity, reusable physical button, FAT/SLIM world screens, interactive menus, and proximity-aware registration terminal).
 - Godot 4.7 project: `fowl-play/`, using Jolt Physics, Forward+, and D3D12.
 - `fowl-play/project.godot` contains the project settings, input actions, and four autoload entries.
 - Foundation scripts exist in `fowl-play/core/`: `layers.gd`, `tuning.gd`, `network.gd`, and `debug_hub.gd`.
@@ -356,7 +356,7 @@ The latest user-authored FAT and SLIM scenes were inspected at commit `61409bf`.
 
 - Registration sessions reveal the local mouse cursor and restore its previous mode on close/completion/rejection.
 - Left-clicks are ray-projected from the local player's Camera3D onto the WorldScreen plane, mapped to SubViewport pixels, and hit-tested against ScreenText's rendered menu option lines.
-- Clicking a valid option row selects and confirms it in one click. Clicks outside option rows are ignored. Arrow keys, Enter, and physical USE/M1 continue to work.
+- Clicking a valid option row selects and confirms it in one click. Clicks outside option rows are ignored. Arrow keys, Enter, and E/M1 on the screen Interactable continue to work.
 - Focused checks cover ScreenText option-row hit testing and cursor-mode restoration. Godot execution and actual 3D click verification remain user-run.
 
 
@@ -367,4 +367,12 @@ Removed the obsolete `registration_terminal_active` player flag, setter, and phy
 
 ## Interactive Terminal foundation (Slice 1)
 
-Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep and active-session lifecycle. It expects an editor-authored proximity Area3D and a screen Interactable, and exposes wake/interaction distances plus overridable lifecycle hooks. RegistrationTerminal has not yet been converted; its physical USE button remains in use until Slice 2. Godot tests and in-world verification are pending.
+Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep and active-session lifecycle. It expects an editor-authored proximity Area3D and a screen Interactable, and exposes wake/interaction distances plus overridable lifecycle hooks. RegistrationTerminal now extends InteractiveTerminal. The physical USE button is optional and is not referenced by the registration controller. Godot tests and in-world verification are pending.
+
+
+## InteractiveTerminal / RegistrationTerminal integration
+- `RegistrationTerminal` inherits `InteractiveTerminal`; the base owns local proximity wake/sleep and session range, while registration owns menus and identity submission.
+- Required inherited references: `screen`, `screen_interactable`, and `proximity_area`. The Area3D CollisionShape3D is editor-authored and should match `wake_distance` (default 5 m); interaction distance defaults to 3 m.
+- Proximity wakes the screen but does not start registration. E/M1 on the screen Interactable starts the session; repeated E/M1 confirms the selected menu row.
+- A physical USE button is optional and is no longer referenced by RegistrationTerminal.
+- Setup: `docs/REGISTRATION_TERMINAL_SETUP.md`. Godot tests and rendered host/client verification remain pending.

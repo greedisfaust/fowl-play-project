@@ -1,12 +1,8 @@
-## Local registration UI controller for a reusable WorldScreen and physical USE button.
+## Local registration UI layered on the reusable proximity-aware terminal lifecycle.
 class_name RegistrationTerminal
-extends Node3D
+extends InteractiveTerminal
 
 const PlayerIdentity = preload("res://core/player_identity.gd")
-
-@export var screen: WorldScreen
-@export var use_interactable: Interactable
-@export_range(0.5, 10.0, 0.25) var interaction_break_distance: float = 3.0
 
 var _menu: ScreenMenu = ScreenMenu.new()
 var _network: Node = null
@@ -22,34 +18,39 @@ var _previous_mouse_mode: int = Input.MOUSE_MODE_CAPTURED
 var _mouse_released_for_menu: bool = false
 
 func _ready() -> void:
-	if not is_instance_valid(screen):
-		push_warning("RegistrationTerminal requires a WorldScreen reference.")
+	super._ready()
+	if not is_instance_valid(screen) or not is_instance_valid(proximity_area):
 		set_process_input(false)
 		return
-	if not is_instance_valid(use_interactable):
-		push_warning("RegistrationTerminal requires the physical USE button Interactable reference.")
+	if not is_instance_valid(screen_interactable):
+		push_warning("RegistrationTerminal requires a screen Interactable reference.")
 		set_process_input(false)
 		return
 	_network = get_node_or_null("/root/Network")
-	use_interactable.interaction_requested.connect(_on_local_interaction_requested)
 	_menu.option_confirmed.connect(_on_option_confirmed)
 	if is_instance_valid(_network):
 		_network.connect("identity_roster_changed", _on_identity_roster_changed)
 	set_process_input(true)
-	set_process(true)
 
 func _exit_tree() -> void:
 	_restore_mouse_mode()
-	if is_instance_valid(use_interactable) and use_interactable.interaction_requested.is_connected(_on_local_interaction_requested):
-		use_interactable.interaction_requested.disconnect(_on_local_interaction_requested)
 	if is_instance_valid(_network) and _network.is_connected("identity_roster_changed", _on_identity_roster_changed):
 		_network.disconnect("identity_roster_changed", _on_identity_roster_changed)
 
 func open_registration_for_actor(actor: Node) -> bool:
-	if not is_instance_valid(screen) or not is_instance_valid(use_interactable) or not is_instance_valid(actor):
+	## Compatibility/convenience entry point; the base lifecycle still validates proximity.
+	return begin_session(actor)
+
+func handle_menu_action(action: StringName) -> bool:
+	if not _session_active or _editing_nickname:
 		return false
-	if _session_active:
-		return actor == _local_actor
+	return _menu.handle_action(action)
+
+func close_registration_session() -> void:
+	if has_active_session():
+		end_session(END_CLOSED)
+
+func _on_terminal_session_started(actor: Node) -> void:
 	_local_actor = actor
 	_session_active = true
 	_release_mouse_for_menu()
@@ -67,41 +68,24 @@ func open_registration_for_actor(actor: Node) -> bool:
 		_requested_nickname = "Chicken"
 		_requested_color_index = 0
 	_show_main_menu()
-	return true
 
-func handle_menu_action(action: StringName) -> bool:
-	if not _session_active or _editing_nickname:
-		return false
-	return _menu.handle_action(action)
-
-func close_registration_session() -> void:
+func _on_terminal_session_ended(actor: Node, reason: StringName) -> void:
+	if actor != _local_actor:
+		return
 	if _menu.is_active():
 		_menu.close()
 	_editing_nickname = false
 	_session_active = false
 	_local_actor = null
 	_restore_mouse_mode()
-
-func _on_local_interaction_requested(actor: Node, action: StringName) -> void:
-	if action != &"use" or not is_instance_valid(actor):
-		return
-	if _session_active:
-		if actor == _local_actor and not _editing_nickname:
-			_menu.handle_action(ScreenMenu.ACTION_CONFIRM)
-		return
-	open_registration_for_actor(actor)
-
-func _process(_delta: float) -> void:
-	if not _session_active or _registration_pending or not is_instance_valid(_local_actor):
-		return
-	if not _local_actor is Node3D:
-		return
-	var actor_position: Vector3 = (_local_actor as Node3D).global_position
-	var actor_flat: Vector2 = Vector2(actor_position.x, actor_position.z)
-	var terminal_flat: Vector2 = Vector2(global_position.x, global_position.z)
-	if actor_flat.distance_to(terminal_flat) > interaction_break_distance:
-		close_registration_session()
+	if reason == END_RANGE:
 		screen.show_layout("warning", "CONNECTION LOST", "You moved too far from the terminal. Registration was reset.", "RETURN TO THE TERMINAL TO RECONNECT")
+	elif reason == END_CLOSED and is_awake():
+		screen.show_layout("information", idle_header, idle_description, idle_prompt)
+
+func _on_terminal_use_again(actor: Node) -> void:
+	if actor == _local_actor and _session_active and not _editing_nickname:
+		_menu.handle_action(ScreenMenu.ACTION_CONFIRM)
 
 func _input(event: InputEvent) -> void:
 	if not _session_active:
@@ -218,7 +202,7 @@ func _show_main_menu() -> void:
 			PlayerIdentity.color_name_for_index(_requested_color_index).to_upper()
 		],
 		options,
-		"CLICK OPTION  •  ARROWS MOVE  •  USE / ENTER SELECT"
+		"CLICK OPTION  •  ARROWS MOVE  •  M1 / E / ENTER SELECT"
 	)
 
 func _show_color_menu() -> void:
@@ -236,7 +220,7 @@ func _show_color_menu() -> void:
 		"SELECT PLAYER COLOR",
 		"Choose a preferred color. If occupied, the host assigns the next available color.",
 		options,
-		"CLICK OPTION  •  ARROWS MOVE  •  USE / ENTER SELECT"
+		"CLICK OPTION  •  ARROWS MOVE  •  M1 / E / ENTER SELECT"
 	)
 	_menu.select_index(_requested_color_index)
 
@@ -275,10 +259,8 @@ func _on_option_confirmed(option_id: StringName, _option_label: String) -> void:
 func _submit_registration() -> void:
 	if not is_instance_valid(_network):
 		_menu.close()
-		screen.show_layout("warning", "NETWORK UNAVAILABLE", "The identity service is not available.", "PRESS THE BUTTON TO REOPEN")
-		_session_active = false
-		_local_actor = null
-		_restore_mouse_mode()
+		end_session(END_CLOSED)
+		screen.show_layout("warning", "NETWORK UNAVAILABLE", "The identity service is not available.", "APPROACH TO REOPEN")
 		return
 	_pending_nickname = _requested_nickname
 	_registration_pending = true
@@ -286,10 +268,8 @@ func _submit_registration() -> void:
 	if not submitted:
 		_registration_pending = false
 		_menu.close()
-		screen.show_layout("warning", "REGISTRATION REJECTED", "Connect to a host and try again. The request was not submitted.", "PRESS THE BUTTON TO REOPEN")
-		_session_active = false
-		_local_actor = null
-		_restore_mouse_mode()
+		end_session(END_CLOSED)
+		screen.show_layout("warning", "REGISTRATION REJECTED", "Connect to a host and try again. The request was not submitted.", "APPROACH TO REOPEN")
 		return
 	if _registration_pending:
 		_menu.close()
@@ -305,6 +285,8 @@ func _on_identity_roster_changed() -> void:
 	if not matches_name:
 		return
 	_registration_pending = false
+	if has_active_session():
+		end_session(END_CLOSED)
 	_menu.close()
 	screen.show_layout(
 		"success",
@@ -312,7 +294,3 @@ func _on_identity_roster_changed() -> void:
 		"%s\nCOLOR: %s" % [identity.get_display_label(), identity.get_color_name().to_upper()],
 		"IDENTITY ASSIGNED BY HOST"
 	)
-	_session_active = false
-	_local_actor = null
-	_restore_mouse_mode()
-
