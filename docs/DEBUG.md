@@ -364,3 +364,12 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 ### Reusable WorldScreen presentation presets
 - `WorldScreen.show_layout(layout, header, body, prompt = "")` replaces the selected screen's content using a named color treatment. Supported names: `standard`, `welcome`, `information`, `warning`, `success`, and `confirmation`.
 - `WorldScreen.set_content(header, body, prompt = "")` is the standard-color replacement shortcut. Existing append and clear methods remain available. Presets affect only text colors; they do not alter screen geometry, font, LED/glow settings, or alignment.
+
+
+## WorldScreen / ScreenText
+
+- Category: `screen` — registered by `ui/screen_text.gd`; logs terminal initialization when enabled.
+- Watch: `screen/<node-path>/lines` — current RichTextLabel line count for that ScreenText instance.
+- Screen content APIs are documented in [WORLD_SCREENS_AND_SCREEN_TEXT.md](WORLD_SCREENS_AND_SCREEN_TEXT.md): append methods, replacement via `set_content`, and named presets via `show_layout`.
+- The screen's visual pipeline is split: opaque `Display` backing, transparent emissive `TextDisplay`, and `SubViewport/ScreenText`. If the whole panel blooms, inspect that split before adjusting WorldEnvironment Glow.
+- No dedicated screen commands currently exist. Screen changes are driven through the WorldScreen / ScreenText script APIs.

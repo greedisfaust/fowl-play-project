@@ -1,6 +1,6 @@
 # Fowl Play — Project State
 
-**Status:** Player Identity Core, reusable Physical USE Button, reusable WorldScreen content, FAT/SLIM housing controllers, and shared optical glass shader are implemented on `features/player-identity-and-world-kit`; Godot checks and visual verification are pending. Registration-terminal integration remains in progress.
+**Status:** Player Identity Core, reusable Physical USE Button, WorldScreen/ScreenText content APIs and presentation presets, and FAT/SLIM housing controllers are implemented on `features/player-identity-and-world-kit`. The screen system is documented in [WORLD_SCREENS_AND_SCREEN_TEXT.md](WORLD_SCREENS_AND_SCREEN_TEXT.md). Godot checks and full rendered verification remain pending.
 
 ## Last updated (2026-11-19; identity and Physical USE Button implementation pending verification)
 
@@ -326,3 +326,11 @@ The latest user-authored FAT and SLIM scenes were inspected at commit `61409bf`.
 - Added named presentation presets through `show_layout(layout, header, body, prompt = "")`. Supported preset names: `standard`, `welcome`, `information`, `warning`, `success`, and `confirmation`. Presets apply per-call text colors without mutating exported default colors or changing alignment, font, LED matrix, glow, housing, or screen size.
 - Existing append and clear methods remain available. Added focused replacement/preset tests to the ScreenText and WorldScreen stages.
 - No scene files or editor-authored node trees changed. Godot test execution and rendered visual verification remain unperformed by the assistant.
+
+
+## 2026-11-20 — World Screens & ScreenText guide
+
+- Added [WORLD_SCREENS_AND_SCREEN_TEXT.md](WORLD_SCREENS_AND_SCREEN_TEXT.md) as the practical reference for the shared WorldScreen scene, ScreenText renderer, FAT/SLIM housing structure, sizing, text APIs, presentation presets, LED/HDR glow pipeline, instance isolation, troubleshooting, and verification.
+- Current public content APIs: `append_header`, `append_paragraph`, `append_prompt`, `clear_screen`, `set_content`, and `show_layout`. The WorldScreen wrapper forwards these to its ScreenText child.
+- The guide records the required `Display` / `TextDisplay` / `SubViewport/ScreenText` split and the FAT/SLIM direct-child `WorldScreen`, `Chassis`, `Glass` contract.
+- No game scripts or scenes changed in this documentation update. Godot tests and rendered checks were not run as part of this documentation update.

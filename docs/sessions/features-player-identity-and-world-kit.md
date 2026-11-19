@@ -167,3 +167,10 @@ User: pull the latest controller/glass commit. In the Godot editor, attach `slim
 - Presets apply per-call colors without mutating exported default colors. Existing append/clear methods and the screen's visual/rendering settings are preserved.
 - Added replacement and preset assertions to the ScreenText and WorldScreen tests; updated debugging and project-state documentation.
 - Not done: no scenes changed; Godot tests and rendered in-game verification have not been run by the assistant.
+
+
+### Session 8 — 2026-11-20 — GPT-6
+- Did: added the reusable World Screens & ScreenText guide covering scene hierarchy, architecture boundaries, FAT/SLIM housing usage, display sizing, viewport/font scaling, text styling APIs, named presentation presets, HDR/LED rendering, per-instance resource isolation, troubleshooting, and verification.
+- Updated the project-state and debug references to point to the guide and describe the current screen diagnostics/API.
+- Changed: `docs/WORLD_SCREENS_AND_SCREEN_TEXT.md`, `docs/PROJECT_STATE.md`, `docs/DEBUG.md`, and this session file.
+- Not changed: no game scripts, tests, or scenes changed. Godot tests and rendered verification were not run for this documentation-only update.
