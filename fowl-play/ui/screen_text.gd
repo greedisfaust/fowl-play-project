@@ -41,8 +41,8 @@ const LAYOUT_CONFIRMATION: StringName = &"confirmation"
 @export var prompt_color: Color = DEFAULT_HEADER
 
 var _debug_watch_name: StringName = &""
-var _menu_option_lines: Array[int] = []
-var _menu_option_end_line: int = -1
+var _menu_option_character_starts: Array[int] = []
+var _menu_option_end_character: int = -1
 
 func _ready() -> void:
 	bbcode_enabled = true
@@ -85,8 +85,8 @@ func set_terminal_font_size(value: int) -> void:
 
 func clear_screen() -> void:
 	clear()
-	_menu_option_lines.clear()
-	_menu_option_end_line = -1
+	_menu_option_character_starts.clear()
+	_menu_option_end_character = -1
 
 ## Replaces the display with selectable menu rows.
 func show_menu(header: String, description: String, options: Array[Dictionary], selected_index: int, prompt: String = "") -> void:
@@ -107,25 +107,27 @@ func show_menu(header: String, description: String, options: Array[Dictionary], 
 			option_color = Color(0.42, 0.46, 0.53, 1.0)
 		elif selected:
 			option_color = Color(0.30, 0.84, 0.92, 1.0)
-		_menu_option_lines.append(maxi(0, get_line_count() - 1))
+		_menu_option_character_starts.append(get_total_character_count())
 		_append_styled_line(marker + str(option.get("label", "")), option_color, selected)
-	_menu_option_end_line = maxi(0, get_line_count() - 1)
+	_menu_option_end_character = get_total_character_count()
 	if not prompt.is_empty():
 		_append_styled_line(prompt, prompt_color, false)
 
 func get_menu_option_at_position(local_position: Vector2) -> int:
-	if _menu_option_lines.is_empty() or _menu_option_end_line < 0:
+	if _menu_option_character_starts.is_empty() or _menu_option_end_character < 0:
 		return -1
 	var vertical_scroll_bar: VScrollBar = get_v_scroll_bar()
 	var vertical_scroll: float = vertical_scroll_bar.value if vertical_scroll_bar != null else 0.0
-	for option_index: int in _menu_option_lines.size():
-		var line_index: int = _menu_option_lines[option_index]
-		var end_line: int = _menu_option_end_line
-		if option_index + 1 < _menu_option_lines.size():
-			end_line = _menu_option_lines[option_index + 1]
-		if line_index < 0 or end_line >= get_line_count() or end_line <= line_index:
+	for option_index: int in _menu_option_character_starts.size():
+		var start_character: int = _menu_option_character_starts[option_index]
+		var end_character: int = _menu_option_end_character
+		if option_index + 1 < _menu_option_character_starts.size():
+			end_character = _menu_option_character_starts[option_index + 1]
+		var start_line: int = get_character_line(start_character)
+		var end_line: int = get_character_line(end_character)
+		if start_line < 0 or end_line < 0 or end_line <= start_line:
 			continue
-		var line_top: float = float(get_line_offset(line_index)) - vertical_scroll
+		var line_top: float = float(get_line_offset(start_line)) - vertical_scroll
 		var line_bottom: float = float(get_line_offset(end_line)) - vertical_scroll
 		if local_position.y >= line_top and local_position.y < line_bottom:
 			return option_index

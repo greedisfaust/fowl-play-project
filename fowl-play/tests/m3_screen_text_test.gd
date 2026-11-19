@@ -42,14 +42,14 @@ func _run() -> void:
 	]
 	terminal.show_menu("CLICK TEST", "Choose one.", menu_options, 0, "CLICK TO SELECT")
 	await process_frame
-	var option_lines: Array = terminal.get("_menu_option_lines")
-	_check(option_lines.size() == 2, "Menu should retain one rendered line index per option")
+	var option_characters: Array = terminal.get("_menu_option_character_starts")
+	_check(option_characters.size() == 2, "Menu should retain one rendered line index per option")
 	if option_lines.size() == 2:
-		var first_line: int = int(option_lines[0])
-		var second_line: int = int(option_lines[1])
+		var first_line: int = terminal.get_character_line(int(option_characters[0]))
+		var second_line: int = terminal.get_character_line(int(option_characters[1]))
 		var first_y: float = (float(terminal.get_line_offset(first_line)) + float(terminal.get_line_offset(second_line))) * 0.5
 		_check(terminal.get_menu_option_at_position(Vector2(500.0, first_y)) == 0, "First option rendered line should resolve to its index")
-		var end_line: int = int(terminal.get("_menu_option_end_line"))
+		var end_line: int = terminal.get_character_line(int(terminal.get("_menu_option_end_character")))
 		var second_y: float = (float(terminal.get_line_offset(second_line)) + float(terminal.get_line_offset(end_line))) * 0.5
 		_check(terminal.get_menu_option_at_position(Vector2(500.0, second_y)) == 1, "Second option rendered line should resolve to its index")
 	terminal.clear_screen()
