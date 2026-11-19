@@ -162,160 +162,165 @@ script = ExtResource("1_67yye")
 [node name="Chassis" type="Node3D" parent="WorldScreen" unique_id=896814966]
 
 [node name="OuterShell" type="CSGPolygon3D" parent="WorldScreen/Chassis" unique_id=241930705]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3)
-polygon = PackedVector2Array(-1.1, -0.782, -1.1, -0.782, 1.22, -0.662, 1.22, 0.663, 1.1, 0.783, -1.1, 0.783, -1.22, 0.663, -1.22, -0.662)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.005)
+polygon = PackedVector2Array(-1.1, -0.7825, 1.1, -0.7825, 1.22, -0.6625, 1.22, 0.6625, 1.1, 0.7825, -1.1, 0.7825, -1.22, 0.6625, -1.22, -0.6625)
 depth = 0.3
 material = SubResource("StandardMaterial3D_hrnm7")
 
 [node name="InnerArmor" type="Node3D" parent="WorldScreen/Chassis" unique_id=1934588388]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.015)
 
 [node name="TopArmor" type="CSGPolygon3D" parent="WorldScreen/Chassis/InnerArmor" unique_id=1642629032]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.015)
 material_override = SubResource("StandardMaterial3D_7sf3j")
-polygon = PackedVector2Array(-1.08, 0.55, 1.08, 0.55, 1.16, 0.68, -1.16, 0.68)
-depth = 0.06
+polygon = PackedVector2Array(-1.0804, 0.55, 1.0804, 0.55, 1.1596, 0.6825, -1.1596, 0.6825)
+depth = 0.055
 
 [node name="BottomArmor" type="CSGPolygon3D" parent="WorldScreen/Chassis/InnerArmor" unique_id=1692322410]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.015)
 material_override = SubResource("StandardMaterial3D_67yye")
-polygon = PackedVector2Array(-1.16, -0.68, 1.16, -0.68, 1.08, -0.55, -1.08, -0.55)
-depth = 0.06
+polygon = PackedVector2Array(-1.1596, -0.6825, 1.1596, -0.6825, 1.0804, -0.55, -1.0804, -0.55)
+depth = 0.055
 
 [node name="LeftArmor" type="CSGPolygon3D" parent="WorldScreen/Chassis/InnerArmor" unique_id=1781666988]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.015)
 material_override = SubResource("StandardMaterial3D_pb6oa")
-polygon = PackedVector2Array(-1.08, -0.55, -0.96, -0.55, -0.96, 0.55, -1.08, 0.55)
-depth = 0.06
+polygon = PackedVector2Array(-1.1596, -0.55, -0.96, -0.55, -0.96, 0.55, -1.1596, 0.55)
+depth = 0.055
 
 [node name="RightArmor" type="CSGPolygon3D" parent="WorldScreen/Chassis/InnerArmor" unique_id=978561599]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.015)
 material_override = SubResource("StandardMaterial3D_yb6si")
-polygon = PackedVector2Array(0.96, -0.55, 1.08, -0.55, 1.08, 0.55, 0.96, 0.55)
-depth = 0.06
+polygon = PackedVector2Array(0.96, -0.55, 1.1596, -0.55, 1.1596, 0.55, 0.96, 0.55)
+depth = 0.055
 
 [node name="SideDetails" type="Node3D" parent="WorldScreen/Chassis" unique_id=626883711]
 
 [node name="LeftVent" type="Node3D" parent="WorldScreen/Chassis/SideDetails" unique_id=622792050]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1694, 0, 0.02)
 
 [node name="Vent1" type="MeshInstance3D" parent="WorldScreen/Chassis/SideDetails/LeftVent" unique_id=750534057]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.17, -0.24, -0.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.24, 0)
 mesh = SubResource("BoxMesh_g4v7s")
 
 [node name="Vent2" type="MeshInstance3D" parent="WorldScreen/Chassis/SideDetails/LeftVent" unique_id=621629105]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.17, -0.12, -0.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.12, 0)
 mesh = SubResource("BoxMesh_g4v7s")
 
 [node name="Vent3" type="MeshInstance3D" parent="WorldScreen/Chassis/SideDetails/LeftVent" unique_id=906315242]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.17, 0, -0.1)
 mesh = SubResource("BoxMesh_g4v7s")
 
 [node name="Vent4" type="MeshInstance3D" parent="WorldScreen/Chassis/SideDetails/LeftVent" unique_id=932069470]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.17, 0.12, -0.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0)
 mesh = SubResource("BoxMesh_g4v7s")
 
 [node name="Vent5" type="MeshInstance3D" parent="WorldScreen/Chassis/SideDetails/LeftVent" unique_id=1688231557]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.17, 0.24, -0.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.24, 0)
 mesh = SubResource("BoxMesh_g4v7s")
 
 [node name="RightVent" type="Node3D" parent="WorldScreen/Chassis/SideDetails" unique_id=88088852]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1694, 0, 0.02)
 
 [node name="Vent6" type="MeshInstance3D" parent="WorldScreen/Chassis/SideDetails/RightVent" unique_id=588788927]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.17, -0.24, -0.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.24, 0)
 mesh = SubResource("BoxMesh_g4v7s")
 
 [node name="Vent7" type="MeshInstance3D" parent="WorldScreen/Chassis/SideDetails/RightVent" unique_id=2034216986]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.17, -0.12, -0.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.12, 0)
 mesh = SubResource("BoxMesh_g4v7s")
 
 [node name="Vent8" type="MeshInstance3D" parent="WorldScreen/Chassis/SideDetails/RightVent" unique_id=1469080913]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.17, 0, -0.1)
 mesh = SubResource("BoxMesh_g4v7s")
 
 [node name="Vent9" type="MeshInstance3D" parent="WorldScreen/Chassis/SideDetails/RightVent" unique_id=1029671947]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.17, 0.12, -0.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0)
 mesh = SubResource("BoxMesh_g4v7s")
 
 [node name="Vent10" type="MeshInstance3D" parent="WorldScreen/Chassis/SideDetails/RightVent" unique_id=1561835074]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.17, 0.24, -0.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.24, 0)
 mesh = SubResource("BoxMesh_g4v7s")
 
 [node name="CornerArmor" type="Node3D" parent="WorldScreen/Chassis" unique_id=1518325116]
 
 [node name="TopLeft" type="CSGPolygon3D" parent="WorldScreen/Chassis/CornerArmor" unique_id=1165353451]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.045)
-polygon = PackedVector2Array(-1.2, 0.66, -1.08, 0.76, -0.88, 0.76, -0.98, 0.62)
-depth = 0.04
+polygon = PackedVector2Array(-0.98, 0.6241, -0.879, 0.7625, -1.1, 0.7625, -1.2, 0.6625)
+depth = 0.035
 material = SubResource("StandardMaterial3D_p0dgw")
 
 [node name="TopRight" type="CSGPolygon3D" parent="WorldScreen/Chassis/CornerArmor" unique_id=1655426099]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.045)
-polygon = PackedVector2Array(1.2, 0.66, 1.08, 0.76, 0.88, 0.76, 0.98, 0.62)
-depth = 0.04
+polygon = PackedVector2Array(1.2, 0.6625, 1.1, 0.7625, 0.879, 0.7625, 0.98, 0.6241)
+depth = 0.035
 material = SubResource("StandardMaterial3D_ujhcv")
 
 [node name="BottomLeft" type="CSGPolygon3D" parent="WorldScreen/Chassis/CornerArmor" unique_id=1378192554]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.045)
-polygon = PackedVector2Array(-1.2, -0.66, -1.08, -0.76, -0.88, -0.76, -0.98, -0.62)
-depth = 0.04
+polygon = PackedVector2Array(-1.2, -0.6625, -1.1, -0.7625, -0.879, -0.7625, -0.98, -0.6241)
+depth = 0.035
 material = SubResource("StandardMaterial3D_frq3h")
 
 [node name="BottomRight" type="CSGPolygon3D" parent="WorldScreen/Chassis/CornerArmor" unique_id=353270423]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.045)
-polygon = PackedVector2Array(1.2, -0.66, 1.08, -0.76, 0.88, -0.76, 0.98, -0.62)
-depth = 0.04
+polygon = PackedVector2Array(0.98, -0.6241, 0.879, -0.7625, 1.1, -0.7625, 1.2, -0.6625)
+depth = 0.035
 material = SubResource("StandardMaterial3D_s7vwt")
 
 [node name="ControlPanel" type="Node3D" parent="WorldScreen/Chassis" unique_id=580430552]
 
 [node name="PanelBody" type="MeshInstance3D" parent="WorldScreen/Chassis/ControlPanel" unique_id=2013980107]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.66, 0.035)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.6625, 0.035)
 material_override = SubResource("StandardMaterial3D_3bu8p")
 mesh = SubResource("BoxMesh_qlawu")
 
 [node name="IndicatorGroup" type="Node3D" parent="WorldScreen/Chassis/ControlPanel" unique_id=1750623697]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.6625, 0.035)
 
 [node name="Button1" type="MeshInstance3D" parent="WorldScreen/Chassis/ControlPanel/IndicatorGroup" unique_id=854842712]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, -0.45, -0.66, 0.075)
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, -0.45, 0, 0.04)
 material_override = SubResource("StandardMaterial3D_lpk3q")
 mesh = SubResource("CylinderMesh_g4v7s")
 
 [node name="Button2" type="MeshInstance3D" parent="WorldScreen/Chassis/ControlPanel/IndicatorGroup" unique_id=1703512645]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, -0.37, -0.66, 0.075)
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, -0.37, 0, 0.04)
 material_override = SubResource("StandardMaterial3D_av1tv")
 mesh = SubResource("CylinderMesh_yf5fn")
 
 [node name="Button3" type="MeshInstance3D" parent="WorldScreen/Chassis/ControlPanel/IndicatorGroup" unique_id=88442090]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, -0.29, -0.66, 0.075)
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, -0.29, 0, 0.04)
 material_override = SubResource("StandardMaterial3D_fgl1k")
 mesh = SubResource("CylinderMesh_57qmd")
 
 [node name="IdentificationPlate" type="Node3D" parent="WorldScreen/Chassis/ControlPanel" unique_id=1224424019]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.6625, 0.035)
 
 [node name="PlateMesh" type="MeshInstance3D" parent="WorldScreen/Chassis/ControlPanel/IdentificationPlate" unique_id=596034988]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.27, -0.66, 0.075)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.27, 0, 0.04)
 material_override = SubResource("StandardMaterial3D_a1d8f")
 mesh = SubResource("BoxMesh_3bu8p")
 
 [node name="EngravedText" type="MeshInstance3D" parent="WorldScreen/Chassis/ControlPanel/IdentificationPlate" unique_id=129356557]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.27, -0.66, 0.082)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.27, 0, 0.049)
 mesh = SubResource("TextMesh_hrnm7")
 
 [node name="Fasteners" type="Node3D" parent="WorldScreen/Chassis" unique_id=892892411]
 
 [node name="TopLeftFastener" type="MeshInstance3D" parent="WorldScreen/Chassis/Fasteners" unique_id=357282570]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, -1.08, 0.69, 0.085)
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, -1.0792, 0.6901, 0.085)
 material_override = SubResource("StandardMaterial3D_7wr3k")
 mesh = SubResource("CylinderMesh_d0u6y")
 
 [node name="TopRightFastener" type="MeshInstance3D" parent="WorldScreen/Chassis/Fasteners" unique_id=870569978]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 1.08, 0.69, 0.085)
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 1.0792, 0.6901, 0.085)
 material_override = SubResource("StandardMaterial3D_7wr3k")
 mesh = SubResource("CylinderMesh_d0u6y")
 
 [node name="BottomLeftFastener" type="MeshInstance3D" parent="WorldScreen/Chassis/Fasteners" unique_id=1480906850]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, -1.08, -0.69, 0.085)
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, -1.0792, -0.6901, 0.085)
 material_override = SubResource("StandardMaterial3D_7wr3k")
 mesh = SubResource("CylinderMesh_d0u6y")
 
 [node name="BottomRightFastener" type="MeshInstance3D" parent="WorldScreen/Chassis/Fasteners" unique_id=1078629511]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 1.08, -0.69, 0.085)
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 1.0792, -0.6901, 0.085)
 material_override = SubResource("StandardMaterial3D_7wr3k")
 mesh = SubResource("CylinderMesh_d0u6y")
 
