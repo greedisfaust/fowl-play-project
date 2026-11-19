@@ -46,10 +46,11 @@ func _run() -> void:
 	_check(option_lines.size() == 2, "Menu should retain one rendered line index per option")
 	if option_lines.size() == 2:
 		var first_line: int = int(option_lines[0])
-		var first_y: float = float(terminal.get_line_offset(first_line)) + float(terminal.get_line_height(first_line)) * 0.5
-		_check(terminal.get_menu_option_at_position(Vector2(500.0, first_y)) == 0, "First option rendered line should resolve to its index")
 		var second_line: int = int(option_lines[1])
-		var second_y: float = float(terminal.get_line_offset(second_line)) + float(terminal.get_line_height(second_line)) * 0.5
+		var first_y: float = (float(terminal.get_line_offset(first_line)) + float(terminal.get_line_offset(second_line))) * 0.5
+		_check(terminal.get_menu_option_at_position(Vector2(500.0, first_y)) == 0, "First option rendered line should resolve to its index")
+		var end_line: int = int(terminal.get("_menu_option_end_line"))
+		var second_y: float = (float(terminal.get_line_offset(second_line)) + float(terminal.get_line_offset(end_line))) * 0.5
 		_check(terminal.get_menu_option_at_position(Vector2(500.0, second_y)) == 1, "Second option rendered line should resolve to its index")
 	terminal.clear_screen()
 	_check(terminal.get_parsed_text().is_empty(), "clear_screen should remove existing content")
