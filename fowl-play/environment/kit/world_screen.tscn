@@ -14,7 +14,7 @@ material = SubResource("StandardMaterial3D_world_screen")
 size = Vector2(2, 1.125)
 
 [sub_resource type="ViewportTexture" id="ViewportTexture_valms"]
-viewport_path = NodePath("WorldScreen/SubViewport")
+viewport_path = NodePath("SubViewport")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3to4u"]
 transparency = 1

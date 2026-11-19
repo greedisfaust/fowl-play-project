@@ -3,7 +3,7 @@
 class_name FatWorldScreen
 extends Node3D
 
-const GLASS_SHADER: Shader = preload("res://environment/kit/slim_world_screen_glass.gdshader")
+const GLASS_SHADER: Shader = preload("res://environment/kit/world_screen_glass.gdshader")
 
 @export_group("Display")
 @export var display_size: Vector2 = Vector2(2.0, 1.125):

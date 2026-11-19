@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://dyw4wgr3svwvg" path="res://props/prop.gd" id="5_5fshk"]
 [ext_resource type="Script" uid="uid://bw1bicstmeec7" path="res://props/prop_profile.gd" id="6_w7fvv"]
 [ext_resource type="PackedScene" uid="uid://dhetiy0bpntqj" path="res://environment/kit/physical_use_button.tscn" id="7_a670p"]
+[ext_resource type="PackedScene" uid="uid://bohm84tw787n0" path="res://environment/kit/slim_world_screen.tscn" id="8_1y418"]
 
 [sub_resource type="Environment" id="Environment_interaction_glow"]
 glow_enabled = true
@@ -142,15 +143,10 @@ shape = SubResource("CapsuleShape3D_57qmd")
 [node name="PhysicalUseButton" parent="." unique_id=1018963796 instance=ExtResource("7_a670p")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0151434, 0.80192447, -2.410954)
 
+[node name="SlimWorldScreen" parent="." unique_id=1216012003 instance=ExtResource("8_1y418")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8811315, 1.1046077)
+glass_base_opacity = 0.02
+
 [node name="FatWorldScreen" parent="." unique_id=1276401181 instance=ExtResource("2_1y418")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.175675, 2.0025928, -0.3037783)
-
-[node name="ScreenText" parent="FatWorldScreen/WorldScreen/SubViewport" parent_id_path=PackedInt32Array(1276401181, 1656044326, 73501419) index="0" unique_id=374298792]
-text = "HANS MOTHA FUCKING JAYDEN
-IN THE HOUSE
-SUCKING DICKS
-MY DICK
-RAAAAAAAAAAH"
-
-[editable path="FatWorldScreen"]
-[editable path="FatWorldScreen/WorldScreen"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.8621528, 2.196668, 0)
+glass_base_opacity = 0.02

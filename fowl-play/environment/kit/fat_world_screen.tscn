@@ -1,7 +1,9 @@
 [gd_scene format=3 uid="uid://cejw4b824vtv2"]
 
+[ext_resource type="Script" uid="uid://cfwxbvehhnlal" path="res://environment/kit/fat_world_screen.gd" id="1_67yye"]
 [ext_resource type="PackedScene" uid="uid://dodi6s0eif5r0" path="res://environment/kit/world_screen.tscn" id="1_hrnm7"]
 [ext_resource type="FontFile" uid="uid://ws0yv8acsgcw" path="res://assets/fonts/JetBrainsMonoNL-Regular.ttf" id="2_7sf3j"]
+[ext_resource type="Shader" uid="uid://c4kdaasjbi04y" path="res://environment/kit/world_screen_glass.gdshader" id="4_pb6oa"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hrnm7"]
 albedo_color = Color(0.1882353, 0.21176471, 0.2509804, 1)
@@ -141,45 +143,21 @@ bottom_radius = 0.022
 height = 0.012
 radial_segments = 12
 
-[sub_resource type="Shader" id="Shader_67yye"]
-code = "shader_type spatial;
-render_mode blend_mix, depth_draw_never, cull_disabled;
-
-uniform float base_opacity : hint_range(0.0, 0.15, 0.005) = 0.035;
-uniform float sheen_strength : hint_range(0.0, 1.0, 0.01) = 0.55;
-uniform float near_distance : hint_range(0.25, 10.0, 0.25) = 1.5;
-uniform float far_distance : hint_range(1.0, 20.0, 0.25) = 5.0;
-uniform vec3 glass_tint : source_color = vec3(0.42, 0.58, 0.72);
-
-void fragment() {
-	float facing = clamp(abs(dot(normalize(NORMAL), normalize(VIEW))), 0.0, 1.0);
-	float fresnel = pow(1.0 - facing, 4.0);
-	float distance_to_camera = length(VERTEX);
-	float near_fade = 1.0 - smoothstep(near_distance, max(far_distance, near_distance + 0.1), distance_to_camera);
-	float sheen = fresnel * near_fade * sheen_strength;
-
-	ALBEDO = glass_tint;
-	METALLIC = 0.05;
-	ROUGHNESS = 0.14;
-	SPECULAR = 0.8;
-	CLEARCOAT = 1.0;
-	ALPHA = clamp(base_opacity + sheen * 0.18, 0.0, 0.22);
-}
-"
-
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_yb6si"]
 render_priority = 0
-shader = SubResource("Shader_67yye")
+shader = ExtResource("4_pb6oa")
+shader_parameter/glass_tint = Color(0.42, 0.58, 0.72, 1)
+shader_parameter/sheen_color = Color(0.92, 0.72, 0.46, 1)
 shader_parameter/base_opacity = 0.035
 shader_parameter/sheen_strength = 0.55
-shader_parameter/near_distance = 1.5
-shader_parameter/far_distance = 5.0
-shader_parameter/glass_tint = Color(0.42, 0.58, 0.72, 1)
+shader_parameter/edge_strength = 0.28
+shader_parameter/emission_strength = 0.08
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_7sf3j"]
 size = Vector2(2, 1.125)
 
 [node name="FatWorldScreen" type="Node3D" unique_id=1276401181]
+script = ExtResource("1_67yye")
 
 [node name="WorldScreen" parent="." unique_id=1656044326 instance=ExtResource("1_hrnm7")]
 
@@ -264,6 +242,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.24, 0)
 mesh = SubResource("BoxMesh_g4v7s")
 
 [node name="CornerArmor" type="Node3D" parent="Chassis" unique_id=1518325116]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.015)
 
 [node name="TopLeft" type="CSGPolygon3D" parent="Chassis/CornerArmor" unique_id=1165353451]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.045)
@@ -327,6 +306,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.27, 0, 0.049)
 mesh = SubResource("TextMesh_hrnm7")
 
 [node name="Fasteners" type="Node3D" parent="Chassis" unique_id=892892411]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.05)
 
 [node name="TopLeftFastener" type="MeshInstance3D" parent="Chassis/Fasteners" unique_id=357282570]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, -1.0792, 0.6901, 0.085)

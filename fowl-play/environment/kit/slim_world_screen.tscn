@@ -1,7 +1,9 @@
 [gd_scene format=3 uid="uid://bohm84tw787n0"]
 
 [ext_resource type="PackedScene" uid="uid://dodi6s0eif5r0" path="res://environment/kit/world_screen.tscn" id="1_py5ij"]
+[ext_resource type="Script" uid="uid://bhsbwyc6r8mb6" path="res://environment/kit/slim_world_screen.gd" id="1_w2241"]
 [ext_resource type="FontFile" uid="uid://ws0yv8acsgcw" path="res://assets/fonts/JetBrainsMonoNL-Regular.ttf" id="2_n2ovl"]
+[ext_resource type="Shader" uid="uid://c4kdaasjbi04y" path="res://environment/kit/world_screen_glass.gdshader" id="4_spwhc"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_py5ij"]
 albedo_color = Color(0.14117648, 0.17254902, 0.20784314, 1)
@@ -10,7 +12,7 @@ roughness = 0.32
 
 [sub_resource type="BoxMesh" id="BoxMesh_yf5fn"]
 material = SubResource("StandardMaterial3D_py5ij")
-size = Vector3(2.42, 1.42, 0.13981445)
+size = Vector3(2.42, 1.42, 0.14)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_d0u6y"]
 albedo_color = Color(0.22352941, 0.27450982, 0.3254902, 1)
@@ -36,19 +38,19 @@ roughness = 0.3
 
 [sub_resource type="BoxMesh" id="BoxMesh_d0u6y"]
 material = SubResource("StandardMaterial3D_n2ovl")
-size = Vector3(2.34, 0.09, 0.08)
+size = Vector3(2.341, 0.09, 0.08)
 
 [sub_resource type="BoxMesh" id="BoxMesh_spwhc"]
 material = SubResource("StandardMaterial3D_n2ovl")
-size = Vector3(2.34, 0.09, 0.08)
+size = Vector3(2.341, 0.09, 0.08)
 
 [sub_resource type="BoxMesh" id="BoxMesh_w2241"]
 material = SubResource("StandardMaterial3D_n2ovl")
-size = Vector3(0.09, 1.23, 0.08)
+size = Vector3(0.09, 1.24, 0.08)
 
 [sub_resource type="BoxMesh" id="BoxMesh_vekha"]
 material = SubResource("StandardMaterial3D_n2ovl")
-size = Vector3(0.09, 1.23, 0.08)
+size = Vector3(0.09, 1.24, 0.08)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_et413"]
 albedo_color = Color(0.27450982, 0.33333334, 0.3882353, 1)
@@ -186,36 +188,47 @@ height = 0.05
 radial_segments = 12
 rings = 6
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_vekha"]
+render_priority = 0
+shader = ExtResource("4_spwhc")
+shader_parameter/glass_tint = Color(0.16, 0.22, 0.29, 1)
+shader_parameter/sheen_color = Color(0.92, 0.72, 0.46, 1)
+shader_parameter/base_opacity = 0.035
+shader_parameter/sheen_strength = 0.55
+shader_parameter/edge_strength = 0.28
+shader_parameter/emission_strength = 0.08
+
 [sub_resource type="PlaneMesh" id="PlaneMesh_yf5fn"]
 size = Vector2(2, 1.125)
 
 [node name="SlimWorldScreen" type="Node3D" unique_id=1216012003]
+script = ExtResource("1_w2241")
 
 [node name="WorldScreen" parent="." unique_id=1656044326 instance=ExtResource("1_py5ij")]
 
 [node name="Chassis" type="Node3D" parent="." unique_id=1959559203]
 
 [node name="MainBody" type="MeshInstance3D" parent="Chassis" unique_id=445705412]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.07090723)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.0709)
 mesh = SubResource("BoxMesh_yf5fn")
 
 [node name="Bezel" type="Node3D" parent="Chassis" unique_id=171374440]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.035)
 
 [node name="TopRail" type="MeshInstance3D" parent="Chassis/Bezel" unique_id=1246501883]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.595, 0.035)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.595, 0)
 mesh = SubResource("BoxMesh_py5ij")
 
 [node name="BottomRail" type="MeshInstance3D" parent="Chassis/Bezel" unique_id=529395729]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.595, 0.035)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.595, 0)
 mesh = SubResource("BoxMesh_n2ovl")
 
 [node name="LeftRail" type="MeshInstance3D" parent="Chassis/Bezel" unique_id=2062474396]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.065, 0, 0.035)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0325, 0, 0)
 mesh = SubResource("BoxMesh_57qmd")
 
 [node name="RightRail" type="MeshInstance3D" parent="Chassis/Bezel" unique_id=2009704563]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.065, 0, 0.035)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0325, 0, 0)
 mesh = SubResource("BoxMesh_57qmd")
 
 [node name="OuterArmor" type="Node3D" parent="Chassis" unique_id=1988279397]
@@ -263,13 +276,14 @@ depth = 0.1
 material = SubResource("StandardMaterial3D_et413")
 
 [node name="LightChannels" type="Node3D" parent="Chassis" unique_id=304301459]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.1)
 
 [node name="TopChannel" type="MeshInstance3D" parent="Chassis/LightChannels" unique_id=795897414]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.51, 0.13)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.551, 0.13)
 mesh = SubResource("BoxMesh_3gngh")
 
 [node name="BottomChannel" type="MeshInstance3D" parent="Chassis/LightChannels" unique_id=1635130420]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.51, 0.13)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.551, 0.13)
 mesh = SubResource("BoxMesh_et413")
 
 [node name="LeftChannel" type="MeshInstance3D" parent="Chassis/LightChannels" unique_id=1732197135]
@@ -281,6 +295,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0.13)
 mesh = SubResource("BoxMesh_kpkxd")
 
 [node name="Fasteners" type="Node3D" parent="Chassis" unique_id=1402364939]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.081)
 
 [node name="TopLeftFastener" type="MeshInstance3D" parent="Chassis/Fasteners" unique_id=1824092259]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, -1.12, 0.47, 0.17)
@@ -299,6 +314,7 @@ transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 1.12
 mesh = SubResource("CylinderMesh_7numd")
 
 [node name="IdentificationPlate" type="Node3D" parent="Chassis" unique_id=590047429]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.05)
 
 [node name="PlateMesh" type="MeshInstance3D" parent="Chassis/IdentificationPlate" unique_id=2129291837]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.665, 0.145)
@@ -355,6 +371,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.34, 0)
 mesh = SubResource("BoxMesh_wke00")
 
 [node name="ControlPanel" type="Node3D" parent="Chassis" unique_id=732082707]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.048)
 
 [node name="PanelBody" type="MeshInstance3D" parent="Chassis/ControlPanel" unique_id=1830250239]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.76, -0.665, 0.15)
@@ -376,4 +393,5 @@ mesh = SubResource("SphereMesh_8qi8j")
 
 [node name="Glass" type="MeshInstance3D" parent="." unique_id=403770130]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0.013)
+material_override = SubResource("ShaderMaterial_vekha")
 mesh = SubResource("PlaneMesh_yf5fn")
