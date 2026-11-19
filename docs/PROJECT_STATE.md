@@ -299,3 +299,6 @@ The test arena now includes a WorldEnvironment with restrained Godot Glow post-p
 - Audited the user's pushed editor-authored FAT scene. Its `Chassis` is correctly nested under `WorldScreen`, not directly under the `FatWorldScreen` root; the controller's original lookup and lettering-capture paths did not match that hierarchy.
 - Updated the controller to resolve `WorldScreen/Chassis` and the engraved TextMesh through that same path. Updated fastener lookup to support the authored `*Fastener` node names while retaining the shorter fixture names.
 - Updated the FAT contract test to mirror the real nested chassis and authored fastener names. This correction is code-reviewed but Godot tests and editor visuals have not been executed by the assistant.
+
+
+- Follow-up geometry alignment: the authored `InnerArmor` group had a local Z offset while the controller also applies the plate Z offset. The controller now normalizes the group to zero before laying out the plates, preventing the offset from being applied twice; the contract fixture now starts with the authored offset and asserts the normalized result.

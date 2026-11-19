@@ -161,6 +161,8 @@ func _layout_outer_shell(shell: CSGPolygon3D) -> void:
 	_set_polygon(shell, points, chassis_depth, -0.005)
 
 func _layout_inner_armor(group: Node3D) -> void:
+	# The controller owns the armor offsets; clear the authored parent offset before positioning each plate.
+	group.position = Vector3.ZERO
 	var half_width: float = _half_width()
 	var half_height: float = _half_height()
 	var frame: float = armor_thickness
