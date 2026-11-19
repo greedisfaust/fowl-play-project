@@ -220,3 +220,9 @@ func clear_screen() -> void:
 	var terminal: ScreenText = get_screen_text()
 	if terminal != null:
 		terminal.clear_screen()
+
+## Replaces this screen's content without changing its housing or rendering settings.
+func set_content(header: String, body: String, prompt: String = "") -> void:
+	var terminal: ScreenText = get_screen_text()
+	if terminal != null:
+		terminal.set_content(header, body, prompt)
