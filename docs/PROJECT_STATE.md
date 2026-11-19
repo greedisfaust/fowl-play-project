@@ -363,3 +363,8 @@ The latest user-authored FAT and SLIM scenes were inspected at commit `61409bf`.
 ### Registration movement-lock cleanup
 
 Removed the obsolete `registration_terminal_active` player flag, setter, and physics early-return branch. Registration is intended to remain fully movement-permissive; terminal sessions use proximity to disconnect/reset instead of immobilizing the player.
+
+
+## Interactive Terminal foundation (Slice 1)
+
+Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep and active-session lifecycle. It expects an editor-authored proximity Area3D and a screen Interactable, and exposes wake/interaction distances plus overridable lifecycle hooks. RegistrationTerminal has not yet been converted; its physical USE button remains in use until Slice 2. Godot tests and in-world verification are pending.

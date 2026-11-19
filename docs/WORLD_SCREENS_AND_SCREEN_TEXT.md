@@ -334,3 +334,17 @@ The FAT controller lays CornerArmor polygons out in chassis-local coordinates an
 ## Clicking rendered menu options
 
 RegistrationTerminal supports direct left-click selection on the physical 3D screen. It projects the local player's camera ray onto the WorldScreen plane, maps the hit into SubViewport pixels, and asks ScreenText which menu row occupies that vertical position. A valid row click selects and confirms the option. The cursor is shown only while the local registration session is active; the previous mouse mode is restored when the session ends. Hit testing uses the actual screen dimensions and rendered line offsets, so it follows display resizing and text wrapping.
+
+
+## 12. Reusable InteractiveTerminal lifecycle
+
+`res://ui/interactive_terminal.gd` (`InteractiveTerminal`) provides shared wake/sleep and session lifecycle for world terminals. Attach it to an editor-authored terminal root and assign:
+- `screen`: the existing WorldScreen.
+- `screen_interactable`: an Interactable on the actual screen housing/collision body (not a separate physical button).
+- `proximity_area`: an editor-authored Area3D with a CollisionShape3D sized to the wake radius.
+
+The proximity sensor wakes the terminal only for the local player's own Player body (`is_local_player == true`). When no local player remains in the sensor, the terminal sleeps and clears its display. The screen Interactable is available only while the local player is inside `interaction_distance` (default 3 m). The active session ends when the actor leaves that distance or exits the sensor. Wake distance defaults to 5 m; the Area3D shape should be authored to match it. `horizontal_distance_only` defaults true.
+
+A specialized terminal overrides `_on_terminal_session_started`, `_on_terminal_session_ended`, and `_on_terminal_use_again`; wake/sleep presentation hooks are also available. The base class does not own terminal-specific menus or network authority. RegistrationTerminal conversion is the next slice.
+
+Test: `res://tests/m3_interactive_terminal_test.gd`; runner stage `interactive-terminal`.

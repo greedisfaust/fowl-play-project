@@ -398,3 +398,6 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 
 
 - Player movement no longer has a `registration_terminal_active` override. Registration terminals must not freeze player movement; use session proximity/range handling instead.
+
+
+- InteractiveTerminal state can be inspected with `is_awake()`, `has_active_session()`, and `get_active_actor()`. The proximity Area3D must overlap the local player body; its CollisionShape3D should match `wake_distance`.

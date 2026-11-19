@@ -210,3 +210,9 @@ Pull the Registration Terminal implementation. In the editor, create the termina
 ### Session 13 — 2026-11-20 — GPT-6
 - Removed the obsolete player `registration_terminal_active` flag, setter, and movement-stopping physics branch. The registration flow does not use movement locking; session range is the intended boundary.
 - Updated the registration test to assert that actors do not require a movement-lock property. No scenes or InputMap actions changed. Godot tests remain user-run.
+
+
+### Session 14 — 2026-11-20 — GPT-6
+- Added Slice 1 of the reusable InteractiveTerminal foundation: proximity-triggered wake/sleep, local-player filtering, screen Interactable availability, active session tracking, configurable wake/interaction distances, and overridable lifecycle hooks.
+- Added `m3_interactive_terminal_test.gd` and registered `interactive-terminal` in the test runner. Updated the WorldScreen guide, project state, debug guide, and this session log.
+- No scenes or editor-authored node trees changed. RegistrationTerminal still uses its physical USE button pending Slice 2. Godot test execution and in-world verification remain pending.
