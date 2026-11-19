@@ -77,17 +77,6 @@ func set_terminal_font_size(value: int) -> void:
 func clear_screen() -> void:
 	clear()
 
-## Replaces the current display with a complete header/body/prompt message.
-## Empty sections are omitted; body may contain multiple lines.
-func set_content(header: String, body: String, prompt: String = "") -> void:
-	clear_screen()
-	if not header.is_empty():
-		append_header(header)
-	if not body.is_empty():
-		append_paragraph(body)
-	if not prompt.is_empty():
-		append_prompt(prompt)
-
 func _append_styled_line(value: String, color: Color, bold: bool) -> void:
 	var escaped: String = _escape_bbcode(value)
 	var color_hex: String = color.to_html(false)

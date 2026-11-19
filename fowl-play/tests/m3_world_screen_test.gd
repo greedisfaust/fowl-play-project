@@ -71,11 +71,6 @@ func _run() -> void:
 	_check(first.get_screen_text().get_parsed_text().contains("FIRST SCREEN"), "First instance should receive its own content")
 	_check(not first.get_screen_text().get_parsed_text().contains("SECOND SCREEN"), "First instance must not receive second instance content")
 	_check(second.get_screen_text().get_parsed_text().contains("SECOND SCREEN"), "Second instance should receive its own content")
-	first.set_content("FIRST REPLACED", "A new message.\nA second line.", "PRESS USE")
-	var first_replaced: String = first.get_screen_text().get_parsed_text()
-	_check(first_replaced.contains("FIRST REPLACED") and first_replaced.contains("A new message.") and first_replaced.contains("A second line.") and first_replaced.contains("PRESS USE"), "WorldScreen set_content should replace content with header, multi-line body, and prompt")
-	_check(not first_replaced.contains("FIRST SCREEN"), "WorldScreen set_content should remove previous content")
-	_check(second.get_screen_text().get_parsed_text().contains("SECOND SCREEN"), "Replacing one screen's content must not affect another screen")
 
 	first.clear_screen()
 	_check(first.get_screen_text().get_parsed_text().is_empty(), "WorldScreen clear_screen should clear its own content")

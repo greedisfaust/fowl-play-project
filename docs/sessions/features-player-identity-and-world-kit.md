@@ -3,7 +3,7 @@
 Branch: features/player-identity-and-world-kit
 Base commit: abb3643d4f9326f0c32a31bfe2ba9b9b46c00b83
 Goal: Establish host-authoritative player identities and reusable physical world interaction/display components, then integrate identity presentation into gameplay.
-Status: IN PROGRESS — Player Identity Core, Physical USE Button, reusable WorldScreen content API, FAT/SLIM housing controllers, and shared optical glass shader are implemented in code; Godot/editor verification pending.
+Status: IN PROGRESS — Player Identity Core, Physical USE Button, reusable WorldScreen content, FAT/SLIM housing controllers, and shared optical glass shader are implemented in code; Godot/editor verification pending.
 Last updated: 2026-11-19 by GPT-6 (session #1)
 Base docs: CLAUDE.md, docs/PROJECT_OVERVIEW.md, docs/PROJECT_STATE.md
 
@@ -85,12 +85,12 @@ Base docs: CLAUDE.md, docs/PROJECT_OVERVIEW.md, docs/PROJECT_STATE.md
 - [x] Player Identity Core — implementation added; Godot and two-instance host/client verification pending.
 - [x] Reusable Physical USE Button — reusable presentation script and automated test added; editor-authored scene fixture and runtime verification remain.
 - [x] Reusable World Screen Housing — FAT/SLIM responsive controllers and shared optical glass shader added; attach scripts to scene roots and verify in Godot.
-- [x] Dynamic Screen Content foundation — per-instance `set_content(header, body, prompt)` replacement API added to WorldScreen/ScreenText; append and clear APIs preserved; focused tests added; Godot execution pending.
+- [x] Dynamic Screen Content — ScreenText script and focused test added; Godot execution pending.
 - [ ] Registration Terminal — not started.
 - [ ] Gameplay Integration — not started.
 
 ## Exact next step
-User: pull the latest Dynamic Screen Content API commit. Run the `screen-text` and `world-screen` test stages (or the full `fowl-play/tests/run_checks.ps1` suite), then visually verify that FAT and SLIM instances can display different content and that calling `set_content` replaces only the selected screen's text. No Godot execution or visual verification has been performed by the assistant.
+User: pull the latest controller/glass commit. In the Godot editor, attach `slim_world_screen.gd` to the `SlimWorldScreen` root and `fat_world_screen.gd` to the `FatWorldScreen` root (do not rebuild or rename the existing child hierarchies). Then run the `slim-world-screen` and `fat-world-screen` test stages and visually inspect glass readability, reflections, and resize behavior. No Godot execution or visual verification has been performed by the assistant.
 
 ## Verification requirements
 - Add focused automated tests for identity data validation, host authority, unique color assignment, duplicate nickname suffixing, peer ID preservation, and display-label formatting.
@@ -160,10 +160,3 @@ User: pull the latest Dynamic Screen Content API commit. Run the `screen-text` a
 - Changed: `fowl-play/environment/kit/slim_world_screen.gd`, `fat_world_screen.gd`, `world_screen_glass.gdshader`, both housing tests, and this session file.
 - Not changed: no `.tscn` files or authored node trees were edited because scene-open status was not confirmed. Both housing root nodes still need their matching controller scripts attached in the Inspector.
 - Not done: Godot import, headless tests, and rendered visual checks have not been run by the assistant.
-
-
-### Session 6 — 2026-11-20 — GPT-6
-- Did: inspected the latest branch and existing WorldScreen/ScreenText APIs. Added a complete-content replacement method that accepts a header, multi-line body, and optional prompt; preserved existing append and clear behavior.
-- Added focused ScreenText and WorldScreen contract assertions for replacement semantics, multi-line body content, and per-instance isolation. Updated the debug reference and session handoff.
-- Changed: `fowl-play/ui/screen_text.gd`, `fowl-play/environment/kit/world_screen.gd`, `fowl-play/tests/m3_screen_text_test.gd`, `fowl-play/tests/m3_world_screen_test.gd`, `docs/DEBUG.md`, and this session file.
-- Not done: no scenes or authored node trees changed. Godot tests and rendered FAT/SLIM verification have not been run by the assistant.

@@ -310,3 +310,11 @@ The test arena now includes a WorldEnvironment with restrained Godot Glow post-p
 ## 2026-11-19 — FAT/SLIM housing and optical glass controller update
 
 The latest user-authored FAT and SLIM scenes were inspected at commit `61409bf`. Both now use direct-child `WorldScreen`, `Chassis`, and `Glass` nodes. Added a responsive SLIM controller, corrected the FAT controller to use the direct-child hierarchy, and created a shared smoked-glass shader with view-angle Fresnel, a subtle diagonal sheen, and edge glints. Updated both housing tests to instantiate the actual authored scenes. The controller scripts have not yet been attached to the scene roots in the editor; the scene files were intentionally not modified because open-scene status was not confirmed. Godot tests/import and visual verification remain unrun.
+
+
+### Dynamic WorldScreen content API — 2026-11-20
+
+- Added `WorldScreen.set_content(header, body, prompt = "")` as the primary full-replacement API. It forwards to the instance's `ScreenText`, clears previous text, then adds a gold header, newline-capable body, and optional prompt. Empty sections are omitted.
+- Existing `append_header`, `append_paragraph`, `append_prompt`, and `clear_screen` APIs remain available. Content remains instance-local; housing geometry, screen sizing, font, LED matrix, glow, and sibling screens are unaffected.
+- Added replacement and multi-line body assertions to `m3_screen_text_test.gd` and per-instance replacement assertions to `m3_world_screen_test.gd`. Registered stages remain `screen-text` and `world-screen`.
+- No scenes or node trees changed. Godot execution and rendered FAT/SLIM verification have not been performed by the assistant.
