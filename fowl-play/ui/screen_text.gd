@@ -1,5 +1,5 @@
 ## Reusable CMD-style text content for world-screen SubViewports.
-## The screen mesh supplies HDR emission/bloom; this Control supplies crisp text and its dark backing.
+## Keeps typography and the dark terminal backing independent from the physical screen housing.
 class_name ScreenText
 extends RichTextLabel
 
@@ -13,14 +13,22 @@ const DEFAULT_BODY: Color = Color(0.96, 0.97, 1.0, 1.0)
 	set(value):
 		terminal_font = value
 		_apply_appearance()
-@export_range(8, 64, 1) var terminal_font_size: int = 22:
+
+@export_range(8, 512, 1) var terminal_font_size: int = 22:
 	set(value):
-		terminal_font_size = clampi(value, 8, 64)
+		terminal_font_size = clampi(value, 8, 512)
 		_apply_appearance()
+
+@export_range(0.0, 1.5, 0.05) var content_padding_ratio: float = 0.45:
+	set(value):
+		content_padding_ratio = clampf(value, 0.0, 1.5)
+		_apply_appearance()
+
 @export var background_color: Color = DEFAULT_BACKGROUND:
 	set(value):
 		background_color = value
 		_apply_appearance()
+
 @export var header_color: Color = DEFAULT_HEADER
 @export var body_color: Color = DEFAULT_BODY
 @export var prompt_color: Color = DEFAULT_HEADER
@@ -35,8 +43,10 @@ func _ready() -> void:
 	selection_enabled = false
 	autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	text_direction = Control.TEXT_DIRECTION_LTR
 	_apply_appearance()
+
 	var debug_hub: Node = get_node_or_null("/root/DebugHub")
 	if is_instance_valid(debug_hub):
 		_debug_watch_name = StringName("screen/%s/lines" % str(get_path()))
@@ -61,6 +71,9 @@ func append_prompt(value: String) -> void:
 func set_terminal_font(value: Font) -> void:
 	terminal_font = value
 
+func set_terminal_font_size(value: int) -> void:
+	terminal_font_size = value
+
 func clear_screen() -> void:
 	clear()
 
@@ -77,14 +90,26 @@ func _escape_bbcode(value: String) -> String:
 func _apply_appearance() -> void:
 	if not is_inside_tree():
 		return
+
 	add_theme_color_override("default_color", body_color)
 	add_theme_font_size_override("normal_font_size", terminal_font_size)
+	add_theme_font_size_override("bold_font_size", terminal_font_size)
+	add_theme_font_size_override("italics_font_size", terminal_font_size)
+	add_theme_font_size_override("bold_italics_font_size", terminal_font_size)
+	add_theme_font_size_override("mono_font_size", terminal_font_size)
+
 	if terminal_font != null:
 		add_theme_font_override("normal_font", terminal_font)
+		add_theme_font_override("bold_font", terminal_font)
+		add_theme_font_override("italics_font", terminal_font)
+		add_theme_font_override("bold_italics_font", terminal_font)
+		add_theme_font_override("mono_font", terminal_font)
+
 	var backing: StyleBoxFlat = StyleBoxFlat.new()
 	backing.bg_color = background_color
-	backing.content_margin_left = 16.0
-	backing.content_margin_top = 12.0
-	backing.content_margin_right = 16.0
-	backing.content_margin_bottom = 12.0
+	var content_padding: float = float(terminal_font_size) * content_padding_ratio
+	backing.content_margin_left = content_padding
+	backing.content_margin_top = content_padding * 0.75
+	backing.content_margin_right = content_padding
+	backing.content_margin_bottom = content_padding * 0.75
 	add_theme_stylebox_override("normal", backing)

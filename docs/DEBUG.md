@@ -311,8 +311,14 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 - `tests/m3_physical_use_button_test.gd` checks USE-only activation, retrigger continuity, and return to rest. It is registered as `physical-button` in `tests/run_checks.ps1`. Godot execution and rendered multiplayer verification remain pending.
 
 
-### World-screen terminal text
+### WorldScreen — reusable size-adaptive display
 
-The reusable ScreenText component is attached to an editor-created RichTextLabel inside the screen's SubViewport. It defaults to a near-black blue backing, gold bold headers, bright-white paragraphs, left alignment, and left-to-right reading. Use append_header(text), append_paragraph(text), append_prompt(text), and clear_screen() to replace or extend content. The Inspector exposes the font resource, font size, and colors.
-
-The text itself stays crisp. Bloom is produced by the 3D screen surface material using the SubViewport texture as its emission texture, with HDR emission and a WorldEnvironment Glow pass enabled in the containing world. Keep the screen background dark so only the bright glyphs bloom noticeably. This rendering setup belongs to the later screen-housing editor task, not a per-label blur effect.
+- Scene: `res://environment/kit/world_screen.tscn`; root script: `world_screen.gd`; text control: `ScreenText` using `screen_text.gd`.
+- Resize through the root's exported **Display Size** (`display_size`) rather than scaling the root Node3D. The controller updates the PlaneMesh dimensions and SubViewport resolution together.
+- **Pixels Per Unit** defaults to 1024. A 2.0 × 1.125 display therefore renders at 2048 × 1152. The maximum viewport dimension defaults to 4096 to cap very large custom screens while preserving their aspect ratio in normal use.
+- **Text Scaling** uses a responsive font-height ratio (default 0.0764) plus a per-instance **Text Scale** multiplier. The standard 2.0 × 1.125 display gets an 88 px font; a 3.0 × 1.6875 display gets a 132 px font. Disable Auto Scale Font Size if a screen needs a manually authored ScreenText font size.
+- ScreenText supports font sizes 8–512 and applies the selected size to normal, bold, italic, bold-italic, and monospace styles. Its content padding scales with font size.
+- Public WorldScreen methods: `append_header(text)`, `append_paragraph(text)`, `append_prompt(text)`, and `clear_screen()`. `get_screen_text()` exposes the underlying ScreenText control when a caller needs lower-level configuration.
+- ViewportTexture, StandardMaterial3D, and PlaneMesh are local-to-scene so separate instances can keep independent render resources and content.
+- The display material currently uses the SubViewport as its albedo texture with Linear filtering. Emission is intentionally off: a future restrained text-only glow pass must not wash out the entire panel.
+- Run `tests/run_checks.ps1 -Stage world-screen` only if the runner supports stage selection; otherwise run `tests/m3_world_screen_test.gd` directly with Godot headless. The test covers default sizing, proportional custom sizing, font scaling, and independent instance content. Godot execution and in-game visual verification remain pending.
