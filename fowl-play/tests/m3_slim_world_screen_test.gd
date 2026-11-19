@@ -64,7 +64,7 @@ func _run() -> void:
 	_check(bezel.rotation_degrees.is_equal_approx(Vector3.ZERO), "Bezel BoxMeshes should remain in the XY-facing orientation")
 	_check((bezel.get_node("Top").mesh as BoxMesh).size == Vector3(2.16, 0.08, 0.025), "Top bezel should use the full outer width")
 	_check((glass.mesh as PlaneMesh).size == Vector2(2.0, 1.125), "Glass should match the display size")
-	_check(glass.rotation_degrees.is_equal_approx(Vector3(90.0, 0.0, 0.0)), "Glass PlaneMesh should rotate to match WorldScreen's XY-facing display plane")
+	_check(glass.rotation_degrees.is_equal_approx(Vector3(-90.0, 0.0, 0.0)), "Glass PlaneMesh should face the camera-facing side of WorldScreen's XY display plane")
 	_check(glass.material_override is ShaderMaterial, "Glass should receive the dedicated sheen shader")
 
 	controller.display_size = Vector2(3.0, 1.6875)
