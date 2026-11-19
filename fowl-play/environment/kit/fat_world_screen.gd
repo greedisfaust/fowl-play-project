@@ -146,7 +146,7 @@ func _layout_outer_shell(shell: CSGPolygon3D) -> void:
 		Vector2(-half_width, half_height - cut),
 		Vector2(-half_width, -half_height + cut)
 	])
-	_set_polygon(shell, points, chassis_depth, -chassis_depth)
+	_set_polygon(shell, points, chassis_depth, -0.005)
 
 func _layout_inner_armor(group: Node3D) -> void:
 	var half_width: float = _half_width()

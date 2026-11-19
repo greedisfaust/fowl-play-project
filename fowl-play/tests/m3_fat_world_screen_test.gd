@@ -108,7 +108,7 @@ func _run() -> void:
 
 	_check(shell.polygon.size() == 8, "Outer shell should keep its clipped eight-point silhouette")
 	_check(is_equal_approx(shell.depth, 0.30), "Outer shell should use the default 0.30 depth")
-	_check(shell.position.is_equal_approx(Vector3(0.0, 0.0, -0.30)), "Outer shell should sit behind the display")
+	_check(shell.position.is_equal_approx(Vector3(0.0, 0.0, -0.005)), "Outer shell front face should sit just behind the display and extrude backward")
 	_check((inner.get_node("TopArmor") as CSGPolygon3D).polygon.size() == 4, "Top armor should be a four-point polygon")
 	_check((corners.get_node("TopLeft") as CSGPolygon3D).position.z == 0.045, "Corner armor should sit forward of the inner frame")
 	_check((panel_body.mesh as BoxMesh).size.is_equal_approx(Vector3(1.35, 0.16, 0.055)), "Control strip should match the default design width")

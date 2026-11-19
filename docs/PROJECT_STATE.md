@@ -289,6 +289,6 @@ The test arena now includes a WorldEnvironment with restrained Godot Glow post-p
 ## 2026-11-19 — FAT industrial WorldScreen controller
 
 - Added a responsive `FatWorldScreen` controller for the editor-authored industrial CRT assembly without modifying or generating its scene file.
-- The controller lays out the clipped outer CSG shell, four inner armor polygons, four corner plates, side vent groups, lower control strip, identification plate, fasteners, WorldScreen content, and glass from one `display_size` value.
+- The controller places the CSG shell front face just behind the display (Depth mode extrudes toward negative Z), then lays out the clipped outer CSG shell, four inner armor polygons, four corner plates, side vent groups, lower control strip, identification plate, fasteners, WorldScreen content, and glass from one `display_size` value.
 - Existing authored materials and TextMesh lettering resources are preserved; the script updates geometry dimensions and transforms only. The same restrained glass shader/settings used by SLIM are reused.
 - Added a headless contract test and registered the `fat-world-screen` stage. Godot execution and rendered visual verification have not been run by the assistant and remain required in the local editor.
