@@ -335,3 +335,14 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 - Run `tests/run_checks.ps1` stage `slim-world-screen` for the headless geometry/resizing contract. Godot execution and rendered visual tuning remain user-run.
 
 - Glass uses a default-orientation PlaneMesh (XZ plane); do not rotate it 90 degrees. The backing BoxMesh and bezel boxes are rotated 90 degrees around X because their broad faces are authored in XY.
+
+
+### FAT WorldScreen kit
+
+- Editor-authored scene: `res://environment/kit/fat_world_screen.tscn`. Attach `res://environment/kit/fat_world_screen.gd` to the `FatWorldScreen` root. The controller does not create or replace scene nodes.
+- Required root children: `WorldScreen`, `Chassis`, and `Glass`. Chassis groups: `OuterShell`, `InnerArmor/{TopArmor,BottomArmor,LeftArmor,RightArmor}`, `CornerArmor/{TopLeft,TopRight,BottomLeft,BottomRight}`, `SideDetails/{LeftVent,RightVent}`, `ControlPanel/{PanelBody,IndicatorGroup,IdentificationPlate}`, and `Fasteners/{TopLeft,TopRight,BottomLeft,BottomRight}`.
+- The controller repositions/regenerates the named CSG silhouettes, vent bars, control strip, plate, fasteners, and glass from `display_size`. It preserves authored materials and the TextMesh resource; keep the node names stable.
+- `display_size` resizes WorldScreen, the clipped eight-point chassis, inner armor, corner plates, vent spacing, lower control strip, identification plate, fasteners, and glass. Chassis depth, armor thickness, corner cut, and glass finish remain adjustable in the Inspector.
+- The outer shell sits behind the display. The inner armor, control panel, TextMesh lettering, fasteners, and glass are layered toward the front (+Z). Glass reuses the same shader and defaults as SLIM.
+- Prefer `MeshInstance3D` with a `TextMesh` resource for crisp physical in-world lettering rather than small `Label3D` textures.
+- Run `tests/run_checks.ps1` stage `fat-world-screen`, or `godot --headless --path fowl-play --script res://tests/m3_fat_world_screen_test.gd`. Godot execution and rendered visual verification remain user-run; this implementation has not been run in Godot.

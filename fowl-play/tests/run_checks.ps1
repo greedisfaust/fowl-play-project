@@ -13,7 +13,7 @@ if (-not (Test-Path -LiteralPath $godot)) {
 	throw "Godot executable not found. Set FOWL_PLAY_GODOT or add godot to PATH."
 }
 $project = Join-Path $PSScriptRoot ".."
-foreach ($stage in @("import", "d0", "m1", "m1-cursor", "m2", "m2-arm-ik", "m3", "m3-interaction", "m4-handoff", "m6", "identity", "physical-button", "screen-text", "world-screen", "slim-world-screen")) {
+foreach ($stage in @("import", "d0", "m1", "m1-cursor", "m2", "m2-arm-ik", "m3", "m3-interaction", "m4-handoff", "m6", "identity", "physical-button", "screen-text", "world-screen", "slim-world-screen", "fat-world-screen")) {
 	$checkStdout = [System.IO.Path]::GetTempFileName()
 	$checkStderr = [System.IO.Path]::GetTempFileName()
 	$arguments = @("--headless", "--path", ('"{0}"' -f $project))
@@ -31,6 +31,7 @@ foreach ($stage in @("import", "d0", "m1", "m1-cursor", "m2", "m2-arm-ik", "m3",
 	elseif ($stage -eq "screen-text") { $arguments += @("--script", "res://tests/m3_screen_text_test.gd") }
 	elseif ($stage -eq "world-screen") { $arguments += @("--script", "res://tests/m3_world_screen_test.gd") }
 	elseif ($stage -eq "slim-world-screen") { $arguments += @("--script", "res://tests/m3_slim_world_screen_test.gd") }
+	elseif ($stage -eq "fat-world-screen") { $arguments += @("--script", "res://tests/m3_fat_world_screen_test.gd") }
 	else { $arguments += @("--script", "res://tests/m3_movement_test.gd") }
 	try {
 		$checkProcess = Start-Process -FilePath $godot -ArgumentList $arguments -WindowStyle Hidden -Wait -PassThru -RedirectStandardOutput $checkStdout -RedirectStandardError $checkStderr
