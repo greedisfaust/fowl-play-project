@@ -1,9 +1,7 @@
-## Headless contract checks for the responsive SLIM WorldScreen housing.
+## Contract checks against the editor-authored SLIM scene and responsive controller.
 extends SceneTree
 
 const SlimScript = preload("res://environment/kit/slim_world_screen.gd")
-const WorldScreenScript = preload("res://environment/kit/world_screen.gd")
-const ScreenTextScript = preload("res://ui/screen_text.gd")
 
 var _failed: bool = false
 
@@ -11,79 +9,46 @@ func _initialize() -> void:
 	_run.call_deferred()
 
 func _run() -> void:
-	var root_node: Node3D = Node3D.new()
-	root_node.set_script(SlimScript)
-	root_node.name = "SlimWorldScreen"
-	for group_name in ["FrontTrim", "LightingSystem", "SideDetails", "Identification", "MechanicalDetails"]:
-		var group: Node3D = Node3D.new()
-		group.name = group_name
-		root_node.add_child(group)
+	var packed: PackedScene = load("res://environment/kit/slim_world_screen.tscn") as PackedScene
+	if packed == null:
+		_fail("Could not load slim_world_screen.tscn")
+		quit(1)
+		return
 
-
-	var screen_node: Node3D = Node3D.new()
-	screen_node.set_script(WorldScreenScript)
-	screen_node.name = "WorldScreen"
-	root_node.add_child(screen_node)
-	var screen: WorldScreen = screen_node as WorldScreen
-
-	var display: MeshInstance3D = MeshInstance3D.new()
-	display.name = "Display"
-	display.mesh = PlaneMesh.new()
-	display.rotation_degrees = Vector3(90.0, 0.0, 0.0)
-	screen.add_child(display)
-	var text_viewport: SubViewport = SubViewport.new()
-	text_viewport.name = "SubViewport"
-	screen.add_child(text_viewport)
-	var terminal_node: RichTextLabel = RichTextLabel.new()
-	terminal_node.set_script(ScreenTextScript)
-	terminal_node.name = "ScreenText"
-	text_viewport.add_child(terminal_node)
-	var text_display: MeshInstance3D = MeshInstance3D.new()
-	text_display.name = "TextDisplay"
-	text_display.mesh = PlaneMesh.new()
-	text_display.rotation_degrees = Vector3(90.0, 0.0, 0.0)
-	screen.add_child(text_display)
-
-	var housing: MeshInstance3D = MeshInstance3D.new()
-	housing.name = "Housing"
-	housing.mesh = BoxMesh.new()
-	root_node.add_child(housing)
-	var bezel: Node3D = Node3D.new()
-	bezel.name = "Bezel"
-	root_node.add_child(bezel)
-	for piece_name in ["Top", "Bottom", "Left", "Right"]:
-		var piece: MeshInstance3D = MeshInstance3D.new()
-		piece.name = piece_name
-		piece.mesh = BoxMesh.new()
-		bezel.add_child(piece)
-	var glass: MeshInstance3D = MeshInstance3D.new()
-	glass.name = "Glass"
-	glass.mesh = PlaneMesh.new()
-	root_node.add_child(glass)
-
-	root.add_child(root_node)
-	var controller: SlimWorldScreen = root_node as SlimWorldScreen
+	var instance: Node3D = packed.instantiate() as Node3D
+	instance.set_script(SlimScript)
+	root.add_child(instance)
 	await process_frame
-	_check((housing.mesh as BoxMesh).size == Vector3(2.16, 1.285, 0.1), "Housing should match default display plus bezel dimensions")
-	_check(housing.rotation_degrees.is_equal_approx(Vector3.ZERO), "Housing BoxMesh should remain in the XY-facing orientation")
-	_check(bezel.rotation_degrees.is_equal_approx(Vector3.ZERO), "Bezel BoxMeshes should remain in the XY-facing orientation")
-	_check((bezel.get_node("Top").mesh as BoxMesh).size == Vector3(2.16, 0.08, 0.025), "Top bezel should use the full outer width")
-	_check((glass.mesh as PlaneMesh).size == Vector2(2.0, 1.125), "Glass should match the display size")
-	_check(glass.rotation_degrees.is_equal_approx(Vector3(-90.0, 0.0, 0.0)), "Glass PlaneMesh should face the camera-facing side of WorldScreen's XY display plane")
-	_check(glass.material_override is ShaderMaterial, "Glass should receive the dedicated sheen shader")
-	_check(root_node.get_node("LightingSystem/GeneratedLighting").get_child_count() >= 13, "Lighting system should generate perimeter, corner, and status lights")
-	_check(root_node.get_node("FrontTrim/GeneratedTrim").get_child_count() == 5, "Front trim should generate machined rails and lower inset")
-	_check(root_node.get_node("SideDetails/GeneratedSideDetails").get_child_count() == 16, "Side details should generate vents and accent inserts")
 
-	controller.display_size = Vector2(3.0, 1.6875)
-	_check((housing.mesh as BoxMesh).size == Vector3(3.16, 1.8475, 0.1), "Housing should resize with the display")
-	_check((bezel.get_node("Top").mesh as BoxMesh).size == Vector3(3.16, 0.08, 0.025), "Top bezel should resize with the display")
-	_check((bezel.get_node("Left").mesh as BoxMesh).size == Vector3(0.08, 1.6875, 0.025), "Side bezels should resize with the display")
+	var screen: WorldScreen = instance.get_node_or_null("WorldScreen") as WorldScreen
+	var chassis: Node3D = instance.get_node_or_null("Chassis") as Node3D
+	var glass: MeshInstance3D = instance.get_node_or_null("Glass") as MeshInstance3D
+	_check(screen != null, "WorldScreen should be a direct child")
+	_check(chassis != null, "Chassis should be a direct child")
+	_check(glass != null, "Glass should be a direct child")
+	if screen == null or chassis == null or glass == null:
+		instance.queue_free()
+		await process_frame
+		quit(1)
+		return
+
+	var body: MeshInstance3D = chassis.get_node("MainBody") as MeshInstance3D
+	_check((body.mesh as BoxMesh).size.is_equal_approx(Vector3(2.42, 1.42, 0.14)), "Main body should match the default display footprint")
+	_check((glass.mesh as PlaneMesh).size == Vector2(2.0, 1.125), "Glass should match the default display size")
+	_check(glass.rotation_degrees.is_equal_approx(Vector3(-90.0, 0.0, 0.0)), "Glass should face the camera")
+	_check(glass.material_override is ShaderMaterial, "Glass should receive the optical sheen shader")
+	_check(chassis.get_node("OuterArmor/CornerArmor").get_child_count() == 4, "All four corner armor pieces should be preserved")
+	_check(chassis.get_node("LightChannels").get_child_count() == 4, "All four gold light channels should be preserved")
+
+	instance.set("display_size", Vector2(3.0, 1.6875))
+	await process_frame
 	_check((glass.mesh as PlaneMesh).size == Vector2(3.0, 1.6875), "Glass should resize with the display")
-	_check(screen.display_size == Vector2(3.0, 1.6875), "WorldScreen content surface should receive the new display size")
-	_check(glass.position.is_equal_approx(Vector3(0.0, 0.0, 0.012)), "Glass should stay in front of the display")
+	_check(screen.display_size == Vector2(3.0, 1.6875), "WorldScreen text surface should receive the new size")
+	_check((body.mesh as BoxMesh).size.is_equal_approx(Vector3(3.42, 1.9825, 0.14)), "Main body should resize with the display")
+	_check((chassis.get_node("OuterArmor/TopArmor") as MeshInstance3D).position.y > 0.8, "Top armor should move outward with the display")
+	_check((chassis.get_node("Fasteners/TopRightFastener") as Node3D).position.x > 1.5, "Fasteners should move outward with the display")
 
-	root_node.queue_free()
+	instance.queue_free()
 	await process_frame
 	if _failed:
 		quit(1)
@@ -93,5 +58,8 @@ func _run() -> void:
 
 func _check(condition: bool, message: String) -> void:
 	if not condition:
-		_failed = true
-		push_error("SLIM WORLD SCREEN FAIL: %s" % message)
+		_fail(message)
+
+func _fail(message: String) -> void:
+	_failed = true
+	push_error("SLIM WORLD SCREEN FAIL: %s" % message)
