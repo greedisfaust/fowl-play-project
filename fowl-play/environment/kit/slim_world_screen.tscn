@@ -363,6 +363,7 @@ size = Vector2(2, 1.125)
 script = ExtResource("1_w2241")
 
 [node name="WorldScreen" parent="." unique_id=1656044326 instance=ExtResource("1_py5ij")]
+content_padding_ratio = 0.7
 
 [node name="Chassis" type="Node3D" parent="." unique_id=1959559203]
 
@@ -485,7 +486,7 @@ mesh = SubResource("TextMesh_vnrda")
 [node name="SideDetails" type="Node3D" parent="Chassis" unique_id=1650939085]
 
 [node name="LeftVent" type="Node3D" parent="Chassis/SideDetails" unique_id=212796233]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.17, 0, 0.13)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.17, 0, 0.06717404)
 
 [node name="Vent1" type="MeshInstance3D" parent="Chassis/SideDetails/LeftVent" unique_id=1425977855]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.34, 0)
@@ -507,7 +508,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.34, 0)
 mesh = SubResource("BoxMesh_noqww")
 
 [node name="RightVent" type="Node3D" parent="Chassis/SideDetails" unique_id=1066370155]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.17, 0, 0.13)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.17, 0, 0.067)
 
 [node name="Vent6" type="MeshInstance3D" parent="Chassis/SideDetails/RightVent" unique_id=1692906905]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.34, 0)
