@@ -205,3 +205,8 @@ Pull the Registration Terminal implementation. In the editor, create the termina
 - Registration opens the mouse cursor and restores its previous mode when the session closes or completes/rejects. Arrow-key navigation, Enter, and physical USE/M1 confirmation remain intact.
 - Added ScreenText row hit testing and focused test coverage for row lookup and cursor-mode restoration. Updated registration, screen, debug, project-state, and session documentation.
 - No scenes or InputMap actions changed. Godot execution and in-world mouse click verification remain pending.
+
+
+### Session 13 — 2026-11-20 — GPT-6
+- Removed the obsolete player `registration_terminal_active` flag, setter, and movement-stopping physics branch. The registration flow does not use movement locking; session range is the intended boundary.
+- Updated the registration test to assert that actors do not require a movement-lock property. No scenes or InputMap actions changed. Godot tests remain user-run.

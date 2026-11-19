@@ -13,7 +13,6 @@ var input_peer_id: int = 0
 var is_local_player: bool = true
 var is_limp: bool = false
 var is_recovering: bool = false
-var registration_terminal_active: bool = false
 var limp_epoch: int = 0
 
 @onready var head: Node3D = $Head
@@ -409,9 +408,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		if mouse_button.pressed and Input.mouse_mode == Input.MOUSE_MODE_VISIBLE:
 			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
-func set_registration_terminal_active(active: bool) -> void:
-	registration_terminal_active = active
-
 func _physics_process(delta: float) -> void:
 	if is_limp:
 		if _is_carried and _has_host_authority() and rig != null:
@@ -421,12 +417,6 @@ func _physics_process(delta: float) -> void:
 		return
 	if not is_on_floor():
 		velocity.y -= TUNING.GRAVITY_MPS2 * delta
-
-	if registration_terminal_active:
-		velocity.x = 0.0
-		velocity.z = 0.0
-		move_and_slide()
-		return
 
 	if bool(debug_hub.call("is_console_open")):
 		velocity.x = 0.0

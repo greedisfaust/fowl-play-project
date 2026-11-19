@@ -358,3 +358,8 @@ The latest user-authored FAT and SLIM scenes were inspected at commit `61409bf`.
 - Left-clicks are ray-projected from the local player's Camera3D onto the WorldScreen plane, mapped to SubViewport pixels, and hit-tested against ScreenText's rendered menu option lines.
 - Clicking a valid option row selects and confirms it in one click. Clicks outside option rows are ignored. Arrow keys, Enter, and physical USE/M1 continue to work.
 - Focused checks cover ScreenText option-row hit testing and cursor-mode restoration. Godot execution and actual 3D click verification remain user-run.
+
+
+### Registration movement-lock cleanup
+
+Removed the obsolete `registration_terminal_active` player flag, setter, and physics early-return branch. Registration is intended to remain fully movement-permissive; terminal sessions use proximity to disconnect/reset instead of immobilizing the player.

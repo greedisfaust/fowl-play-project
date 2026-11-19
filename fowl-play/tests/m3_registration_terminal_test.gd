@@ -28,7 +28,7 @@ func _run() -> void:
 	var menu: ScreenMenu = terminal.get("_menu") as ScreenMenu
 	_check(menu != null and menu.is_active(), "Registration menu should become active")
 	_check(Input.get_mouse_mode() == Input.MOUSE_MODE_VISIBLE, "Opening registration should reveal the mouse cursor")
-	_check(not actor.has_method("set_registration_terminal_active"), "Registration should not require a movement-lock method")
+	_check(not _has_property(actor, "registration_terminal_active"), "Registration actor should not require a movement-lock property")
 	var rendered: String = screen.get_screen_text().get_parsed_text()
 	_check(rendered.contains("PLAYER REGISTRATION") and rendered.contains("EDIT NICKNAME"), "Main menu should render")
 	_check(bool(terminal.call("handle_menu_action", ScreenMenu.ACTION_DOWN)), "Menu navigation should be forwarded")
@@ -53,6 +53,12 @@ func _run() -> void:
 		return
 	print("REGISTRATION TERMINAL PASS")
 	quit(0)
+
+func _has_property(target: Object, property_name: String) -> bool:
+	for property: Dictionary in target.get_property_list():
+		if str(property.get("name", "")) == property_name:
+			return true
+	return false
 
 func _check(condition: bool, message: String) -> void:
 	if not condition:

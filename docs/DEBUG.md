@@ -395,3 +395,6 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 
 
 - Registration menu: while active, mouse cursor is visible. Left-click an option row on the WorldScreen to select and confirm; click elsewhere to do nothing. Keyboard arrows/Enter and physical USE/M1 remain active. Closing/completing/rejecting registration restores the prior mouse mode.
+
+
+- Player movement no longer has a `registration_terminal_active` override. Registration terminals must not freeze player movement; use session proximity/range handling instead.
