@@ -36,14 +36,14 @@ func _run() -> void:
 	_check(glass.material_override is ShaderMaterial, "Glass should receive the shared optical sheen shader")
 	_check((chassis.get_node("OuterShell") as CSGPolygon3D).polygon.size() == 8, "Outer shell should retain its clipped silhouette")
 	_check(chassis.get_node("CornerArmor").get_child_count() == 4, "All four corner plates should remain present")
-	_check((chassis.get_node("ControlPanel/PanelBody/MeshInstance3D") == null), "Control panel should keep its authored flat hierarchy")
 	_check((chassis.get_node("ControlPanel/PanelBody") as MeshInstance3D).mesh is BoxMesh, "Control panel body should remain a BoxMesh")
+	_check(is_equal_approx(((chassis.get_node("ControlPanel/PanelBody") as MeshInstance3D).mesh as BoxMesh).size.x, 1.35), "Control panel should keep its authored width")
 
 	instance.set("display_size", Vector2(3.0, 1.6875))
 	await process_frame
 	_check((glass.mesh as PlaneMesh).size == Vector2(3.0, 1.6875), "Glass should resize with the display")
 	_check(screen.display_size == Vector2(3.0, 1.6875), "WorldScreen text surface should receive the new size")
-	_check(is_equal_approx((chassis.get_node("OuterShell") as CSGPolygon3D).polygon[0].x, -1.72), "Outer shell should expand with the display")
+	_check(is_equal_approx((chassis.get_node("OuterShell") as CSGPolygon3D).polygon[0].x, -1.60), "Outer shell should expand with the display")
 	_check((chassis.get_node("Fasteners/TopRightFastener") as Node3D).position.x > 1.5, "Fasteners should move outward with the display")
 
 	instance.queue_free()

@@ -3,7 +3,7 @@
 class_name FatWorldScreen
 extends Node3D
 
-const GLASS_SHADER: Shader = preload("res://environment/kit/world_screen_glass.gdshader")
+const GLASS_SHADER: Shader = preload("res://environment/kit/slim_world_screen_glass.gdshader")
 
 @export_group("Display")
 @export var display_size: Vector2 = Vector2(2.0, 1.125):
@@ -36,17 +36,21 @@ const GLASS_SHADER: Shader = preload("res://environment/kit/world_screen_glass.g
 		_apply_configuration()
 
 @export_group("Glass Finish")
-@export_range(0.0, 0.2, 0.005) var glass_base_opacity: float = 0.035:
+@export_range(0.0, 0.15, 0.005) var glass_base_opacity: float = 0.035:
 	set(value):
-		glass_base_opacity = clampf(value, 0.0, 0.2)
+		glass_base_opacity = clampf(value, 0.0, 0.15)
 		_apply_configuration()
 @export_range(0.0, 1.0, 0.01) var glass_sheen_strength: float = 0.55:
 	set(value):
 		glass_sheen_strength = clampf(value, 0.0, 1.0)
 		_apply_configuration()
-@export_range(0.0, 1.0, 0.01) var glass_edge_strength: float = 0.28:
+@export_range(0.25, 10.0, 0.25) var glass_sheen_near_distance: float = 1.5:
 	set(value):
-		glass_edge_strength = clampf(value, 0.0, 1.0)
+		glass_sheen_near_distance = maxf(value, 0.25)
+		_apply_configuration()
+@export_range(1.0, 20.0, 0.25) var glass_sheen_far_distance: float = 5.0:
+	set(value):
+		glass_sheen_far_distance = maxf(value, glass_sheen_near_distance + 0.1)
 		_apply_configuration()
 
 var _glass_material: ShaderMaterial
@@ -55,7 +59,7 @@ var _lettering_scale_captured: bool = false
 var _warning_sent: bool = false
 
 func _ready() -> void:
-	var lettering: MeshInstance3D = get_node_or_null("Chassis/ControlPanel/IdentificationPlate/EngravedText") as MeshInstance3D
+	var lettering: MeshInstance3D = get_node_or_null("WorldScreen/Chassis/ControlPanel/IdentificationPlate/EngravedText") as MeshInstance3D
 	if lettering != null:
 		_lettering_base_scale = lettering.scale
 		_lettering_scale_captured = true
@@ -69,7 +73,7 @@ func _apply_configuration() -> void:
 		return
 
 	var screen: WorldScreen = get_node_or_null("WorldScreen") as WorldScreen
-	var chassis: Node3D = get_node_or_null("Chassis") as Node3D
+	var chassis: Node3D = get_node_or_null("WorldScreen/Chassis") as Node3D
 	var glass: MeshInstance3D = get_node_or_null("Glass") as MeshInstance3D
 	if screen != null:
 		screen.set_display_size(display_size)
@@ -80,7 +84,7 @@ func _apply_configuration() -> void:
 		_layout_glass(glass)
 
 	if (screen == null or chassis == null or glass == null) and not _warning_sent:
-		push_warning("FatWorldScreen expects WorldScreen, Chassis, and Glass as direct children.")
+		push_warning("FatWorldScreen expects WorldScreen, Chassis, and Glass children. Check the editor-authored hierarchy.")
 		_warning_sent = true
 
 func _half_width() -> float:
@@ -98,6 +102,7 @@ func _outer_half_height() -> float:
 func _set_polygon(node: CSGPolygon3D, points: PackedVector2Array, depth: float, z_position: float) -> void:
 	if node == null:
 		return
+	# Keep all polygon faces consistently wound so mirrored corner plates do not flip.
 	var signed_area: float = 0.0
 	for index: int in range(points.size()):
 		var current: Vector2 = points[index]
@@ -115,25 +120,25 @@ func _set_polygon(node: CSGPolygon3D, points: PackedVector2Array, depth: float, 
 	node.position = Vector3(0.0, 0.0, z_position)
 
 func _layout_chassis(chassis: Node3D) -> void:
-	var shell: CSGPolygon3D = chassis.get_node_or_null("OuterShell") as CSGPolygon3D
-	if shell != null:
-		_layout_outer_shell(shell)
+	var outer_shell: CSGPolygon3D = chassis.get_node_or_null("OuterShell") as CSGPolygon3D
+	if outer_shell != null:
+		_layout_outer_shell(outer_shell)
 
-	var inner: Node3D = chassis.get_node_or_null("InnerArmor") as Node3D
-	if inner != null:
-		_layout_inner_armor(inner)
+	var inner_armor: Node3D = chassis.get_node_or_null("InnerArmor") as Node3D
+	if inner_armor != null:
+		_layout_inner_armor(inner_armor)
 
-	var corners: Node3D = chassis.get_node_or_null("CornerArmor") as Node3D
-	if corners != null:
-		_layout_corner_armor(corners)
+	var corner_armor: Node3D = chassis.get_node_or_null("CornerArmor") as Node3D
+	if corner_armor != null:
+		_layout_corner_armor(corner_armor)
 
-	var details: Node3D = chassis.get_node_or_null("SideDetails") as Node3D
-	if details != null:
-		_layout_side_details(details)
+	var side_details: Node3D = chassis.get_node_or_null("SideDetails") as Node3D
+	if side_details != null:
+		_layout_side_details(side_details)
 
-	var control: Node3D = chassis.get_node_or_null("ControlPanel") as Node3D
-	if control != null:
-		_layout_control_panel(control)
+	var control_panel: Node3D = chassis.get_node_or_null("ControlPanel") as Node3D
+	if control_panel != null:
+		_layout_control_panel(control_panel)
 
 	var fasteners: Node3D = chassis.get_node_or_null("Fasteners") as Node3D
 	if fasteners != null:
@@ -156,6 +161,7 @@ func _layout_outer_shell(shell: CSGPolygon3D) -> void:
 	_set_polygon(shell, points, chassis_depth, -0.005)
 
 func _layout_inner_armor(group: Node3D) -> void:
+	# The controller owns the armor offsets; clear the authored parent offset before positioning each plate.
 	group.position = Vector3.ZERO
 	var half_width: float = _half_width()
 	var half_height: float = _half_height()
@@ -164,6 +170,7 @@ func _layout_inner_armor(group: Node3D) -> void:
 	var outer_x: float = half_width + frame * 1.33
 	var inner_y: float = half_height - 0.0125
 	var outer_y: float = half_height + frame
+
 	_set_polygon(group.get_node_or_null("TopArmor") as CSGPolygon3D, PackedVector2Array([
 		Vector2(-half_width - frame * 0.67, inner_y),
 		Vector2(half_width + frame * 0.67, inner_y),
@@ -197,30 +204,33 @@ func _layout_corner_armor(group: Node3D) -> void:
 	var plate_height: float = maxf(0.12, chassis_margin * 0.72)
 	var inner_x: float = outer_x - plate_width
 	var inner_y: float = outer_y - plate_height
+	var depth: float = 0.035
+	var z_position: float = 0.045
+
 	_set_polygon(group.get_node_or_null("TopLeft") as CSGPolygon3D, PackedVector2Array([
 		Vector2(-outer_x + 0.02, outer_y - cut),
 		Vector2(-outer_x + cut, outer_y - 0.02),
 		Vector2(-inner_x, outer_y - 0.02),
 		Vector2(-outer_x + cut * 2.0, inner_y)
-	]), 0.035, 0.045)
+	]), depth, z_position)
 	_set_polygon(group.get_node_or_null("TopRight") as CSGPolygon3D, PackedVector2Array([
 		Vector2(outer_x - 0.02, outer_y - cut),
 		Vector2(outer_x - cut, outer_y - 0.02),
 		Vector2(inner_x, outer_y - 0.02),
 		Vector2(outer_x - cut * 2.0, inner_y)
-	]), 0.035, 0.045)
+	]), depth, z_position)
 	_set_polygon(group.get_node_or_null("BottomLeft") as CSGPolygon3D, PackedVector2Array([
 		Vector2(-outer_x + 0.02, -outer_y + cut),
 		Vector2(-outer_x + cut, -outer_y + 0.02),
 		Vector2(-inner_x, -outer_y + 0.02),
 		Vector2(-outer_x + cut * 2.0, -inner_y)
-	]), 0.035, 0.045)
+	]), depth, z_position)
 	_set_polygon(group.get_node_or_null("BottomRight") as CSGPolygon3D, PackedVector2Array([
 		Vector2(outer_x - 0.02, -outer_y + cut),
 		Vector2(outer_x - cut, -outer_y + 0.02),
 		Vector2(inner_x, -outer_y + 0.02),
 		Vector2(outer_x - cut * 2.0, -inner_y)
-	]), 0.035, 0.045)
+	]), depth, z_position)
 
 func _layout_side_details(group: Node3D) -> void:
 	var side_offset: float = _half_width() + chassis_margin * 0.77
@@ -231,7 +241,7 @@ func _layout_vent_group(group: Node3D, x_position: float) -> void:
 	if group == null:
 		return
 	group.position = Vector3(x_position, 0.0, 0.02)
-	var index: int = 0
+	var vent_index: int = 0
 	for child: Node in group.get_children():
 		var vent: MeshInstance3D = child as MeshInstance3D
 		if vent == null:
@@ -241,8 +251,8 @@ func _layout_vent_group(group: Node3D, x_position: float) -> void:
 			box = BoxMesh.new()
 			vent.mesh = box
 		box.size = Vector3(0.025, 0.42, 0.012)
-		vent.position = Vector3(0.0, (float(index) - 2.0) * 0.12, 0.0)
-		index += 1
+		vent.position = Vector3(0.0, (float(vent_index) - 2.0) * 0.12, 0.0)
+		vent_index += 1
 
 func _layout_control_panel(group: Node3D) -> void:
 	group.position = Vector3.ZERO
@@ -259,14 +269,14 @@ func _layout_control_panel(group: Node3D) -> void:
 	var indicators: Node3D = group.get_node_or_null("IndicatorGroup") as Node3D
 	if indicators != null:
 		indicators.position = Vector3(0.0, panel_y, 0.035)
-		var index: int = 0
+		var indicator_index: int = 0
 		for child: Node in indicators.get_children():
 			var indicator: MeshInstance3D = child as MeshInstance3D
 			if indicator == null:
 				continue
-			indicator.position = Vector3(-display_size.x * 0.225 + float(index) * 0.08, 0.0, 0.04)
+			indicator.position = Vector3(-display_size.x * 0.225 + float(indicator_index) * 0.08, 0.0, 0.04)
 			indicator.rotation_degrees = Vector3(90.0, 0.0, 0.0)
-			index += 1
+			indicator_index += 1
 
 	var plate_group: Node3D = group.get_node_or_null("IdentificationPlate") as Node3D
 	if plate_group != null:
@@ -295,13 +305,19 @@ func _layout_fasteners(group: Node3D) -> void:
 		"TopLeftFastener": Vector3(-x_position, y_position, 0.085),
 		"TopRightFastener": Vector3(x_position, y_position, 0.085),
 		"BottomLeftFastener": Vector3(-x_position, -y_position, 0.085),
-		"BottomRightFastener": Vector3(x_position, -y_position, 0.085)
+		"BottomRightFastener": Vector3(x_position, -y_position, 0.085),
+		# Keep compatibility with the shorter names used by the contract fixture.
+		"TopLeft": Vector3(-x_position, y_position, 0.085),
+		"TopRight": Vector3(x_position, y_position, 0.085),
+		"BottomLeft": Vector3(-x_position, -y_position, 0.085),
+		"BottomRight": Vector3(x_position, -y_position, 0.085)
 	}
-	for fastener_name: String in positions:
-		var fastener: MeshInstance3D = group.get_node_or_null(fastener_name) as MeshInstance3D
-		if fastener != null:
-			fastener.position = positions[fastener_name]
-			fastener.rotation_degrees = Vector3(90.0, 0.0, 0.0)
+	for child_name: String in positions:
+		var fastener: MeshInstance3D = group.get_node_or_null(child_name) as MeshInstance3D
+		if fastener == null:
+			continue
+		fastener.position = positions[child_name]
+		fastener.rotation_degrees = Vector3(90.0, 0.0, 0.0)
 
 func _layout_glass(glass: MeshInstance3D) -> void:
 	var plane: PlaneMesh = glass.mesh as PlaneMesh
@@ -322,4 +338,5 @@ func _apply_glass_material(glass: MeshInstance3D) -> void:
 	_glass_material.shader = GLASS_SHADER
 	_glass_material.set_shader_parameter("base_opacity", glass_base_opacity)
 	_glass_material.set_shader_parameter("sheen_strength", glass_sheen_strength)
-	_glass_material.set_shader_parameter("edge_strength", glass_edge_strength)
+	_glass_material.set_shader_parameter("near_distance", glass_sheen_near_distance)
+	_glass_material.set_shader_parameter("far_distance", glass_sheen_far_distance)
