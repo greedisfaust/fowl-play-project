@@ -27,6 +27,7 @@ func _run() -> void:
 	_check(bool(terminal.call("open_registration_for_actor", actor)), "Terminal should open for a valid local actor")
 	var menu: ScreenMenu = terminal.get("_menu") as ScreenMenu
 	_check(menu != null and menu.is_active(), "Registration menu should become active")
+	_check(Input.get_mouse_mode() == Input.MOUSE_MODE_VISIBLE, "Opening registration should reveal the mouse cursor")
 	_check(not actor.has_method("set_registration_terminal_active"), "Registration should not require a movement-lock method")
 	var rendered: String = screen.get_screen_text().get_parsed_text()
 	_check(rendered.contains("PLAYER REGISTRATION") and rendered.contains("EDIT NICKNAME"), "Main menu should render")
@@ -36,6 +37,7 @@ func _run() -> void:
 	_check(screen.get_screen_text().get_parsed_text().contains("SELECT PLAYER COLOR"), "Color choices should render")
 	terminal.call("close_registration_session")
 	_check(not menu.is_active(), "Closing the terminal should close its menu")
+	_check(Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED, "Closing registration should restore the previous mouse mode")
 	terminal.call("open_registration_for_actor", actor)
 	terminal.set("interaction_break_distance", 1.0)
 	actor.position = Vector3(2.0, 0.0, 0.0)

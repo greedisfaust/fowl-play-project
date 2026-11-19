@@ -34,7 +34,7 @@ Focus emits Interactable.interaction_requested locally after submitting the exis
 Run:
 godot --headless --path fowl-play --script res://tests/m3_registration_terminal_test.gd
 
-Then wire the editor-authored terminal and verify locally and with two instances: nickname entry, duplicate nickname suffixing, occupied-color fallback, host/client roster agreement, and movement lock/unlock. Automated checks do not replace rendered or multiplayer verification.
+Then wire the editor-authored terminal and verify locally and with two instances: nickname entry, duplicate nickname suffixing, occupied-color fallback, host/client roster agreement, and proximity-based session reset. Automated checks do not replace rendered or multiplayer verification. Confirm that the local player can keep moving while the terminal is open and that the proximity cutoff resets the session; no movement lock is used.
 
 
 ## Direct mouse selection
