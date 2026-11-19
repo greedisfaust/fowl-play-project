@@ -42,15 +42,17 @@ roughness = 0.42
 material = SubResource("StandardMaterial3D_57qmd")
 size = Vector3(0.235, 0.008, 0.235)
 
-[sub_resource type="ViewportTexture" id="ViewportTexture_gurba"]
+[sub_resource type="ViewportTexture" id="ViewportTexture_a670p"]
 viewport_path = NodePath("Cap/LabelSurface/SubViewport")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jfp2y"]
 resource_local_to_scene = true
+transparency = 1
 shading_mode = 0
-albedo_texture = SubResource("ViewportTexture_gurba")
+albedo_texture = SubResource("ViewportTexture_a670p")
 
 [sub_resource type="QuadMesh" id="QuadMesh_gurba"]
+resource_local_to_scene = true
 material = SubResource("StandardMaterial3D_jfp2y")
 size = Vector2(0.235, 0.235)
 
@@ -80,7 +82,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.041, 0)
 mesh = SubResource("BoxMesh_yf5fn")
 
 [node name="LabelSurface" type="MeshInstance3D" parent="Cap" unique_id=581134905]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0.045, 0)
+transform = Transform3D(-1, 8.742278e-08, 3.821371e-15, 0, -4.371139e-08, 1, 8.742278e-08, 1, 4.371139e-08, 0, 0.047, 0)
 mesh = SubResource("QuadMesh_gurba")
 
 [node name="SubViewport" type="SubViewport" parent="Cap/LabelSurface" unique_id=457063243]
