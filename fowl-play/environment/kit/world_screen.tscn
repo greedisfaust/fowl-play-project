@@ -13,13 +13,13 @@ texture_filter = 1
 material = SubResource("StandardMaterial3D_world_screen")
 size = Vector2(2, 1.125)
 
-[sub_resource type="ViewportTexture" id="ViewportTexture_qdpk0"]
+[sub_resource type="ViewportTexture" id="ViewportTexture_valms"]
 viewport_path = NodePath("SubViewport")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3to4u"]
 transparency = 1
 shading_mode = 0
-albedo_texture = SubResource("ViewportTexture_qdpk0")
+albedo_texture = SubResource("ViewportTexture_valms")
 texture_filter = 1
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_vx1u1"]
@@ -31,14 +31,14 @@ shader_parameter/hdr_boost = 3.6
 shader_parameter/led_matrix_enabled = true
 shader_parameter/led_dot_size = 4.0
 shader_parameter/led_gap = 0.25
-shader_parameter/led_softness = 0.060000000000000005
+shader_parameter/led_softness = 0.06
 
 [node name="WorldScreen" type="Node3D" unique_id=1656044326]
 script = ExtResource("2_world_screen")
 text_glow_boost = 3.6
 led_dot_size = 4.0
 led_gap = 0.25
-led_softness = 0.060000000000000005
+led_softness = 0.06
 
 [node name="Display" type="MeshInstance3D" parent="." unique_id=541727026]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)

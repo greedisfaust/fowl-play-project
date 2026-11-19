@@ -19,6 +19,5 @@ void fragment() {
 	ROUGHNESS = 0.14;
 	SPECULAR = 0.8;
 	CLEARCOAT = 1.0;
-	CLEARCOAT_GLOSS = 0.92;
 	ALPHA = clamp(base_opacity + sheen * 0.18, 0.0, 0.22);
 }

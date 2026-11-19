@@ -1,7 +1,103 @@
 [gd_scene format=3 uid="uid://bohm84tw787n0"]
 
+[ext_resource type="Script" uid="uid://dj7wpbb3ohs1n" path="res://environment/kit/slim_world_screen.gd" id="1_n2ovl"]
 [ext_resource type="PackedScene" uid="uid://dodi6s0eif5r0" path="res://environment/kit/world_screen.tscn" id="1_py5ij"]
+[ext_resource type="Shader" uid="uid://dia2br0pm32xp" path="res://environment/kit/slim_world_screen_glass.gdshader" id="3_w2241"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_py5ij"]
+albedo_color = Color(0.1254902, 0.14117648, 0.16862746, 1)
+metallic = 0.65
+roughness = 0.38
+
+[sub_resource type="BoxMesh" id="BoxMesh_g4v7s"]
+material = SubResource("StandardMaterial3D_py5ij")
+size = Vector3(2.16, 1.285, 0.1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_n2ovl"]
+albedo_color = Color(0.1882353, 0.20392157, 0.23137255, 1)
+metallic = 0.75
+roughness = 0.3
+
+[sub_resource type="BoxMesh" id="BoxMesh_n2ovl"]
+material = SubResource("StandardMaterial3D_n2ovl")
+size = Vector3(2.16, 0.08, 0.025)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_w2241"]
+albedo_color = Color(0.1882353, 0.20392157, 0.23137255, 1)
+metallic = 0.75
+roughness = 0.3
+
+[sub_resource type="BoxMesh" id="BoxMesh_w2241"]
+material = SubResource("StandardMaterial3D_w2241")
+size = Vector3(2.16, 0.08, 0.025)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_spwhc"]
+albedo_color = Color(0.1882353, 0.20392157, 0.23137255, 1)
+metallic = 0.75
+roughness = 0.3
+
+[sub_resource type="BoxMesh" id="BoxMesh_spwhc"]
+material = SubResource("StandardMaterial3D_spwhc")
+size = Vector3(0.08, 1.125, 0.025)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vekha"]
+albedo_color = Color(0.1882353, 0.20392157, 0.23137255, 1)
+metallic = 0.75
+roughness = 0.3
+
+[sub_resource type="BoxMesh" id="BoxMesh_py5ij"]
+material = SubResource("StandardMaterial3D_vekha")
+size = Vector3(0.08, 1.125, 0.025)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_spwhc"]
+render_priority = 0
+shader = ExtResource("3_w2241")
+shader_parameter/base_opacity = 0.035
+shader_parameter/sheen_strength = 0.55
+shader_parameter/near_distance = 1.5
+shader_parameter/far_distance = 5.0
+shader_parameter/glass_tint = Color(0.42, 0.58, 0.72, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kpkxd"]
+transparency = 1
+albedo_color = Color(0.72135246, 0.7845677, 0.8472311, 0.060000002)
+metallic = 0.05
+roughness = 0.16
+clearcoat_enabled = true
+clearcoat_roughness = 0.08
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_g4v7s"]
+material = SubResource("StandardMaterial3D_kpkxd")
+size = Vector2(2, 1.125)
 
 [node name="SlimWorldScreen" type="Node3D" unique_id=681439892]
+script = ExtResource("1_n2ovl")
 
 [node name="WorldScreen" parent="." unique_id=1656044326 instance=ExtResource("1_py5ij")]
+
+[node name="Housing" type="MeshInstance3D" parent="." unique_id=955644027]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.055)
+mesh = SubResource("BoxMesh_g4v7s")
+
+[node name="Bezel" type="Node3D" parent="." unique_id=1384935771]
+
+[node name="Top" type="MeshInstance3D" parent="Bezel" unique_id=551523265]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6025, 0.008)
+mesh = SubResource("BoxMesh_n2ovl")
+
+[node name="Bottom" type="MeshInstance3D" parent="Bezel" unique_id=1570338714]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.6025, 0.008)
+mesh = SubResource("BoxMesh_w2241")
+
+[node name="Left" type="MeshInstance3D" parent="Bezel" unique_id=878889822]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.04, 0, 0.008)
+mesh = SubResource("BoxMesh_spwhc")
+
+[node name="Right" type="MeshInstance3D" parent="Bezel" unique_id=1056022302]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.04, 0, 0.008)
+mesh = SubResource("BoxMesh_py5ij")
+
+[node name="Glass" type="MeshInstance3D" parent="." unique_id=1287149561]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0.012)
+material_override = SubResource("ShaderMaterial_spwhc")
+mesh = SubResource("PlaneMesh_g4v7s")

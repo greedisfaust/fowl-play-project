@@ -1,13 +1,14 @@
 [gd_scene format=3 uid="uid://ctr8im3lpy4pn"]
 
 [ext_resource type="Script" uid="uid://n6lbgq5xyb75" path="res://arena/test_arena.gd" id="1_555b8"]
+[ext_resource type="PackedScene" uid="uid://cejw4b824vtv2" path="res://environment/kit/fat_world_screen.tscn" id="2_1y418"]
 [ext_resource type="PackedScene" uid="uid://p4yueflmbgmy" path="res://ui/debug/debug_console.tscn" id="2_nr24g"]
 [ext_resource type="Script" uid="uid://46ghk5d3vk2r" path="res://interaction/debug_use_device.gd" id="3_6pj3w"]
 [ext_resource type="Script" uid="uid://dd5c04repreo1" path="res://interaction/interactable.gd" id="3_555b8"]
 [ext_resource type="Script" uid="uid://dyw4wgr3svwvg" path="res://props/prop.gd" id="5_5fshk"]
 [ext_resource type="Script" uid="uid://bw1bicstmeec7" path="res://props/prop_profile.gd" id="6_w7fvv"]
 [ext_resource type="PackedScene" uid="uid://dhetiy0bpntqj" path="res://environment/kit/physical_use_button.tscn" id="7_a670p"]
-[ext_resource type="PackedScene" uid="uid://dodi6s0eif5r0" path="res://environment/kit/world_screen.tscn" id="8_imect"]
+[ext_resource type="PackedScene" uid="uid://bohm84tw787n0" path="res://environment/kit/slim_world_screen.tscn" id="8_imect"]
 
 [sub_resource type="Environment" id="Environment_interaction_glow"]
 glow_enabled = true
@@ -65,6 +66,9 @@ mesh = SubResource("BoxMesh_g4v7s")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="World" unique_id=1677053292]
 transform = Transform3D(0.8660254, 0.40957603, -0.28678823, 0, 0.57357645, 0.81915206, 0.5, -0.7094065, 0.49673176, 0, 5, 0)
+
+[node name="FatWorldScreen" parent="World" unique_id=1276401181 instance=ExtResource("2_1y418")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.175675, 1.2820001, -0.3037783)
 
 [node name="DebugConsole" parent="." unique_id=1236782275 instance=ExtResource("2_nr24g")]
 
@@ -142,5 +146,5 @@ shape = SubResource("CapsuleShape3D_57qmd")
 [node name="PhysicalUseButton" parent="." unique_id=1018963796 instance=ExtResource("7_a670p")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0151434, 0.80192447, -2.410954)
 
-[node name="WorldScreen" parent="." unique_id=1656044326 instance=ExtResource("8_imect")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.895873, 1.7079158, 0)
+[node name="SlimWorldScreen" parent="." unique_id=681439892 instance=ExtResource("8_imect")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.945764, 1.734121, -1.5040392)
