@@ -26,7 +26,7 @@ func _run() -> void:
 	_check(first_text.text_direction == Control.TEXT_DIRECTION_LTR, "Terminal text must read left-to-right")
 	var first_background: ColorRect = first.get_node("SubViewport/Background") as ColorRect
 	_check(first_background.color == first_text.background_color, "Separate background should match ScreenText background color")
-	var first_style: StyleBox = first_text.get_theme_stylebox("normal")
+	var first_style: StyleBoxFlat = first_text.get_theme_stylebox("normal") as StyleBoxFlat
 	_check(is_equal_approx(first_style.bg_color.a, 0.0), "ScreenText stylebox must remain transparent so the text shader cannot glow the panel")
 	var first_material: ShaderMaterial = first_text.material as ShaderMaterial
 	_check(first_material != null, "ScreenText should use the reusable HDR/LED shader material")
