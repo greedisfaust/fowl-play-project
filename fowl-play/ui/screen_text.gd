@@ -106,7 +106,7 @@ func _apply_appearance() -> void:
 		add_theme_font_override("mono_font", terminal_font)
 
 	var backing: StyleBoxFlat = StyleBoxFlat.new()
-	backing.bg_color = background_color
+	backing.bg_color = Color(0.0, 0.0, 0.0, 0.0)
 	var content_padding: float = float(terminal_font_size) * content_padding_ratio
 	backing.content_margin_left = content_padding
 	backing.content_margin_top = content_padding * 0.75

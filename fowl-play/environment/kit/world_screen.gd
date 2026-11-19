@@ -22,6 +22,38 @@ const MAX_FONT_SIZE: int = 512
 		max_viewport_dimension = maxi(value, MIN_VIEWPORT_DIMENSION)
 		_apply_configuration()
 
+@export_group("Text Glow")
+@export var text_glow_enabled: bool = true:
+	set(value):
+		text_glow_enabled = value
+		_apply_configuration()
+
+@export_range(1.0, 8.0, 0.1) var text_glow_boost: float = 2.2:
+	set(value):
+		text_glow_boost = clampf(value, 1.0, 8.0)
+		_apply_configuration()
+
+@export_group("LED Matrix")
+@export var led_matrix_enabled: bool = true:
+	set(value):
+		led_matrix_enabled = value
+		_apply_configuration()
+
+@export_range(1.0, 16.0, 0.5) var led_dot_size: float = 3.0:
+	set(value):
+		led_dot_size = clampf(value, 1.0, 16.0)
+		_apply_configuration()
+
+@export_range(0.0, 0.8, 0.01) var led_gap: float = 0.28:
+	set(value):
+		led_gap = clampf(value, 0.0, 0.8)
+		_apply_configuration()
+
+@export_range(0.01, 0.25, 0.01) var led_softness: float = 0.08:
+	set(value):
+		led_softness = clampf(value, 0.01, 0.25)
+		_apply_configuration()
+
 @export_group("Text Scaling")
 @export var auto_scale_font_size: bool = true:
 	set(value):
@@ -52,6 +84,7 @@ func _apply_configuration() -> void:
 	var display: MeshInstance3D = get_node_or_null("Display") as MeshInstance3D
 	var viewport: SubViewport = get_node_or_null("SubViewport") as SubViewport
 	var terminal: ScreenText = get_node_or_null("SubViewport/ScreenText") as ScreenText
+	var background: ColorRect = get_node_or_null("SubViewport/Background") as ColorRect
 
 	if display != null:
 		var plane: PlaneMesh = display.mesh as PlaneMesh
@@ -62,6 +95,19 @@ func _apply_configuration() -> void:
 
 	if viewport != null:
 		viewport.size = _calculate_viewport_size()
+		viewport.use_hdr_2d = true
+
+	if terminal != null and background != null:
+		background.color = terminal.background_color
+
+	if terminal != null:
+		var text_material: ShaderMaterial = terminal.material as ShaderMaterial
+		if text_material != null:
+			text_material.set_shader_parameter("hdr_boost", text_glow_boost if text_glow_enabled else 1.0)
+			text_material.set_shader_parameter("led_matrix_enabled", led_matrix_enabled)
+			text_material.set_shader_parameter("led_dot_size", led_dot_size)
+			text_material.set_shader_parameter("led_gap", led_gap)
+			text_material.set_shader_parameter("led_softness", led_softness)
 
 	if terminal != null and viewport != null and auto_scale_font_size:
 		terminal.terminal_font_size = _calculate_font_size(viewport.size.y)

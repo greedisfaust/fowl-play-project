@@ -261,3 +261,12 @@ The test arena now includes a WorldEnvironment with restrained Godot Glow post-p
 - The host/offline authority plays the local presentation and, for ENet sessions, sends a reliable presentation-only RPC. Clients validate that the sender is host before animating. Gameplay acceptance remains owned by Network/Interactable.
 - Added `fowl-play/tests/m3_physical_use_button_test.gd` and registered the `physical-button` stage in `fowl-play/tests/run_checks.ps1`. Added `interact/button/<node-path>/press_count` debug watch documentation.
 - No scene, mesh, or collision shape was authored by script. The first physical button fixture remains an editor task. Godot test execution and rendered host/client animation verification are UNTESTED.
+
+
+## 2026-11-19 — reusable WorldScreen HDR glow and LED matrix
+
+- Enabled HDR 2D on the reusable WorldScreen SubViewport and routed its ViewportTexture through the 3D display material's emission texture, using the existing WorldEnvironment Glow for the halo.
+- Split the dark panel backing into its own full-viewport ColorRect. ScreenText now has a transparent stylebox so the text shader affects glyphs only, not the panel.
+- Added a reusable CanvasItem shader that boosts text RGB into HDR and optionally applies a circular LED dot mask to glyph alpha.
+- Added per-instance WorldScreen controls for glow enable/boost and LED matrix enable/dot size/gap/softness. The ShaderMaterial is local-to-scene so tuning one screen does not affect another.
+- Extended the WorldScreen headless contract test for HDR, background separation, shader defaults, and per-instance shader parameter isolation. Godot tests and rendered visual tuning have NOT been run; confirm the glow strength, dot size, and readability in the editor/game before considering this visual slice verified.
