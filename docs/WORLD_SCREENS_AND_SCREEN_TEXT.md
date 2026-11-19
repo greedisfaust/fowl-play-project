@@ -280,3 +280,38 @@ When extending the system:
 6. Add focused tests for every new public API and for multiple-instance isolation where mutable resources are involved.
 7. Update this guide, `docs/DEBUG.md`, `docs/PROJECT_STATE.md`, and the active session notes whenever the implementation contract changes.
 8. Do not modify user-authored scene hierarchies or meshes without confirming the scene is closed and the user has explicitly handed off that work.
+
+
+## 11. Interactive menu foundation
+
+The reusable menu model is `res://ui/screen_menu.gd` (`ScreenMenu`). It is input-independent: it does not capture keyboard/gamepad input, depend on a player, or know whether a display is FAT or SLIM. An active terminal/input owner forwards semantic actions to it.
+
+Each option is a Dictionary with a unique non-empty `id`, a non-empty `label`, and optional `enabled` (defaults to true). Disabled options remain visible but are skipped.
+
+```gdscript
+const ScreenMenuScript = preload("res://ui/screen_menu.gd")
+var menu: ScreenMenu = ScreenMenuScript.new()
+
+func open_menu(screen: WorldScreen) -> void:
+    menu.option_confirmed.connect(_on_option_confirmed)
+    menu.open(screen, "MAIN MENU", "Choose an operation.", [
+        {"id": &"register", "label": "REGISTER"},
+        {"id": &"settings", "label": "SETTINGS"},
+        {"id": &"leave", "label": "LEAVE SESSION", "enabled": false}
+    ])
+
+func _on_option_confirmed(option_id: StringName, _label: String) -> void:
+    if option_id == &"register":
+        # Transition to the registration page.
+        pass
+```
+
+Public API: `open(screen, header, description, options, prompt)`, `move_selection(direction)` (positive down, negative up), `select_index(index)`, `confirm()`, `cancel()`, `close()`, `handle_action(action)`, `get_selected_index()`, `get_selected_option_id()`, and `get_options()`. Confirmation emits `option_confirmed(id, label)` and intentionally leaves the menu open so the owner can choose the next page. Cancellation emits `cancelled`, then closes and clears the display.
+
+Semantic actions: `ACTION_UP` (`menu_up`), `ACTION_DOWN` (`menu_down`), `ACTION_CONFIRM` (`menu_confirm`), and `ACTION_CANCEL` (`menu_cancel`). Navigation wraps by default; set `menu.wrap_navigation = false` to stop at the ends. Signals: `opened`, `selection_changed(index, id)`, `option_confirmed(id, label)`, `cancelled`, and `closed`.
+
+Rendering is handled by `WorldScreen.show_menu` and `ScreenText.show_menu`. The selected row uses a cyan `> ` marker, disabled rows are subdued gray, and existing terminal typography/LED/glow remain active.
+
+This first foundation deliberately adds no global InputMap actions and captures no input. That prevents inactive screens from stealing movement or interaction controls. Registration Terminal integration will route keyboard/gamepad and physical USE actions only while the local player is actively controlling the terminal.
+
+Focused test: `fowl-play/tests/m3_screen_menu_test.gd`; runner stage: `screen-menu`. It covers validation, rendering, disabled-option skipping, wrap behavior, semantic routing, confirmation, and cancellation. Actual input-device and in-world verification remain a later integration task.

@@ -373,3 +373,12 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 - Screen content APIs are documented in [WORLD_SCREENS_AND_SCREEN_TEXT.md](WORLD_SCREENS_AND_SCREEN_TEXT.md): append methods, replacement via `set_content`, and named presets via `show_layout`.
 - The screen's visual pipeline is split: opaque `Display` backing, transparent emissive `TextDisplay`, and `SubViewport/ScreenText`. If the whole panel blooms, inspect that split before adjusting WorldEnvironment Glow.
 - No dedicated screen commands currently exist. Screen changes are driven through the WorldScreen / ScreenText script APIs.
+
+
+## Interactive screen menus
+
+- `ScreenMenu` (`ui/screen_menu.gd`) is an input-independent menu model rendered through WorldScreen/ScreenText.
+- Semantic actions: `menu_up`, `menu_down`, `menu_confirm`, and `menu_cancel`, forwarded through `ScreenMenu.handle_action()`. It does not capture global input or add InputMap actions.
+- Signals: `opened`, `selection_changed`, `option_confirmed`, `cancelled`, and `closed`.
+- Focused test: `screen-menu` stage / `tests/m3_screen_menu_test.gd`.
+- Keyboard/gamepad and physical USE routing are deferred to Registration Terminal integration to prevent inactive screens stealing player controls.

@@ -334,3 +334,11 @@ The latest user-authored FAT and SLIM scenes were inspected at commit `61409bf`.
 - Current public content APIs: `append_header`, `append_paragraph`, `append_prompt`, `clear_screen`, `set_content`, and `show_layout`. The WorldScreen wrapper forwards these to its ScreenText child.
 - The guide records the required `Display` / `TextDisplay` / `SubViewport/ScreenText` split and the FAT/SLIM direct-child `WorldScreen`, `Chassis`, `Glass` contract.
 - No game scripts or scenes changed in this documentation update. Godot tests and rendered checks were not run as part of this documentation update.
+
+
+## 2026-11-20 — Interactive menu foundation
+
+- Added input-independent `ScreenMenu` in `fowl-play/ui/screen_menu.gd`: validated option IDs/labels, enabled/disabled options, selection movement, optional wrap navigation, semantic action routing, and confirmation/cancellation signals.
+- Added `ScreenText.show_menu` and `WorldScreen.show_menu`; selected rows use a cyan marker and disabled rows are dimmed while preserving the existing LED/glow pipeline.
+- Added `fowl-play/tests/m3_screen_menu_test.gd` and registered the `screen-menu` runner stage. Updated the screen guide and debug reference.
+- No scenes or global InputMap actions changed. Keyboard/gamepad/physical USE routing is deferred to the Registration Terminal input owner. Godot tests and rendered verification have not been run by the assistant.

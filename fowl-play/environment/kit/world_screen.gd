@@ -221,6 +221,12 @@ func clear_screen() -> void:
 	if terminal != null:
 		terminal.clear_screen()
 
+## Renders menu rows through ScreenText; selection logic belongs to ScreenMenu.
+func show_menu(header: String, description: String, options: Array[Dictionary], selected_index: int, prompt: String = "") -> void:
+	var terminal: ScreenText = get_screen_text()
+	if terminal != null:
+		terminal.show_menu(header, description, options, selected_index, prompt)
+
 ## Replaces this screen's content using the configured standard colors.
 func set_content(header: String, body: String, prompt: String = "") -> void:
 	var terminal: ScreenText = get_screen_text()

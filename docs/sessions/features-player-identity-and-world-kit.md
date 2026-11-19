@@ -174,3 +174,11 @@ User: pull the latest controller/glass commit. In the Godot editor, attach `slim
 - Updated the project-state and debug references to point to the guide and describe the current screen diagnostics/API.
 - Changed: `docs/WORLD_SCREENS_AND_SCREEN_TEXT.md`, `docs/PROJECT_STATE.md`, `docs/DEBUG.md`, and this session file.
 - Not changed: no game scripts, tests, or scenes changed. Godot tests and rendered verification were not run for this documentation-only update.
+
+
+### Session 9 — 2026-11-20 — GPT-6
+- Added the first reusable interactive menu foundation. `ScreenMenu` validates menu options, supports disabled rows, wrap navigation, semantic action routing, selection/confirmation/cancellation signals, and close behavior.
+- Added menu rendering to ScreenText and the WorldScreen forwarding API. Selected rows use a cyan marker; disabled rows are dimmed.
+- Added `m3_screen_menu_test.gd`, registered `screen-menu` in the runner, and documented the menu contract and future input integration boundary.
+- Changed: `fowl-play/ui/screen_menu.gd`, `fowl-play/ui/screen_text.gd`, `fowl-play/environment/kit/world_screen.gd`, `fowl-play/tests/m3_screen_menu_test.gd`, `fowl-play/tests/run_checks.ps1`, `docs/WORLD_SCREENS_AND_SCREEN_TEXT.md`, `docs/PROJECT_STATE.md`, `docs/DEBUG.md`, and this session file.
+- No scenes or global InputMap actions changed. Actual keyboard/gamepad/physical USE routing and Godot/rendered verification remain for Registration Terminal integration.
