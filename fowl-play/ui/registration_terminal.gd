@@ -18,6 +18,8 @@ var _requested_nickname: String = "Chicken"
 var _requested_color_index: int = 0
 var _registration_pending: bool = false
 var _pending_nickname: String = ""
+var _previous_mouse_mode: int = Input.MOUSE_MODE_CAPTURED
+var _mouse_released_for_menu: bool = false
 
 func _ready() -> void:
 	if not is_instance_valid(screen):
@@ -37,6 +39,7 @@ func _ready() -> void:
 	set_process(true)
 
 func _exit_tree() -> void:
+	_restore_mouse_mode()
 	if is_instance_valid(use_interactable) and use_interactable.interaction_requested.is_connected(_on_local_interaction_requested):
 		use_interactable.interaction_requested.disconnect(_on_local_interaction_requested)
 	if is_instance_valid(_network) and _network.is_connected("identity_roster_changed", _on_identity_roster_changed):
@@ -49,6 +52,7 @@ func open_registration_for_actor(actor: Node) -> bool:
 		return actor == _local_actor
 	_local_actor = actor
 	_session_active = true
+	_release_mouse_for_menu()
 	_editing_nickname = false
 	_registration_pending = false
 	var current_identity: PlayerIdentity = null
@@ -76,6 +80,8 @@ func close_registration_session() -> void:
 	_editing_nickname = false
 	_session_active = false
 	_local_actor = null
+	_restore_mouse_mode()
+	_restore_mouse_mode()
 
 func _on_local_interaction_requested(actor: Node, action: StringName) -> void:
 	if action != &"use" or not is_instance_valid(actor):
@@ -99,7 +105,13 @@ func _process(_delta: float) -> void:
 		screen.show_layout("warning", "CONNECTION LOST", "You moved too far from the terminal. Registration was reset.", "RETURN TO THE TERMINAL TO RECONNECT")
 
 func _input(event: InputEvent) -> void:
-	if not _session_active or not event is InputEventKey:
+	if not _session_active:
+		return
+	if event is InputEventMouseButton:
+		if _handle_screen_click(event as InputEventMouseButton):
+			get_viewport().set_input_as_handled()
+		return
+	if not event is InputEventKey:
 		return
 	var key_event: InputEventKey = event as InputEventKey
 	if not key_event.pressed or key_event.echo:
@@ -119,6 +131,59 @@ func _input(event: InputEvent) -> void:
 	else:
 		return
 	get_viewport().set_input_as_handled()
+
+func _handle_screen_click(event: InputEventMouseButton) -> bool:
+	if not event.pressed or event.button_index != MOUSE_BUTTON_LEFT or _editing_nickname or not _menu.is_active():
+		return false
+	if not is_instance_valid(_local_actor):
+		return false
+	var camera: Camera3D = _local_actor.get_node_or_null("Head/Camera3D") as Camera3D
+	if camera == null:
+		var camera_nodes: Array[Node] = _local_actor.find_children("*", "Camera3D", true, false)
+		if not camera_nodes.is_empty():
+			camera = camera_nodes[0] as Camera3D
+	if camera == null or not camera.is_inside_tree():
+		return false
+	var ray_origin: Vector3 = camera.project_ray_origin(event.position)
+	var ray_direction: Vector3 = camera.project_ray_normal(event.position).normalized()
+	var screen_normal: Vector3 = screen.global_transform.basis.z.normalized()
+	var denominator: float = screen_normal.dot(ray_direction)
+	if denominator >= -0.0001:
+		return false
+	var hit_distance: float = screen_normal.dot(screen.global_position - ray_origin) / denominator
+	if hit_distance < 0.0:
+		return false
+	var hit_position: Vector3 = ray_origin + ray_direction * hit_distance
+	var local_hit: Vector3 = screen.to_local(hit_position)
+	if absf(local_hit.x) > screen.display_size.x * 0.5 or absf(local_hit.y) > screen.display_size.y * 0.5:
+		return false
+	var viewport: SubViewport = screen.get_node_or_null("SubViewport") as SubViewport
+	var terminal_text: ScreenText = screen.get_screen_text()
+	if viewport == null or terminal_text == null:
+		return false
+	var pixel_position: Vector2 = Vector2(
+		(local_hit.x / screen.display_size.x + 0.5) * float(viewport.size.x),
+		(0.5 - local_hit.y / screen.display_size.y) * float(viewport.size.y)
+	)
+	var option_index: int = terminal_text.get_menu_option_at_position(pixel_position)
+	if option_index < 0:
+		return false
+	if not _menu.select_index(option_index) and _menu.get_selected_index() != option_index:
+		return false
+	return _menu.confirm()
+
+func _release_mouse_for_menu() -> void:
+	if _mouse_released_for_menu:
+		return
+	_previous_mouse_mode = Input.get_mouse_mode()
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	_mouse_released_for_menu = true
+
+func _restore_mouse_mode() -> void:
+	if not _mouse_released_for_menu:
+		return
+	Input.set_mouse_mode(_previous_mouse_mode)
+	_mouse_released_for_menu = false
 
 func _handle_nickname_key(event: InputEventKey) -> void:
 	if event.keycode == KEY_ESCAPE:
@@ -213,6 +278,7 @@ func _submit_registration() -> void:
 		screen.show_layout("warning", "NETWORK UNAVAILABLE", "The identity service is not available.", "PRESS THE BUTTON TO REOPEN")
 		_session_active = false
 		_local_actor = null
+		_restore_mouse_mode()
 		return
 	_pending_nickname = _requested_nickname
 	_registration_pending = true
@@ -223,6 +289,7 @@ func _submit_registration() -> void:
 		screen.show_layout("warning", "REGISTRATION REJECTED", "Connect to a host and try again. The request was not submitted.", "PRESS THE BUTTON TO REOPEN")
 		_session_active = false
 		_local_actor = null
+		_restore_mouse_mode()
 		return
 	if _registration_pending:
 		_menu.close()
