@@ -259,3 +259,28 @@ When the carried target is a limp player, cosmetic hand grips use the live Chest
 - Standing arm IK permits up to 12% visual bone-axis extension when a wrist target exceeds normal combined reach. It returns to authored scale as the target comes back into range and resets to unit scale before ragdoll/recovery ownership; PhysicalBone collision shapes and ragdoll simulation are unchanged.
 - Debug watches: `rig/<player-id>/right_arm_ik`, `rig/<player-id>/left_arm_ik`, `rig/<player-id>/right_rig_hand_visible`, and `rig/<player-id>/left_rig_hand_visible`. Commands: `arm_ik_status_<player>` and `arm_ik_status_left_<player>`.
 - `tests/m2_procedural_arm_test.gd` checks both wrist targets, the Viewmodel visibility toggle, hidden world-hand forearm meshes, the 12% stretch cap, and ragdoll ownership. Run `tests/run_checks.ps1`; Godot execution and rendered two-instance verification remain user-run.
+
+
+### Interactable silhouette outline
+
+Every `Interactable` component automatically adds an inverted-hull silhouette overlay to all descendant `GeometryInstance3D` nodes of its owning target. It preserves each mesh's previous `material_overlay` and restores it when the component leaves the scene tree.
+
+- Idle: thin near-black outline, no glow.
+- Focused: smoothly transitions to a wider warm-gold outline with restrained emission.
+- Focus is still owned by `player/focus.gd`; the outline does not perform raycasts or change interaction authority.
+- `interact/highlight/<node-path>/state` reports `idle` or `focused`.
+- The `interact` log reports focus-driven highlight state changes.
+- `tests/m1_interaction_test.gd` checks automatic idle outlines, no outline on a sibling mesh without an Interactable, gold/glow focus state, return to idle, and restoration of the original overlay.
+
+The test arena now has an editor-authored `WorldEnvironment` with restrained Glow enabled. The interactable outline emits HDR gold while focused so Godot's Glow post-process can create a real soft halo. Glow is scene-wide as a rendering pass, but only bright pixels (including focused outline emission) should contribute significantly. The environment is currently attached to `test_arena.tscn`; when a shared production world/environment is introduced, move or reuse these settings there rather than duplicating per-level environments. The outline remains an inverted-hull shader and does not depend on custom post-process code.
+
+
+
+### Gameplay cursor and focus animation
+
+- The center-screen cursor is a CanvasLayer under Player, and only the local player's instance is enabled while the mouse is captured.
+- Idle: a small translucent white circle with a thin dark outline.
+- Focused: it smoothly grows, blends toward its configurable identity accent, and gains three soft translucent glow rings. A gentle 1.8-second breathing pulse scales the cursor while focused.
+- The color is deliberately a temporary fallback, not a network/player-color lookup. Future lobby identity code should call GameplayCursor.set_identity_color(color) with the assigned player's color.
+- The focused Interactable outline has a separate, slower 2-second breathing glow. Only emission intensity pulses; outline width and silhouette stay stable. The existing test-arena WorldEnvironment Glow creates the soft bloom.
+- Run tests/run_checks.ps1 for the cursor contract check and tests/m1_interaction_test.gd for the interactable outline checks. Godot runtime and visual verification remain user-run.

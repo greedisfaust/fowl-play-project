@@ -3,6 +3,8 @@
 
 extends Node3D
 
+signal focus_target_changed(target: Interactable)
+
 const LAYERS = preload("res://core/layers.gd")
 const TUNING = preload("res://core/tuning.gd")
 
@@ -81,6 +83,7 @@ func _update_focus() -> void:
 		if is_instance_valid(_focused):
 			_focused.set_focused(true)
 			_debug_log("Focused %s" % _focused.prompt_text)
+		focus_target_changed.emit(_focused)
 	var collision_point: Vector3 = Vector3.ZERO
 	if is_instance_valid(candidate) and focus_ray.is_colliding():
 		collision_point = focus_ray.get_collision_point()
@@ -103,9 +106,12 @@ func _sync_world_hand_hover(active: bool, world_point: Vector3) -> void:
 	get_node("/root/Network").call("update_hand_hover", active, world_point)
 
 func _clear_focus() -> void:
+	var had_focus: bool = _focused != null
 	if is_instance_valid(_focused):
 		_focused.set_focused(false)
 	_focused = null
+	if had_focus:
+		focus_target_changed.emit(null)
 	_set_hands_hover(false, Vector3.ZERO)
 	_sync_world_hand_hover(false, Vector3.ZERO)
 

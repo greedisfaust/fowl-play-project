@@ -13,13 +13,14 @@ if (-not (Test-Path -LiteralPath $godot)) {
 	throw "Godot executable not found. Set FOWL_PLAY_GODOT or add godot to PATH."
 }
 $project = Join-Path $PSScriptRoot ".."
-foreach ($stage in @("import", "d0", "m1", "m2", "m2-arm-ik", "m3", "m3-interaction", "m4-handoff", "m6")) {
+foreach ($stage in @("import", "d0", "m1", "m1-cursor", "m2", "m2-arm-ik", "m3", "m3-interaction", "m4-handoff", "m6")) {
 	$checkStdout = [System.IO.Path]::GetTempFileName()
 	$checkStderr = [System.IO.Path]::GetTempFileName()
 	$arguments = @("--headless", "--path", ('"{0}"' -f $project))
 	if ($stage -eq "import") { $arguments += @("--editor", "--import") }
 	elseif ($stage -eq "d0") { $arguments += @("--script", "res://tests/d0_debug_hub_test.gd") }
 	elseif ($stage -eq "m1") { $arguments += @("--script", "res://tests/m1_interaction_test.gd") }
+	elseif ($stage -eq "m1-cursor") { $arguments += @("--script", "res://tests/m1_cursor_test.gd") }
 	elseif ($stage -eq "m2") { $arguments += @("--script", "res://tests/m2_hands_test.gd") }
 	elseif ($stage -eq "m2-arm-ik") { $arguments += @("--script", "res://tests/m2_procedural_arm_test.gd") }
 	elseif ($stage -eq "m3-interaction") { $arguments += @("--script", "res://tests/m3_interaction_test.gd") }

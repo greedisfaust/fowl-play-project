@@ -29,6 +29,7 @@ var limp_epoch: int = 0
 @onready var limp_interactable: Interactable = get_node_or_null("Interactable") as Interactable
 @onready var limp_interaction_proxy: StaticBody3D = get_node_or_null("LimpInteractionProxy") as StaticBody3D
 @onready var focus: Node = get_node_or_null("Head/Camera3D/Focus")
+@onready var gameplay_cursor: Control = get_node_or_null("GameplayCursor/CursorDisplay") as Control
 @onready var debug_hub: Node = get_node("/root/DebugHub")
 @onready var network: Node = get_node("/root/Network")
 
@@ -89,6 +90,9 @@ func _ready() -> void:
 	set_physics_process(is_local_player)
 	if focus != null:
 		focus.call("set_active", is_local_player)
+	if gameplay_cursor != null:
+		gameplay_cursor.call("bind_focus_source", focus)
+		gameplay_cursor.call("set_cursor_enabled", is_local_player)
 	if carrier != null:
 		carrier.carry_started.connect(_on_carry_started)
 		carrier.carry_ended.connect(_on_carry_ended)
