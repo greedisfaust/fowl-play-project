@@ -105,9 +105,11 @@ func _apply_appearance() -> void:
 		add_theme_font_override("bold_italics_font", terminal_font)
 		add_theme_font_override("mono_font", terminal_font)
 
-	var background_node: ColorRect = get_parent().get_node_or_null("Background") as ColorRect
-	if background_node != null:
-		background_node.color = background_color
+	var parent_node: Node = get_parent()
+	if parent_node != null:
+		var background_node: ColorRect = parent_node.get_node_or_null("Background") as ColorRect
+		if background_node != null:
+			background_node.color = background_color
 
 	var backing: StyleBoxFlat = StyleBoxFlat.new()
 	backing.bg_color = Color(0.0, 0.0, 0.0, 0.0)
