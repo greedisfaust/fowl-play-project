@@ -44,7 +44,7 @@ func _run() -> void:
 	await process_frame
 	var option_characters: Array = terminal.get("_menu_option_character_starts")
 	_check(option_characters.size() == 2, "Menu should retain one rendered line index per option")
-	if option_lines.size() == 2:
+	if option_characters.size() == 2:
 		var first_line: int = terminal.get_character_line(int(option_characters[0]))
 		var second_line: int = terminal.get_character_line(int(option_characters[1]))
 		var first_y: float = (float(terminal.get_line_offset(first_line)) + float(terminal.get_line_offset(second_line))) * 0.5

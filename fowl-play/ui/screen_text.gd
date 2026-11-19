@@ -91,8 +91,6 @@ func clear_screen() -> void:
 ## Replaces the display with selectable menu rows.
 func show_menu(header: String, description: String, options: Array[Dictionary], selected_index: int, prompt: String = "") -> void:
 	clear_screen()
-	_menu_option_lines.clear()
-	_menu_option_end_line = -1
 	if not header.is_empty():
 		_append_styled_line(header, header_color, true)
 	if not description.is_empty():
