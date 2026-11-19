@@ -81,6 +81,9 @@ func _height_delta() -> float:
 
 
 func _ready() -> void:
+	# Keep chassis and glass mesh/material changes local to this placed instance.
+	_make_housing_resources_local(get_node_or_null("Chassis"))
+	_make_housing_resources_local(get_node_or_null("Glass"))
 	_capture_authored_positions(self)
 	_layout_initialized = true
 	var lettering: MeshInstance3D = get_node_or_null("Chassis/ControlPanel/IdentificationPlate/EngravedText") as MeshInstance3D
@@ -88,6 +91,24 @@ func _ready() -> void:
 		_lettering_base_scale = lettering.scale
 		_lettering_scale_captured = true
 	_apply_configuration()
+
+func _make_housing_resources_local(node: Node) -> void:
+	if node == null:
+		return
+	if node is MeshInstance3D:
+		var mesh_instance: MeshInstance3D = node as MeshInstance3D
+		if mesh_instance.mesh != null:
+			mesh_instance.mesh = mesh_instance.mesh.duplicate(true) as Mesh
+		if mesh_instance.material_override != null:
+			mesh_instance.material_override = mesh_instance.material_override.duplicate(true) as Material
+		if mesh_instance.material_overlay != null:
+			mesh_instance.material_overlay = mesh_instance.material_overlay.duplicate(true) as Material
+	elif node is GeometryInstance3D:
+		var geometry: GeometryInstance3D = node as GeometryInstance3D
+		if geometry.material_override != null:
+			geometry.material_override = geometry.material_override.duplicate(true) as Material
+	for child: Node in node.get_children():
+		_make_housing_resources_local(child)
 
 func set_display_size(value: Vector2) -> void:
 	display_size = value

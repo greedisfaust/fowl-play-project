@@ -78,7 +78,26 @@ var _missing_overlay_warning_sent: bool = false
 		_apply_configuration()
 
 func _ready() -> void:
+	# PackedScene instances can share SubResources. Localize every mutable resource
+	# before the @tool controller changes mesh sizes or material parameters.
+	_make_instance_resources_local(self)
 	_apply_configuration()
+
+func _make_instance_resources_local(node: Node) -> void:
+	if node is MeshInstance3D:
+		var mesh_instance: MeshInstance3D = node as MeshInstance3D
+		if mesh_instance.mesh != null:
+			mesh_instance.mesh = mesh_instance.mesh.duplicate(true) as Mesh
+		if mesh_instance.material_override != null:
+			mesh_instance.material_override = mesh_instance.material_override.duplicate(true) as Material
+		if mesh_instance.material_overlay != null:
+			mesh_instance.material_overlay = mesh_instance.material_overlay.duplicate(true) as Material
+	elif node is CanvasItem:
+		var canvas_item: CanvasItem = node as CanvasItem
+		if canvas_item.material != null:
+			canvas_item.material = canvas_item.material.duplicate(true) as Material
+	for child: Node in node.get_children():
+		_make_instance_resources_local(child)
 
 ## Resize through display_size rather than scaling the root Node3D.
 ## Display is the opaque physical panel; TextDisplay is a transparent, emissive overlay.

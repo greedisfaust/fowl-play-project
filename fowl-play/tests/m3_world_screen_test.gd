@@ -62,6 +62,10 @@ func _run() -> void:
 	var second_shader: ShaderMaterial = second.get_screen_text().material as ShaderMaterial
 	_check(is_equal_approx(float(first_shader.get_shader_parameter("hdr_boost")), 3.5), "Changing one screen's glow should update its material")
 	_check(is_equal_approx(float(second_shader.get_shader_parameter("hdr_boost")), 2.2), "WorldScreen instances should keep independent shader settings")
+	_check(first_display.mesh != (second.get_node("Display") as MeshInstance3D).mesh, "WorldScreen instances must not share mutable display meshes")
+	_check(first_text_display == null or first_text_display.mesh != (second.get_node("TextDisplay") as MeshInstance3D).mesh, "WorldScreen instances must not share mutable overlay meshes")
+	first.display_size = Vector2(4.0, 2.25)
+	_check((second.get_node("Display") as MeshInstance3D).mesh is PlaneMesh and ((second.get_node("Display") as MeshInstance3D).mesh as PlaneMesh).size == Vector2(2.0, 1.125), "Resizing one WorldScreen must not resize another instance")
 	first.append_header("FIRST SCREEN")
 	second.append_paragraph("SECOND SCREEN")
 	_check(first.get_screen_text().get_parsed_text().contains("FIRST SCREEN"), "First instance should receive its own content")
