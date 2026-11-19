@@ -3,7 +3,6 @@
 [ext_resource type="Script" uid="uid://cfwxbvehhnlal" path="res://environment/kit/fat_world_screen.gd" id="1_67yye"]
 [ext_resource type="PackedScene" uid="uid://dodi6s0eif5r0" path="res://environment/kit/world_screen.tscn" id="1_hrnm7"]
 [ext_resource type="FontFile" uid="uid://ws0yv8acsgcw" path="res://assets/fonts/JetBrainsMonoNL-Regular.ttf" id="2_7sf3j"]
-[ext_resource type="Shader" uid="uid://dia2br0pm32xp" path="res://environment/kit/slim_world_screen_glass.gdshader" id="4_pb6oa"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hrnm7"]
 albedo_color = Color(0.1882353, 0.21176471, 0.2509804, 1)
@@ -121,6 +120,7 @@ metallic = 0.65
 metallic_specular = 0.8
 emission_enabled = true
 emission = Color(1, 1, 1, 1)
+emission_energy_multiplier = 1.77
 
 [sub_resource type="TextMesh" id="TextMesh_hrnm7"]
 material = SubResource("StandardMaterial3D_4fg7x")
@@ -142,9 +142,35 @@ bottom_radius = 0.022
 height = 0.012
 radial_segments = 12
 
+[sub_resource type="Shader" id="Shader_67yye"]
+code = "shader_type spatial;
+render_mode blend_mix, depth_draw_never, cull_disabled;
+
+uniform float base_opacity : hint_range(0.0, 0.15, 0.005) = 0.035;
+uniform float sheen_strength : hint_range(0.0, 1.0, 0.01) = 0.55;
+uniform float near_distance : hint_range(0.25, 10.0, 0.25) = 1.5;
+uniform float far_distance : hint_range(1.0, 20.0, 0.25) = 5.0;
+uniform vec3 glass_tint : source_color = vec3(0.42, 0.58, 0.72);
+
+void fragment() {
+	float facing = clamp(abs(dot(normalize(NORMAL), normalize(VIEW))), 0.0, 1.0);
+	float fresnel = pow(1.0 - facing, 4.0);
+	float distance_to_camera = length(VERTEX);
+	float near_fade = 1.0 - smoothstep(near_distance, max(far_distance, near_distance + 0.1), distance_to_camera);
+	float sheen = fresnel * near_fade * sheen_strength;
+
+	ALBEDO = glass_tint;
+	METALLIC = 0.05;
+	ROUGHNESS = 0.14;
+	SPECULAR = 0.8;
+	CLEARCOAT = 1.0;
+	ALPHA = clamp(base_opacity + sheen * 0.18, 0.0, 0.22);
+}
+"
+
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_yb6si"]
 render_priority = 0
-shader = ExtResource("4_pb6oa")
+shader = SubResource("Shader_67yye")
 shader_parameter/base_opacity = 0.035
 shader_parameter/sheen_strength = 0.55
 shader_parameter/near_distance = 1.5
