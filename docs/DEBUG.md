@@ -382,3 +382,13 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 - Signals: `opened`, `selection_changed`, `option_confirmed`, `cancelled`, and `closed`.
 - Focused test: `screen-menu` stage / `tests/m3_screen_menu_test.gd`.
 - Keyboard/gamepad and physical USE routing are deferred to Registration Terminal integration to prevent inactive screens stealing player controls.
+
+
+## Registration Terminal
+
+- Attach ui/registration_terminal.gd to the editor-authored terminal root.
+- Assign screen to the child WorldScreen and use_interactable to the physical USE button's Interactable node (the same Interactable referenced by PhysicalUseButton).
+- Arrow Up/Down navigate, Enter confirms, Escape closes; the physical USE button confirms the selected menu item. Nickname entry supports printable keys, Backspace, Enter, and Escape.
+- The local interaction-request signal is only a local presentation/input hook. Host-side range, actor, and Interactable validation remain in Network.
+- Focused check: godot --headless --path fowl-play --script res://tests/m3_registration_terminal_test.gd.
+- Multiplayer verification: open the terminal from a client and host, submit duplicate nicknames and occupied colors, and confirm the displayed identity matches the host's net/identities roster.

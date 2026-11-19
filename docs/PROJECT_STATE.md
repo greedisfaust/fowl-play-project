@@ -342,3 +342,11 @@ The latest user-authored FAT and SLIM scenes were inspected at commit `61409bf`.
 - Added `ScreenText.show_menu` and `WorldScreen.show_menu`; selected rows use a cyan marker and disabled rows are dimmed while preserving the existing LED/glow pipeline.
 - Added `fowl-play/tests/m3_screen_menu_test.gd` and registered the `screen-menu` runner stage. Updated the screen guide and debug reference.
 - No scenes or global InputMap actions changed. Keyboard/gamepad/physical USE routing is deferred to the Registration Terminal input owner. Godot tests and rendered verification have not been run by the assistant.
+
+
+## Registration Terminal foundation
+
+- Added RegistrationTerminal as a reusable local controller for the existing WorldScreen, ScreenMenu, PhysicalUseButton, Interactable, and host-authoritative PlayerIdentity systems.
+- Local menu flow supports nickname editing (16 characters), ten-color selection, registration submission, host-assigned success display, arrow-key navigation, Enter/Escape handling, physical USE confirmation, and temporary local movement lock.
+- Added a presentation-only local interaction-request signal to Interactable/Focus for immediate per-player screen input. Host validation and the authoritative interacted signal remain unchanged.
+- No scene/node construction or InputMap changes were made. Focused test stage: registration-terminal. Godot execution and editor-authored scene/host-client verification remain pending.

@@ -3,7 +3,7 @@
 Branch: features/player-identity-and-world-kit
 Base commit: abb3643d4f9326f0c32a31bfe2ba9b9b46c00b83
 Goal: Establish host-authoritative player identities and reusable physical world interaction/display components, then integrate identity presentation into gameplay.
-Status: IN PROGRESS — Player Identity Core, Physical USE Button, reusable WorldScreen content, FAT/SLIM housing controllers, and shared optical glass shader are implemented in code; Godot/editor verification pending.
+Status: IN PROGRESS — Player Identity Core, Physical USE Button, reusable WorldScreen content, FAT/SLIM housing controllers, ScreenMenu, and RegistrationTerminal code are implemented; terminal editor fixture and Godot/multiplayer verification pending.
 Last updated: 2026-11-19 by GPT-6 (session #1)
 Base docs: CLAUDE.md, docs/PROJECT_OVERVIEW.md, docs/PROJECT_STATE.md
 
@@ -86,11 +86,11 @@ Base docs: CLAUDE.md, docs/PROJECT_OVERVIEW.md, docs/PROJECT_STATE.md
 - [x] Reusable Physical USE Button — reusable presentation script and automated test added; editor-authored scene fixture and runtime verification remain.
 - [x] Reusable World Screen Housing — FAT/SLIM responsive controllers and shared optical glass shader added; attach scripts to scene roots and verify in Godot.
 - [x] Dynamic Screen Content — ScreenText script and focused test added; Godot execution pending.
-- [ ] Registration Terminal — not started.
+- [x] Registration Terminal controller and local menu/input flow added; editor-authored fixture and Godot/host-client verification pending.
 - [ ] Gameplay Integration — not started.
 
 ## Exact next step
-User: pull the latest controller/glass commit. In the Godot editor, attach `slim_world_screen.gd` to the `SlimWorldScreen` root and `fat_world_screen.gd` to the `FatWorldScreen` root (do not rebuild or rename the existing child hierarchies). Then run the `slim-world-screen` and `fat-world-screen` test stages and visually inspect glass readability, reflections, and resize behavior. No Godot execution or visual verification has been performed by the assistant.
+Pull the Registration Terminal implementation. In the editor, create the terminal controller node under the authored terminal root (do not rebuild the screen or button), attach ui/registration_terminal.gd, assign its screen and use_interactable exports, and ensure the same button Interactable is assigned to PhysicalUseButton. Then run the registration-terminal test stage and verify local menu behavior plus host/client identity assignment. No Godot execution or terminal scene verification has been performed by the assistant.
 
 ## Verification requirements
 - Add focused automated tests for identity data validation, host authority, unique color assignment, duplicate nickname suffixing, peer ID preservation, and display-label formatting.
@@ -182,3 +182,10 @@ User: pull the latest controller/glass commit. In the Godot editor, attach `slim
 - Added `m3_screen_menu_test.gd`, registered `screen-menu` in the runner, and documented the menu contract and future input integration boundary.
 - Changed: `fowl-play/ui/screen_menu.gd`, `fowl-play/ui/screen_text.gd`, `fowl-play/environment/kit/world_screen.gd`, `fowl-play/tests/m3_screen_menu_test.gd`, `fowl-play/tests/run_checks.ps1`, `docs/WORLD_SCREENS_AND_SCREEN_TEXT.md`, `docs/PROJECT_STATE.md`, `docs/DEBUG.md`, and this session file.
 - No scenes or global InputMap actions changed. Actual keyboard/gamepad/physical USE routing and Godot/rendered verification remain for Registration Terminal integration.
+
+
+### Session 10 — 2026-11-20 — GPT-6
+- Added the RegistrationTerminal local controller: nickname editing, ten-color selection, registration submission, success display, arrow-key navigation, Enter/Escape handling, physical USE confirmation, and temporary local movement lock.
+- Added a presentation-only local interaction-request signal to Interactable and emitted it from Focus after submitting the existing Network interaction request. Host validation and the authoritative Interactable.interacted path remain intact.
+- Added the focused registration-terminal test stage and a dedicated editor/setup guide; updated project state and debug documentation.
+- No scenes, meshes, collision shapes, or InputMap entries were changed. Editor wiring, Godot execution, and two-instance verification remain pending.
