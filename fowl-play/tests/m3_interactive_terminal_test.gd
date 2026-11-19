@@ -37,7 +37,7 @@ func _run() -> void:
 	root.add_child(local_actor)
 	terminal.call("_on_proximity_body_entered", local_actor)
 	_check(bool(terminal.call("is_awake")), "A nearby local player should wake the terminal")
-	_check(interactable.can_interact(local_actor, &"use"), "A nearby local player should be allowed to activate the screen")
+	_check(bool(terminal.call("_can_actor_activate", local_actor, &"use")), "A nearby local player should be allowed to activate the screen")
 	_check(bool(terminal.call("begin_session", local_actor)), "A nearby local player should begin a session")
 	_check(bool(terminal.call("has_active_session")), "Terminal should report its active session")
 	local_actor.position = Vector3(4.0, 0.0, 0.0)

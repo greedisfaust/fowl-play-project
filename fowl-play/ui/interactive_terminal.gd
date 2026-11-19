@@ -43,7 +43,6 @@ func _ready() -> void:
 	proximity_area.body_entered.connect(_on_proximity_body_entered)
 	proximity_area.body_exited.connect(_on_proximity_body_exited)
 	if is_instance_valid(screen_interactable):
-		screen_interactable.availability_check = _can_actor_activate
 		screen_interactable.interaction_requested.connect(_on_screen_interaction_requested)
 	_sleep_terminal()
 	set_process(true)
@@ -52,7 +51,6 @@ func _exit_tree() -> void:
 	if is_instance_valid(screen_interactable):
 		if screen_interactable.interaction_requested.is_connected(_on_screen_interaction_requested):
 			screen_interactable.interaction_requested.disconnect(_on_screen_interaction_requested)
-		screen_interactable.availability_check = Callable()
 	if is_instance_valid(proximity_area):
 		if proximity_area.body_entered.is_connected(_on_proximity_body_entered):
 			proximity_area.body_entered.disconnect(_on_proximity_body_entered)
