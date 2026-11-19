@@ -370,7 +370,7 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 
 - Category: `screen` — registered by `ui/screen_text.gd`; logs terminal initialization when enabled.
 - Watch: `screen/<node-path>/lines` — current RichTextLabel line count for that ScreenText instance.
-- Screen content APIs are documented in [WORLD_SCREENS_AND_SCREEN_TEXT.md](WORLD_SCREENS_AND_SCREEN_TEXT.md): append methods, replacement via `set_content`, and named presets via `show_layout`.
+- Screen content APIs are documented in [WORLD_SCREENS_AND_SCREEN_TEXT.md](WORLD_SCREENS_AND_SCREEN_TEXT.md): append methods, replacement via `set_content`, and named presets via `show_layout`, and inner safe margins via `WorldScreen.content_padding_ratio` (default 0.70).
 - The screen's visual pipeline is split: opaque `Display` backing, transparent emissive `TextDisplay`, and `SubViewport/ScreenText`. If the whole panel blooms, inspect that split before adjusting WorldEnvironment Glow.
 - No dedicated screen commands currently exist. Screen changes are driven through the WorldScreen / ScreenText script APIs.
 
@@ -388,7 +388,7 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 
 - Attach ui/registration_terminal.gd to the editor-authored terminal root.
 - Assign screen to the child WorldScreen and use_interactable to the physical USE button's Interactable node (the same Interactable referenced by PhysicalUseButton).
-- Arrow Up/Down navigate, Enter confirms, Escape closes; the physical USE button confirms the selected menu item. Nickname entry supports printable keys, Backspace, Enter, and Escape.
+- Arrow Up/Down navigate, Enter confirms, Escape closes; the physical USE button and M1 (primary) confirm the selected menu item. Players can move freely; the local session resets after exceeding interaction_break_distance (default 3 m, horizontal distance). Direct clicking of individual screen text rows is not currently supported. Nickname entry supports printable keys, Backspace, Enter, and Escape.
 - The local interaction-request signal is only a local presentation/input hook. Host-side range, actor, and Interactable validation remain in Network.
 - Focused check: godot --headless --path fowl-play --script res://tests/m3_registration_terminal_test.gd.
 - Multiplayer verification: open the terminal from a client and host, submit duplicate nicknames and occupied colors, and confirm the displayed identity matches the host's net/identities roster.

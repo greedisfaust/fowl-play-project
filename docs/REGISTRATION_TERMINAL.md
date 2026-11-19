@@ -23,7 +23,7 @@ Assign that same Interactable node to the PhysicalUseButton script's interactabl
 - Select one of the ten palette colors, then confirm registration.
 - The host remains authoritative for nickname normalization, duplicate suffixes, and color availability. The terminal displays the host-assigned identity after the roster update.
 
-The local player is movement-locked while the registration session is active. The screen/menu state is local to the requesting player's process; other players do not share that local menu state.
+The local player is never movement-locked by the registration terminal. The screen/menu state is local to the requesting player's process; other players do not share that local menu state.
 
 ## Authority boundary
 

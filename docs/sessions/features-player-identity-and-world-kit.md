@@ -185,7 +185,16 @@ Pull the Registration Terminal implementation. In the editor, create the termina
 
 
 ### Session 10 — 2026-11-20 — GPT-6
-- Added the RegistrationTerminal local controller: nickname editing, ten-color selection, registration submission, success display, arrow-key navigation, Enter/Escape handling, physical USE confirmation, and temporary local movement lock.
+- Added the RegistrationTerminal local controller: nickname editing, ten-color selection, registration submission, success display, arrow-key navigation, Enter/Escape handling, physical USE/M1 confirmation. Players remain free to move; the local session resets when they exceed the configurable horizontal proximity cutoff (default 3 m).
 - Added a presentation-only local interaction-request signal to Interactable and emitted it from Focus after submitting the existing Network interaction request. Host validation and the authoritative Interactable.interacted path remain intact.
 - Added the focused registration-terminal test stage and a dedicated editor/setup guide; updated project state and debug documentation.
 - No scenes, meshes, collision shapes, or InputMap entries were changed. Editor wiring, Godot execution, and two-instance verification remain pending.
+
+
+### Session 11 — 2026-11-20 — GPT-6
+- Removed the registration terminal movement lock. Players can move freely, and the local session closes with a warning after exceeding the configurable horizontal proximity threshold (default 3 m). A registration request already submitted to the host is allowed to finish because it cannot be recalled locally.
+- Exposed WorldScreen.content_padding_ratio (default 0.70) as a screen-level inner safe margin that scales with font size.
+- Corrected FAT responsive detail layout: generated corner armor no longer receives a second parent/child offset, and both five-vent banks scale vertical spacing and vent height with display height.
+- M1 was already supported by Focus/Interactable: primary maps to use, and the terminal treats that local interaction as confirmation of the highlighted option. Direct clicking of individual screen text rows remains a separate future feature.
+- Added focused checks for proximity reset and responsive FAT vent scaling. Updated Registration Terminal, WorldScreen, debug, and project-state documentation.
+- No scenes were edited. Godot execution and rendered/multiplayer verification have not been run by the assistant.
