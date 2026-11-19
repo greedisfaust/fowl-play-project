@@ -147,8 +147,9 @@ func _layout_chassis(chassis: Node3D) -> void:
 			}
 			for piece_name: String in positions:
 				var piece: Node3D = corners.get_node_or_null(piece_name) as Node3D
-				if piece != null:
-					var direction_x: float = -1.0 if piece_name.ends_with("Left") else 1.0
+				if piece == null:
+					continue
+				var direction_x: float = -1.0 if piece_name.ends_with("Left") else 1.0
 				var direction_y: float = 1.0 if piece_name.begins_with("Top") else -1.0
 				piece.position = _authored_position(piece) + Vector3(direction_x * _width_delta(), direction_y * _height_delta(), 0.0)
 
