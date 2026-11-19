@@ -41,6 +41,7 @@ const LAYOUT_CONFIRMATION: StringName = &"confirmation"
 @export var prompt_color: Color = DEFAULT_HEADER
 
 var _debug_watch_name: StringName = &""
+var _menu_option_lines: Array[int] = []
 
 func _ready() -> void:
 	bbcode_enabled = true
@@ -87,6 +88,7 @@ func clear_screen() -> void:
 ## Replaces the display with selectable menu rows.
 func show_menu(header: String, description: String, options: Array[Dictionary], selected_index: int, prompt: String = "") -> void:
 	clear_screen()
+	_menu_option_lines.clear()
 	if not header.is_empty():
 		_append_styled_line(header, header_color, true)
 	if not description.is_empty():
@@ -101,9 +103,24 @@ func show_menu(header: String, description: String, options: Array[Dictionary], 
 			option_color = Color(0.42, 0.46, 0.53, 1.0)
 		elif selected:
 			option_color = Color(0.30, 0.84, 0.92, 1.0)
+		_menu_option_lines.append(maxi(0, get_line_count() - 1))
 		_append_styled_line(marker + str(option.get("label", "")), option_color, selected)
 	if not prompt.is_empty():
 		_append_styled_line(prompt, prompt_color, false)
+
+func get_menu_option_at_position(local_position: Vector2) -> int:
+	if _menu_option_lines.is_empty():
+		return -1
+	var vertical_scroll: float = float(get_v_scroll())
+	for option_index: int in _menu_option_lines.size():
+		var line_index: int = _menu_option_lines[option_index]
+		if line_index < 0 or line_index >= get_line_count():
+			continue
+		var line_top: float = float(get_line_offset(line_index)) - vertical_scroll
+		var line_bottom: float = line_top + float(get_line_height(line_index))
+		if local_position.y >= line_top and local_position.y <= line_bottom:
+			return option_index
+	return -1
 
 ## Replaces the current display using the configured standard terminal colors.
 func set_content(header: String, body: String, prompt: String = "") -> void:
