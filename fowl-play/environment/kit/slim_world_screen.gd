@@ -60,18 +60,21 @@ func _apply_configuration() -> void:
 	if screen != null:
 		screen.set_display_size(display_size)
 
+	# WorldScreen's PlaneMeshes are authored in XY by rotating them 90 degrees
+	# around X. Keep the BoxMesh housing/bezel in XY, and rotate the glass
+	# PlaneMesh to the same XY-facing orientation.
 	if housing != null:
 		_set_box_mesh(housing, Vector3(display_size.x + bezel_thickness * 2.0, display_size.y + bezel_thickness * 2.0, housing_depth))
-		housing.rotation_degrees = Vector3(90.0, 0.0, 0.0)
+		housing.rotation_degrees = Vector3.ZERO
 		housing.position = Vector3(0.0, 0.0, -housing_depth * 0.5 - 0.005)
 
 	if bezel != null:
-		bezel.rotation_degrees = Vector3(90.0, 0.0, 0.0)
+		bezel.rotation_degrees = Vector3.ZERO
 		_layout_bezel(bezel)
 
 	if glass != null:
 		_set_plane_mesh(glass, display_size)
-		glass.rotation_degrees = Vector3.ZERO
+		glass.rotation_degrees = Vector3(90.0, 0.0, 0.0)
 		glass.position = Vector3(0.0, 0.0, 0.012)
 		_apply_glass_material(glass)
 
