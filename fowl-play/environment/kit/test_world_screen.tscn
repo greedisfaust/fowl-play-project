@@ -7,6 +7,7 @@ viewport_path = NodePath("SubViewport")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_u42pp"]
 resource_local_to_scene = true
+shading_mode = 0
 albedo_texture = SubResource("ViewportTexture_dqol5")
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_u42pp"]

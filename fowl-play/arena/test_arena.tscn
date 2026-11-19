@@ -7,7 +7,7 @@
 [ext_resource type="Script" uid="uid://dyw4wgr3svwvg" path="res://props/prop.gd" id="5_5fshk"]
 [ext_resource type="Script" uid="uid://bw1bicstmeec7" path="res://props/prop_profile.gd" id="6_w7fvv"]
 [ext_resource type="PackedScene" uid="uid://dhetiy0bpntqj" path="res://environment/kit/physical_use_button.tscn" id="7_a670p"]
-[ext_resource type="PackedScene" uid="uid://dciq5f1epr2ep" path="res://environment/kit/test_world_screen.tscn" id="8_imect"]
+[ext_resource type="PackedScene" uid="uid://dodi6s0eif5r0" path="res://environment/kit/world_screen.tscn" id="8_imect"]
 
 [sub_resource type="Environment" id="Environment_interaction_glow"]
 glow_enabled = true
@@ -142,5 +142,5 @@ shape = SubResource("CapsuleShape3D_57qmd")
 [node name="PhysicalUseButton" parent="." unique_id=1018963796 instance=ExtResource("7_a670p")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0151434, 0.80192447, -2.410954)
 
-[node name="WorldScreen" parent="." unique_id=816085125 instance=ExtResource("8_imect")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5257096, 1.7049814, -3.3692033)
+[node name="WorldScreen" parent="." unique_id=1656044326 instance=ExtResource("8_imect")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.895873, 1.7079158, 0)
