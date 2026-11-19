@@ -5,7 +5,7 @@ extends Node3D
 
 const MIN_VIEWPORT_DIMENSION: int = 256
 const MAX_FONT_SIZE: int = 512
-const TEXT_SHADER: Shader = preload("res://environment/kit/world_screen_text.shader")
+const TEXT_SHADER: Shader = preload("res://environment/kit/world_screen_text.gdshader")
 
 var _text_shader_material: ShaderMaterial
 var _overlay_material: StandardMaterial3D
