@@ -191,6 +191,8 @@ size = Vector2(2, 1.125)
 
 [node name="SlimWorldScreen" type="Node3D" unique_id=1216012003]
 
+[node name="WorldScreen" parent="." unique_id=1656044326 instance=ExtResource("1_py5ij")]
+
 [node name="Chassis" type="Node3D" parent="." unique_id=1959559203]
 
 [node name="MainBody" type="MeshInstance3D" parent="Chassis" unique_id=445705412]
@@ -372,8 +374,6 @@ mesh = SubResource("SphereMesh_wke00")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.12, 0, 0)
 mesh = SubResource("SphereMesh_8qi8j")
 
-[node name="Glass" type="MeshInstance3D" parent="Chassis" unique_id=403770130]
+[node name="Glass" type="MeshInstance3D" parent="." unique_id=403770130]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0.013)
 mesh = SubResource("PlaneMesh_yf5fn")
-
-[node name="WorldScreen" parent="." unique_id=1656044326 instance=ExtResource("1_py5ij")]
