@@ -352,3 +352,10 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 
 - The FAT housing controller reads its chassis at `WorldScreen/Chassis`, matching the authored scene hierarchy. The four authored fasteners use the `TopLeftFastener` / `TopRightFastener` / `BottomLeftFastener` / `BottomRightFastener` names and are repositioned by the controller.
 - In the editor, changing `FatWorldScreen.display_size` should resize the WorldScreen content, CSG chassis plates, vents, control strip, identification plate/text, fasteners, and glass together. Run the `fat-world-screen` headless contract stage after pulling controller updates; visual alignment still needs editor verification.
+
+
+### SLIM WorldScreen — Precision Cyber Industrial pass
+
+- SlimWorldScreen now supports optional FrontTrim, LightingSystem, SideDetails, Identification, and MechanicalDetails groups. The controller creates generated child containers beneath each group and rebuilds only those generated children when dimensions or finish settings change; authored nodes outside the generated containers are preserved.
+- New exported finish controls: trim width, light width, cyan/amber light colors, and emissive energy. The controller lays out machined trim rails, perimeter/corner light channels, status indicators, side vent inserts, a model plate, and micro-fasteners relative to display_size.
+- Verify in the editor by adjusting display_size and confirming the new details follow the housing. For a headless contract check, run godot --headless --path fowl-play --script res://tests/m3_slim_world_screen_test.gd. Godot tests and rendered visual verification have not been executed by the assistant.

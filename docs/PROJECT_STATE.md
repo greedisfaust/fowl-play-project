@@ -302,3 +302,6 @@ The test arena now includes a WorldEnvironment with restrained Godot Glow post-p
 
 
 - Follow-up geometry alignment: the authored `InnerArmor` group had a local Z offset while the controller also applies the plate Z offset. The controller now normalizes the group to zero before laying out the plates, preventing the offset from being applied twice; the contract fixture now starts with the authored offset and asserts the normalized result.
+
+
+- SLIM Precision Cyber Industrial foundation: extended the existing controller to populate optional authored detail groups with generated machined trim, emissive perimeter/corner lighting, status indicators, side vent inserts, an identification plate, and micro-fasteners. Added adjustable trim/light widths, cyan/amber colors, and emissive energy. The existing WorldScreen, glass orientation, and core housing nodes remain unchanged. Contract checks and editor verification are pending.

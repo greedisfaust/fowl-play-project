@@ -14,6 +14,11 @@ func _run() -> void:
 	var root_node: Node3D = Node3D.new()
 	root_node.set_script(SlimScript)
 	root_node.name = "SlimWorldScreen"
+	for group_name in ["FrontTrim", "LightingSystem", "SideDetails", "Identification", "MechanicalDetails"]:
+		var group: Node3D = Node3D.new()
+		group.name = group_name
+		root_node.add_child(group)
+
 
 	var screen_node: Node3D = Node3D.new()
 	screen_node.set_script(WorldScreenScript)
@@ -66,6 +71,9 @@ func _run() -> void:
 	_check((glass.mesh as PlaneMesh).size == Vector2(2.0, 1.125), "Glass should match the display size")
 	_check(glass.rotation_degrees.is_equal_approx(Vector3(-90.0, 0.0, 0.0)), "Glass PlaneMesh should face the camera-facing side of WorldScreen's XY display plane")
 	_check(glass.material_override is ShaderMaterial, "Glass should receive the dedicated sheen shader")
+	_check(root_node.get_node("LightingSystem/GeneratedLighting").get_child_count() >= 13, "Lighting system should generate perimeter, corner, and status lights")
+	_check(root_node.get_node("FrontTrim/GeneratedTrim").get_child_count() == 5, "Front trim should generate machined rails and lower inset")
+	_check(root_node.get_node("SideDetails/GeneratedSideDetails").get_child_count() == 16, "Side details should generate vents and accent inserts")
 
 	controller.display_size = Vector2(3.0, 1.6875)
 	_check((housing.mesh as BoxMesh).size == Vector3(3.16, 1.8475, 0.1), "Housing should resize with the display")
