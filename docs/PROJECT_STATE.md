@@ -273,3 +273,12 @@ The test arena now includes a WorldEnvironment with restrained Godot Glow post-p
 - Both display planes resize together through `display_size`. Responsive viewport/font sizing, content helpers, and per-instance shader settings remain supported.
 - Updated the WorldScreen contract test and debug documentation for the two-layer setup. The test tolerates the committed scene while the editor-authored TextDisplay node is still local/uncommitted; overlay-specific assertions run once that node is present.
 - Godot tests and rendered visual verification have NOT been run by the assistant. The user must verify text visibility, panel darkness, dot size/readability, and bloom in the editor/game before this slice is considered complete.
+
+
+## 2026-11-19 — SLIM WorldScreen housing foundation
+
+- Added the `SlimWorldScreen` controller and dedicated glass shader without modifying the editor-authored SLIM scene.
+- The controller resizes the WorldScreen content surface, backing housing, four bezel pieces, and protective glass from one display-size property. Bezel thickness and housing depth are separately adjustable.
+- Corrected the authored geometry orientation in the controller to match WorldScreen's existing XZ display plane: housing and bezel group rotate 90 degrees around X, and the glass is aligned to the same plane.
+- Added restrained cool-tinted glass with PBR specular/clearcoat response, a grazing-angle Fresnel sheen, and a near-camera fade. This is not a real reflection capture; reflection probes and scene lighting determine environmental reflections.
+- Added a headless contract test and registered the `slim-world-screen` stage. Godot tests and rendered visual verification have not been run by the assistant.

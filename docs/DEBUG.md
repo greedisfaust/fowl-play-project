@@ -323,3 +323,13 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 - The TextDisplay overlay uses alpha transparency, unshaded rendering, and an emission texture. The existing WorldEnvironment must have Glow enabled for HDR glyphs to bloom.
 - Resize through root `display_size`, not root Transform Scale. The controller updates both PlaneMeshes, SubViewport resolution, and responsive font size.
 - Run `tests/run_checks.ps1` to include the WorldScreen stage. Isolated: `godot --headless --path fowl-play --script res://tests/m3_world_screen_test.gd`. The test checks sizing, transparent HDR viewport, text shader settings, overlay material when the editor-authored TextDisplay exists, per-instance isolation, and independent content. Godot execution and rendered visual verification remain user-run.
+
+
+## SLIM WorldScreen kit
+
+- The editor-authored `slim_world_screen.tscn` hierarchy is `SlimWorldScreen/WorldScreen`, `Housing`, `Bezel/{Top,Bottom,Left,Right}`, and `Glass`.
+- Attach `res://environment/kit/slim_world_screen.gd` to the `SlimWorldScreen` root. Its exported `display_size`, `bezel_thickness`, and `housing_depth` properties resize the WorldScreen, backing plate, four bezel pieces, and glass together.
+- The controller aligns the backing plate, bezel, and glass to the existing WorldScreen's XZ-facing display plane. Keep the authored child names stable.
+- Glass uses `slim_world_screen_glass.gdshader`: a faint cool tint, physically lit clearcoat/specular response, angle-based Fresnel sheen, and a restrained near-camera fade. This is a stylized sheen, not a captured real-world reflection; visible environment reflections depend on scene lighting/reflection probes.
+- `glass_base_opacity`, `glass_sheen_strength`, `glass_sheen_near_distance`, and `glass_sheen_far_distance` tune the effect. The default keeps the screen readable and the glass understated.
+- Run `tests/run_checks.ps1` stage `slim-world-screen` for the headless geometry/resizing contract. Godot execution and rendered visual tuning remain user-run.
