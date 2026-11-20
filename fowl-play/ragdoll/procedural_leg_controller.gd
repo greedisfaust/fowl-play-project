@@ -133,10 +133,15 @@ func update(delta: float, local_velocity: Vector3, grounded: bool, vertical_velo
 		var right_air_thigh: Quaternion = Quaternion(swing_axis, tuck_angle)
 		var left_air_shin: Quaternion = Quaternion(swing_axis, knee_angle)
 		var right_air_shin: Quaternion = Quaternion(swing_axis, knee_angle)
+		var air_foot_pitch: float = 0.08 if ascending else -0.12
+		var left_air_foot: Quaternion = Quaternion(swing_axis, air_foot_pitch)
+		var right_air_foot: Quaternion = Quaternion(swing_axis, air_foot_pitch)
 		left_thigh_rotation = left_thigh_rotation.slerp(left_air_thigh, air_weight)
 		right_thigh_rotation = right_thigh_rotation.slerp(right_air_thigh, air_weight)
 		left_shin_rotation = left_shin_rotation.slerp(left_air_shin, air_weight)
 		right_shin_rotation = right_shin_rotation.slerp(right_air_shin, air_weight)
+		left_foot_rotation = left_foot_rotation.slerp(left_air_foot, air_weight)
+		right_foot_rotation = right_foot_rotation.slerp(right_air_foot, air_weight)
 	if landing_weight > 0.001:
 		var landing_bend: float = 0.16 * landing_weight
 		left_shin_rotation = left_shin_rotation * Quaternion(swing_axis, landing_bend)

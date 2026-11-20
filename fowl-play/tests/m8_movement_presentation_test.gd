@@ -61,8 +61,13 @@ func _check_airborne_leg_pose() -> void:
 	var grounded_thigh: Quaternion = controller.get("left_thigh_rotation")
 	controller.call("update", 0.1, Vector3(0.0, 0.0, -3.8), false, 4.0, 0.0)
 	var airborne_thigh: Quaternion = controller.get("left_thigh_rotation")
+	var ascending_foot: Quaternion = controller.get("left_foot_rotation")
 	if airborne_thigh.angle_to(grounded_thigh) < 0.03:
 		_fail("Airborne leg pose should visibly differ from grounded gait")
+	controller.call("update", 0.1, Vector3.ZERO, false, -3.0, 0.0)
+	var descending_foot: Quaternion = controller.get("left_foot_rotation")
+	if descending_foot.angle_to(ascending_foot) < 0.05:
+		_fail("Descent should extend and point the feet toward landing")
 	controller.call("update", 0.1, Vector3.ZERO, true, -1.0, 1.0)
 	if float(controller.get("landing_weight")) < 0.99:
 		_fail("Landing weight should be accepted by the leg controller")
