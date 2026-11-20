@@ -653,3 +653,10 @@ The M7.2 pose-curve assertions are included in `m7_jab_test.gd`; run them with `
 - The cylinder uses layered moving scan/rib/stream patterns and a stronger view-angle rim emission. The two torus rings are substantially thinner; the upper ring sweeps from the base to the top during activation. Material emission is enabled; visible bloom still depends on the active WorldEnvironment glow setting.
 - Boxer guard keeps the existing closed-fist curl and smooth hand blend, but moves both Viewmodel fists higher and inward with a forward defensive wrist angle. The two hand roots are mirrored, so the same local inward offset moves each fist toward the centerline.
 - No parry timing, hit resolution, reflection, cooldown, networking, or collision authority changed.
+
+
+### M7 combat feel follow-up — charged punch, guard orientation, and parry brightness
+- Charged-punch ragdoll launch velocity is 31.5 m/s (3× the previous 10.5 m/s), preserving the existing impact-angle direction and elevation calculation.
+- Charged-lunge query reach is 1.75 m (half the previous 3.5 m), and its capsule radius is 0.22 m (60% smaller than 0.55 m). Lunge movement speed/duration remain 12 m/s and 0.5 s; only the hit query volume changed.
+- Guard now rotates the hand face around its local length axis rather than relying on a large wrist pitch. This is intended to show the dorsal/knuckle side while preserving the finger direction; verify both mirrored hands in-game.
+- Parry barrier keeps its player-colored translucent cylinder and moving pattern, but reduces shell opacity/emission, ring alpha and ring emission, and the amount of white mixed into dark player colors. This removes the overexposed stage-light look while retaining a readable edge and localized impact flash.

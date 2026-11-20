@@ -44,8 +44,14 @@ func _check_tap_window() -> void:
 	var opposite_steered: Vector3 = COMBAT_CONTROLLER.steer_lunge_direction(Vector3.FORWARD, -Vector3.FORWARD, 0.1)
 	if opposite_steered.angle_to(Vector3.FORWARD) > TUNING.LUNGE_STEER_MAX_RAD_S * 0.1 + 0.001 or opposite_steered.length_squared() < 0.99:
 		_fail("A 180-degree aim reversal must still steer safely within the angular-speed limit")
-	if not is_equal_approx(TUNING.LUNGE_SPEED_MPS, 12.0) or not is_equal_approx(TUNING.LUNGE_DURATION_S, 0.5) or not is_equal_approx(TUNING.LUNGE_HIT_RADIUS_M, 0.55):
-		_fail("Charged lunge must preserve its 12 m/s, 0.5 s movement profile")
+	if not is_equal_approx(TUNING.LUNGE_SPEED_MPS, 12.0) or not is_equal_approx(TUNING.LUNGE_DURATION_S, 0.5) or not is_equal_approx(TUNING.LUNGE_HIT_RADIUS_M, 0.22):
+		_fail("Charged lunge should retain movement while using the smaller hit radius")
+	if not is_equal_approx(TUNING.CHARGED_PUNCH_RANGE_M, 1.75):
+		_fail("Charged punch hit reach should be half the previous 3.5 m length")
+	if not is_equal_approx(TUNING.CHARGED_PUNCH_LAUNCH_SPEED_MPS, 31.5):
+		_fail("Charged punch ragdoll launch should be three times the previous 10.5 m/s velocity")
+	if not is_equal_approx(PARRY_BARRIER.RING_ALPHA, 0.38) or PARRY_BARRIER.RING_EMISSION_ENERGY > 1.0:
+		_fail("Parry barrier rings should remain restrained rather than stage-light bright")
 func _check_jab_endpoint() -> void:
 	var origin: Vector3 = Vector3(1.0, 2.0, 3.0)
 	var endpoint: Vector3 = HIT_DETECTOR.get_jab_endpoint(origin, Vector3(0.0, 0.0, -4.0), TUNING.QUICK_PUNCH_RANGE_M)
@@ -145,8 +151,8 @@ func _check_world_hit_and_recoil() -> void:
 		_fail("Boxer guard should lift both closed fists into a higher defensive position")
 	if attacker_left_guard.guard_position_offset.x >= 0.0 or attacker_right_guard.guard_position_offset.x >= 0.0:
 		_fail("Mirrored Viewmodel hands should use inward local offsets to bring both fists toward the centerline")
-	if attacker_left_guard.guard_rotation_degrees.x < 65.0 or attacker_right_guard.guard_rotation_degrees.x < 65.0:
-		_fail("Boxer guard should rotate the closed fists so their back/knuckle side faces an opponent in front")
+	if not is_equal_approx(attacker_left_guard.guard_rotation_degrees.z, 190.0) or not is_equal_approx(attacker_right_guard.guard_rotation_degrees.z, 190.0):
+		_fail("Boxer guard should flip the hand face around its local length axis while preserving finger direction")
 	if not attacker_left_guard.guard_rotation_degrees.is_equal_approx(attacker_right_guard.guard_rotation_degrees):
 		_fail("Mirrored Viewmodel hands should retain a consistent defensive wrist angle")
 	var camera: Camera3D = attacker.get_node("Head/Camera3D") as Camera3D

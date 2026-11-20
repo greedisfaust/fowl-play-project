@@ -389,3 +389,13 @@ Verification:
 - Preserved the existing closed-fist guard curl and smooth pose blending. Both Viewmodel fists now rise farther and move inward toward the centerline, with the wrist rotated farther forward so the back/knuckle side faces an opponent approaching from the front.
 - Parry timing, cooldown, host-authoritative hit/reflection rules, replication, and barrier dimensions are unchanged. No scene files or user-authored hierarchy were edited.
 - Verification: source changes and existing regression checks are committed, but Godot import/headless checks and rendered host/client visuals have not been run by the assistant. The user should inspect fist orientation from first-person and opponent views, especially the mirrored left hand, and confirm whether project WorldEnvironment glow is enabled for bloom.
+
+
+### 2026-11-20 — charged punch reach/knockback and parry visual calibration
+
+- Increased charged-punch ragdoll launch velocity from 10.5 to 31.5 m/s (3×), leaving the existing angle-aware launch direction and parry-reflection velocity unchanged.
+- Tightened the charged-lunge hit capsule from 3.5 m reach / 0.55 m radius to 1.75 m reach / 0.22 m radius. Lunge movement remains 12 m/s for 0.5 s; only the hit query volume was reduced.
+- Corrected the guard wrist pose by rotating the hand around its local length axis to flip the visible hand face without reversing the finger direction. The earlier extreme pitch was removed. Both mirrored hands retain the same guard pose values.
+- Reduced the barrier shader brightness and alpha, slowed the internal energy pattern, lowered the ring emission/opacity, and reduced the white blend in the selected player color. The intent is a stylized colored energy shell with defined details rather than a blown-out light source. It remains a translucent cylinder with moving energy rings and a localized impact ripple.
+- Regression checks now cover the new launch/reach/radius tuning, restrained ring settings, and corrected guard-axis rotation. No scene files or authored hierarchy changed.
+- Verification: source and tests are committed, but Godot checks and in-game visuals have not been run by the assistant. Confirm the knuckle face from the opponent view, actual punch contact distance, ragdoll launch stability, and barrier brightness in the arena.
