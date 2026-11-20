@@ -101,3 +101,16 @@ The authored skeleton places `Thigh_L` at local positive X and `Thigh_R` at loca
 ### Regression and verification
 
 M8 planner checks now assert the authored positive-X/negative-X side mapping, including strafing. The swing articulation check verifies that the knee-bend weight is available to the IK solver. Godot tests and in-game behavior have not been run by the assistant.
+
+
+## Leg reach extension and higher swing arc — 2026-11-20
+
+### Changes
+
+- Added a maximum 1.14x cosmetic reach extension when the planted foot approaches the natural two-bone reach limit. Thigh and shin pose scales are applied along each authored rest-bone axis, so BoneAttachment3D limb meshes inherit the extension. The ratio eases toward the required amount and resets when IK is no longer active or another pose owner takes over.
+- Raised the foot swing/recovery arc from 0.12 m to 0.30 m, increased thigh swing to 46 degrees, knee flex to 68 degrees, and strengthened the forward knee-pole bias to 0.55 m. This is intended to read as a clear thigh lift, tucked knee, and forward foot arc before landing.
+- M8 coverage now checks the configured stretch/lift range and verifies that a 1.14x two-bone chain can reach a farther target without clamping.
+
+### Verification
+
+Code and documentation were updated on the feature branch. Godot parsing, automated tests, and in-game visual behavior have not been run by the assistant; the user should pull and inspect the actual rig before treating the visual tuning as final.
