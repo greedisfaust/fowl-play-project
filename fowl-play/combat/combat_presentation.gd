@@ -150,7 +150,7 @@ static func get_recoil_body_pose(elapsed: float, local_direction: Vector3, stren
 	var pitch: float = RECOIL_LEAN_RAD * snap * impact_scale
 	var yaw: float = -side * RECOIL_TWIST_RAD * snap * impact_scale
 	var roll: float = side * RECOIL_ROLL_RAD * snap * impact_scale
-	return Vector3(lerpf(pitch, 0.0, settle), lerpf(yaw, 0.0, settle), lerpf(roll, 0.0, settle)
+	return Vector3(lerpf(pitch, 0.0, settle), lerpf(yaw, 0.0, settle), lerpf(roll, 0.0, settle))
 
 func _local_direction(world_direction: Vector3) -> Vector3:
 	var player_3d: Node3D = _player as Node3D
