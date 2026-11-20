@@ -34,7 +34,7 @@ func update(delta: float, local_velocity: Vector3, grounded: bool) -> void:
 	motion_weight = lerpf(motion_weight, target_weight, blend_weight)
 	if moving:
 		phase = fposmod(
-			phase + (speed / TUNING.LEG_STEP_CYCLE_DISTANCE_M) * TAU * safe_delta,
+			phase + (speed / TUNING.LEG_STEP_CYCLE_DISTANCE_M) * TAU * TUNING.LEG_GAIT_RATE_MULTIPLIER * safe_delta,
 			TAU
 		)
 	elif motion_weight > 0.01:
