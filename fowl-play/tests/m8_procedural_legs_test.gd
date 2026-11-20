@@ -36,6 +36,8 @@ func _check_controller_gait() -> void:
 	if left_forward.z >= -0.05:
 		_fail("Forward walking should swing the leg toward the character's forward axis")
 
+	_check_stance_swing_articulation()
+
 	var phase_before_air: float = phase_after_walk
 	var angle_before_air: float = left_thigh.angle_to(Quaternion.IDENTITY)
 	controller.call("update", 0.1, Vector3(0.0, 0.0, -5.0), false)
@@ -75,6 +77,27 @@ func _check_controller_gait() -> void:
 		_fail("Smoothed movement speed should decay after the player stops")
 	if weight_after_stop >= weight_before_stop:
 		_fail("Leg motion weight should ease down after stopping")
+
+func _check_stance_swing_articulation() -> void:
+	var controller: RefCounted = LEG_CONTROLLER_SCRIPT.new()
+	controller.set("phase", TAU * 0.30)
+	controller.call("update", 0.0, Vector3(0.0, 0.0, -5.0), true)
+	var stance_foot: Quaternion = controller.get("left_foot_rotation")
+	if bool(controller.get("left_in_swing")):
+		_fail("The left foot should be in stance during the first part of its cycle")
+
+	controller.set("phase", TAU * 0.80)
+	controller.call("update", 0.0, Vector3(0.0, 0.0, -5.0), true)
+	var swing_foot: Quaternion = controller.get("left_foot_rotation")
+	if not bool(controller.get("left_in_swing")):
+		_fail("The left foot should enter swing after the stance fraction")
+	if stance_foot.angle_to(swing_foot) < 0.08:
+		_fail("Foot articulation should differ between stance and swing")
+	if float(controller.get("left_swing_progress")) <= 0.0:
+		_fail("Swing phase should expose a normalized progress value")
+
+	if bool(controller.get("right_in_swing")) == bool(controller.get("left_in_swing")):
+		_fail("Opposite feet should occupy opposite gait phases")
 
 func _check_rig_ownership() -> void:
 	var rig: Node3D = RIG_SCENE.instantiate() as Node3D
