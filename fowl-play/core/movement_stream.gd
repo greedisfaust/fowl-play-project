@@ -5,6 +5,7 @@ extends RefCounted
 const TUNING = preload("res://core/tuning.gd")
 var position: Vector3
 var velocity: Vector3 = Vector3.ZERO
+var grounded: bool = true
 var last_sequence: int = -1
 var last_time: float
 var horizontal_budget: float = 0.5
@@ -18,9 +19,10 @@ func reset(at: Vector3, now: float) -> void:
 	horizontal_budget = 0.5
 	vertical_budget = 0.5
 	velocity = Vector3.ZERO
+	grounded = true
 	samples.clear()
 
-func accept(sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float, now: float) -> bool:
+func accept(sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float, now: float, on_floor: bool = true) -> bool:
 	if sequence <= last_sequence or sequence < 0:
 		return false
 	if not at.is_finite() or not speed.is_finite() or not is_finite(yaw) or not is_finite(pitch):
@@ -42,13 +44,14 @@ func accept(sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float
 	vertical_budget -= absf(displacement.y)
 	position = at
 	velocity = speed
+	grounded = on_floor
 	last_sequence = sequence
 	return true
 
-func push(sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float, now: float) -> void:
+func push(sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float, now: float, on_floor: bool = true) -> void:
 	if not samples.is_empty() and sequence <= int(samples.back().sequence):
 		return
-	samples.append({"sequence": sequence, "position": at, "velocity": speed, "yaw": yaw, "pitch": pitch, "time": now})
+	samples.append({"sequence": sequence, "position": at, "velocity": speed, "yaw": yaw, "pitch": pitch, "grounded": on_floor, "time": now})
 	while samples.size() > 32:
 		samples.pop_front()
 
@@ -63,6 +66,7 @@ func sample(now: float) -> Dictionary:
 		return first
 	var second: Dictionary = samples[1]
 	var weight: float = clampf((render_time - float(first.time)) / maxf(float(second.time) - float(first.time), 0.0001), 0.0, 1.0)
+	var sampled_grounded: bool = first.grounded if render_time < float(second.time) else second.grounded
 	return {"position": (first.position as Vector3).lerp(second.position, weight),
 		"velocity": second.velocity, "yaw": lerp_angle(first.yaw, second.yaw, weight),
-		"pitch": lerpf(first.pitch, second.pitch, weight)}
+		"pitch": lerpf(first.pitch, second.pitch, weight), "grounded": sampled_grounded}

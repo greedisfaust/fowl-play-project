@@ -67,7 +67,13 @@ func _ready() -> void:
 		set_process_unhandled_input(_is_local_player)
 
 func _exit_tree() -> void:
-	# Never leave a prop frozen if the carrier disappears (disconnect, level unload).
+	# If the host loses a carrier while the session is active, broadcast a real
+	# release before this node disappears. Clients and offline shutdown retain
+	# the local detach fallback below.
+	if is_holding() and is_instance_valid(network) and is_instance_valid(player):
+		if network.get("peer") == null or bool(network.get("is_host")):
+			network.call("force_drop_carry", int(player.get("input_peer_id")), "carrier removed")
+	# Never leave a held item frozen if no authoritative release was possible.
 	if is_holding():
 		detach_item()
 	if is_instance_valid(debug_hub):

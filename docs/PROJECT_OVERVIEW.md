@@ -125,19 +125,19 @@ Inputs are InputMap actions only (never raw keycodes). The full action table is 
 
 | Action | Input | Behavior |
 |---|---|---|
-| Quick punch (jab) | tap `punch` (Q): released within `TAP_MAX_SECONDS` (0.25 s) | Fires on release. Range ~2.5 m, hitbox lives ~0.1 s, spam guard 0.35 s. **No limp.** The target recoils (visual only). |
-| Charged punch | hold `punch` while holding nothing | **Wind-up animation plays to indicate the charge** (DECIDED). Auto-fires the moment the hold reaches 1.0 s, even while still held. **One fire per press:** `punch` must be released to re-arm, and `CHARGED_PUNCH_COOLDOWN_SECONDS` (2.0) must pass; the host enforces both. **No early-release fizzle:** releasing before 1.0 s simply cancels with no punch and no penalty (DECIDED). No charge meter UI: feedback is the wind-up pose and a rising sound. |
-| Lunge | on auto-fire | 12 m/s for 0.5 s, direction steered toward the camera look at ≤ 3 rad/s. The hitbox is parented to the puncher and moves with them. |
-| Lunge hit | hitbox overlaps a player | Target goes **limp**; the lunge stops immediately on the host and the puncher's client; hits all players inside the hitbox. |
-| Lunge miss | 0.5 s passes | Nothing happens. Input resumes. |
+| Quick punch (jab) | release `punch` (Q) strictly before 1.00 s | Fires on release. Range ~2.5 m, active hit window ~0.1 s, spam guard 0.35 s. Never causes limp. Standing targets receive a weak physical recoil; already-limp targets receive a physical-bone impulse without restarting or extending recovery. |
+| Charged punch | hold `punch` (Q) while not carrying | The host auto-fires at the exact 1.0 s threshold, even while Q remains held. Releasing strictly before 1.0 s produces a jab instead. **One fire per press:** Q must be released to re-arm, and `CHARGED_PUNCH_COOLDOWN_SECONDS` (2.0) must pass; the host enforces both. The charge wind-up pose is the feedback; no charge meter UI. Audio remains deferred, with a future rising-sound hook. |
+| Lunge | on charged auto-fire | Owner-driven movement at 12 m/s for 0.5 s, steered toward camera look at ≤ 3 rad/s. The host rechecks a moving capsule hit volume (0.55 m radius) along the attacker's current camera direction each physics tick, with world/prop obstruction filtering. |
+| Lunge hit | host confirms standing players inside the moving capsule with a clear line of sight | Every distinct standing player inside the capsule goes **limp**; the lunge stops immediately after processing those hits on the host and puncher's client. |
+| Lunge miss | 0.5 s passes | No target effect; the lunge ends harmlessly. Movement resumes, while the charged-punch action lock remains until its 2.0 s cooldown/recovery window expires. |
 | Parry | press `parry` (F) once | Guard (barrier) up for 1.5 s, then 1.5 s cooldown. Press-once, no hold-to-keep. A punch hitting the barrier is cancelled. **Attacker:** a parried **charged** punch makes the attacker go **limp** (`PARRY_LIMP_SECONDS`); a parried **jab** is **recoil only**. |
 
-- **Blocked states:** cannot punch/parry while limp, carrying something, or (for punch) parrying; cannot parry while on cooldown. **During the charged-punch state (wind-up, lunge, recovery) use, grab and parry are blocked** (this avoids state bugs); becoming limp ends it at once.
-- **OPEN:** movement during wind-up (full speed / slowed ~50% RECOMMENDED / rooted). **DECIDED:** full speed during charge; no slowdown.
+- **Blocked states:** cannot punch/parry while limp, carrying something, or (for punch) parrying; cannot parry while on cooldown. While Q is held for a potential charge, and throughout the charged-punch lunge/recovery lock, use, grab and parry are blocked by the host. The post-launch lock lasts for the 2.0 s charged-punch cooldown. Becoming limp ends the sequence at once.
+- **DECIDED:** full movement speed during the charge hold. During the 0.5 s lunge, the lunge movement owns horizontal/vertical velocity; normal movement resumes immediately when it ends, even though use/grab/parry remain locked through recovery.
 - **Jab recoil (RECOMMENDED):** a short additive spring on Spine/Chest, visual only, triggered on all machines from the replicated hit event. It is **not** a ragdoll and not limp.
 - A knockdown while lunging cancels the lunge with no hit.
 - **The host judges every hit. Clients send intent only.** Requests must come from the node's owner (sender check).
-- **OPEN:** whether punches affect already-limp bodies (RECOMMENDED: ignore them; dedupe hits by player root).
+- **DECIDED:** a quick jab may physically impulse an already-limp ragdoll but never resets or extends its recovery timer. Charged lunge targets standing players only; already-limp bodies are ignored.
 
 ## 10. Limp / ragdoll lifecycle
 
@@ -257,12 +257,13 @@ Focus-based: a ray from the camera finds the target, the target highlights, the 
 | `MOVE_INTERP_DELAY_S` | ~0.1 | remote player smoothing |
 | `MOVE_SANITY_MAX_SPEED_MPS` | 15 | host plausibility check (above lunge speed) |
 | `MAX_PUNCH_POS_ERROR_M` | 6.0 | host ignores a reported punch position farther than this from its own copy |
-| `TAP_MAX_SECONDS` | 0.25 | tap vs hold (jab, drop) |
-| `CHARGED_PUNCH_HOLD_SECONDS` | 1.0 | auto-fire |
+| `TAP_MAX_SECONDS` | 0.25 | carrier-only: distinguishes a quick drop from the start of the throw-charge feedback; does not control idle combat jabs |
+| `CHARGED_PUNCH_HOLD_SECONDS` | 1.0 | idle punch: release before threshold = jab; reaching threshold = charged punch. Carry throw auto-fire remains separately governed by `THROW_AUTO_FIRE_SECONDS` |
 | `CHARGED_PUNCH_COOLDOWN_SECONDS` | 2.0 | before another can start |
 | `JAB_COOLDOWN_SECONDS` | 0.35 | spam guard |
 | `QUICK_PUNCH_RANGE_M` / duration | 2.5 / 0.10 s | |
-| `CHARGED_PUNCH_RANGE_M` | 3.5 | |
+| `CHARGED_PUNCH_RANGE_M` | 3.5 | capsule length along the aim direction |
+| `LUNGE_HIT_RADIUS_M` | 0.55 | capsule radius; tune after playtest |
 | `LUNGE_SPEED_MPS` / duration | 12 / 0.5 s | steer ≤ 3 rad/s |
 | `PARRY_GRACE_SECONDS` / `PARRY_COOLDOWN_SECONDS` | 1.5 / 1.5 | |
 | `PARRY_LIMP_SECONDS` | 3.5 | attacker of a parried charged punch (tune) |
@@ -335,7 +336,7 @@ Adding a prop "just for fun" must be: inherit the base prop scene, assign a mesh
 | `jump` | Space | |
 | `interact` | E | grab or use, resolved by the aimed target |
 | `primary` | Left mouse | presses USE devices only |
-| `punch` | Q | tap = jab or drop; hold = charge (punch or throw by state) |
+| `punch` | Q | while idle, release before 1.0 s = jab and reaching 1.0 s = charged punch; while carrying, tap = drop and hold = auto-throw |
 | `parry` | F | |
 | `ui_cancel` | Escape | release the mouse (no pause) |
 
@@ -347,8 +348,8 @@ Right mouse is unused. There is no separate drop key.
 |---|---|---|---|---|
 | `primary` | press device | blocked | blocked | blocked |
 | `interact` | press device, or grab | blocked | blocked | blocked |
-| `punch` tap | jab | drop | n/a | blocked |
-| `punch` hold | charged punch (auto-fires at 1.0 s) | throw charge (auto-fires at 1.0 s; early release drops) | n/a | blocked |
+| `punch` release before 1.0 s | jab | drop | n/a | blocked |
+| `punch` held to 1.0 s | charged punch auto-fires while held | throw auto-fires at 1.0 s; early release drops | n/a | blocked |
 | `parry` | parry | blocked | blocked | blocked |
 
 **Feedback and UI (RECOMMENDED, minimal at first):**
@@ -432,16 +433,25 @@ res://
 - Movement authority: owner-authoritative standing movement with host sanity checks was approved at the M3 gate (2026-11-16). Host validates and relays owner snapshots; remote peers interpolate. Gameplay outcomes remain host-authoritative.
 - Owner's legs are hidden when looking down (pitch below horizontal); when looking forward again they fade from hidden to visible via a smooth opacity slide (no instant snap).
 - Camera follow target while limp: **simulated head eye point** with head rotation and additive mouse look (user changed the earlier hips decision after visual playtest on 2026-11-17).
-- Wind-up movement: **full speed** (no slowdown) during charge; **no early-release fizzle** (releasing before 1.0 s cancels with no punch and no penalty).
+- Charged-punch input: **release before 1.0 s = jab; reaching 1.0 s while held = charged punch auto-fire**. Q release is required to re-arm; host-enforced cooldown is 2.0 s. Movement remains full speed during charge.
 - Beak and eyes are a rigid attachment on the head (cosmetic only; does not change the skeleton).
 - A player node is never reparented (it breaks every RPC path).
 
-**Open (ask before building):**
-1. Whether punches affect already-limp bodies.
-2. Whether to include impact/wall-slam feedback.
-3. Final lobby, nickname and color flow.
-4. Per-bone ragdoll masses (spike).
-5. Rebuilding the casino/economy layer, and when.
+**Combat decisions (user-approved, 2026-11-20):**
+- The user replaced the earlier early-release-cancel rule: releasing Q strictly before 1.00 s fires a jab; at 1.00 s or later the host auto-fires the charged punch while Q remains held. One charged fire per press; release to re-arm.
+- Use/grab/parry are blocked while Q is held for a potential charge and through the charged-punch cooldown/recovery lock. Full movement speed is retained during the charge; the lunge owns movement for its 0.5 s duration.
+- Style: hybrid — believable physical movement with exaggerated cartoon impacts.
+- Physical reactions have two levels only: **Weak** (recoil and balance correction) and **Strong** (stumble, loss of balance, collapse/full limp when the attack rules call for it). No Medium tier.
+- Jab on an already-limp player applies a physical impulse; it never resets or extends that player's recovery timer.
+- Strong impacts may produce a small burst of feathers tinted by the involved players' identity colors, restrained stylized bursts/rings/directional flashes, and subtle camera kick/FOV/shake. Avoid oversized explosions and nauseating camera motion.
+- Big wind-ups, torso/body lean, arm extension, follow-through and recoil are approved presentation goals. Stumbles and convincing collapses are desired where the existing rig/physics can support them.
+- Audio is deferred until suitable assets are available; leave integration points but do not block implementation on audio.
+
+**Still open:**
+1. Whether to add dedicated wall-slam feedback beyond the approved general impact presentation.
+2. Final lobby, nickname and color flow.
+3. Per-bone ragdoll masses (spike).
+4. Rebuilding the casino/economy layer, and when.
 
 
 ### Player identity presentation
@@ -451,3 +461,11 @@ res://
 - The editor-authored `NamePlate` is a Node3D scene instance (`res://player/player_nameplate.tscn`) with a transparent SubViewport UI. It follows `Rig/Skeleton3D/HeadAttachment` during standing, ragdoll, remote pose playback, and recovery. The local player's own nameplate is hidden.
 - The assigned palette color tints the world rig, attached world hands, first-person Viewmodel hands, cursor accent, and nameplate accent. Rig materials are duplicated per player before tinting; the temporary `FacePhoto` placeholder is intentionally excluded.
 - USER VERIFIED: the player-color presentation works in-game. Nickname text remains white for readability while the nameplate accent carries the identity color.
+
+### M7.1 implementation note — jab foundation
+
+The first jab slice uses a host-timed press/release request, a host-side obstruction-aware ray query, and a 0.1 s active hit window. The host alone selects the target. Standing recoil is applied through the target owner's movement simulation; an already-limp target receives a host-only physical-bone velocity impulse, with no limp lifecycle or recovery-timer mutation. The first-person/remote Viewmodel right hand has a dedicated curled-fist pose and short extension. M7.2 subsequently added the torso lean and weak recoil pose; stumble/collapse escalation, camera feedback, feathers and impact VFX remain later presentation work.
+
+### M7.2 implementation note — jab animation and weak reaction
+
+The jab presentation now pulls the curled fist back during anticipation, then drives a short forward hand extension and Chest-bone lean/follow-through before a smooth neutral return. The hand offset is continuous through both transitions and returns to its authored rest offset. Standing targets receive a brief upper-body recoil lean in addition to the existing movement impulse. `CombatPresentation.advance()` runs before the procedural arm IK updates, so the arm solver follows the animated shoulder rather than overwriting the torso pose. Host-approved wind-up/jab events already reach remote player copies, so this pose is derived locally on each peer without joint-transform streaming. Carry, limp, ragdoll and recovery continue to override combat presentation. Camera effects, strong stumble/collapse and impact VFX remain future slices.

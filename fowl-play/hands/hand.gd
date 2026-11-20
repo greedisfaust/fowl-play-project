@@ -13,6 +13,7 @@ enum PoseState {
 	POINT,
 	REACH,
 	GUARD,
+	PUNCH,
 	CARRY,
 	LIMP,
 }
@@ -32,6 +33,11 @@ const AUTHORED_GUARD_THUMB_BASES: Array[Basis] = [
 @export_range(0.0, 60.0) var index_aim_limit_degrees: float = 35.0
 @export var relaxed_curl_degrees: Vector3 = Vector3(-12.0, -18.0, -10.0)
 @export var guard_curl_degrees: Vector3 = Vector3(-75.0, -85.0, -45.0)
+@export var punch_curl_degrees: Vector3 = Vector3(-82.0, -88.0, -68.0)
+@export var punch_position_offset: Vector3 = Vector3(-0.025, -0.025, 0.075)
+@export var punch_rotation_degrees: Vector3 = Vector3(-8.0, -4.0, 2.0)
+@export var punch_thumb_root_degrees: Vector3 = Vector3(-18.0, -48.0, 0.0)
+@export var punch_thumb_curl_degrees: Vector2 = Vector2(-22.0, -38.0)
 @export var point_curl_degrees: Vector3 = Vector3(-75.0, -85.0, -45.0)
 ## Offsets in authoring units, relative to the editor-authored rest pose.
 @export var guard_position_offset: Vector3 = Vector3(0.0, 0.14, -0.04)
@@ -46,12 +52,12 @@ const AUTHORED_GUARD_THUMB_BASES: Array[Basis] = [
 @export var relaxed_thumb_curl_degrees: Vector2 = Vector2(-10.0, -15.0)
 @export var point_thumb_root_degrees: Vector3 = Vector3(-15.0, -40.0, 0.0)
 @export var point_thumb_curl_degrees: Vector2 = Vector2(-18.0, -25.0)
-@export_range(0.0, 1.0) var reach_distance: float = 0.28
+@export_range(0.0, 1.0) var reach_distance: float = 0.42
 ## Action timing is a small lifecycle, not a per-click animation clip.
 @export_range(0.02, 0.5) var action_extend_seconds: float = 0.11
 @export_range(0.0, 0.3) var action_contact_seconds: float = 0.05
 @export_range(0.02, 0.8) var action_return_seconds: float = 0.18
-@export_range(0.0, 0.15) var point_hand_offset: float = 0.035
+@export_range(0.0, 0.4) var point_hand_offset: float = 0.28
 @export_range(1.0, 80.0) var target_rotation_limit_degrees: float = 42.0
 ## Small world-space clearance added beyond the detected prop collision bounds.
 @export_range(0.0, 0.2) var carry_side_offset_m: float = 0.04
@@ -98,6 +104,7 @@ var _sway: Vector2 = Vector2.ZERO
 
 var is_hovering: bool = false
 var is_guarding: bool = false
+var is_punching: bool = false
 var is_carrying: bool = false
 var is_limp: bool = false
 var speed_mps: float = 0.0
@@ -180,6 +187,8 @@ func _process(delta: float) -> void:
 				curl = Vector3(-8.0, -12.0, -8.0)
 			PoseState.GUARD:
 				curl = guard_curl_degrees
+			PoseState.PUNCH:
+				curl = punch_curl_degrees
 			PoseState.CARRY:
 				var finger_index: int = index / 3
 				curl = carry_finger_curls[finger_index] if finger_index < carry_finger_curls.size() else carry_tight_curl_degrees
@@ -225,6 +234,7 @@ func _advance_action(delta: float) -> void:
 				_action_elapsed = 0.0
 				_reach_elapsed = -1.0
 				_reach_amount = 0.0
+				is_punching = false
 				_debug_log("Action cycle complete")
 
 func _begin_action_return() -> void:
@@ -239,7 +249,7 @@ func _cancel_action() -> void:
 	_reach_amount = 0.0
 
 ## Resolve one authoritative pose before touching any joint or transform.
-## Priority: limp > carry > guard > reach > point > idle.
+## Priority: limp > carry > guard > punch > reach > point > idle.
 func _resolve_pose_state() -> PoseState:
 	if is_limp:
 		return PoseState.LIMP
@@ -247,6 +257,8 @@ func _resolve_pose_state() -> PoseState:
 		return PoseState.CARRY
 	if is_guarding:
 		return PoseState.GUARD
+	if is_punching:
+		return PoseState.PUNCH
 	if _action_phase != HandActionPhase.NONE:
 		return PoseState.REACH
 	if is_hovering:
@@ -255,6 +267,7 @@ func _resolve_pose_state() -> PoseState:
 
 func _blend_thumb_and_hand_pose(weight: float, delta: float, pose_state: PoseState) -> void:
 	var guard_active: bool = pose_state == PoseState.GUARD
+	var punch_active: bool = pose_state == PoseState.PUNCH
 	var point_active: bool = pose_state == PoseState.POINT or pose_state == PoseState.REACH
 	var thumb_root_degrees: Vector3 = relaxed_thumb_root_degrees
 	var thumb_curl_degrees: Vector2 = relaxed_thumb_curl_degrees
@@ -267,6 +280,9 @@ func _blend_thumb_and_hand_pose(weight: float, delta: float, pose_state: PoseSta
 	elif guard_active:
 		thumb_root_degrees = guard_thumb_root_degrees
 		thumb_curl_degrees = guard_thumb_curl_degrees
+	elif punch_active:
+		thumb_root_degrees = punch_thumb_root_degrees
+		thumb_curl_degrees = punch_thumb_curl_degrees
 	elif point_active:
 		thumb_root_degrees = point_thumb_root_degrees
 		thumb_curl_degrees = point_thumb_curl_degrees
@@ -295,6 +311,11 @@ func _blend_thumb_and_hand_pose(weight: float, delta: float, pose_state: PoseSta
 	if guard_active:
 		position_target += guard_position_offset
 		rotation_offset = guard_rotation_degrees * PI / 180.0
+	elif punch_active:
+		position_target += punch_position_offset
+		if _action_phase != HandActionPhase.NONE:
+			position_target += _reach_offset * _reach_amount
+		rotation_offset = punch_rotation_degrees * PI / 180.0
 	elif pose_state == PoseState.REACH:
 		position_target += _reach_offset * _reach_amount
 	elif pose_state == PoseState.POINT:
@@ -405,7 +426,15 @@ func set_guard(active: bool) -> void:
 	if is_guarding == active:
 		return
 	is_guarding = active
+	if active:
+		is_punching = false
 	_debug_log("Guard %s" % ("on" if active else "off"))
+
+func set_punching(active: bool) -> void:
+	if active and (is_guarding or is_limp or is_carrying):
+		return
+	is_punching = active
+	_debug_log("Punch pose %s" % ("on" if active else "off"))
 
 func shake(intensity: float) -> void:
 	var clamped_intensity: float = clampf(intensity, 0.0, 1.0)
@@ -424,6 +453,8 @@ func set_speed(new_speed_mps: float) -> void:
 func set_carrying(on: bool, item: Node3D = null, side: float = 0.0) -> void:
 	var item_changed: bool = carry_item != item
 	is_carrying = on
+	if on:
+		is_punching = false
 	carry_item = item if on else null
 	carry_side = clampf(side, -1.0, 1.0) if on else 0.0
 	if not on or item_changed:
@@ -670,6 +701,22 @@ func _get_carry_pose_rotation(grip_position: Vector3) -> Quaternion:
 	var rest_palm_normal: Vector3 = (_pose_rest_rotation * Vector3.DOWN).normalized()
 	var facing_delta: Quaternion = Quaternion(rest_palm_normal, toward_item_local)
 	var facing_rotation: Quaternion = facing_delta * _pose_rest_rotation
+	if _is_dynamic_ragdoll_carry_target():
+		# Chest-to-chest grips should keep the thumbs aimed toward the top
+		# of the carried player's chest, regardless of the mirrored hand side.
+		var chest_up_local: Vector3 = hand_basis.inverse() * _get_carry_target_basis().y.normalized()
+		var rest_thumb_axis: Vector3 = (_pose_rest_rotation * Vector3.LEFT).normalized()
+		var facing_thumb_axis: Vector3 = (facing_rotation * rest_thumb_axis).normalized()
+		var desired_thumb_flat: Vector3 = chest_up_local - toward_item_local * chest_up_local.dot(toward_item_local)
+		var facing_thumb_flat: Vector3 = facing_thumb_axis - toward_item_local * facing_thumb_axis.dot(toward_item_local)
+		if desired_thumb_flat.length_squared() < 0.0001 or facing_thumb_flat.length_squared() < 0.0001:
+			return facing_rotation
+		desired_thumb_flat = desired_thumb_flat.normalized()
+		facing_thumb_flat = facing_thumb_flat.normalized()
+		var thumb_up_roll: float = facing_thumb_flat.signed_angle_to(desired_thumb_flat, toward_item_local)
+		return Quaternion(toward_item_local, thumb_up_roll) * facing_rotation
+
+	# Prop grips keep the original forearm-axis roll constraint.
 	var rest_forearm_axis: Vector3 = (_pose_rest_rotation * Vector3.BACK).normalized()
 	var facing_forearm_axis: Vector3 = (facing_rotation * Vector3.BACK).normalized()
 	var desired_forearm_flat: Vector3 = rest_forearm_axis - toward_item_local * rest_forearm_axis.dot(toward_item_local)
@@ -734,6 +781,8 @@ func _aabb_corner(bounds: AABB, corner_index: int) -> Vector3:
 
 func set_limp(on: bool) -> void:
 	is_limp = on
+	if on:
+		is_punching = false
 	_debug_log("Limp %s" % ("on" if on else "off"))
 
 func _update_aim(world_point: Vector3, weight: float) -> void:
@@ -753,13 +802,14 @@ func _update_aim(world_point: Vector3, weight: float) -> void:
 	_aim_node.quaternion = _aim_node.quaternion.slerp(target, weight)
 
 func _debug_pose(args: Array[Variant]) -> String:
-	if args.size() != 1 or str(args[0]) not in ["idle", "point", "guard", "limp", "reach"]:
-		return "Usage: %s idle|point|guard|limp|reach" % _pose_command_name
+	if args.size() != 1 or str(args[0]) not in ["idle", "point", "guard", "punch", "limp", "reach"]:
+		return "Usage: %s idle|point|guard|punch|limp|reach" % _pose_command_name
 	var pose: String = str(args[0])
 	_cancel_action()
 	_reach_preview_delay = -1.0
 	set_limp(pose == "limp")
 	set_guard(pose == "guard")
+	set_punching(pose == "punch")
 	set_carrying(false)
 	set_hover(pose == "point", global_position - global_basis.z * 2.0)
 	if pose == "reach":
@@ -832,6 +882,8 @@ func _pose_state_name(state: PoseState) -> String:
 			return "reach"
 		PoseState.GUARD:
 			return "guard"
+		PoseState.PUNCH:
+			return "punch"
 		PoseState.CARRY:
 			return "carry"
 		PoseState.LIMP:

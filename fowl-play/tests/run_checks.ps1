@@ -1,3 +1,7 @@
+param(
+	[string]$OnlyStage = "all"
+)
+
 $ErrorActionPreference = "Stop"
 
 $godot = $env:FOWL_PLAY_GODOT
@@ -13,7 +17,14 @@ if (-not (Test-Path -LiteralPath $godot)) {
 	throw "Godot executable not found. Set FOWL_PLAY_GODOT or add godot to PATH."
 }
 $project = Join-Path $PSScriptRoot ".."
-foreach ($stage in @("import", "d0", "m1", "m1-cursor", "m2", "m2-arm-ik", "m3", "m3-interaction", "m4-handoff", "m6", "identity", "identity-presentation", "physical-button", "screen-text", "world-screen", "slim-world-screen", "fat-world-screen", "screen-menu", "registration-terminal", "interactive-terminal")) {
+$stages = @("import", "d0", "m1", "m1-cursor", "m2", "m2-arm-ik", "m7-jab", "m3", "m3-interaction", "m4-handoff", "m6", "procedural-legs", "movement-presentation", "m10-camera", "m10-owner-view", "m10-camera-collision", "m10-ragdoll-camera", "m9-lifecycle", "identity", "identity-presentation", "physical-button", "screen-text", "world-screen", "slim-world-screen", "fat-world-screen", "screen-menu", "registration-terminal", "interactive-terminal")
+if ($OnlyStage -ne "all") {
+	if ($stages -notcontains $OnlyStage) {
+		throw "Unknown test stage '$OnlyStage'. Available stages: $($stages -join ', ')"
+	}
+	$stages = @($OnlyStage)
+}
+foreach ($stage in $stages) {
 	$checkStdout = [System.IO.Path]::GetTempFileName()
 	$checkStderr = [System.IO.Path]::GetTempFileName()
 	$arguments = @("--headless", "--path", ('"{0}"' -f $project))
@@ -23,9 +34,17 @@ foreach ($stage in @("import", "d0", "m1", "m1-cursor", "m2", "m2-arm-ik", "m3",
 	elseif ($stage -eq "m1-cursor") { $arguments += @("--script", "res://tests/m1_cursor_test.gd") }
 	elseif ($stage -eq "m2") { $arguments += @("--script", "res://tests/m2_hands_test.gd") }
 	elseif ($stage -eq "m2-arm-ik") { $arguments += @("--script", "res://tests/m2_procedural_arm_test.gd") }
+	elseif ($stage -eq "m7-jab") { $arguments += @("--script", "res://tests/m7_jab_test.gd") }
 	elseif ($stage -eq "m3-interaction") { $arguments += @("--script", "res://tests/m3_interaction_test.gd") }
 	elseif ($stage -eq "m4-handoff") { $arguments += @("--script", "res://tests/m4_limp_handoff_test.gd") }
 	elseif ($stage -eq "m6") { $arguments += @("--script", "res://tests/m6_carry_test.gd") }
+	elseif ($stage -eq "procedural-legs") { $arguments += @("--script", "res://tests/m8_procedural_legs_test.gd") }
+	elseif ($stage -eq "movement-presentation") { $arguments += @("--script", "res://tests/m8_movement_presentation_test.gd") }
+	elseif ($stage -eq "m10-camera") { $arguments += @("--script", "res://tests/m10_camera_presentation_test.gd") }
+	elseif ($stage -eq "m10-owner-view") { $arguments += @("--script", "res://tests/m10_owner_view_test.gd") }
+	elseif ($stage -eq "m10-camera-collision") { $arguments += @("--script", "res://tests/m10_camera_collision_test.gd") }
+	elseif ($stage -eq "m10-ragdoll-camera") { $arguments += @("--script", "res://tests/m10_ragdoll_camera_test.gd") }
+	elseif ($stage -eq "m9-lifecycle") { $arguments += @("--script", "res://tests/m9_lifecycle_test.gd") }
 	elseif ($stage -eq "identity") { $arguments += @("--script", "res://tests/m3_identity_test.gd") }
 	elseif ($stage -eq "identity-presentation") { $arguments += @("--script", "res://tests/m3_player_identity_presentation_test.gd") }
 	elseif ($stage -eq "physical-button") { $arguments += @("--script", "res://tests/m3_physical_use_button_test.gd") }
@@ -49,7 +68,10 @@ foreach ($stage in @("import", "d0", "m1", "m1-cursor", "m2", "m2-arm-ik", "m3",
 		throw "Godot $stage failed (exit code: $exitCode)."
 	}
 }
-& (Join-Path $PSScriptRoot "run_m0_checks.ps1") -GodotExecutable $godot
-& (Join-Path $PSScriptRoot "run_m3_roster_checks.ps1") -GodotExecutable $godot
-& (Join-Path $PSScriptRoot "run_m4_ragdoll_checks.ps1") -GodotExecutable $godot
-& (Join-Path $PSScriptRoot "run_m5_recovery_checks.ps1") -GodotExecutable $godot
+if ($OnlyStage -eq "all") {
+	& (Join-Path $PSScriptRoot "run_m0_checks.ps1") -GodotExecutable $godot
+	& (Join-Path $PSScriptRoot "run_m3_roster_checks.ps1") -GodotExecutable $godot
+	& (Join-Path $PSScriptRoot "run_m4_ragdoll_checks.ps1") -GodotExecutable $godot
+	& (Join-Path $PSScriptRoot "run_m5_recovery_checks.ps1") -GodotExecutable $godot
+	& (Join-Path $PSScriptRoot "run_m9_late_join_checks.ps1") -GodotExecutable $godot
+}

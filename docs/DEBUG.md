@@ -9,11 +9,12 @@ security secret.
 | Category | Owner script | What it logs |
 |---|---|---|
 | net | core/network.gd | network startup, shutdown, rejected RPCs |
-| combat | core/combat.gd | punch, parry, lunge, hit, limb events |
+| combat | combat/combat_controller.gd, combat/combat_hit_detector.gd, combat/combat_presentation.gd and core/network.gd | Jab and charged-punch input, host validation, lunge hit detection, action locks, recoil and limp-body impulse |
+| Combat launch lift | core/tuning.gd and ragdoll/player_rig.gd | Charged-punch and parry ragdoll launches retain their horizontal impulse and receive an additional configurable upward velocity component; ordinary limp jabs retain the baseline impulse. |
 | limp | core/limp.gd | limp start/end, recovery, phase changes |
 | carry | core/carry.gd | pickup, carry, throw, drop, state |
 | hands | core/hands.gd | reach, hover, guard, shake, color changes |
-| legs | core/legs.gd | step, land, settle, air movement |
+| legs | ragdoll/player_rig.gd and ragdoll/procedural_leg_controller.gd | Local gait phase, procedural leg pose activation, and ragdoll ownership gating |
 | props | core/props.gd | spawn, grab, throw, interact, state |
 | ragdoll | ragdoll/player_ragdoll_test.gd | isolated physical-bone test start/stop |
 | interact | player/focus.gd and interaction/interactable.gd | focus changes, accepted/rejected interaction requests |
@@ -26,6 +27,8 @@ security secret.
 |---|---|---|
 | `player/<name>/speed_mps` | player/player.gd | Current capsule velocity magnitude. |
 | `player/<name>/on_floor` | player/player.gd | Whether the capsule is grounded. |
+| `player/<name>/jump_coyote_s` | player/player.gd | Remaining ledge-grace time before a jump is no longer accepted. |
+| `player/<name>/jump_buffer_s` | player/player.gd | Remaining buffered jump-input time before it expires. |
 | `net/status` | core/network.gd | offline, hosting, connecting, connected, disconnected, or failed. |
 | `net/peers` | core/network.gd | Locally known connected peer IDs, including local ID once connected. |
 | `net/player_count` | arena/test_arena.gd | Spawned players in this arena instance. |
@@ -36,11 +39,20 @@ security secret.
 | `interact/device/<name>/active` | interaction/debug_use_device.gd | Toggle state of the M1 test USE device. |
 | `props/<name>/pickup_allowed` | props/prop.gd | Whether the prop's assigned profile allows pickup. |
 | `hands/<name>/state` | hands/hand.gd | World mode, hover, guard, carry, limp, and speed state. |
-| Carry pose | hands/hand.gd | While carrying, the palm's local +Y normal smoothly turns toward the carried prop; finger curl is still the shared carry pose. |
+| `rig/<name>/legs_active` | ragdoll/player_rig.gd | Whether the local procedural gait is currently blended in. |
+| Carry pose | hands/hand.gd | While carrying a prop, the palm turns toward the prop. While carrying a limp player, left/right grips account for the face-to-face chest orientation and both thumbs roll toward the top of the chest. |
 | `ragdoll_test.simulating` | ragdoll/player_ragdoll_test.gd | Whether the isolated PhysicalBoneSimulator3D is simulating. |
 | `player/<name>/wall_clearance` | player/player.gd | Whether recovery placement had to move away from a wall/prop during limp recovery. |
 | `player/<name>/carrying` | player/player.gd | Whether this player currently holds a carried item (prop or limp body). |
 | `player/<name>/limp_interactable_enabled` | player/player.gd | Whether this limp player's grab-target Interactable is enabled. |
+| `net/combat_rejected` | core/network.gd | Rejected combat input requests. |
+| `net/combat_jabs` | core/network.gd | Host-accepted jab count, including misses. |
+| `net/combat_hits` | core/network.gd | Host-confirmed jab hits. |
+| `net/combat_charged_punches` | core/network.gd | Host-fired charged punches. |
+| `net/combat_lunge_hits` | core/network.gd | Host-confirmed charged-lunge knockdowns. |
+| `net/combat_lunges_active` | core/network.gd | Number of active host-tracked lunges. |
+
+The M9 watches `net/player_state_sync_sent` and `net/player_state_sync_received` report reliable standing/recovery baseline delivery to late joiners.
 
 ## Commands
 
@@ -67,6 +79,8 @@ Automated checks cover Enter/Run signal wiring, category toggles, feedback with 
 | `net_disconnect` | none | no | no | Disconnects this instance and clears its players. On the host, ends the session for clients. Use net_host/net_join afterward. |
 | `interact_use_<name>` | none | no | no | Submits the local player's focused interaction to the host. Remote-player commands reject locally. Submission is not acceptance; see interact logs. |
 | `hand_status_<name>` | none | no | no | Reports this hand's cosmetic state. |
+| `leg_status_<player>` | none | no | no | Reports procedural gait activation, current phase, and each foot's stance/swing state plus swing progress. |
+| `leg_ground_<player>` | none | no | no | Reports each foot's ground hit, IK active state/blend weight, locked world-space anchor, current target, and surface normal. |
 | `arm_ik_status_<player>` | none | no | no | Reports the Viewmodel-right arm IK target, active state, and mapped Rig bone chain. |
 | `arm_ik_status_left_<player>` | none | no | no | Reports the Viewmodel-left arm IK target, active state, and mapped Rig bone chain. |
 | `ragdoll_test_start` | none | no | yes | Starts the isolated player ragdoll simulation. |
@@ -92,6 +106,7 @@ Automated checks cover Enter/Run signal wiring, category toggles, feedback with 
 | M1 | 3 | Aim at the GRAB prop: `props/<name>/pickup_allowed=true`; press E and see `props: <name> grab accepted; carry is deferred to M6`. |
 | M2 | 1 | Hand registration shows `hands/<name>/state`; `hand_status_<name>` reports world/hover/guard/carry/limp state. |
 | M2/M3 | 1 | On an accepted USE/GRAB interaction, the initiating player sees the immediate first-person poke; other peers see that player's world right hand poke toward the target. `net/hand_poke_sent` increases on host; `net/hand_poke_received` increases on peers that animate a remote hand. Rejected interactions do not broadcast a poke. |
+| M8 | 1 | Walk forward and strafe while grounded: `rig/<name>/legs_active=true`; `leg_status_<player>` reports the current gait phase and each foot's stance/swing phase. During swing, the knee flexes and the foot pitches for angular clearance; during stance, knee flexion stays restrained with a small toe-roll arc. `procedural_foot_plant.gd` provides world-space stance anchors and lifted swing targets. `PlayerRig` probes beneath both feet during physics ticks, excluding the owning Player body and filtering steep surfaces; `leg_ground_<player>` reports the latest hit, locked anchor, target, and normal. A swing captures its landing point once rather than chasing a moving probe, and the foot bone blends toward the detected surface normal while planted. The shared two-bone solver bends each thigh/shin chain toward its planted or interpolated swing target. When movement stops mid-swing, the gait now advances gently to the shared double-stance phase so neither foot remains suspended. While airborne or standing still, the gait blends toward neutral; during ragdoll/recovery, procedural legs yield to the rig lifecycle. |
 | M6 | 1 | Aim at a free prop or limp body: `props/<name>/pickup_allowed=true` or `player/<name>/limp_interactable_enabled=true`; press interact → `carry: Player <name> picked up <item>` on host and `carry/<name>/holding=<item>` watch appears. |
 | M6 | 2 | Press punch once and release quickly: `carry: Player <name> released <item>` and `props/<name> set carried=false`. |
 | M6 | 3 | Hold punch past auto-fire: `carry: Player <name> released <item>`; prop/body flies at `THROW_SPEED_MPS` (props) or `THROW_SPEED_LIMP_MPS` (limp bodies). |
@@ -163,6 +178,12 @@ M2 hand names: the first instance retains its node-name command/watch suffix. Co
 Once `res://ragdoll/player_rig.gd` is attached to the visual Rig root, `rig/<player-id>/physical_bones` reports the number of physical bones prepared for that Player. The new `rig/<player-id>/right_arm_ik` watch reports whether standing right-arm IK is currently active. Expect 11, with `Rig <player-id> prepared 11 dormant physical bones; 10 selective self-contact pairs.` in the ragdoll log. A different count emits a warning. The component stops simulation and clears physical-bone collision layers/masks while standing. During limp, 10 non-neighboring forearm/thigh/shin-to-torso pairs may contact; connected joints and remaining same-ragdoll pairs stay exempt. The isolated `ragdoll_test_*` commands use the same policy. Run `tests/run_ragdoll_collision_checks.ps1 -GodotExecutable <path>` to check the exception map; visual clipping and jitter still need an in-game drop test.
 
 `player/<player-id>/limp` reports the handoff state, and `player/<player-id>/recovering` reports the short get-up phase after limp ends. The host-only `begin_host_limp()` and `stop_host_limp()` methods are exercised by `tests/m4_limp_handoff_test.gd`. `limp` logs the two transitions plus `finished get-up blend`. During the handoff test, the Player root remains fixed while the rig simulates as a top-level node; capsule collisions are off. Stopping restores standing collisions and blends the saved ragdoll pose to the rest pose over `GET_UP_BLEND_SECONDS` (0.5 s) at the final hips position on walkable ground.
+
+### M9 late-join player lifecycle synchronization
+
+When a peer joins, the host sends reliable ragdoll snapshots for currently limp players and reliable capsule baselines for every non-limp player. The baseline includes position, velocity, yaw, pitch, and grounded state. A player who is midway through recovery is placed at the host-approved standing position; the joining peer starts from a stable standing pose instead of trying to replay a get-up clip halfway through. The next ordinary movement snapshots resume after recovery finishes. The net/player_state_sync_sent and net/player_state_sync_received watches count these baseline events. If a state arrives before its Player node is registered, it is held until Player._ready() completes; ragdoll ownership takes priority.
+
+Regression: run tests/run_m9_late_join_checks.ps1 -GodotExecutable <path>. The host begins recovery before the client connects; the client must see the host near the host-reported recovery position, not at the default spawn point. Existing M4 late-join tests continue to cover active and settled ragdolls. The test runner also waits for the host and client processes to exit cleanly.
 
 ### M4 replicated ragdoll spike
 
@@ -433,7 +454,7 @@ The test arena has an editor-authored `WorldEnvironment` with restrained Glow en
 ### Nameplate text and plate opacity
 - Nickname and status labels remain fully opaque (alpha 1.0) whether or not the player is being aimed at.
 - Only the decorative backing, identity accent rail, and divider use the hover opacity transition (default 12% idle, 100% aimed-at). The distance fade affects those decorative elements only.
-- The runtime HeadAttachment local Y offset is 0.62 m, raised from 0.38 m to improve clearance above the head.
+- The runtime HeadAttachment local Y offset is 0.62 m, raised from 0.56 m to improve clearance above the head.
 - The scene design is not final; the current hierarchy is a stable base for further visual polish. Add or restyle decorative elements in the user-authored scene without changing the required node names.
 
 
@@ -442,3 +463,239 @@ The test arena has an editor-authored `WorldEnvironment` with restrained Glow en
 - The Rig duplicates its visible geometry materials before tinting, preserving source resources and per-instance independence. The temporary `FacePhoto` placeholder is excluded.
 - The nameplate accent continues to use the same `PlayerIdentity.get_color()` value.
 - USER VERIFIED: player identity coloring works in-game, including the character presentation, world and first-person hands, and ragdoll. The nameplate's identity accent uses the same palette color; nickname text stays white for readability. Regression check: compare different host/client colors, then knock down, carry, throw, and recover each player to confirm colors persist.
+
+
+## Procedural footstep planner
+- Landing targets are calculated relative to each thigh/hip using the rig's smoothed movement direction, not by projecting a long distance from the current trailing foot.
+- The planner offsets left/right feet perpendicular to movement, preserving separation during forward/backward movement, strafing, and diagonals.
+- Forward landing prediction uses the root travel over the swing fraction: `LEG_STEP_CYCLE_DISTANCE_M * (1 - LEG_STANCE_FRACTION)`. The planner target is then raycast vertically at the current sole height.
+- `leg_ground_<player>` reports the captured world-space anchor and current planner/plant target. If the target is not where expected, inspect the rig's movement direction and hip position before changing the ground probe.
+- Focused regression coverage: M8 `procedural-legs` stage. Godot execution and in-game verification remain pending.
+
+
+- Follow-up refinement: hip-relative predicted targets are used only for a foot that is actively in swing. Stance feet continue probing their current sole, so standing initialization and stop-settling cannot pull a planted foot toward a forward target. Both targets are calculated from the midpoint between the hips to avoid doubling the lateral separation.
+
+
+## Leg spacing, smoother planting, and earlier step timing — 2026-11-20
+
+- Reduced `LEG_STANCE_FRACTION` from 0.58 to 0.50 so each foot enters swing sooner and spends less time trailing before requesting a new landing target.
+- Foot lateral placement now always uses the rig's anatomical right axis, rather than an axis perpendicular to movement. This prevents left/right targets from swapping sides during strafing and diagonals.
+- Two-bone IK pole targets now receive an outward lateral bias per leg, encouraging knees to bend in separate planes instead of converging through one another.
+- Reduced procedural leg IK blend response from 14 to 8 to soften sudden thigh/knee corrections when a new planted target is acquired.
+- Replaced cubic smoothstep with quintic smootherstep for the swing path, reducing abrupt velocity changes at lift-off and touchdown.
+- Added planner regression assertions for anatomical left/right separation during strafing and diagonal movement.
+- Godot tests and in-game verification remain pending; this is procedural pose separation, not physical collision bodies between the legs.
+
+
+## Readable knee-lift walking pass — 2026-11-20
+
+- Restored the stance fraction from 0.50 to 0.58 so each foot has a more readable planted/support phase rather than spending half the cycle in swing.
+- Increased swing-foot vertical arc from 0.12 m to 0.28 m so the foot visibly clears the floor.
+- Changed knee flexion to bend early, hold through most of forward swing, and extend during the final approach to landing. The two-bone IK then follows the elevated foot target, producing the intended knee-up-then-place motion.
+- Reduced ground-hit foot clearance from 0.04 m to 0.015 m to reduce visible hovering. The value remains a small ankle/sole offset, not a guarantee of exact mesh contact because the foot bone origin is not necessarily the bottom of the shoe.
+- Added/updated M8 assertions for visible knee bend and the larger swing arc. Godot tests and in-game verification remain pending.
+
+
+## Gait cadence and anatomical spacing refinement — 2026-11-20
+
+- Added `LEG_GAIT_RATE_MULTIPLIER = 0.78` to slow the procedural step cycle independently of player movement speed. The player still moves at the same gameplay speed; only gait phase advances more deliberately.
+- Increased the rig's hip-relative landing-zone lateral offset from 0.18 m to 0.24 m to keep the feet in clearer left/right lanes.
+- Increased the per-leg outward knee-pole bias from 0.30 m to 0.48 m so IK solutions favor separate knee bend planes.
+- Updated the gait phase regression expectation to include the cadence multiplier.
+- This is a soft anatomical separation constraint, not physical leg collision. Godot tests and visual verification remain pending.
+
+
+## Procedural leg recovery diagnostics
+
+The `leg_ground_<player>` command now reports each foot's emergency-replant state and current hip-to-anchor stretch ratio, normalized against that leg's comfortable reach. A stretch ratio at or above 1.0 requests a recovery step when the foot is in stance. Only the more-stretched foot is allowed to emergency-step at a time.
+
+
+## Procedural leg side and knee diagnostics
+
+The authored rig's `Thigh_L` bone is on local +X and `Thigh_R` is on local -X. Footstep planner and IK side arguments follow that exact mapping: left = +1, right = -1. The gait controller exposes per-leg knee bend weights; the IK pole uses those weights to increase forward knee flex during swing while retaining the outward anatomical bias.
+
+
+## Procedural leg reach and swing lift
+
+- Leg IK now allows a smoothed, cosmetic reach extension up to `LEG_IK_MAX_STRETCH_RATIO` (1.14). Both thigh and shin bone scales are adjusted along their authored bone axes, so attached limb meshes stretch with the IK chain rather than leaving the visible geometry behind. Scales return to identity when IK is no longer active or when ragdoll/other pose ownership takes over.
+- Swing and emergency recovery foot arcs use `LEG_REPLANT_LIFT_M` (0.30 m). Thigh swing is tuned to 46 degrees, knee flex to 68 degrees, and the IK pole adds a stronger forward bias while the knee is flexed.
+- M8 checks cover the configured stretch/lift range and a farther two-bone IK target.
+
+
+## Procedural gait sync and knee direction
+
+- Gait phase now advances from the measured horizontal player velocity rather than the smoothed direction-filter velocity. Direction still blends for smooth turning, while cadence no longer waits for the velocity filter to catch up.
+- Stride cycle distance is 1.4 m with a 1.0 cadence multiplier. Normal landing targets are placed 0.40 m ahead of the hip at touchdown, after accounting for predicted swing travel. At the 0.58 stance fraction, the foot ends stance about 0.412 m behind the hip; combined with the 0.84 m vertical two-bone rest reach, this is about 0.936 m, within the 0.94 m replant margin. Emergency replants also predict root travel over the 0.18 s recovery arc.
+- Leg IK pole guidance now favors anatomical outward knee placement (0.95 m) with a reduced forward component (0.55 m base plus 0.35 m swing bias). Arm IK retains its independent pole tuning.
+- M8 checks assert stance travel remains below the leg reach margin and that mirrored left/right IK poles place each knee outward from the centerline.
+
+
+## Knee bend direction correction
+
+- The shared two-bone IK solver interprets its pole argument as a direction relative to the hip/shoulder, not a world-space pole position. The leg controller now passes a character-facing world direction directly instead of adding the hip world position first. This prevents character translation and heading from distorting the bend plane.
+- Forward pole weight is now 1.0, swing adds up to 0.45, and outward bias is a mild 0.18. The intended result is forward knee flex with a subtle outward anatomical angle at every heading.
+- M8 solver checks use hip-relative pole directions and require both forward and outward bend for mirrored legs.
+
+
+## Sideways gait foot lanes
+
+## Rapid direction-change gait response
+
+- Gait heading smoothing now uses a faster response when the incoming movement direction differs sharply from the current smoothed heading (dot product below 0.55). Normal directional changes retain the original smoother response; sharp turns use a 42 response rate.
+- Filtered heading magnitude also tracks incoming speed with the faster response so repeated perpendicular/reversing inputs do not collapse the planner direction toward zero. This is intended to keep footstep targets following rapid WASD zig-zags without making ordinary walking jittery.
+- M8 includes a repeated forward/right/back/left sequence at 20 updates per second and checks that the filtered heading tracks each new direction.
+
+
+- Footstep planning now keeps the two foot lanes perpendicular to the current movement direction instead of forcing them to remain on fixed anatomical left/right offsets. Forward/backward movement still uses the rig-right axis; pure strafing uses the character-forward axis, giving the feet stable front/back lanes.
+- The same movement-relative axis is used by landing-target separation constraints, so a leading foot is not pushed back across the hip centerline while strafing. Lane orientation remains stable for left and right strafes.
+- M8 coverage now checks rightward and leftward strafing, front/back separation, and movement-relative replant constraints.
+
+
+## Moving-support foot planting
+
+- `leg_ground_<player>` reports the current world-space planted targets and anchor state. A planted foot now also stores its contact point in the supporting `Node3D`'s local space.
+- When the support translates or rotates, the planted target is transformed back into world space so the foot follows the elevator/platform instead of remaining behind.
+- The ground probe passes its hit collider into the foot-plant tracker. Static floors continue to work as before; if a support is freed, the anchor safely remains at its last world position.
+- M8 regression coverage checks both translation and rotation of a moving support. Run the Godot M8 test and verify in-game on a moving elevator/platform; these checks have not been run by the assistant.
+
+
+## Movement tuning — 2026-11-20
+
+- Normal movement uses `PLAYER_SPEED_MPS` (3.8 m/s); holding the `sprint` input action uses `PLAYER_RUN_SPEED_MPS` (8.0 m/s).
+- Horizontal velocity accelerates at `PLAYER_ACCELERATION_MPS2` and decelerates at `PLAYER_DECELERATION_MPS2`, including smooth directional changes. Sprint only changes the target speed while movement input is held.
+- The procedural gait blends its stride amplitude and cadence toward a more energetic run as measured speed rises. This remains cosmetic and does not change movement authority or replication.
+- Input Map handoff: create the `sprint` action and bind Left Shift. The player script intentionally does not edit project settings or scenes.
+
+
+### Jump movement playtest
+
+- Ground jump: tap and hold Space separately; a tap should produce a shorter hop, while holding should reach the full jump height.
+- Coyote time: run off a ledge and press jump immediately afterward; the short grace window should still allow takeoff.
+- Jump buffer: while descending, press jump just before touching down; the next grounded physics tick should launch the next jump.
+- Air control: steer left/right in the air and compare with grounded steering; air corrections should be weaker and preserve more momentum.
+- Debug watches `player/<name>/jump_coyote_s` and `player/<name>/jump_buffer_s` show the active grace/buffer windows. These are local movement values; no new network stream is added.
+
+
+### Movement feel calibration — 2026-11-20
+
+- Ground direction changes use a dedicated 24 m/s² turn response when the requested direction differs sharply from current horizontal momentum. Ordinary acceleration remains 14 m/s² and deceleration remains 18 m/s², so starts/stops retain their original feel while turns become less car-like. Air steering applies the existing 55% multiplier to this response.
+- Gait stride intensity now scales against the 8 m/s sprint speed instead of reaching full intensity at the 3.8 m/s walk speed. Walking therefore uses a softer leg swing/knee bend; sprinting builds toward the full stride.
+- Jump launch speed is now 6.9 m/s (from 6.5 m/s), increasing full-height jump airtime and height modestly without changing gravity, coyote time, buffering, or short-hop release behavior.
+- Playtest: compare 90-degree turns and full reversals while walking/sprinting; check walking no longer looks like repeated bunny hops; compare tap and held jump heights.
+
+
+## Procedural walk/sprint gait calibration
+
+- Walking and sprinting use separate gait profiles instead of simply scaling one oversized stride. Walking uses a longer cycle distance (2.0 m), a 0.46 stance fraction, 24-degree thigh swing, 30-degree knee flex, and a 0.09 m normal swing arc. Sprint blends toward the existing 1.4 m cycle, 0.58 stance fraction, 46-degree thigh swing, 68-degree knee flex, and a 0.20 m swing arc.
+- The 0.30 m emergency replant arc remains separate so a stretched foot can still recover safely. Normal walking no longer uses that exaggerated recovery height.
+- M8 checks now cover distinct walk/sprint cadence, articulation, lift tuning, and ensure the longer walking cycle does not keep a foot planted beyond comfortable leg reach. Godot execution and in-game visual verification remain user-run.
+
+
+### Walking rhythm regression — 2026-11-20
+
+- Footstep landing prediction now uses the same blended walk/run cycle distance and stance fraction as the gait controller. Previously the controller could be in the longer walking cycle while the rig predicted landing travel with sprint timing, making the planted/swing phases disagree.
+- M8 now checks that ordinary walking never places both legs in swing together and that the walk cycle includes a double-support interval where both feet remain planted.
+- Sprint cadence and movement tuning are unchanged. Godot execution and in-game verification remain user-run.
+
+
+### Walking cadence reach adjustment — 2026-11-20
+
+- Increased the walking cycle distance to 2.0 m to slow the forward walking rhythm. Reduced the walking stance fraction to 0.46 so the longer cycle does not make the planted foot exceed comfortable leg reach and trigger emergency replants.
+- Sprint timing remains unchanged. In-game confirmation is still pending from the user.
+
+## M7.1 — Jab
+
+- Releasing Q strictly before `CHARGED_PUNCH_HOLD_SECONDS` (1.0 s) starts a jab. Releasing at or after the threshold cannot create a jab.
+- `net/combat_jabs` counts host-accepted jabs; `net/combat_hits` counts host-confirmed player hits; `net/combat_rejected` counts rejected requests.
+- Enable the `combat` category to see host wind-up, accepted jab and confirmed hit logs.
+- The host owns jab press timing, jab cooldown, camera direction, raycast, obstruction and target selection. Clients submit only press/release intent.
+- The jab ray includes static world, elevator, props and player layers. World geometry and props block hits; the jab cannot hit through an obstruction.
+- Standing targets receive a visual-only upper-torso spring recoil; no player-root movement is added. Already-limp targets receive a host-only physical-bone velocity impulse; their limp state and recovery timer are not restarted.
+- The right Viewmodel hand uses a dedicated curled-fist pose and short extension/return. Carry and limp pose priorities override combat.
+- M7.2 adds a procedural Chest-bone anticipation lean, forward punch follow-through, smooth neutral return, and a brief visual-only upper-torso spring recoil on standing targets. The body pose is applied before arm IK; the existing viewmodel wrist target continues to drive the visible arm on remote rigs.
+
+| M7.1 | 1 | Tap Q: a short fist wind-up and jab extension play; `net/combat_jabs` increases once. |
+| M7.1 | 2 | Aim at another standing player within 2.5 m and tap Q: `net/combat_hits` increases and the target receives a small recoil. |
+| M7.1 | 3 | Aim through a wall or prop: the jab is blocked and does not hit through it. |
+| M7.1 | 4 | Jab an already-limp player: the ragdoll physically reacts, but `player/<name>/limp_elapsed_s` continues without resetting. |
+| M7.1 | 5 | Release Q before 1.0 s: a jab fires on release. Reaching 1.0 s while held auto-fires the charged punch. |
+| M7.1 | 6 | While carrying, tap/hold Q: existing drop/throw behavior remains unchanged. |
+| M7.2 | 1 | Tap Q: the curled fist visibly pulls back, then extends and returns to its authored hand position. |
+| M7.2 | 2 | Watch from a second peer: the attacker’s torso leans into the jab and returns without per-bone animation traffic. |
+| M7.2 | 3 | Get jabbed while standing: the target receives a brief upper-body spring recoil without player-root knockback. |
+| M7.2 | 4 | Walk and sprint while jabbing: movement gait continues and the torso/arm pose does not fight the procedural IK. |
+| M7.2 | 5 | Start carrying or enter limp/recovery: combat pose clears and the higher-priority carry/limp/recovery presentation wins. |
+| M7.3 | 1 | Hold Q to 1.0 s without releasing: `net/combat_charged_punches` increases once and the lunge begins. |
+| M7.3 | 2 | Release Q before 1.0 s: `net/combat_jabs` increases once; no charged lunge starts. |
+| M7.3 | 3 | Aim through two standing players inside the capsule with a clear line: each distinct player inside the unobstructed volume goes limp, `net/combat_lunge_hits` counts both, and the lunge stops. |
+| M7.3 | 4 | Miss: lunge ends after 0.5 s without affecting a target; normal movement resumes. |
+| M7.3 | 5 | During a held charge and the 2.0 s charged recovery lock, use/grab requests are rejected; parry start is denied by `can_start_parry()`. |
+| M7.3 | 6 | While carrying, Q tap/hold still uses the existing drop/throw path; while limp, combat remains blocked. |
+
+Run only the jab regression stage from the `fowl-play/` directory with `.\tests\run_checks.ps1 -OnlyStage m7-jab`. Run the full suite with `.\tests\run_checks.ps1`.
+
+The M7.2 pose-curve assertions are included in `m7_jab_test.gd`; run them with `.\tests\run_checks.ps1 -OnlyStage m7-jab` from `fowl-play/`.
+
+
+### M7.3 charged-punch refinement
+
+- Charged wind-up now builds a stronger backward torso lean/twist/counter-roll and draws the fist farther back before the lunge release. The presentation remains cosmetic and is evaluated locally from the host-approved wind-up/lunge events.
+- A charged hit launches the target away from the actual attacker-to-impact position. Side impacts push sideways; strike pitch and relative impact height contribute a bounded vertical component. The host enters limp first, then applies the impulse to the simulating physical rig.
+- Tuning: `CHARGED_PUNCH_LAUNCH_SPEED_MPS` is 10.5 m/s; `CHARGED_PUNCH_LAUNCH_BASE_LIFT` is 0.34 and `CHARGED_PUNCH_LAUNCH_MAX_LIFT` is 0.48. These are starting values for playtesting, not final balance claims.
+- Run `.\tests\run_checks.ps1 -OnlyStage m7-jab` from `fowl-play/`. Playtest front, side and elevated/low-angle charged hits, then repeat with host and client. Confirm the target flies away from the impact direction without excessive distance. These checks have not yet been run for this refinement.
+
+
+### M7.4 parry and cylindrical barrier
+
+- Press **F** to request a parry. The host approves the action; the client does not decide the active window or reflection.
+- net/combat_parries counts successful reflections, net/combat_parry_rejected counts rejected parry requests, and net/combat_parries_active reports active host windows.
+- The active window is 1.25 s. A missed window expires automatically, then a 1.5 s cooldown begins. Successful reflection also begins a 1.5 s cooldown.
+- During the window, the defender's full-height translucent cylindrical barrier should expand from the ground, follow the player, and show animated surface patterns with top/bottom rings. On contact, a ripple should appear at the actual impact side before the barrier dissolves.
+- A jab or charged punch that contacts an active parry should leave the defender standing and send the attacker into limp, launched away from the defender. Charged punches must not bypass parry.
+- The barrier is a cosmetic runtime presentation; never treat its mesh or shader as a collision authority.
+- Playtest: press F with no incoming attack and verify expiry/cooldown; then have another player jab during the window; repeat with a charged punch and from front/side angles. Try F while carrying, limp, recovering, charging Q, during charged recovery, during an active jab, and during parry cooldown; each should reject. Repeat with host and client.
+- Run .\\tests\\run_checks.ps1 -OnlyStage m7-jab from fowl-play/. Godot execution and in-game verification have not yet been run for this slice.
+
+
+### M7.4 parry presentation visual refinement
+- The runtime barrier now inherits the owning player identity palette color on every peer. Dark palette entries are brightened for the energy emission so black remains distinguishable, while the player identity color itself is unchanged.
+- The cylinder uses layered moving scan/rib/stream patterns and a stronger view-angle rim emission. The two torus rings are substantially thinner; the upper ring sweeps from the base to the top during activation. Material emission is enabled; visible bloom still depends on the active WorldEnvironment glow setting.
+- Boxer guard keeps the existing closed-fist curl and smooth hand blend, but moves both Viewmodel fists higher and inward with a forward defensive wrist angle. The two hand roots are mirrored, so the same local inward offset moves each fist toward the centerline.
+- No parry timing, hit resolution, reflection, cooldown, networking, or collision authority changed.
+
+
+### M7 combat feel follow-up — charged punch, guard orientation, and parry brightness
+- Charged-punch ragdoll launch velocity is 31.5 m/s (3× the previous 10.5 m/s), preserving the existing impact-angle direction and elevation calculation.
+- Charged-lunge query reach is 1.75 m (half the previous 3.5 m), and its capsule radius is 0.22 m (60% smaller than 0.55 m). Lunge movement speed/duration remain 12 m/s and 0.5 s; only the hit query volume changed.
+- Guard now rotates the hand face around its local length axis rather than relying on a large wrist pitch. This is intended to show the dorsal/knuckle side while preserving the finger direction; verify both mirrored hands in-game.
+- Parry barrier keeps its player-colored translucent cylinder and moving pattern, but reduces shell opacity/emission, ring alpha and ring emission, and the amount of white mixed into dark player colors. This removes the overexposed stage-light look while retaining a readable edge and localized impact flash.
+
+
+### M8.1–M8.3 coordinated movement presentation
+
+- The procedural movement presenter derives cosmetic torso lean from measured local acceleration/braking and turn rate. It does not change CharacterBody velocity, jump timing, movement authority, or network payloads.
+- Takeoff blends into a tucked airborne leg pose; descent relaxes the tuck; touchdown triggers a short torso/leg compression pulse that eases back to neutral.
+- Movement body pose is layered with combat body pose in PlayerRig. Combat remains visually stronger, carry suppresses locomotion body language, and ragdoll/recovery continue to own the skeleton.
+- Remote players calculate the same presentation locally from their interpolated root velocity and replicated grounded state; no per-bone animation traffic is added.
+- Run `.\\tests\\run_checks.ps1 -OnlyStage movement-presentation` and `.\\tests\\run_checks.ps1 -OnlyStage procedural-legs` from `fowl-play/`. Then playtest walk/sprint acceleration, abrupt stops, strafes, sharp turns, jump ascent/descent/landing, jab/charged punch, carry, and ragdoll/recovery on host and client. Godot execution and in-game verification have not been run by the assistant.
+
+
+### M10 first-person camera presentation
+
+The local first-person camera adds a restrained velocity-driven bob while walking/running, lateral sway while strafing, vertical response while airborne, and a short landing-compression pulse. Approved standing combat recoil also adds a brief directional camera impulse. These are local cosmetic effects and do not add network traffic or change movement authority. Ragdoll head-follow and the recovery camera blend retain ownership while limp/recovering; first-person movement effects are suspended during those states. The Player's exported `camera_motion_intensity` property scales the effect (0 disables it, 1 is the default, and values up to 1.5 amplify it). Camera offsets are composed with the authored `Head/Camera3D` transform rather than replacing its authored position; the same base transform is restored after ragdoll recovery. Run `tests/run_checks.ps1 -OnlyStage m10-camera` for the pure camera-controller and transform-composition regression checks. Godot execution and visual tuning remain user-run.
+
+
+### M10.4 ragdoll and recovery camera comfort
+
+- During limp, the local first-person camera should follow the ragdoll head with a smooth, responsive position/rotation filter. The head should still visibly tilt with the body; the filter is intended to soften physics/network jitter, not lock the view level.
+- Test a normal knockdown, a charged/parry launch, being carried, and being released. Confirm the camera catches up to the moving head without sharp snaps or excessive float.
+- During get-up, the camera should transition from the filtered ragdoll view to the authored standing camera pose without a sudden rotation or position jump. Normal camera bob/sway and wall avoidance should resume after recovery.
+- Run .\tests\run_checks.ps1 -OnlyStage m10-ragdoll-camera from fowl-play/. These checks and the in-game visual behavior have not been run by the assistant.
+
+
+### M10.4 recovery camera follow refinement
+
+- During get-up, the owner's FPS camera should follow the live HeadAttachment eye transform while the rig blends into and plays its authored recovery animation. The view should rise, tilt, and level with the character rather than travel directly toward the final standing camera position.
+- Mouse-look offsets should remain usable during recovery. Once the rig completes its get-up animation, expect only a short 0.16-second alignment into the authored FPS camera mount.
+- Test face-up and face-down recovery, including charged/parry launches, and verify there is no visible snap when normal camera parenting resumes. FOV should remain the normal gameplay FOV throughout.
+- Run the focused m10-ragdoll-camera test stage from fowl-play. These checks and in-game behavior have not been run by the assistant.

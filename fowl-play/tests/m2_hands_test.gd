@@ -52,6 +52,7 @@ func _run() -> void:
 	grip_item.free()
 	_check_shape_aware_grip(hand)
 	_check_ragdoll_follow_grip(hand)
+	_check_ragdoll_carry_thumb_orientation()
 	_check_individual_carry_finger_curls()
 	_check_box_surface_contact()
 	if hand._resolve_pose_state() != Hand.PoseState.GUARD:
@@ -67,8 +68,10 @@ func _run() -> void:
 		_fail("First hand reach was unexpectedly throttled")
 	if hand._resolve_pose_state() != Hand.PoseState.REACH:
 		_fail("Active poke must resolve above point and idle")
-	if absf((hand.global_basis * hand._reach_offset).length() - hand.reach_distance) > 0.001 or hand.reach_distance < 0.25:
-		_fail("Poke reach should preserve the increased world-space travel distance on scaled Viewmodel hands")
+	if absf((hand.global_basis * hand._reach_offset).length() - hand.reach_distance) > 0.001 or hand.reach_distance < 0.4:
+		_fail("Poke reach should preserve the extended world-space travel distance on scaled Viewmodel hands")
+	if hand.point_hand_offset < 0.25:
+		_fail("Hover pointing should visibly extend the hand farther toward its target")
 	hand._process(hand.action_extend_seconds * 0.5)
 	var partial_reach_amount: float = hand._reach_amount
 	if partial_reach_amount <= 0.0 or partial_reach_amount >= 1.0:
@@ -124,6 +127,39 @@ func _check_ragdoll_follow_grip(hand: Hand) -> void:
 	if (right_grip - left_grip).normalized().dot(chest_side_axis) < 0.95:
 		_fail("Ragdoll left/right grip targets should use the live chest orientation for opposite sides")
 	hand.set_carrying(false)
+	ragdoll_target.free()
+
+func _check_ragdoll_carry_thumb_orientation() -> void:
+	var scene: PackedScene = load("res://hands/hand.tscn") as PackedScene
+	var ragdoll_target: MockRagdollCarryTarget = MockRagdollCarryTarget.new()
+	ragdoll_target.chest_world_position = Vector3(0.0, 0.0, -2.0)
+	# A player facing the carrier has the opposite lateral axis from the carrier.
+	ragdoll_target.chest_world_basis = Basis(Vector3.UP, PI)
+	root.add_child(ragdoll_target)
+	var left_hand: Hand = scene.instantiate() as Hand
+	var right_hand: Hand = scene.instantiate() as Hand
+	root.add_child(left_hand)
+	root.add_child(right_hand)
+	left_hand.scale = Vector3(-1.0, 1.0, 1.0)
+	left_hand.position = Vector3(-0.25, 0.0, 0.0)
+	right_hand.position = Vector3(0.25, 0.0, 0.0)
+	left_hand.set_carrying(true, ragdoll_target, 1.0)
+	right_hand.set_carrying(true, ragdoll_target, -1.0)
+	var left_grip_world: Vector3 = left_hand.to_global(left_hand._get_carry_pose_position())
+	var right_grip_world: Vector3 = right_hand.to_global(right_hand._get_carry_pose_position())
+	var chest_side: Vector3 = ragdoll_target.chest_world_basis.x.normalized()
+	if (left_grip_world - ragdoll_target.chest_world_position).dot(chest_side) <= 0.0:
+		_fail("Carrier left hand should grip the carried player's right-side chest position")
+	if (right_grip_world - ragdoll_target.chest_world_position).dot(chest_side) >= 0.0:
+		_fail("Carrier right hand should grip the carried player's left-side chest position")
+	for carry_hand: Hand in [left_hand, right_hand]:
+		var grip_position: Vector3 = carry_hand._get_carry_pose_position()
+		var carry_rotation: Quaternion = carry_hand._get_carry_pose_rotation(grip_position)
+		var thumb_local: Vector3 = carry_rotation * (carry_hand._pose_rest_rotation * Vector3.LEFT)
+		var thumb_world: Vector3 = carry_hand.global_basis * thumb_local
+		if thumb_world.normalized().dot(ragdoll_target.chest_world_basis.y.normalized()) < 0.95:
+			_fail("Both carried-player grip thumbs should point toward the top of the chest")
+		carry_hand.free()
 	ragdoll_target.free()
 
 func _check_shape_aware_grip(hand: Hand) -> void:

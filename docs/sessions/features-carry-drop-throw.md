@@ -32,6 +32,13 @@ Implement M6 limp-player carry, drop and throw while preserving the working prop
 - Carried-only damping reduces repetitive arm/head oscillation. Head joint swing/twist limits are narrowed while carried and restored on release; original damping values are also restored.
 - The carried player's local first-person camera continues to use the simulated Head eye transform. While carried, only the physics-driven camera position/rotation contribution is smoothed; mouse-look remains responsive and the existing dynamic FOV is unchanged. Smoothing is disabled again on release.
 
+### Carry-hand and interaction reach polish
+
+- Face-to-face limp-player carrying swaps the carrier's left/right chest grip sides; the carried player's chest local lateral axis is reversed from the carrier's view, so retaining the old signs crossed the arms.
+- Limp-player grip wrist roll now aligns each thumb toward the carried Chest's local up axis. Prop grips retain their original forearm-axis roll behavior.
+- Pointing hand hover reach is 4.0 m (previously 3.2 m), the visible hand advances farther toward the hover target, and the poke extension increases to 0.42 m. Host interaction distance validation uses the same shared reach constant.
+- No scene hierarchy or authored scene files changed.
+
 ## Verification status
 
 - **User visual/playtest confirmation:** the carried Chest now stays in front of the carrier and faces them; opposite-side arm/leg collisions work; carried head and arm movement is calmer; the head-mounted first-person camera is more comfortable while preserving mouse-look and dynamic FOV. The user reports the carry feature is working and considers implementation complete.

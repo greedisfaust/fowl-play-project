@@ -1,10 +1,10 @@
 # Fowl Play — Project State
 
-**Status:** Player Identity & World Kit is archived as implemented on `features/player-identity-and-world-kit`. The user has confirmed the multiplayer hand-sync fixes, Interactive Terminal fixes, golden Interactable highlighting, and player identity coloring in-game. Remaining automated/rendered checks are recorded as unverified where applicable; see the archived session and [DEBUG.md](DEBUG.md).
+**Status:** Combat, Procedural Movement & Multiplayer Lifecycle is active on `features/combat-and-procedural-movement`. M7 combat, M8 coordinated movement, and M9 multiplayer lifecycle hardening are committed; the user reports the latest M9 build works correctly. A focused carry-hand and pointing-reach polish pass is now added ahead of M10.
 
-## Last updated (2026-11-20; Player Identity & World Kit branch closeout)
+## Last updated (2026-11-20; carry-hand and pointing-reach polish)
 
-- Current branch: `features/player-identity-and-world-kit` (host-authoritative player identity, reusable physical button, FAT/SLIM world screens, interactive menus, and proximity-aware registration terminal).
+- Current branch: `features/combat-and-procedural-movement` (based on merged `main` commit `1506c03746e158c74ffcd2da5df042b20435db25`). Read-only rig and combat integration audits are complete; initial procedural gait, M7.1 jab gameplay and M7.2 jab presentation slices are committed and awaiting Godot verification.
 - Godot 4.7 project: `fowl-play/`, using Jolt Physics, Forward+, and D3D12.
 - `fowl-play/project.godot` contains the project settings, input actions, and four autoload entries.
 - Foundation scripts exist in `fowl-play/core/`: `layers.gd`, `tuning.gd`, `network.gd`, and `debug_hub.gd`.
@@ -27,20 +27,20 @@
 | M4 Ragdoll spike | Skeleton, 11 physical bones, Jolt joints, sync measurements at 15/30/60 Hz | User verified both peers see the ragdoll and approved the head camera/look limit. Two-process checks pass for host/client targets, mid-limp and already-settled late joins, reliable settled pose, and latest-snapshot hips error <0.25 m with 40 ms interpolation. One-client host ENet send rates at 15/30/60 Hz were roughly 4–7/8–12/21–22 KB/s across runs (natural settling and other game traffic affect totals). A new 10-pair selective self-contact policy passes exception-map, multiplayer, and four-ragdoll 7-second headless checks; remote peers render replicated bones without local collision shapes. Symmetric ragdoll contact remains a host-authoritative design task; the attempted remote-bone collision experiment was rolled back after inconsistent hard-obstacle/phasing behavior. 30 Hz remains the default. |
 | M5 Limp lifecycle | Knockdown → ground → recovery (G1–G3, G8) | PARTIAL: host timer recovers after 3.5 s plus slow bones or at 6 s hard cap. Host plants capsule under final hips and reliably sends both standing position, final ragdoll pose, and the selected face-up/face-down recovery variant to clients. Wall-clearance search (floor + capsule overlap + spiral outward to 1.5 m) is implemented; forced-exit G8 cleanup broadcasts a reliable `_ragdoll_end` when a limp peer disconnects so remaining clients complete a get-up blend. PUNCH_HITBOX ↔ LIMP_BODIES collision is now bidirectional. |
 | World kit — WorldScreen | Reusable size-adaptive 3D screen, CMD-style text renderer, and FAT/SLIM housings | Reusable content APIs, menus, FAT/SLIM controllers and glass treatments are implemented and documented. Automated housing checks and final rendered sizing/material verification remain unconfirmed in this archive. |
-| M6 Carry and throw | Props and limp bodies, auto-fire throw, dangling limbs | IMPLEMENTED; USER VISUAL-PLAYTESTED: host-authoritative carry/drop/throw; Chest spring/torque stabilisation at the carrier anchor; selective opposite-side limb self-collision; carried-only head/arm damping and narrower neck joint limits; smoothed head-mounted first-person camera while preserving mouse-look and dynamic FOV. Player root stays fixed, remote peers render host poses without local ragdoll collision, recovery pauses while carried, and each release resets a fresh 3.5 s countdown. Automated M6 test and full two-instance host/client verification remain pending. |
-| M7 Combat | Jab/recoil, charged punch, lunge, parry outcomes | Not started |
-| M8 Procedural legs | Cosmetic legs, zero network traffic | Not started |
-| M9 Camera + owner view | Camera follow target, owner legs visibility | Limp camera follows the simulated head position and orientation; the owner's head geometry is hidden and body visible. Head rotational stability is user-verified after physical head tuning; visual comfort, wall avoidance and final camera transitions remain. |
-| M10 Hardening | Cleanup matrix, weak-laptop budget, 4-player soak | Not started |
+| M6 Carry and throw | Props and limp bodies, auto-fire throw, dangling limbs | IMPLEMENTED; USER VISUAL-PLAYTESTED: host-authoritative carry/drop/throw, stable chest anchor, carried-only damping, and smoothed head camera. Follow-up polish fixes face-to-face left/right grip assignment and thumb-up wrist roll for carried limp players. Automated M6 and full two-instance verification remain user-run. |
+| M7 Combat | Jab/recoil, charged punch, lunge, parry outcomes | IMPLEMENTED IN SOURCE: host-timed jab, charged punch/lunge, host-side hit validation, parry/reflection, action locks, and replicated procedural combat presentation are in place. Godot/headless and rendered host/client verification remain pending for the complete combat matrix. |
+| M8 Procedural legs and coordinated movement | Hybrid locomotion, jump/landing, body coordination, zero per-bone network traffic | IMPLEMENTED IN SOURCE: local velocity-driven gait, foot planting and two-bone IK, moving-support anchors, airborne/landing leg poses, acceleration/braking lean, strafing counterbalance, turning response, and layered combat/movement torso presentation are committed. Remaining polish includes owner-view leg visibility and terrain-specific visual tuning. Godot/headless and rendered host/client verification remain pending. |
+| M9 Multiplayer lifecycle hardening | Late-join state, ragdoll/recovery handoffs, carry/drop/throw cleanup, combat disconnect cleanup | IMPLEMENTED IN SOURCE: late joiners receive a reliable standing/recovery capsule baseline while active limp players continue through the existing ragdoll snapshot path. Pending snapshots are applied after Player registration, stale baselines cannot rewind newer movement samples, and disconnect cleanup clears peer-owned combat/carry timing state. Focused offline and two-process recovery-join tests are added; Godot execution and in-game verification remain pending. |
+| M10 Camera + owner view | Responsive first-person motion, impact feedback, owner legs, ragdoll/recovery comfort, wall avoidance | COMPLETE — M10.1–M10.4 implemented; user confirmed camera motion, owner-view visibility, camera collision, and live-head recovery camera in-game. |
+| M11 Hardening | Cleanup matrix, weak-laptop target, four-player stability | COMPLETE — user confirmed both focused M6 and M9 lifecycle test stages passed. M11.1 cleanup regression coverage is verified by the user's test run. M11.2 practical multiplayer movement, physics, and combat scenarios were user-reported smooth; no speculative optimization was needed. M11.3 extended 10–15 minute soak remains explicitly deferred due to the user's 8 GB RAM limit, not passed. M11.4 documentation and verification closeout complete. |
 
 ## Open decisions (from PROJECT_OVERVIEW.md §24)
 
 1. Skeleton authoring resolved: manual Godot editor authoring, with humanoid legs.
-2. Whether punches affect already-limp bodies.
-3. Whether to include impact/wall-slam feedback.
-4. Final lobby/connection presentation beyond the implemented Registration Terminal identity flow.
-5. Per-bone ragdoll masses (M4 spike).
-6. Rebuilding the casino/economy layer, and when.
+2. Dedicated wall-slam feedback beyond the approved general combat impact presentation.
+3. Final lobby/connection presentation beyond the implemented Registration Terminal identity flow.
+4. Per-bone ragdoll masses (M4 spike).
+5. Rebuilding the casino/economy layer, and when.
 
 Late join is decided: allowed during the rest of a day, not during casino/elevator gameplay. Throw power is decided: fixed full power with auto-fire at one second.
 
@@ -64,7 +64,7 @@ Late join is decided: allowed during the rest of a day, not during casino/elevat
 
 The user also confirmed the latest player-color implementation works in-game. This is user verification, not a claim that the assistant ran Godot tests. Existing automated test stages and any unconfirmed WorldScreen visual checks remain recorded as pending rather than being silently marked passed.
 
-**Next feature:** Combat & Procedural Legs (Movement), planned branch `features/combat-and-procedural-movement`. Begin with a read-only rig audit, then implement combat and procedural locomotion in isolated, testable slices. See [the next feature session](sessions/features-combat-and-procedural-movement.md).
+**Active feature:** Combat & Procedural Legs (Movement), branch `features/combat-and-procedural-movement`. Read-only rig audit completed; the gait controller, world-space foot target tracker, per-foot ground probes, and first two-bone IK integration are implemented. Next visually verify and tune the IK in Godot, then address owner-view leg visibility and terrain adaptation while preserving the scene hierarchy, movement stream, and ragdoll/recovery ownership. See [the active feature session](sessions/features-combat-and-procedural-movement.md).
 
 ## Historical verification notes
 
@@ -421,7 +421,7 @@ Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep a
 
 ## 2026-11-20 — nameplate text clarity and head clearance
 
-- Raised the runtime HeadAttachment offset from 0.38 m to 0.62 m so the plate sits more comfortably above the head.
+- Raised the runtime HeadAttachment offset from 0.56 m to 0.62 m so the plate sits more comfortably above the head.
 - Split opacity treatment: the dark backing, identity accent rail, and divider fade from the resting opacity to full opacity when aimed at. Nickname and status text remain fully opaque at all times for quick player identification.
 - The existing distance fade continues to apply to the decorative panel only; text remains readable independently of hover and panel opacity.
 - The current visual design is a functional first pass, not a locked final design. Keep the existing scene hierarchy; future styling can replace or add authored decorative UI elements without changing identity networking or ragdoll attachment.
@@ -443,3 +443,246 @@ Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep a
 - User confirmed player identity coloring works in-game across the character presentation, including hands and ragdoll; the nameplate uses the assigned identity color as its accent while keeping nickname text legible.
 - This branch is archived as the implementation baseline for identity, terminal/world-kit presentation, and interaction feedback. Do not carry the three resolved issues forward as open tasks.
 - No claim is made here that the assistant ran Godot tests. Preserve explicit pending status for automated checks or visual checks that were not independently confirmed.
+
+
+### Procedural leg stopping refinement — 2026-11-20
+
+- Fixed the gait phase freezing in mid-swing when horizontal movement stopped. The controller now gently advances the remaining cycle to the shared double-stance phase while the motion blend fades, then holds a neutral standing phase.
+- Added an M8 regression check that stops the controller during swing and verifies both feet settle into stance.
+- This addresses the suspended-foot case visible in the user's playtest. Foot sole alignment and surface-normal orientation remain separate visual-contact refinements; Godot test execution and in-game verification are still pending.
+
+
+### Movement-based procedural footstep planner — 2026-11-20
+- Replaced the trailing-foot-origin predictive landing calculation with a hip-relative planner driven by smoothed movement intent.
+- The planner keeps left/right targets separated perpendicular to travel, supports forward/backward/strafe/diagonal movement, and predicts root travel over the swing interval before vertical ground probing.
+- Existing foot anchors, swing interpolation, two-bone IK, and ground-normal alignment remain in place.
+- Added M8 planner assertions. Godot tests and in-game verification have not been run by the assistant; user visual verification is pending.
+
+
+- Follow-up refinement: hip-relative predicted targets are used only for a foot that is actively in swing. Stance feet continue probing their current sole, so standing initialization and stop-settling cannot pull a planted foot toward a forward target. Both targets are calculated from the midpoint between the hips to avoid doubling the lateral separation.
+
+
+## Leg spacing, smoother planting, and earlier step timing — 2026-11-20
+
+- Reduced `LEG_STANCE_FRACTION` from 0.58 to 0.50 so each foot enters swing sooner and spends less time trailing before requesting a new landing target.
+- Foot lateral placement now always uses the rig's anatomical right axis, rather than an axis perpendicular to movement. This prevents left/right targets from swapping sides during strafing and diagonals.
+- Two-bone IK pole targets now receive an outward lateral bias per leg, encouraging knees to bend in separate planes instead of converging through one another.
+- Reduced procedural leg IK blend response from 14 to 8 to soften sudden thigh/knee corrections when a new planted target is acquired.
+- Replaced cubic smoothstep with quintic smootherstep for the swing path, reducing abrupt velocity changes at lift-off and touchdown.
+- Added planner regression assertions for anatomical left/right separation during strafing and diagonal movement.
+- Godot tests and in-game verification remain pending; this is procedural pose separation, not physical collision bodies between the legs.
+
+
+## Readable knee-lift walking pass — 2026-11-20
+
+- Restored the stance fraction from 0.50 to 0.58 so each foot has a more readable planted/support phase rather than spending half the cycle in swing.
+- Increased swing-foot vertical arc from 0.12 m to 0.28 m so the foot visibly clears the floor.
+- Changed knee flexion to bend early, hold through most of forward swing, and extend during the final approach to landing. The two-bone IK then follows the elevated foot target, producing the intended knee-up-then-place motion.
+- Reduced ground-hit foot clearance from 0.04 m to 0.015 m to reduce visible hovering. The value remains a small ankle/sole offset, not a guarantee of exact mesh contact because the foot bone origin is not necessarily the bottom of the shoe.
+- Added/updated M8 assertions for visible knee bend and the larger swing arc. Godot tests and in-game verification remain pending.
+
+
+## Gait cadence and anatomical spacing refinement — 2026-11-20
+
+- Added `LEG_GAIT_RATE_MULTIPLIER = 0.78` to slow the procedural step cycle independently of player movement speed. The player still moves at the same gameplay speed; only gait phase advances more deliberately.
+- Increased the rig's hip-relative landing-zone lateral offset from 0.18 m to 0.24 m to keep the feet in clearer left/right lanes.
+- Increased the per-leg outward knee-pole bias from 0.30 m to 0.48 m so IK solutions favor separate knee bend planes.
+- Updated the gait phase regression expectation to include the cadence multiplier.
+- This is a soft anatomical separation constraint, not physical leg collision. Godot tests and visual verification remain pending.
+
+
+## 2026-11-20 — distance-triggered foot recovery and anatomical landing lanes
+
+- Added per-leg comfortable-reach thresholds based on the authored thigh/shin chain lengths. A planted stance foot requests an emergency replant when its hip-to-anchor distance reaches 82% of the available two-bone chain length.
+- Emergency recovery captures a fresh hip-relative ground target and performs a short 0.18 s lifted step rather than teleporting the foot or waiting for the normal gait phase.
+- If both legs exceed their thresholds in the same update, only the more-stretched leg is allowed to recover first.
+- Added a target-space anatomical side clamp so left landing targets remain at least 0.20 m left of the hip midpoint and right targets at least 0.20 m right, including emergency targets.
+- Extended M8 checks for overreach detection, lifted recovery interpolation, completed anchor capture, and left/right centerline protection.
+- Debug ground status now reports emergency-replant state and normalized hip-to-anchor stretch ratios.
+- Godot execution and in-game verification have not been run by the assistant. This remains a procedural target constraint, not physical collision between the leg meshes.
+
+
+## 2026-11-20 — correct authored leg sides and preserve swing knee bend
+
+- Corrected the left/right sign mapping throughout normal footstep planning, emergency replanting, anatomical target constraints, and IK knee-pole placement. The rig's authored `Thigh_L` is at local +X; `Thigh_R` is at local -X. Previous code had these signs reversed, causing the visible leg crossing.
+- Kept the side axis fixed to the rig's anatomical right axis while strafing.
+- Exposed smoothed per-leg knee-bend weights from the gait controller and fed them into the IK pole. During swing, the knee receives additional forward bend while the outward side bias remains active; the weight eases in and out with the gait's existing smooth swing curve.
+- Updated planner and gait regression assertions for the authored side mapping and IK knee bend handoff.
+- No scene files changed. Godot tests and in-game behavior have not been executed by the assistant.
+
+
+## 2026-11-20 — improve leg reach and high stepping
+
+- Added smoothed, controlled two-bone IK stretch up to 1.14x when the planted foot approaches the natural thigh-plus-shin reach. Both bones scale along their authored chain axes, so attached limb meshes follow the extended skeleton. Stretch eases back toward neutral and resets when IK ownership ends or ragdoll/other pose ownership takes over.
+- Increased swing/recovery foot arc height to 0.30 m, thigh swing to 46 degrees, knee flex to 68 degrees, and forward knee-pole guidance to make each step lift more visibly before extending toward landing.
+- Added M8 assertions for stretch/lift tuning and the farther reachable IK target.
+- No scene files changed. Godot tests and in-game behavior have not been executed by the assistant.
+
+
+## 2026-11-20 — correct inward knee bend and foot drag
+
+- Adjusted the leg IK pole to prioritize outward anatomical knee direction: outward bias increased from 0.48 m to 0.95 m, forward base bias reduced to 0.55 m, and swing-only forward addition reduced to 0.35 m. Arm IK pole settings remain independent and unchanged.
+- Fixed cadence lag by driving gait phase and stride amplitude from actual measured horizontal player velocity, while retaining smoothed velocity only for direction changes and landing-target orientation. Increased direction smoothing response from 12 to 20 for quicker tracking.
+- Reduced stride cycle distance from 1.8 m to 1.4 m and restored the cadence multiplier from 0.78 to 1.0. Normal foot targets now land 0.40 m ahead of the hip at touchdown after predicted swing travel; at the 0.58 stance fraction this leaves the foot about 0.412 m behind the hip by stance end. Combined with the 0.84 m vertical rest reach, that is about 0.936 m, within the 0.94 m replant margin. Emergency replant targets additionally predict player travel during the 0.18 s recovery arc.
+- M8 tests now cover stance travel versus leg reach and mirrored outward knee placement.
+- No scene files changed. Godot tests and in-game behavior have not been executed by the assistant.
+
+
+## 2026-11-20 — correct knee pole direction space
+
+- Corrected a deeper IK issue: the shared two-bone solver expects a pole direction relative to the upper joint, but the leg code supplied an absolute world-space pole position. The solver was projecting that absolute position, making knee direction vary with world position and appear sideways across headings.
+- Leg IK now passes a hip-relative direction transformed by character facing. Forward bias is 1.0 plus up to 0.45 during swing; outward bias is reduced to 0.18 for a subtle anatomical angle.
+- M8 assertions now require forward and mild outward knee bend on both mirrored legs. No scene files changed. Godot tests and in-game verification have not been executed by the assistant.
+
+
+## 2026-11-20 — fix one-leg dragging during strafing
+
+## 2026-11-20 — stabilize rapid WASD direction changes
+
+- Added adaptive heading response to the procedural gait controller. Ordinary direction changes retain the existing smooth filter; sharp changes (heading dot below 0.55) use a faster 42 response rate so footstep planning does not continue following stale directions during rapid W/A/S/D alternation.
+- Smoothed velocity magnitude also catches up at the faster turn response, preventing the filtered movement vector from collapsing while direction changes repeatedly. Added an M8 zig-zag regression sequence. No scenes changed. Godot tests and in-game verification have not been executed by the assistant.
+
+
+- Identified a planner conflict: landing targets advanced along the strafe direction while the anatomical-side clamp continued enforcing fixed left/right lanes. For the leading leg, the forward offset could push the target across the centerline, then the clamp pulled it back, leaving one leg unable to complete its step.
+- Foot lanes are now perpendicular to movement. Forward/backward locomotion retains the rig-right lane axis; strafing switches to a stable character-forward axis, so the two feet occupy front/back lanes and both can alternate steps without being clamped against their travel direction.
+- Applied the same movement-relative axis to the landing/replant constraint and added symmetric left/right strafe regression checks. No scene files changed. Godot tests and in-game verification have not been executed by the assistant.
+
+
+## Moving-platform foot anchors
+
+Foot planting now records both a world-space target and, when the ground hit belongs to a `Node3D`, the target's local position relative to that support. Stance anchors follow support translation and rotation. Normal swing targets and emergency-replant targets also retain their support-local landing positions, so a moving elevator does not move out from underneath a planted foot. Static ground remains world-anchored as before. M8 includes moving-support translation and rotation assertions. No scene files were changed; Godot tests and in-game verification remain pending.
+
+
+## 2026-11-20 — walk/run movement pass
+
+- Reduced normal horizontal movement speed to 3.8 m/s and added a 8.0 m/s run target while the `sprint` action is held with directional input.
+- Added acceleration (14 m/s²) and deceleration (18 m/s²) so starts, stops, speed changes, and direction reversals blend instead of snapping. Existing vertical jump/gravity behavior is unchanged.
+- Procedural gait now smoothly blends toward a faster, slightly larger-stride running presentation as actual horizontal speed increases; no separate animation rig or scene hierarchy was introduced.
+- The project Input Map remains editor-authored. Add the `sprint` action and bind Left Shift before playtesting. Godot tests and in-game verification have not been run by the assistant.
+
+
+## 2026-11-20 — sprint speed tuning
+
+- Increased the sprint target from 7.0 m/s to 8.0 m/s after the initial walk/run implementation, keeping normal walking at 3.8 m/s. The acceleration and deceleration response are unchanged.
+- User playtesting is still needed to confirm the new run pace and gait feel appropriate.
+
+
+## 2026-11-20 — responsive jump movement
+
+- Added a small pure `JumpController` for coyote time (0.10 s), jump buffering (0.12 s), and variable jump height. Releasing the jump action during ascent scales upward velocity by 0.45 for a shorter hop; holding it preserves the full jump.
+- Reduced horizontal acceleration and deceleration while airborne to 55% of their grounded values, preserving more momentum while still allowing midair steering.
+- Integrated the controller into the existing Player physics loop. Console/terminal movement locks still block new jump input; gravity and collision movement remain active.
+- Added local debug watches for remaining coyote and jump-buffer time. No scene files, Input Map actions, or network messages were changed.
+- Extended the existing M3 movement checks to cover coyote acceptance/expiry, buffered landing jumps, variable jump release, full-height held jumps, and reduced air steering.
+- Godot import, automated checks, and in-game playtesting have **not** been run by the assistant. User verification remains required.
+
+
+## 2026-11-20 — movement feel calibration follow-up
+
+- Added a separate turn acceleration response of 24 m/s² for sharp direction changes. The existing 14 m/s² normal acceleration and 18 m/s² deceleration remain unchanged; turn response is only selected when current velocity and input direction differ by more than the configured 0.75 dot threshold. This keeps acceleration and momentum while reducing the car-like delay when steering around or reversing.
+- The same turn response is scaled by the existing air-control multiplier while airborne.
+- Recalibrated procedural leg swing intensity against sprint speed (8 m/s), not walk speed (3.8 m/s). At ordinary walking speed the stride and knee bend are now less exaggerated; the full stride builds as actual speed approaches sprint. Gait cadence, foot planting, and the existing planner/replant system are retained.
+- Increased jump launch speed from 6.5 to 6.9 m/s. Gravity, coyote time, jump buffer, and variable-height release remain unchanged, giving a modestly higher/full jump without altering short-hop behavior.
+- Added regression assertions for faster-but-blended reversals, lower walking stride intensity, stronger sprint stride, and the revised jump tuning.
+- Godot tests and in-game visual behavior have not been run by the assistant; user playtesting is still required.
+
+
+### 2026-11-20 — grounded walk and energetic sprint gait
+
+- Split the procedural gait into independent walking and sprint profiles. Walking uses a longer cycle distance, a shorter planted phase, reduced thigh swing and knee flexion, and a low 0.09 m foot arc to keep steps grounded and alternating.
+- Sprint smoothly blends toward the previous faster 1.4 m cycle, longer stance, larger thigh swing, stronger knee flexion, and 0.20 m swing arc. Emergency replant retains its separate 0.30 m recovery lift.
+- Updated M8 regression checks for cadence, profile separation, stance reach, and normal swing height. Turning and jump launch tuning are unchanged. Godot tests and in-game verification have not been run by the assistant.
+
+
+### Walking rhythm alignment — 2026-11-20
+
+- Corrected a mismatch between the gait controller's separate walking profile and the rig's footstep landing predictor. Landing travel now uses the active blended cycle distance and stance fraction, so the foot planner and alternating leg phases share one timing model.
+- Added M8 checks for mutually exclusive left/right swing and a real double-support window during ordinary walking. Sprint and jump/turn tuning remain unchanged. Godot tests and in-game verification have not been run by the assistant.
+
+
+### 2026-11-20 — walking cadence and stance reach tuning
+
+- Increased the dedicated walking cycle distance to 2.0 m to slow the forward gait rhythm. Set the walking stance fraction to 0.46 to keep planted-foot travel within comfortable leg reach and avoid excessive emergency replanting.
+- Sprint gait values remain unchanged. M8 regression coverage guards the walking stance fraction and planted-foot reach. Godot tests and in-game verification have not been run by the assistant.
+
+## 2026-11-20 — M7.1 jab foundation
+
+- Added the dedicated `fowl-play/combat/` feature folder with separate input, hit-detection, and presentation responsibilities.
+- Q press/release intent is routed through the combat controller only while not carrying; the existing Carrier remains the sole owner of Q while holding an item.
+- The host owns tap timing, jab cooldown, attack direction, obstruction-aware ray query, target selection, and confirmed hit outcomes.
+- Standing targets receive a small movement recoil. Already-limp targets receive a physical-bone impulse without modifying limp state or recovery elapsed time.
+- The Viewmodel hand has a dedicated curled-fist pose and extension/return lifecycle.
+- Added M7.1 headless regression coverage and registered it in `tests/run_checks.ps1`.
+- No scenes were edited. Godot tests and in-game host/client playtests have not yet been run for this slice.
+
+## 2026-11-20 — M7.2 jab presentation
+
+- Added a local procedural Chest-bone pose curve and animated fist offset: the hand pulls back during anticipation, then extends with the torso through follow-through before returning to its authored rest offset.
+- The hand remains curled through the jab extension/return and then releases back to its ordinary pose; the existing hand action controls wrist reach.
+- Standing targets now combine the existing movement recoil with a brief upper-body lean/twist response.
+- `CombatPresentation.advance()` runs before PlayerRig's procedural arm IK pass. The IK therefore solves from the animated shoulder and continues following the Viewmodel wrist target.
+- Host-approved wind-up and jab RPCs drive the same presentation on remote player copies. No per-bone animation replication was added.
+- Added deterministic pose-curve assertions to `m7_jab_test.gd`; run with `-OnlyStage m7-jab`.
+- No scenes or user-authored hierarchy were edited. Godot execution and in-game rendered pose checks remain pending.
+
+
+## 2026-11-20 — jab timing refinement
+
+- Tightened the M7.2 jab presentation from 0.38 s to 0.34 s, with a quick 0.11 s extension, a brief 0.035 s contact hold, and a smooth return.
+- Reduced torso anticipation/follow-through magnitude and shortened the hand pullback so the jab reads as a compact boxer-like strike rather than a broad swing.
+- Kept host-authoritative hit timing, hit detection, cooldown, and weak-reaction gameplay unchanged. No scene files changed.
+- Added focused timing assertions to the M7 jab test. Godot execution and rendered in-game verification remain pending.
+
+
+### M7.2 jab feel refinement — pending playtest
+- Jab pose shortened to 0.30 s with a 0.085 s extension and 0.025 s contact hold; retraction remains smooth and readable.
+- Standing weak-hit recoil now uses a single fast chest snap with directional twist/roll and a damped 0.34 s settle, without oscillation or knockdown.
+- Host calculates impact strength from attacker velocity projected onto jab direction at impact. Strength is bounded from 1.0× to 1.35×; sideways/away movement does not amplify the hit. The bounded value is relayed to the target for matching movement and torso response.
+- Limp-body impulse behavior and recovery lifecycle are unchanged.
+- Focused check: ` .\tests\run_checks.ps1 -OnlyStage m7-jab` from `fowl-play/`. Godot execution and visual host/client verification remain pending.
+
+
+## 2026-11-20 — M7.3 charged punch and lunge implementation
+
+- Replaced the old 0.25 s jab cutoff: releasing Q strictly before 1.0 s fires a jab; reaching 1.0 s while held auto-fires a charged punch. A fired press is consumed and Q must be released to re-arm.
+- The host owns the charge timer, charged cooldown, action lock, lunge hit judgment and knockdown result. The owning player drives the 12 m/s, 0.5 s lunge and steers toward camera look at no more than 3 rad/s.
+- Host-side hit checks follow the attacker's current camera each physics tick and reuse the existing obstruction-aware punch ray. A confirmed standing target enters the existing host-owned limp lifecycle; a miss ends harmlessly after 0.5 s.
+- Use/grab are rejected while Q is held for a possible charge and throughout the 2.0 s charged-punch cooldown/recovery lock. A shared parry gate is exposed for the later parry slice; parry itself is not implemented here.
+- Added charged-punch, lunge and active-lunge DebugHub watches plus regression assertions for threshold behavior, auto-fire while held, one-fire-per-press, steering limits and action gating.
+- No scenes or user-authored hierarchy were edited. Godot tests, imports and rendered host/client playtests have not been run by the assistant.
+
+
+## 2026-11-21 — M10.4 ragdoll and recovery camera comfort
+
+- Added a local-only ragdoll camera presenter that captures the current camera pose on limp entry and filters both position and rotation as the view follows the simulated/interpolated head eye transform. Filtering applies consistently to carried and uncarried ragdolls; natural head tilt remains visible without exposing the camera directly to every physics/network pose jitter.
+- Existing bounded limp look offsets remain layered on the filtered head orientation. Host ragdoll simulation, carry physics, pose replication, recovery placement, and gameplay authority are unchanged.
+- Recovery now uses quintic smootherstep easing between the last filtered ragdoll camera pose and the authored standing camera target.
+- Added the m10-ragdoll-camera focused regression stage. No scene hierarchy or .tscn files changed.
+- Godot execution and in-game visual verification have not been run by the assistant. User playtesting remains required for falling, carried/released ragdolls, and get-up camera handoff.
+
+
+## 2026-11-21 — M10.4 recovery camera follows the get-up animation
+
+- Replaced the fixed recovery camera interpolation toward the final Player camera position with continuous local camera follow of the rig's live HeadAttachment eye transform during the procedural pose blend and authored get-up animation.
+- The same low-pass head filter remains active, with owner look yaw/pitch layered over the live head orientation. After the rig finishes the get-up animation, a 0.16-second smootherstep alignment returns the camera to the authored FPS mount before camera re-parenting.
+- Added regression coverage for a moving head target during recovery. No scene hierarchy, ragdoll physics, or multiplayer authority changes.
+- Godot execution and in-game verification have not been run by the assistant.
+
+
+## 2026-11-21 — M11 performance and stability checkpoint
+
+- Working target: modest laptop, integrated graphics, 8 GB RAM, aiming for 60 FPS at reasonable settings. This is a design target, not a measured guarantee.
+- USER REPORTED: four separate game instances remained smooth during simultaneous movement; physics-heavy play (multiple ragdolls, carrying, throwing, recovery) also remained smooth; multiplayer combat (punches, charged punches, parries) also remained smooth.
+- The initial profiler screenshot was a light baseline only. No controlled profiler capture under four-player load, long-session memory measurement, or numerical 60 FPS guarantee was established.
+- No performance optimization was made. Source-inspection candidates (procedural leg skeleton refreshes/ground probes, local camera obstruction query, host combat iteration, ragdoll pose publishing) remain profiling candidates only; user experience did not indicate a need to risk behavior changes.
+- M11.3 extended 10–15 minute soak is DEFERRED because running four instances is too demanding for the user's 8 GB RAM machine. Short four-instance stress scenarios were user-reported smooth; extended stability is not marked passed.
+- M11.4 closeout: preserve current gameplay behavior, retain outstanding focused test commands, and do not label unrun Godot checks as passed.
+
+
+## 2026-11-21 — M11 final verification complete
+
+- USER CONFIRMED both focused regression stages passed: ` .\\tests\\run_checks.ps1 -OnlyStage m6` and ` .\\tests\\run_checks.ps1 -OnlyStage m9-lifecycle`.
+- M11.1 lifecycle cleanup implementation and regression coverage are now user-verified by those focused checks.
+- M11.2 practical multiplayer movement, physics-heavy play, and combat/parry scenarios were previously user-reported smooth. No measured 60 FPS guarantee or long-session memory result is claimed.
+- M11.3 extended 10–15 minute soak remains DEFERRED because four instances are too demanding for the user's 8 GB RAM system. This is a documented scope limitation, not a failed test and not a passed test.
+- M11.4 closeout is complete. M11 is marked COMPLETE with the soak limitation explicitly retained.

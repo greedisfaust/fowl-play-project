@@ -4,6 +4,30 @@
 extends CharacterBody3D
 
 const TUNING = preload("res://core/tuning.gd")
+const MOVEMENT_CONTROLLER_SCRIPT = preload("res://core/movement_controller.gd")
+const JUMP_CONTROLLER_SCRIPT = preload("res://core/jump_controller.gd")
+const COMBAT_CONTROLLER_SCRIPT = preload("res://combat/combat_controller.gd")
+const COMBAT_PRESENTATION_SCRIPT = preload("res://combat/combat_presentation.gd")
+const PARRY_BARRIER_SCRIPT = preload("res://combat/parry_barrier_presentation.gd")
+const MOVEMENT_PRESENTATION_SCRIPT = preload("res://ragdoll/procedural_movement_presentation.gd")
+const CAMERA_PRESENTATION_SCRIPT = preload("res://player/camera_presentation.gd")
+const OWNER_VIEW_PRESENTATION_SCRIPT = preload("res://player/owner_view_presentation.gd")
+const CAMERA_COLLISION_SCRIPT = preload("res://player/camera_collision_presentation.gd")
+const RAGDOLL_CAMERA_PRESENTATION_SCRIPT = preload("res://player/ragdoll_camera_presentation.gd")
+var _movement_controller: RefCounted = MOVEMENT_CONTROLLER_SCRIPT.new()
+var _jump_controller: RefCounted = JUMP_CONTROLLER_SCRIPT.new()
+var _combat_controller: RefCounted = COMBAT_CONTROLLER_SCRIPT.new()
+var _combat_presentation: RefCounted = COMBAT_PRESENTATION_SCRIPT.new()
+var _parry_barrier: RefCounted = PARRY_BARRIER_SCRIPT.new()
+var _movement_presentation: RefCounted = MOVEMENT_PRESENTATION_SCRIPT.new()
+var _camera_presentation: RefCounted = CAMERA_PRESENTATION_SCRIPT.new()
+var _camera_collision: RefCounted = CAMERA_COLLISION_SCRIPT.new()
+var _ragdoll_camera_presentation: RefCounted = RAGDOLL_CAMERA_PRESENTATION_SCRIPT.new()
+var _camera_rest_transform: Transform3D = Transform3D.IDENTITY
+@export_range(0.0, 1.5, 0.05) var camera_motion_intensity: float = 1.0
+var _movement_presentation_last_yaw: float = 0.0
+var _movement_presentation_yaw_initialized: bool = false
+var _parry_active: bool = false
 const LAYERS = preload("res://core/layers.gd")
 const PlayerIdentity = preload("res://core/player_identity.gd")
 const LIMP_LOOK_YAW_LIMIT: float = deg_to_rad(75.0)
@@ -54,23 +78,23 @@ var auto_recovery_enabled: bool = true
 var accepted_position: Vector3
 # True when another player's Carrier is holding this player (limp carry).
 var _is_carried: bool = false
+var _combat_lunge_active: bool = false
+var _combat_lunge_elapsed: float = 0.0
+var _combat_lunge_direction: Vector3 = Vector3.FORWARD
 
 var _pitch_radians: float = 0.0
+var _remote_grounded: bool = true
 var _limp_look_yaw: float = 0.0
 var _limp_look_pitch: float = 0.0
-var _carry_camera_smoothing_initialized: bool = false
-var _carry_camera_smoothed_origin: Vector3 = Vector3.ZERO
-var _carry_camera_smoothed_rotation: Quaternion = Quaternion.IDENTITY
-
-# Smooth only the ragdoll-head contribution; mouse look and dynamic FOV stay untouched.
-const CARRY_CAMERA_ROTATION_RESPONSE: float = 9.0
-const CARRY_CAMERA_POSITION_RESPONSE: float = 14.0
 var _recovery_elapsed_s: float = 0.0
-var _recovery_camera_start: Transform3D
-var _recovery_camera_target: Transform3D
+var _recovery_camera_alignment_start: Transform3D
+var _recovery_camera_alignment_elapsed: float = -1.0
+const RECOVERY_CAMERA_ALIGNMENT_SECONDS: float = 0.16
 var _debug_command_name: StringName
 var _debug_speed_watch_name: StringName
 var _debug_floor_watch_name: StringName
+var _debug_coyote_watch_name: StringName
+var _debug_jump_buffer_watch_name: StringName
 var _debug_limp_watch_name: StringName
 var _debug_recovering_watch_name: StringName
 var _debug_limp_elapsed_watch_name: StringName
@@ -85,10 +109,17 @@ func _ready() -> void:
 	_movement.reset(global_position, Time.get_ticks_msec() / 1000.0)
 	network.call("register_movement_player", input_peer_id, self)
 	is_local_player = input_peer_id == 0 or input_peer_id == multiplayer.get_unique_id()
+	_combat_controller.call("configure", self, network)
+	_combat_presentation.call("configure", self)
+	_parry_barrier.call("configure", self)
+	_configure_boxer_guard_hands()
+	_camera_rest_transform = camera.transform
 	camera.current = is_local_player
 	if rig != null:
-		# Hide the owner's world model until the first-person body visibility pass.
-		rig.visible = not is_local_player
+		# Keep the owner rig active; its upper body is hidden and legs fade in on look-down.
+		rig.visible = true
+		if is_local_player:
+			rig.call("set_owner_view_visibility", true, 0.0)
 	set_process_unhandled_input(is_local_player)
 	set_physics_process(is_local_player)
 	if focus != null:
@@ -115,6 +146,8 @@ func _ready() -> void:
 		limp_interaction_proxy.collision_layer = 0
 	_debug_speed_watch_name = StringName("player/%s/speed_mps" % name)
 	_debug_floor_watch_name = StringName("player/%s/on_floor" % name)
+	_debug_coyote_watch_name = StringName("player/%s/jump_coyote_s" % name)
+	_debug_jump_buffer_watch_name = StringName("player/%s/jump_buffer_s" % name)
 	_debug_limp_watch_name = StringName("player/%s/limp" % name)
 	_debug_recovering_watch_name = StringName("player/%s/recovering" % name)
 	_debug_limp_elapsed_watch_name = StringName("player/%s/limp_elapsed_s" % name)
@@ -131,6 +164,8 @@ func _ready() -> void:
 		func() -> bool:
 			return is_on_floor()
 	)
+	debug_hub.call("watch", _debug_coyote_watch_name, func() -> float: return float(_jump_controller.call("get_coyote_remaining_s")))
+	debug_hub.call("watch", _debug_jump_buffer_watch_name, func() -> float: return float(_jump_controller.call("get_jump_buffer_remaining_s")))
 	debug_hub.call("watch", _debug_limp_watch_name, func() -> bool: return is_limp)
 	debug_hub.call("watch", _debug_recovering_watch_name, func() -> bool: return is_recovering)
 	debug_hub.call("watch", _debug_limp_elapsed_watch_name, func() -> float: return _limp_elapsed_s)
@@ -152,8 +187,13 @@ func _ready() -> void:
 	if is_local_player and not bool(debug_hub.call("is_console_open")):
 		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	network.call("apply_pending_ragdoll_start", input_peer_id, self)
+	network.call("apply_pending_player_state", input_peer_id, self)
 
 func _exit_tree() -> void:
+	_combat_controller.call("abandon")
+	end_parry_presentation(false)
+	_combat_presentation.call("cancel")
+	_parry_barrier.call("dispose")
 	if (is_limp or is_recovering) and is_instance_valid(rig):
 		rig.call("stop_host_simulation")
 	if is_instance_valid(network):
@@ -167,6 +207,8 @@ func _exit_tree() -> void:
 	debug_hub.call("unregister_command", _debug_hands_command_name)
 	debug_hub.call("unwatch", _debug_speed_watch_name)
 	debug_hub.call("unwatch", _debug_floor_watch_name)
+	debug_hub.call("unwatch", _debug_coyote_watch_name)
+	debug_hub.call("unwatch", _debug_jump_buffer_watch_name)
 	debug_hub.call("unwatch", _debug_limp_watch_name)
 	debug_hub.call("unwatch", _debug_recovering_watch_name)
 	debug_hub.call("unwatch", _debug_limp_elapsed_watch_name)
@@ -201,6 +243,7 @@ func _refresh_identity_presentation() -> void:
 	var identity_color: Color = identity.get_color() if identity != null else Color.WHITE
 	if is_instance_valid(rig) and rig.has_method("set_player_color"):
 		rig.call("set_player_color", identity_color)
+	_parry_barrier.call("set_color", identity_color)
 	if is_instance_valid(viewmodel_left_hand):
 		viewmodel_left_hand.set_color(identity_color)
 	if is_instance_valid(viewmodel_right_hand):
@@ -213,7 +256,18 @@ func _refresh_identity_presentation() -> void:
 	if is_instance_valid(nameplate) and nameplate.has_method("apply_player_identity"):
 		nameplate.call("apply_player_identity", identity, is_local_player)
 
+
+func _configure_boxer_guard_hands() -> void:
+	# The mirrored Viewmodel hand roots make the same inward local offset converge
+	# toward the centerline on both sides. The closed-fist curl remains Hand-owned.
+	for hand: Hand in [viewmodel_left_hand, viewmodel_right_hand]:
+		if not is_instance_valid(hand):
+			continue
+		hand.guard_position_offset = Vector3(-0.16, 0.27, -0.08)
+		hand.guard_rotation_degrees = Vector3(30.0, -10.0, 190.0)
+
 func _process(delta: float) -> void:
+	_parry_barrier.call("advance", delta)
 	if is_limp:
 		_update_limp_camera(delta)
 		_update_limp_interaction_proxy()
@@ -250,9 +304,24 @@ func _process(delta: float) -> void:
 		return
 	if is_recovering:
 		_update_recovery_camera(delta)
-		if rig != null and not bool(rig.call("is_pose_blending")):
-			_finish_recovery()
+		if rig == null or not bool(rig.call("is_pose_blending")):
+			if not is_local_player:
+				_finish_recovery()
+			elif _recovery_camera_alignment_elapsed < 0.0:
+				# The rig has reached its authored standing pose. Give the view a
+				# short final alignment before re-parenting it to the FPS head.
+				_recovery_camera_alignment_start = camera.global_transform
+				_recovery_camera_alignment_elapsed = 0.0
+			elif _recovery_camera_alignment_elapsed >= RECOVERY_CAMERA_ALIGNMENT_SECONDS:
+				_finish_recovery()
 		return
+	if is_local_player:
+		_update_owner_view_visibility()
+		_update_first_person_camera_presentation(delta)
+	_combat_presentation.call("advance", delta)
+	var grounded_for_legs: bool = is_on_floor() if is_local_player else _remote_grounded
+	if rig != null:
+		rig.call("update_procedural_legs", velocity, grounded_for_legs, delta)
 	# The camera-attached Viewmodel hand is the pose source for remote-visible arms.
 	# Its authored wrist pivot sits 0.32 hand-local units behind the palm.
 	if rig != null and is_instance_valid(viewmodel_right_hand_pose_root):
@@ -266,7 +335,7 @@ func _process(delta: float) -> void:
 		if _send_elapsed >= 1.0 / TUNING.MOVE_SEND_HZ:
 			_send_elapsed = 0.0
 			_movement_sequence += 1
-			network.call("send_movement", input_peer_id, _movement_sequence, global_position, velocity, rotation.y, _pitch_radians)
+			network.call("send_movement", input_peer_id, _movement_sequence, global_position, velocity, rotation.y, _pitch_radians, is_on_floor())
 	else:
 		var snapshot: Dictionary = _movement.sample(Time.get_ticks_msec() / 1000.0)
 		if not snapshot.is_empty():
@@ -274,6 +343,32 @@ func _process(delta: float) -> void:
 			velocity = snapshot.velocity
 			rotation.y = snapshot.yaw
 			head.rotation.x = snapshot.pitch
+			_remote_grounded = bool(snapshot.get("grounded", true))
+
+func _update_owner_view_visibility() -> void:
+	if not is_local_player or not is_instance_valid(rig) or is_limp or is_recovering:
+		return
+	var leg_visibility: float = OWNER_VIEW_PRESENTATION_SCRIPT.leg_visibility_weight(_pitch_radians)
+	rig.call("set_owner_view_visibility", true, leg_visibility)
+
+func _update_first_person_camera_presentation(delta: float) -> void:
+	if not is_local_player or is_limp or is_recovering or not is_instance_valid(camera):
+		return
+	_camera_presentation.set("intensity", clampf(camera_motion_intensity, 0.0, 1.5))
+	var local_velocity: Vector3 = global_basis.inverse() * velocity
+	var presentation: Dictionary = _camera_presentation.call("advance", delta, local_velocity, velocity.y, is_on_floor(), not is_carrying())
+	var camera_offset: Vector3 = Vector3(presentation.get("offset", Vector3.ZERO))
+	var camera_rotation: Vector3 = Vector3(presentation.get("rotation", Vector3.ZERO))
+	var desired_local: Transform3D = CAMERA_PRESENTATION_SCRIPT.compose_camera_transform(_camera_rest_transform, camera_offset, camera_rotation)
+	var desired_world: Transform3D = head.global_transform * desired_local
+	var ray_mask: int = (1 << (LAYERS.WORLD_STATIC - 1)) | (1 << (LAYERS.DEVICES - 1)) | (1 << (LAYERS.PROPS - 1)) | (1 << (LAYERS.ELEVATOR - 1))
+	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(head.global_position, desired_world.origin, ray_mask)
+	query.exclude = [get_rid()]
+	query.collide_with_areas = false
+	var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(query)
+	var resolved_origin: Vector3 = _camera_collision.call("advance", head.global_position, desired_world.origin, not hit.is_empty(), Vector3(hit.get("position", Vector3.ZERO)), delta)
+	desired_world.origin = resolved_origin
+	camera.global_transform = desired_world
 
 func _has_host_authority() -> bool:
 	return network.get("peer") == null or bool(network.get("is_host"))
@@ -295,14 +390,14 @@ func _update_limp_interaction_proxy() -> void:
 		return
 	limp_interaction_proxy.global_position = rig.call("get_hips_world_position")
 
-func accept_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float) -> bool:
+func accept_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float, grounded: bool = true) -> bool:
 	if is_limp or is_recovering:
 		return false
 	var now: float = Time.get_ticks_msec() / 1000.0
-	if not _movement.accept(sequence, at, speed, yaw, pitch, now):
+	if not _movement.accept(sequence, at, speed, yaw, pitch, now, grounded):
 		return false
 	accepted_position = at
-	receive_movement(sequence, at, speed, yaw, pitch)
+	receive_movement(sequence, at, speed, yaw, pitch, grounded)
 	return true
 
 ## Returns true while this player holds a carried item (prop or limp body).
@@ -313,16 +408,24 @@ func is_carrying() -> bool:
 ## Remote observers therefore see the same hand instances used for pointing/poking;
 ## ragdoll Rig hands remain dedicated to physical/ragdoll presentation.
 func _on_carry_started(item: Node3D) -> void:
+	_combat_controller.call("cancel")
+	end_parry_presentation(false)
+	_combat_presentation.call("cancel")
 	_set_carry_hand_pose(true, item)
 
 func _on_carry_ended() -> void:
 	_set_carry_hand_pose(false)
 
 func _set_carry_hand_pose(active: bool, item: Node3D = null) -> void:
+	# A limp player's chest faces the carrier, reversing its lateral axis.
+	# Ordinary props keep the original same-side grip mapping.
+	var is_face_to_face_player: bool = is_instance_valid(item) and item.has_method("get_carry_hand_target_position")
+	var left_side: float = 1.0 if is_face_to_face_player else -1.0
+	var right_side: float = -1.0 if is_face_to_face_player else 1.0
 	if is_instance_valid(viewmodel_left_hand):
-		viewmodel_left_hand.set_carrying(active, item, -1.0)
+		viewmodel_left_hand.set_carrying(active, item, left_side)
 	if is_instance_valid(viewmodel_right_hand):
-		viewmodel_right_hand.set_carrying(active, item, 1.0)
+		viewmodel_right_hand.set_carrying(active, item, right_side)
 
 ## Applies replicated pointing to this player's camera-attached Viewmodel right hand.
 ## The local owner already drives that hand directly through Focus.
@@ -361,7 +464,6 @@ func set_carried(carried: bool, by: Node3D = null) -> void:
 		if _is_carried or not is_limp or is_recovering:
 			return
 		_is_carried = true
-		_carry_camera_smoothing_initialized = false
 		_set_limp_interaction_proxy(false)
 		if _has_host_authority() and rig != null:
 			rig.call("disable_collisions")
@@ -375,7 +477,6 @@ func set_carried(carried: bool, by: Node3D = null) -> void:
 	if not _is_carried:
 		return
 	_is_carried = false
-	_carry_camera_smoothing_initialized = false
 	if _has_host_authority() and is_limp and rig != null:
 		rig.call("end_carry_physics")
 		rig.call("stop_carry_support")
@@ -422,11 +523,44 @@ func apply_release(at: Vector3, linear: Vector3, angular: Vector3) -> void:
 	global_position = at
 	velocity = linear
 
-func receive_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float) -> void:
+func receive_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float, grounded: bool = true) -> void:
 	if is_limp or is_recovering:
 		return
 	if not is_local_player:
-		_movement.push(sequence, at, speed, yaw, pitch, Time.get_ticks_msec() / 1000.0)
+		_movement.push(sequence, at, speed, yaw, pitch, Time.get_ticks_msec() / 1000.0, grounded)
+
+## Seeds a newly joined peer with the host's current standing capsule state.
+## Recovery is represented by its authoritative standing position; the new peer
+## starts from a stable pose rather than replaying a get-up animation mid-clip.
+func get_movement_sync_sequence() -> int:
+	if is_local_player:
+		return _movement_sequence
+	if _movement.samples.is_empty():
+		return 0
+	return int(_movement.samples.back().get("sequence", 0))
+
+func apply_initial_player_state(sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float, grounded: bool) -> bool:
+	if is_local_player or is_limp or sequence < 0:
+		return false
+	if not at.is_finite() or not speed.is_finite() or not is_finite(yaw) or not is_finite(pitch):
+		return false
+	if absf(pitch) > deg_to_rad(85.1):
+		return false
+	# A newer unreliable movement sample may beat this reliable baseline across
+	# channels. Never rewind that newer state when the baseline arrives later.
+	if not _movement.samples.is_empty():
+		var newest_sequence: int = int(_movement.samples.back().get("sequence", -1))
+		if newest_sequence > sequence:
+			return false
+	var now: float = Time.get_ticks_msec() / 1000.0
+	_movement.reset(at, now)
+	_movement.push(sequence, at, speed, yaw, pitch, now, grounded)
+	global_position = at
+	velocity = speed
+	rotation.y = yaw
+	head.rotation.x = pitch
+	_remote_grounded = grounded
+	return true
 
 ## Locks standing movement while a local terminal text field is being edited.
 ## Mouse look, gravity, collision, and other presentation remain active.
@@ -439,23 +573,31 @@ func set_terminal_movement_locked(locked: bool) -> void:
 func correct_movement(at: Vector3) -> void:
 	if is_limp or is_recovering:
 		return
+	_jump_controller.call("reset")
 	global_position = at
 	velocity = Vector3.ZERO
 	debug_hub.call("log", &"net", "Movement corrected for player %s" % name)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if bool(debug_hub.call("is_console_open")):
+		if event.is_action_released("punch") or event.is_action_released("parry"):
+			_combat_controller.call("cancel")
 		return
 	if event is InputEventMouseMotion:
 		var mouse_event: InputEventMouseMotion = event
 		_rotate_view(mouse_event.relative)
 	elif event.is_action_pressed("ui_cancel"):
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-	elif event.is_action_pressed("punch"):
-		# While carrying, punch is owned by the Carrier (tap = drop, hold = throw).
-		# Do not also process it as combat input; M7 combat reads punch only when
-		# not carrying. When not carrying, fall through so M7 can claim it.
+	elif event.is_action_pressed("parry") or event.is_action_released("parry"):
 		if is_carrying():
+			return
+		if _combat_controller.call("handle_input", event):
+			return
+	elif event.is_action_pressed("punch") or event.is_action_released("punch"):
+		# While carrying, punch remains exclusively owned by Carrier (drop/throw).
+		if is_carrying():
+			return
+		if _combat_controller.call("handle_input", event):
 			return
 	elif event is InputEventMouseButton:
 		var mouse_button: InputEventMouseButton = event
@@ -469,16 +611,35 @@ func _physics_process(delta: float) -> void:
 		return
 	if is_recovering:
 		return
-	if not is_on_floor():
+	if _combat_lunge_active:
+		_advance_combat_lunge(delta)
+		return
+	var grounded_before_move: bool = is_on_floor()
+	if not grounded_before_move:
 		velocity.y -= TUNING.GRAVITY_MPS2 * delta
 
-	if bool(debug_hub.call("is_console_open")) or terminal_movement_locked:
+	var movement_locked: bool = bool(debug_hub.call("is_console_open")) or terminal_movement_locked
+	var jump_pressed: bool = not movement_locked and Input.is_action_just_pressed("jump")
+	var jump_released: bool = Input.is_action_just_released("jump")
+	var jump_state: Dictionary = _jump_controller.call(
+		"advance",
+		delta,
+		grounded_before_move,
+		jump_pressed,
+		jump_released,
+		velocity.y,
+		TUNING.JUMP_SPEED_MPS,
+		TUNING.JUMP_COYOTE_TIME_S,
+		TUNING.JUMP_BUFFER_TIME_S,
+		TUNING.JUMP_RELEASE_MULTIPLIER
+	)
+	velocity.y = float(jump_state.get("vertical_velocity", velocity.y))
+
+	if movement_locked:
 		velocity.x = 0.0
 		velocity.z = 0.0
 		move_and_slide()
 		return
-	if is_on_floor() and Input.is_action_just_pressed("jump"):
-		velocity.y = TUNING.JUMP_SPEED_MPS
 
 	var input_vector: Vector2 = Input.get_vector(
 		"move_left",
@@ -488,17 +649,26 @@ func _physics_process(delta: float) -> void:
 	)
 	var local_direction: Vector3 = Vector3(input_vector.x, 0.0, input_vector.y)
 	var move_direction: Vector3 = (transform.basis * local_direction).normalized()
-	if move_direction != Vector3.ZERO:
-		velocity.x = move_direction.x * TUNING.PLAYER_SPEED_MPS
-		velocity.z = move_direction.z * TUNING.PLAYER_SPEED_MPS
-	else:
-		velocity.x = move_toward(velocity.x, 0.0, TUNING.PLAYER_SPEED_MPS * 8.0 * delta)
-		velocity.z = move_toward(velocity.z, 0.0, TUNING.PLAYER_SPEED_MPS * 8.0 * delta)
+	var target_speed: float = TUNING.PLAYER_SPEED_MPS
+	if move_direction != Vector3.ZERO and Input.is_action_pressed("sprint"):
+		target_speed = TUNING.PLAYER_RUN_SPEED_MPS
+	var air_control: float = 1.0 if grounded_before_move and not bool(jump_state.get("jumped", false)) else TUNING.PLAYER_AIR_CONTROL_MULTIPLIER
+	var horizontal_velocity: Vector3 = _movement_controller.call(
+		"advance_horizontal_velocity",
+		Vector3(velocity.x, 0.0, velocity.z),
+		move_direction,
+		target_speed,
+		TUNING.PLAYER_ACCELERATION_MPS2 * air_control,
+		TUNING.PLAYER_DECELERATION_MPS2 * air_control,
+		delta,
+		TUNING.PLAYER_TURN_ACCELERATION_MPS2 * air_control
+	)
+	velocity.x = horizontal_velocity.x
+	velocity.z = horizontal_velocity.z
 
 	move_and_slide()
 
 ## Host-only: called when another player grabs this limp player's Interactable.
-## Delegates to Network.host_begin_carry so host validation applies.
 func _on_limp_interacted(actor: Node, action: StringName) -> void:
 	if action != &"grab":
 		return
@@ -516,6 +686,10 @@ func begin_host_limp() -> bool:
 		network.call("force_drop_carry", input_peer_id, "entered limp")
 	collision_layer = 0
 	collision_mask = 0
+	_combat_controller.call("cancel")
+	end_parry_presentation(false)
+	_combat_presentation.call("cancel")
+	_movement_presentation.call("reset", is_on_floor(), global_basis.inverse() * velocity)
 	if not bool(rig.call("begin_host_simulation")):
 		collision_layer = 1 << (LAYERS.HEALTHY_PLAYERS - 1)
 		collision_mask = LAYERS.LAYER_MASK_HEALTHY_PLAYERS
@@ -535,6 +709,7 @@ func begin_host_limp() -> bool:
 	_recovery_retry_s = 0.0
 	_recovery_blocked = false
 	wall_clearance_active = false
+	_jump_controller.call("reset")
 	velocity = Vector3.ZERO
 	if focus != null:
 		focus.call("set_active", false)
@@ -622,6 +797,9 @@ func _recovery_candidate(at: Vector3, collider_transform: Transform3D, params: P
 func begin_remote_limp(epoch: int, world_transform: Transform3D, initial_pose: PackedInt32Array) -> bool:
 	if is_limp or is_recovering or epoch <= limp_epoch or rig == null:
 		return false
+	_combat_controller.call("cancel")
+	end_parry_presentation(false)
+	_combat_presentation.call("cancel")
 	if not bool(rig.call("begin_remote_pose", world_transform, initial_pose)):
 		return false
 	limp_epoch = epoch
@@ -631,6 +809,8 @@ func begin_remote_limp(epoch: int, world_transform: Transform3D, initial_pose: P
 	if limp_interactable != null:
 		limp_interactable.enabled = true
 	velocity = Vector3.ZERO
+	_movement_presentation.call("reset", true, Vector3.ZERO)
+	_movement_presentation_yaw_initialized = false
 	collision_layer = 0
 	collision_mask = 0
 	if focus != null:
@@ -690,14 +870,17 @@ func _set_viewmodel_hands_visible(visible: bool) -> void:
 func _begin_limp_camera() -> void:
 	if not is_local_player:
 		return
+	_camera_presentation.call("reset", false)
 	var camera_transform: Transform3D = camera.global_transform
 	camera.top_level = true
 	camera.global_transform = camera_transform
+	_ragdoll_camera_presentation.call("begin", camera_transform)
 	_limp_look_yaw = 0.0
 	_limp_look_pitch = clampf(_pitch_radians, -LIMP_LOOK_PITCH_LIMIT, LIMP_LOOK_PITCH_LIMIT)
 	# Keep the body visible without placing the camera inside its head mesh.
 	if rig != null:
 		rig.visible = true
+		rig.call("set_owner_view_visibility", false, 1.0)
 		rig.call("set_owner_head_visible", false)
 
 func _begin_recovery_camera() -> void:
@@ -708,36 +891,59 @@ func _begin_recovery_camera() -> void:
 	# start and makes host/client recovery orientations disagree.
 	_pitch_radians = _limp_look_pitch
 	head.rotation.x = _pitch_radians
-	_recovery_camera_start = camera.global_transform
-	_recovery_camera_target = Transform3D(head.global_basis, head.global_position)
+	# Continue the same filtered head-follow stream through the get-up pose.
+	_ragdoll_camera_presentation.call("begin", camera.global_transform)
+	_recovery_camera_alignment_elapsed = -1.0
 	if rig != null:
 		rig.visible = true
+		rig.call("set_owner_view_visibility", false, 1.0)
 		rig.call("set_owner_head_visible", false)
 
 func _update_recovery_camera(delta: float) -> void:
 	_recovery_elapsed_s += delta
-	if not is_local_player:
+	if not is_local_player or not is_instance_valid(rig):
 		return
-	var weight: float = clampf(_recovery_elapsed_s / TUNING.GET_UP_BLEND_SECONDS, 0.0, 1.0)
-	var eased_weight: float = weight * weight * (3.0 - 2.0 * weight)
-	var rotation: Quaternion = _recovery_camera_start.basis.get_rotation_quaternion().slerp(
-		_recovery_camera_target.basis.get_rotation_quaternion(),
-		eased_weight
-	)
-	camera.global_transform = Transform3D(
-		Basis(rotation),
-		_recovery_camera_start.origin.lerp(_recovery_camera_target.origin, eased_weight)
-	)
+	# Follow the live HeadAttachment through the procedural blend and authored
+	# get-up animation instead of lerping toward the Player root destination.
+	var eye_transform: Transform3D = rig.call("get_head_eye_transform")
+	if not eye_transform.is_finite():
+		return
+	var smoothed_head: Transform3D = _ragdoll_camera_presentation.call("advance", eye_transform, delta)
+	var head_rotation: Quaternion = smoothed_head.basis.get_rotation_quaternion().normalized()
+	var look_yaw: Basis = Basis(Vector3.UP, _limp_look_yaw)
+	var look_pitch: Basis = Basis(Vector3.RIGHT, _limp_look_pitch)
+	camera.global_transform = Transform3D(Basis(head_rotation) * look_yaw * look_pitch, smoothed_head.origin)
+
+	# After the rig finishes its animation, softly align with the authored FPS mount.
+	if _recovery_camera_alignment_elapsed >= 0.0:
+		_recovery_camera_alignment_elapsed += delta
+		var alignment_weight: float = RAGDOLL_CAMERA_PRESENTATION_SCRIPT.recovery_weight(
+			_recovery_camera_alignment_elapsed,
+			RECOVERY_CAMERA_ALIGNMENT_SECONDS
+		)
+		var target: Transform3D = head.global_transform * _camera_rest_transform
+		var aligned_rotation: Quaternion = _recovery_camera_alignment_start.basis.get_rotation_quaternion().slerp(
+			target.basis.get_rotation_quaternion(),
+			alignment_weight
+		)
+		camera.global_transform = Transform3D(
+			Basis(aligned_rotation),
+			_recovery_camera_alignment_start.origin.lerp(target.origin, alignment_weight)
+		)
 
 func _finish_recovery() -> void:
 	is_recovering = false
 	_set_viewmodel_hands_visible(true)
 	if is_local_player:
 		camera.top_level = false
-		camera.transform = Transform3D.IDENTITY
+		camera.transform = _camera_rest_transform
+		_camera_presentation.call("reset", true)
+		_camera_collision.call("reset")
+		_ragdoll_camera_presentation.call("reset")
 		if rig != null:
-			rig.call("set_owner_head_visible", true)
-			rig.visible = false
+			rig.visible = true
+			rig.call("set_owner_view_visibility", true, float(OWNER_VIEW_PRESENTATION_SCRIPT.leg_visibility_weight(_pitch_radians)))
+			rig.call("set_owner_head_visible", false)
 	if focus != null:
 		focus.call("set_active", is_local_player)
 	debug_hub.call("log", &"limp", "Player %s finished get-up blend." % name)
@@ -748,26 +954,99 @@ func _update_limp_camera(delta: float) -> void:
 	var eye_transform: Transform3D = rig.call("get_head_eye_transform")
 	if not eye_transform.is_finite():
 		return
-	var head_rotation: Quaternion = eye_transform.basis.get_rotation_quaternion().normalized()
-	var camera_origin: Vector3 = eye_transform.origin
-	if _is_carried:
-		# Follow the head-mounted eye point with a little inertia, filtering
-		# physics jolts without detaching the view or smoothing player mouse-look.
-		if not _carry_camera_smoothing_initialized:
-			_carry_camera_smoothed_origin = camera_origin
-			_carry_camera_smoothed_rotation = head_rotation
-			_carry_camera_smoothing_initialized = true
-		var rotation_weight: float = 1.0 - exp(-CARRY_CAMERA_ROTATION_RESPONSE * delta)
-		var position_weight: float = 1.0 - exp(-CARRY_CAMERA_POSITION_RESPONSE * delta)
-		_carry_camera_smoothed_rotation = _carry_camera_smoothed_rotation.slerp(head_rotation, rotation_weight).normalized()
-		_carry_camera_smoothed_origin = _carry_camera_smoothed_origin.lerp(camera_origin, position_weight)
-		head_rotation = _carry_camera_smoothed_rotation
-		camera_origin = _carry_camera_smoothed_origin
-	else:
-		_carry_camera_smoothing_initialized = false
+	# Filter every simulated-head update, not only carried ragdolls. This
+	# preserves natural head tilt while removing sharp physics/network jitter.
+	var smoothed_head: Transform3D = _ragdoll_camera_presentation.call("advance", eye_transform, delta)
+	var head_rotation: Quaternion = smoothed_head.basis.get_rotation_quaternion().normalized()
+	var camera_origin: Vector3 = smoothed_head.origin
 	var look_yaw: Basis = Basis(Vector3.UP, _limp_look_yaw)
 	var look_pitch: Basis = Basis(Vector3.RIGHT, _limp_look_pitch)
 	camera.global_transform = Transform3D(Basis(head_rotation) * look_yaw * look_pitch, camera_origin)
+
+## Host-approved parry presentation, shared by first-person and remote copies.
+func begin_parry_presentation() -> void:
+	if is_limp or is_recovering or is_carrying():
+		return
+	_parry_active = true
+	_combat_presentation.call("begin_parry")
+	if is_instance_valid(viewmodel_left_hand):
+		viewmodel_left_hand.set_guard(true)
+	if is_instance_valid(viewmodel_right_hand):
+		viewmodel_right_hand.set_guard(true)
+	_parry_barrier.call("begin")
+
+func play_parry_hit(world_position: Vector3) -> void:
+	if _parry_active and world_position.is_finite():
+		_parry_barrier.call("play_impact", world_position)
+
+func end_parry_presentation(_successful: bool = false) -> void:
+	if not _parry_active:
+		return
+	_parry_active = false
+	if is_instance_valid(viewmodel_left_hand):
+		viewmodel_left_hand.set_guard(false)
+	if is_instance_valid(viewmodel_right_hand):
+		viewmodel_right_hand.set_guard(false)
+	_combat_presentation.call("end_parry")
+	_parry_barrier.call("end")
+
+## Host-approved combat presentation, shared by first-person and remote copies.
+func play_combat_windup() -> void:
+	if is_limp or is_recovering or is_carrying():
+		return
+	_combat_presentation.call("begin_windup")
+
+func play_combat_jab(direction: Vector3) -> void:
+	if is_limp or is_recovering or is_carrying() or not direction.is_finite():
+		_combat_presentation.call("cancel")
+		return
+	_combat_presentation.call("play_jab", direction)
+
+## Host-approved charged punch. Only the owning player drives the lunge movement.
+func begin_combat_lunge(direction: Vector3) -> void:
+	if is_limp or is_recovering or is_carrying() or not direction.is_finite() or direction.length_squared() < 0.0001:
+		return
+	_combat_lunge_active = true
+	_combat_lunge_elapsed = 0.0
+	_combat_lunge_direction = direction.normalized()
+	_combat_presentation.call("play_charged_lunge", _combat_lunge_direction)
+
+func stop_combat_lunge() -> void:
+	if not _combat_lunge_active:
+		return
+	_combat_lunge_active = false
+	_combat_lunge_elapsed = 0.0
+	if is_local_player:
+		velocity = Vector3.ZERO
+	_combat_presentation.call("end_charged_lunge")
+
+func _advance_combat_lunge(delta: float) -> void:
+	_combat_lunge_elapsed += maxf(delta, 0.0)
+	var desired_direction: Vector3 = -camera.global_basis.z
+	_combat_lunge_direction = COMBAT_CONTROLLER_SCRIPT.steer_lunge_direction(
+		_combat_lunge_direction,
+		desired_direction,
+		delta
+	)
+	velocity = _combat_lunge_direction * TUNING.LUNGE_SPEED_MPS
+	move_and_slide()
+	if _combat_lunge_elapsed >= TUNING.LUNGE_DURATION_S:
+		stop_combat_lunge()
+
+func cancel_combat_presentation() -> void:
+	_combat_presentation.call("cancel")
+
+## Weak standing reactions are visual torso impulses, not player knockback or knockdowns.
+func apply_combat_recoil(direction: Vector3, strength: float = 1.0) -> void:
+	if is_limp or is_recovering or not direction.is_finite():
+		return
+	var horizontal: Vector3 = Vector3(direction.x, 0.0, direction.z)
+	if horizontal.length_squared() < 0.0001:
+		return
+	var bounded_strength: float = clampf(strength, 1.0, 1.35)
+	_combat_presentation.call("play_recoil", direction, bounded_strength)
+	if is_local_player:
+		_camera_presentation.call("add_impact", direction, bounded_strength, global_basis)
 
 func _rotate_view(mouse_delta: Vector2) -> void:
 	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:

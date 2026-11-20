@@ -5,6 +5,10 @@ const LAYERS = preload("res://core/layers.gd")
 const TUNING = preload("res://core/tuning.gd")
 const SELF_COLLISION = preload("res://ragdoll/self_collision_policy.gd")
 const ARM_IK = preload("res://ragdoll/procedural_arm_ik.gd")
+const LEG_CONTROLLER_SCRIPT = preload("res://ragdoll/procedural_leg_controller.gd")
+const FOOT_PLANT_SCRIPT = preload("res://ragdoll/procedural_foot_plant.gd")
+const FOOTSTEP_PLANNER_SCRIPT = preload("res://ragdoll/procedural_footstep_planner.gd")
+const LEG_IK = preload("res://ragdoll/procedural_arm_ik.gd")
 const EXPECTED_PHYSICAL_BONES: int = 11
 const POSE_VALUES_PER_BONE: int = 7
 const POSITION_QUANTIZATION: float = 1000.0
@@ -26,7 +30,37 @@ var _last_remote_sequence: int = -1
 var _last_remote_host_time_ms: int = -1
 var _latest_host_pose: PackedInt32Array = PackedInt32Array()
 var _hips_bone_index: int = -1
+var _left_thigh_bone_index: int = -1
+var _left_shin_bone_index: int = -1
+var _left_foot_bone_index: int = -1
+var _right_thigh_bone_index: int = -1
+var _right_shin_bone_index: int = -1
+var _right_foot_bone_index: int = -1
+var _left_leg_replant_distance_m: float = 0.0
+var _right_leg_replant_distance_m: float = 0.0
+var _leg_controller: RefCounted = LEG_CONTROLLER_SCRIPT.new()
+var _left_foot_plant: RefCounted = FOOT_PLANT_SCRIPT.new()
+var _right_foot_plant: RefCounted = FOOT_PLANT_SCRIPT.new()
+var _footstep_planner: RefCounted = FOOTSTEP_PLANNER_SCRIPT.new()
+var _left_foot_grounded: bool = false
+var _right_foot_grounded: bool = false
+var _left_foot_ground_target_world: Vector3 = Vector3.ZERO
+var _right_foot_ground_target_world: Vector3 = Vector3.ZERO
+var _left_foot_ground_normal: Vector3 = Vector3.UP
+var _right_foot_ground_normal: Vector3 = Vector3.UP
+var _left_leg_ik_weight: float = 0.0
+var _right_leg_ik_weight: float = 0.0
+var _left_leg_ik_active: bool = false
+var _right_leg_ik_active: bool = false
+var _left_ground_probe: Dictionary = {}
+var _right_ground_probe: Dictionary = {}
+var _leg_ground_status_command_name: StringName
+var _leg_pose_active: bool = false
+var _leg_status_watch_name: StringName
+var _leg_status_command_name: StringName
 var _chest_bone_index: int = -1
+var _combat_body_pose: Vector3 = Vector3.ZERO
+var _movement_body_pose: Vector3 = Vector3.ZERO
 var _right_viewmodel_upper_arm_bone_index: int = -1
 var _right_viewmodel_forearm_bone_index: int = -1
 var _right_viewmodel_hand_bone_index: int = -1
@@ -137,6 +171,13 @@ const CARRY_FOREARM_ANGULAR_DAMP: float = 11.0
 const ARM_IK_BLEND_SPEED: float = 18.0
 const ARM_IK_POLE_FORWARD_WEIGHT: float = 0.22
 const ARM_IK_MAX_STRETCH_RATIO: float = 1.12
+const LEG_GROUND_PROBE_UP_M: float = 0.35
+const LEG_GROUND_PROBE_DOWN_M: float = 0.85
+const LEG_GROUND_FOOT_CLEARANCE_M: float = 0.015
+const LEG_GROUND_MIN_NORMAL_Y: float = 0.45
+const LEG_IK_BLEND_RESPONSE: float = 8.0
+const LEG_IK_POLE_FORWARD_WEIGHT: float = 1.0
+const LEG_KNEE_OUTWARD_BIAS_M: float = 0.18
 const CARRY_HEAD_ANGULAR_DAMP: float = 12.0
 
 func _enter_tree() -> void:
@@ -171,6 +212,14 @@ func _ready() -> void:
 		# not the character's forward axis. Preserve that bind-space offset.
 		_chest_rest_basis_offset = global_basis.inverse() * _chest_physical_bone.global_basis
 
+	_left_thigh_bone_index = skeleton.find_bone("Thigh_L")
+	_left_shin_bone_index = skeleton.find_bone("Shin_L")
+	_left_foot_bone_index = skeleton.find_bone("Foot_L")
+	_right_thigh_bone_index = skeleton.find_bone("Thigh_R")
+	_right_shin_bone_index = skeleton.find_bone("Shin_R")
+	_right_foot_bone_index = skeleton.find_bone("Foot_R")
+	_left_leg_replant_distance_m = _get_leg_replant_distance(_left_thigh_bone_index, _left_foot_bone_index)
+	_right_leg_replant_distance_m = _get_leg_replant_distance(_right_thigh_bone_index, _right_foot_bone_index)
 	_right_viewmodel_upper_arm_bone_index = skeleton.find_bone("UpperArm_L")
 	_right_viewmodel_forearm_bone_index = skeleton.find_bone("Forearm_L")
 	_right_viewmodel_hand_bone_index = skeleton.find_bone("Hand_L")
@@ -199,6 +248,9 @@ func _ready() -> void:
 				_left_rig_hand_visuals.append(left_visual_instance)
 	_left_rig_hand_visible_watch_name = StringName("rig/%s/left_rig_hand_visible" % get_parent().name)
 	_set_left_rig_hand_visual_visible(false)
+	_leg_status_watch_name = StringName("rig/%s/legs_active" % get_parent().name)
+	_leg_status_command_name = StringName("leg_status_%s" % get_parent().name)
+	_leg_ground_status_command_name = StringName("leg_ground_%s" % get_parent().name)
 	_right_arm_ik_watch_name = StringName("rig/%s/right_arm_ik" % get_parent().name)
 	_right_arm_ik_command_name = StringName("arm_ik_status_%s" % get_parent().name)
 	_left_arm_ik_watch_name = StringName("rig/%s/left_arm_ik" % get_parent().name)
@@ -210,6 +262,9 @@ func _ready() -> void:
 	else:
 		debug_hub.call("log", &"ragdoll", "Rig %s prepared 11 dormant physical bones; %d selective self-contact pairs." % [get_parent().name, self_contact_pairs])
 	debug_hub.call("watch", _watch_name, func() -> int: return physical_bones.size())
+	debug_hub.call("watch", _leg_status_watch_name, func() -> bool: return _leg_pose_active)
+	debug_hub.call("command", _leg_status_command_name, _debug_leg_status, "Report this player procedural leg gait state.", false, false)
+	debug_hub.call("command", _leg_ground_status_command_name, _debug_leg_ground_status, "Report both procedural foot ground probes and world-space targets.", false, false)
 	debug_hub.call("watch", _right_arm_ik_watch_name, func() -> bool: return _right_arm_ik_active)
 	debug_hub.call("watch", _right_rig_hand_visible_watch_name, _is_right_rig_hand_visual_visible)
 	debug_hub.call("watch", _left_arm_ik_watch_name, func() -> bool: return _left_arm_ik_active)
@@ -217,10 +272,14 @@ func _ready() -> void:
 	debug_hub.call("command", _right_arm_ik_command_name, _debug_right_arm_ik_status, "Report the procedural Viewmodel right-arm target and ownership state.", false, false)
 	debug_hub.call("command", _left_arm_ik_command_name, _debug_left_arm_ik_status, "Report the procedural Viewmodel left-arm target and ownership state.", false, false)
 	set_process(false)
+	set_physics_process(true)
 
 func _exit_tree() -> void:
 	if is_instance_valid(debug_hub):
 		debug_hub.call("unwatch", _watch_name)
+		debug_hub.call("unwatch", _leg_status_watch_name)
+		debug_hub.call("unregister_command", _leg_status_command_name)
+		debug_hub.call("unregister_command", _leg_ground_status_command_name)
 		debug_hub.call("unwatch", _right_arm_ik_watch_name)
 		debug_hub.call("unwatch", _left_arm_ik_watch_name)
 		debug_hub.call("unwatch", _right_rig_hand_visible_watch_name)
@@ -373,6 +432,347 @@ func _update_procedural_arm_chain(
 	skeleton.force_update_all_bone_transforms()
 	return true
 
+func _physics_process(_delta: float) -> void:
+	if simulator.is_simulating_physics() or _remote_active or _pose_blend_active or _recovery_animation_active:
+		_left_ground_probe.clear()
+		_right_ground_probe.clear()
+		return
+	if _left_foot_bone_index < 0 or _right_foot_bone_index < 0:
+		return
+	# Landing probes are calculated after the gait update, from hip-relative
+	# planner targets, inside update_procedural_legs().
+	_left_ground_probe.clear()
+	_right_ground_probe.clear()
+
+func _get_leg_replant_distance(thigh_index: int, foot_index: int) -> float:
+	if thigh_index < 0 or foot_index < 0:
+		return 0.0
+	# Measure the authored neutral standing reach so normal straight-legged idle
+	# posture does not constantly trigger recovery. Replant only after the hip
+	# travels an additional margin away from its original planted-foot distance.
+	var hip_world: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(thigh_index).origin)
+	var foot_world: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(foot_index).origin)
+	return hip_world.distance_to(foot_world) + TUNING.LEG_REPLANT_EXTRA_STRETCH_M
+
+func _probe_ground_at_target(foot_world: Vector3) -> Dictionary:
+	if not foot_world.is_finite():
+		return {}
+	# The planner supplies a hip-relative landing point. Probe vertically at
+	# that point instead of projecting a long distance from the trailing foot.
+	var probe_origin: Vector3 = foot_world + Vector3.UP * LEG_GROUND_PROBE_UP_M
+	var probe_end: Vector3 = foot_world - Vector3.UP * LEG_GROUND_PROBE_DOWN_M
+	var ground_mask: int = (1 << (LAYERS.WORLD_STATIC - 1)) | (1 << (LAYERS.PROPS - 1)) | (1 << (LAYERS.ELEVATOR - 1))
+	var excluded: Array[RID] = []
+	var player_body: CollisionObject3D = get_parent() as CollisionObject3D
+	if player_body != null:
+		excluded.append(player_body.get_rid())
+	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(probe_origin, probe_end, ground_mask, excluded)
+	query.collide_with_areas = false
+	query.collide_with_bodies = true
+	var world: World3D = get_world_3d()
+	if world == null:
+		return {}
+	var hit: Dictionary = world.direct_space_state.intersect_ray(query)
+	if hit.is_empty():
+		return {}
+	var hit_normal: Vector3 = hit.get("normal", Vector3.UP)
+	if hit_normal.y < LEG_GROUND_MIN_NORMAL_Y:
+		return {}
+	return {
+		"position": hit.get("position", foot_world) + Vector3.UP * LEG_GROUND_FOOT_CLEARANCE_M,
+		"normal": hit_normal,
+		"collider": hit.get("collider")
+	}
+
+func _reset_leg_pose_scale(thigh_index: int, shin_index: int) -> void:
+	if thigh_index >= 0:
+		skeleton.set_bone_pose_scale(thigh_index, Vector3.ONE)
+	if shin_index >= 0:
+		skeleton.set_bone_pose_scale(shin_index, Vector3.ONE)
+
+func _apply_procedural_leg_ik(
+	thigh_index: int,
+	shin_index: int,
+	foot_index: int,
+	foot_target_world: Vector3,
+	foot_ground_normal: Vector3,
+	base_thigh_rotation: Quaternion,
+	base_shin_rotation: Quaternion,
+	base_foot_rotation: Quaternion,
+	ik_weight: float,
+	foot_side: float,
+	knee_bend_weight: float,
+	delta: float
+) -> bool:
+	if thigh_index < 0 or shin_index < 0 or foot_index < 0 or not foot_target_world.is_finite():
+		return false
+	skeleton.force_update_all_bone_transforms()
+	var hip_local: Vector3 = skeleton.get_bone_global_pose(thigh_index).origin
+	var hip_world: Vector3 = skeleton.to_global(hip_local)
+	var upper_rest_offset: Vector3 = skeleton.get_bone_rest(shin_index).origin
+	var lower_rest_offset: Vector3 = skeleton.get_bone_rest(foot_index).origin
+	var upper_length: float = upper_rest_offset.length()
+	var lower_length: float = lower_rest_offset.length()
+	var parent_index: int = skeleton.get_bone_parent(thigh_index)
+	if parent_index < 0 or upper_length <= 0.001 or lower_length <= 0.001:
+		return false
+	# Scale both bone segments only as much as the planted-foot reach requires.
+	# Their attached meshes inherit this scale, so the visual leg stays connected.
+	var raw_reach: float = hip_world.distance_to(foot_target_world)
+	var natural_reach: float = upper_length + lower_length
+	var target_stretch_ratio: float = clampf(
+		raw_reach / maxf(natural_reach, 0.001),
+		1.0,
+		TUNING.LEG_IK_MAX_STRETCH_RATIO
+	)
+	var stretch_blend: float = 1.0 - exp(-10.0 * maxf(delta, 0.0))
+	var current_stretch_ratio: float = _bone_axis_scale_value(
+		upper_rest_offset, skeleton.get_bone_pose_scale(thigh_index)
+	)
+	var stretch_ratio: float = lerpf(current_stretch_ratio, target_stretch_ratio, stretch_blend)
+	skeleton.set_bone_pose_scale(thigh_index, _bone_axis_scale(upper_rest_offset, stretch_ratio))
+	skeleton.set_bone_pose_scale(shin_index, _bone_axis_scale(lower_rest_offset, stretch_ratio))
+	skeleton.force_update_all_bone_transforms()
+	upper_length *= stretch_ratio
+	lower_length *= stretch_ratio
+	var parent_world_basis: Basis = skeleton.global_basis * skeleton.get_bone_global_pose(parent_index).basis
+	# ProceduralArmIK expects a pole DIRECTION relative to the hip,
+	# not a world-space pole position. Keep it in character-facing space so
+	# the knee bends forward at every heading, with only a mild outward bias.
+	var pole_direction_world: Vector3 = global_basis * (
+		Vector3.FORWARD * (LEG_IK_POLE_FORWARD_WEIGHT + knee_bend_weight * TUNING.LEG_IK_SWING_KNEE_FORWARD_BIAS_M)
+		+ Vector3.RIGHT * signf(foot_side) * LEG_KNEE_OUTWARD_BIAS_M
+	)
+	var solution: Dictionary = LEG_IK.solve_two_bone(
+		hip_world, foot_target_world, pole_direction_world, upper_length, lower_length
+	)
+	if solution.is_empty():
+		return false
+	var knee_world: Vector3 = solution["elbow"]
+	var solved_foot_world: Vector3 = solution.get("target", foot_target_world)
+	var upper_direction_parent: Vector3 = parent_world_basis.inverse() * (knee_world - hip_world).normalized()
+	var upper_rest_axis: Vector3 = upper_rest_offset.normalized()
+	var upper_target_rotation: Quaternion = Quaternion(upper_rest_axis, upper_direction_parent.normalized())
+	var blend_weight: float = clampf(ik_weight, 0.0, 1.0)
+	var blended_thigh: Quaternion = base_thigh_rotation.slerp(upper_target_rotation, blend_weight)
+	skeleton.set_bone_pose_rotation(thigh_index, blended_thigh)
+	skeleton.force_update_all_bone_transforms()
+	var actual_knee_local: Vector3 = skeleton.get_bone_global_pose(shin_index).origin
+	var actual_knee_world: Vector3 = skeleton.to_global(actual_knee_local)
+	var thigh_world_basis: Basis = skeleton.global_basis * skeleton.get_bone_global_pose(thigh_index).basis
+	var lower_direction_local: Vector3 = thigh_world_basis.inverse() * (solved_foot_world - actual_knee_world).normalized()
+	var lower_rest_axis: Vector3 = lower_rest_offset.normalized()
+	var lower_target_rotation: Quaternion = Quaternion(lower_rest_axis, lower_direction_local.normalized())
+	var blended_shin: Quaternion = base_shin_rotation.slerp(lower_target_rotation, blend_weight)
+	skeleton.set_bone_pose_rotation(shin_index, blended_shin)
+	skeleton.force_update_all_bone_transforms()
+	var foot_parent_index: int = skeleton.get_bone_parent(foot_index)
+	if foot_parent_index >= 0 and foot_ground_normal.is_finite() and foot_ground_normal.length_squared() > 0.5:
+		var foot_parent_world_basis: Basis = skeleton.global_basis * skeleton.get_bone_global_pose(foot_parent_index).basis
+		var normal_parent_local: Vector3 = (foot_parent_world_basis.inverse() * foot_ground_normal.normalized()).normalized()
+		var foot_surface_rotation: Quaternion = Quaternion(Vector3.UP, normal_parent_local)
+		var blended_foot: Quaternion = base_foot_rotation.slerp(foot_surface_rotation, blend_weight)
+		skeleton.set_bone_pose_rotation(foot_index, blended_foot)
+	return true
+
+func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: float, vertical_velocity: float = 0.0, landing_weight: float = 0.0) -> bool:
+	if _left_thigh_bone_index < 0 or _left_shin_bone_index < 0 or _left_foot_bone_index < 0:
+		return false
+	if _right_thigh_bone_index < 0 or _right_shin_bone_index < 0 or _right_foot_bone_index < 0:
+		return false
+	if simulator.is_simulating_physics() or _remote_active or _pose_blend_active or _recovery_animation_active:
+		_leg_pose_active = false
+		_left_foot_grounded = false
+		_right_foot_grounded = false
+		_left_foot_plant.call("reset")
+		_right_foot_plant.call("reset")
+		_left_leg_ik_weight = 0.0
+		_right_leg_ik_weight = 0.0
+		_left_leg_ik_active = false
+		_right_leg_ik_active = false
+		return false
+	if not world_velocity.is_finite():
+		return false
+	# Clear last frame's reach compensation before measuring this frame.
+	# The IK pass reapplies only the amount currently needed.
+	skeleton.set_bone_pose_scale(_left_thigh_bone_index, Vector3.ONE)
+	skeleton.set_bone_pose_scale(_left_shin_bone_index, Vector3.ONE)
+	skeleton.set_bone_pose_scale(_right_thigh_bone_index, Vector3.ONE)
+	skeleton.set_bone_pose_scale(_right_shin_bone_index, Vector3.ONE)
+	skeleton.force_update_all_bone_transforms()
+	var local_velocity: Vector3 = global_basis.inverse() * world_velocity
+	_leg_controller.call("update", delta, local_velocity, grounded, vertical_velocity, landing_weight)
+	skeleton.force_update_all_bone_transforms()
+	var left_foot_world: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(_left_foot_bone_index).origin)
+	var right_foot_world: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(_right_foot_bone_index).origin)
+	var left_hip_world: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(_left_thigh_bone_index).origin)
+	var right_hip_world: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(_right_thigh_bone_index).origin)
+	var hip_center_world: Vector3 = (left_hip_world + right_hip_world) * 0.5
+	var planner_velocity: Vector3 = _leg_controller.get("smoothed_velocity")
+	var actual_horizontal_speed: float = Vector3(local_velocity.x, 0.0, local_velocity.z).length()
+	var left_landing_world: Vector3 = left_foot_world
+	var right_landing_world: Vector3 = right_foot_world
+	# Only swing feet request a new hip-relative landing point. During stance,
+	# probe the current sole so initialization and stopping cannot pull feet
+	# toward an artificial forward target.
+	# Keep landing prediction synchronized with the exact gait profile. A
+	# walk uses its longer cycle and longer double-support overlap; sprint uses
+	# its own shorter cycle and stance timing.
+	var gait_run_weight: float = float(_leg_controller.get("run_weight"))
+	var gait_cycle_distance: float = lerpf(TUNING.LEG_WALK_STEP_CYCLE_DISTANCE_M, TUNING.LEG_STEP_CYCLE_DISTANCE_M, gait_run_weight)
+	var gait_stance_fraction: float = lerpf(TUNING.LEG_WALK_STANCE_FRACTION, TUNING.LEG_STANCE_FRACTION, gait_run_weight)
+	var predicted_swing_travel: float = gait_cycle_distance * (1.0 - gait_stance_fraction)
+	if bool(_leg_controller.get("left_in_swing")) and planner_velocity.length() > TUNING.LEG_MIN_WALK_SPEED_MPS:
+		left_landing_world = _footstep_planner.call(
+			"get_landing_target", hip_center_world, global_basis, planner_velocity, 1.0,
+			TUNING.LEG_NORMAL_FORWARD_PLACEMENT_M, 0.24, predicted_swing_travel
+		)
+	if bool(_leg_controller.get("right_in_swing")) and planner_velocity.length() > TUNING.LEG_MIN_WALK_SPEED_MPS:
+		right_landing_world = _footstep_planner.call(
+			"get_landing_target", hip_center_world, global_basis, planner_velocity, -1.0,
+			TUNING.LEG_NORMAL_FORWARD_PLACEMENT_M, 0.24, predicted_swing_travel
+		)
+	var left_replant_requested: bool = false
+	var right_replant_requested: bool = false
+	var left_needs_replant: bool = not bool(_leg_controller.get("left_in_swing")) and bool(_left_foot_plant.call("needs_replant", left_hip_world, _left_leg_replant_distance_m))
+	var right_needs_replant: bool = not bool(_leg_controller.get("right_in_swing")) and bool(_right_foot_plant.call("needs_replant", right_hip_world, _right_leg_replant_distance_m))
+	if left_needs_replant or right_needs_replant:
+		var left_stretch_ratio: float = float(_left_foot_plant.call("get_stretch_ratio", left_hip_world, _left_leg_replant_distance_m))
+		var right_stretch_ratio: float = float(_right_foot_plant.call("get_stretch_ratio", right_hip_world, _right_leg_replant_distance_m))
+		# Only one leg may emergency-step at a time; recover the more stretched leg first.
+		if left_needs_replant and (not right_needs_replant or left_stretch_ratio >= right_stretch_ratio):
+			left_replant_requested = true
+			left_landing_world = _footstep_planner.call(
+				"get_landing_target", hip_center_world, global_basis, planner_velocity, 1.0,
+				TUNING.LEG_EMERGENCY_FORWARD_PLACEMENT_M, TUNING.LEG_MIN_LANDING_LATERAL_M,
+				actual_horizontal_speed * TUNING.LEG_REPLANT_RECOVERY_SECONDS
+			)
+		elif right_needs_replant:
+			right_replant_requested = true
+			right_landing_world = _footstep_planner.call(
+				"get_landing_target", hip_center_world, global_basis, planner_velocity, -1.0,
+				TUNING.LEG_EMERGENCY_FORWARD_PLACEMENT_M, TUNING.LEG_MIN_LANDING_LATERAL_M,
+				actual_horizontal_speed * TUNING.LEG_REPLANT_RECOVERY_SECONDS
+			)
+	left_landing_world = _footstep_planner.call("constrain_anatomical_side", left_landing_world, hip_center_world, global_basis, 1.0, TUNING.LEG_MIN_LANDING_LATERAL_M, planner_velocity)
+	right_landing_world = _footstep_planner.call("constrain_anatomical_side", right_landing_world, hip_center_world, global_basis, -1.0, TUNING.LEG_MIN_LANDING_LATERAL_M, planner_velocity)
+	# Keep each probe at its current sole height; only X/Z come from the hip zone.
+	left_landing_world.y = left_foot_world.y
+	right_landing_world.y = right_foot_world.y
+	_left_ground_probe = _probe_ground_at_target(left_landing_world)
+	_right_ground_probe = _probe_ground_at_target(right_landing_world)
+	var left_ground_hit: Dictionary = _left_ground_probe
+	var right_ground_hit: Dictionary = _right_ground_probe
+	_left_foot_grounded = grounded and not left_ground_hit.is_empty()
+	_right_foot_grounded = grounded and not right_ground_hit.is_empty()
+	_left_foot_ground_target_world = left_ground_hit.get("position", left_foot_world)
+	_right_foot_ground_target_world = right_ground_hit.get("position", right_foot_world)
+	_left_foot_ground_normal = left_ground_hit.get("normal", Vector3.UP)
+	_right_foot_ground_normal = right_ground_hit.get("normal", Vector3.UP)
+	var left_target: Vector3 = _left_foot_plant.call(
+		"update_target", left_foot_world, _left_foot_ground_target_world,
+		_left_foot_grounded, bool(_leg_controller.get("left_in_swing")),
+		float(_leg_controller.get("left_swing_progress")), lerpf(TUNING.LEG_WALK_SWING_LIFT_M, TUNING.LEG_RUN_SWING_LIFT_M, float(_leg_controller.get("run_weight"))),
+		delta, left_hip_world, _left_leg_replant_distance_m,
+		TUNING.LEG_REPLANT_RECOVERY_SECONDS, left_replant_requested,
+		_left_ground_probe.get("collider") as Node3D, TUNING.LEG_REPLANT_LIFT_M
+	)
+	var right_target: Vector3 = _right_foot_plant.call(
+		"update_target", right_foot_world, _right_foot_ground_target_world,
+		_right_foot_grounded, bool(_leg_controller.get("right_in_swing")),
+		float(_leg_controller.get("right_swing_progress")), lerpf(TUNING.LEG_WALK_SWING_LIFT_M, TUNING.LEG_RUN_SWING_LIFT_M, float(_leg_controller.get("run_weight"))),
+		delta, right_hip_world, _right_leg_replant_distance_m,
+		TUNING.LEG_REPLANT_RECOVERY_SECONDS, right_replant_requested,
+		_right_ground_probe.get("collider") as Node3D, TUNING.LEG_REPLANT_LIFT_M
+	)
+	_left_foot_ground_target_world = left_target
+	_right_foot_ground_target_world = right_target
+	var left_thigh_rotation: Quaternion = _leg_controller.get("left_thigh_rotation")
+	var left_shin_rotation: Quaternion = _leg_controller.get("left_shin_rotation")
+	var left_foot_rotation: Quaternion = _leg_controller.get("left_foot_rotation")
+	var right_thigh_rotation: Quaternion = _leg_controller.get("right_thigh_rotation")
+	var right_shin_rotation: Quaternion = _leg_controller.get("right_shin_rotation")
+	var right_foot_rotation: Quaternion = _leg_controller.get("right_foot_rotation")
+	skeleton.set_bone_pose_rotation(_left_thigh_bone_index, left_thigh_rotation)
+	skeleton.set_bone_pose_rotation(_left_shin_bone_index, left_shin_rotation)
+	skeleton.set_bone_pose_rotation(_left_foot_bone_index, left_foot_rotation)
+	skeleton.set_bone_pose_rotation(_right_thigh_bone_index, right_thigh_rotation)
+	skeleton.set_bone_pose_rotation(_right_shin_bone_index, right_shin_rotation)
+	skeleton.set_bone_pose_rotation(_right_foot_bone_index, right_foot_rotation)
+	var left_ik_target_weight: float = 1.0 if _left_foot_plant.get("has_anchor") else 0.0
+	var right_ik_target_weight: float = 1.0 if _right_foot_plant.get("has_anchor") else 0.0
+	var ik_blend: float = 1.0 - exp(-LEG_IK_BLEND_RESPONSE * maxf(delta, 0.0))
+	_left_leg_ik_weight = lerpf(_left_leg_ik_weight, left_ik_target_weight, ik_blend)
+	_right_leg_ik_weight = lerpf(_right_leg_ik_weight, right_ik_target_weight, ik_blend)
+	if _left_leg_ik_weight > 0.01:
+		var left_ik_applied: bool = _apply_procedural_leg_ik(
+			_left_thigh_bone_index, _left_shin_bone_index, _left_foot_bone_index,
+			_left_foot_ground_target_world,
+			_left_foot_ground_normal if not bool(_leg_controller.get("left_in_swing")) and not bool(_left_foot_plant.get("emergency_replant_active")) else Vector3.ZERO,
+			left_thigh_rotation, left_shin_rotation, left_foot_rotation, _left_leg_ik_weight, 1.0,
+			float(_leg_controller.get("left_knee_bend_weight")), delta
+		)
+		_left_leg_ik_active = left_ik_applied
+	else:
+		_left_leg_ik_active = false
+		_reset_leg_pose_scale(_left_thigh_bone_index, _left_shin_bone_index)
+	if _right_leg_ik_weight > 0.01:
+		var right_ik_applied: bool = _apply_procedural_leg_ik(
+			_right_thigh_bone_index, _right_shin_bone_index, _right_foot_bone_index,
+			_right_foot_ground_target_world,
+			_right_foot_ground_normal if not bool(_leg_controller.get("right_in_swing")) and not bool(_right_foot_plant.get("emergency_replant_active")) else Vector3.ZERO,
+			right_thigh_rotation, right_shin_rotation, right_foot_rotation, _right_leg_ik_weight, -1.0,
+			float(_leg_controller.get("right_knee_bend_weight")), delta
+		)
+		_right_leg_ik_active = right_ik_applied
+	else:
+		_right_leg_ik_active = false
+		_reset_leg_pose_scale(_right_thigh_bone_index, _right_shin_bone_index)
+	skeleton.force_update_all_bone_transforms()
+	_leg_pose_active = bool(_leg_controller.call("is_active"))
+	return true
+
+func _debug_leg_status(_args: Array[Variant]) -> String:
+	var phase_value: float = float(_leg_controller.get("phase"))
+	var left_state: String = "swing" if bool(_leg_controller.get("left_in_swing")) else "stance"
+	var right_state: String = "swing" if bool(_leg_controller.get("right_in_swing")) else "stance"
+	var left_progress: float = float(_leg_controller.get("left_swing_progress"))
+	var right_progress: float = float(_leg_controller.get("right_swing_progress"))
+	return "active=%s phase=%.2f left=%s(%.2f) right=%s(%.2f)" % [
+		_leg_pose_active, phase_value, left_state, left_progress, right_state, right_progress
+	]
+
+func _debug_leg_ground_status(_args: Array[Variant]) -> String:
+	return "left_hit=%s left_ik=%s left_weight=%.2f left_anchor=%s left_target=%s left_normal=%s left_replant=%s left_stretch=%.2f right_hit=%s right_ik=%s right_weight=%.2f right_anchor=%s right_target=%s right_normal=%s right_replant=%s right_stretch=%.2f" % [
+		_left_foot_grounded, _left_leg_ik_active, _left_leg_ik_weight, _left_foot_plant.get("anchor_world"), _left_foot_ground_target_world, _left_foot_ground_normal,
+		_left_foot_plant.get("emergency_replant_active"), _left_foot_plant.call("get_stretch_ratio", skeleton.to_global(skeleton.get_bone_global_pose(_left_thigh_bone_index).origin), _left_leg_replant_distance_m),
+		_right_foot_grounded, _right_leg_ik_active, _right_leg_ik_weight, _right_foot_plant.get("anchor_world"), _right_foot_ground_target_world, _right_foot_ground_normal,
+		_right_foot_plant.get("emergency_replant_active"), _right_foot_plant.call("get_stretch_ratio", skeleton.to_global(skeleton.get_bone_global_pose(_right_thigh_bone_index).origin), _right_leg_replant_distance_m)
+	]
+
+## Apply a small additive upper-body pose before the procedural arm IK pass.
+## Pose values are local radians and are reset when standing animation ownership ends.
+func set_combat_body_pose(pose: Vector3) -> bool:
+	if not pose.is_finite():
+		return false
+	_combat_body_pose = pose
+	return _apply_combined_body_pose()
+
+func set_movement_body_pose(pose: Vector3) -> bool:
+	if not pose.is_finite():
+		return false
+	_movement_body_pose = pose
+	return _apply_combined_body_pose()
+
+func _apply_combined_body_pose() -> bool:
+	if _chest_bone_index < 0 or simulator.is_simulating_physics() or _remote_active or _pose_blend_active or _recovery_animation_active:
+		return false
+	var combined_pose: Vector3 = _movement_body_pose + _combat_body_pose
+	var chest_rotation: Quaternion = Quaternion(Vector3.RIGHT, combined_pose.x) * Quaternion(Vector3.UP, combined_pose.y) * Quaternion(Vector3.BACK, combined_pose.z)
+	skeleton.set_bone_pose_rotation(_chest_bone_index, chest_rotation)
+	skeleton.force_update_all_bone_transforms()
+	return true
+
 func update_procedural_right_arm(wrist_target_world: Vector3, delta: float) -> bool:
 	var applied: bool = _update_procedural_arm_chain(
 		_right_viewmodel_upper_arm_bone_index,
@@ -403,6 +803,29 @@ func update_procedural_left_arm(wrist_target_world: Vector3, delta: float) -> bo
 	_set_left_arm_ik_active(true)
 	return true
 
+## Add a small host-only velocity impulse to an already-simulating ragdoll.
+## This does not touch the Player limp lifecycle or recovery countdown.
+func apply_combat_impulse(direction: Vector3, hit_position: Vector3, impulse_speed: float, vertical_bonus_ratio: float = 0.0) -> bool:
+	if not simulator.is_simulating_physics() or not direction.is_finite() or not is_finite(impulse_speed) or impulse_speed <= 0.0 or not is_finite(vertical_bonus_ratio):
+		return false
+	var push_direction: Vector3 = direction.normalized()
+	if push_direction.length_squared() < 0.0001:
+		return false
+	var chosen_bone: PhysicalBone3D = _chest_physical_bone if _chest_physical_bone != null else _hips_physical_bone
+	if hit_position.is_finite() and not physical_bones.is_empty():
+		var nearest_distance: float = INF
+		for candidate: PhysicalBone3D in physical_bones:
+			var distance: float = candidate.global_position.distance_squared_to(hit_position)
+			if distance < nearest_distance:
+				nearest_distance = distance
+				chosen_bone = candidate
+	if chosen_bone == null:
+		return false
+	var impulse_velocity: Vector3 = (push_direction + Vector3.UP * 0.12).normalized() * impulse_speed
+	impulse_velocity += Vector3.UP * impulse_speed * clampf(vertical_bonus_ratio, 0.0, 0.5)
+	chosen_bone.linear_velocity += impulse_velocity
+	return true
+
 func enable_host_collisions() -> void:
 	for physical_bone: PhysicalBone3D in physical_bones:
 		physical_bone.collision_layer = 1 << (LAYERS.LIMP_BODIES - 1)
@@ -421,6 +844,14 @@ func begin_host_simulation() -> bool:
 	# blends back to the actual standing pose instead of the rest/T-pose.
 	if not _remote_active:
 		_standing_pose = _capture_skeleton_pose()
+	_leg_controller.call("reset")
+	_leg_pose_active = false
+	_combat_body_pose = Vector3.ZERO
+	_movement_body_pose = Vector3.ZERO
+	if _chest_bone_index >= 0:
+		skeleton.set_bone_pose_rotation(_chest_bone_index, Quaternion.IDENTITY)
+	_reset_leg_pose_scale(_left_thigh_bone_index, _left_shin_bone_index)
+	_reset_leg_pose_scale(_right_thigh_bone_index, _right_shin_bone_index)
 	_set_right_arm_ik_active(false)
 	_set_left_arm_ik_active(false)
 	_set_right_rig_hand_visual_visible(true)
@@ -460,6 +891,8 @@ func stop_host_simulation() -> void:
 	top_level = false
 	transform = Transform3D.IDENTITY
 	_latest_host_pose = PackedInt32Array()
+	_leg_controller.call("reset")
+	_leg_pose_active = false
 
 func stop_host_simulation_with_blend(duration: float, recovery_variant: StringName = &"") -> void:
 	# Outside modification_processed the host skeleton can contain the
@@ -618,6 +1051,38 @@ func get_head_eye_transform() -> Transform3D:
 	var eye_offset: Transform3D = Transform3D(Basis.IDENTITY, Vector3(0.0, 0.17, -0.06))
 	return head_attachment.global_transform * eye_offset
 
+
+## Show only the lower body for the local first-person owner without changing the rig hierarchy.
+func set_owner_view_visibility(enabled: bool, lower_body_alpha: float = 1.0) -> void:
+	var upper_attachment_paths: Array[NodePath] = [
+		^"PelvisAttachment", ^"AbdomenAttachment", ^"ChestAttachment",
+		^"NeckAttachment", ^"HeadAttachment", ^"UpperArmAttachment_L",
+		^"ForearmAttachment_L", ^"UpperArmAttachment_R", ^"ForearmAttachment_R",
+		^"HandAttachment_L", ^"HandAttachment_R"
+	]
+	for attachment_path: NodePath in upper_attachment_paths:
+		var attachment: Node3D = get_node_or_null(NodePath("Skeleton3D/" + String(attachment_path))) as Node3D
+		if attachment != null:
+			attachment.visible = not enabled
+	var leg_alpha: float = clampf(lower_body_alpha, 0.0, 1.0) if enabled else 1.0
+	var leg_paths: Array[NodePath] = [
+		^"Skeleton3D/ThighAttachment_L", ^"Skeleton3D/ShinAttachment_L",
+		^"Skeleton3D/FootAttachment_L", ^"Skeleton3D/ThighAttachment_R",
+		^"Skeleton3D/ShinAttachment_R", ^"Skeleton3D/FootAttachment_R"
+	]
+	for leg_path: NodePath in leg_paths:
+		var leg_attachment: Node3D = get_node_or_null(leg_path) as Node3D
+		if leg_attachment != null:
+			leg_attachment.visible = true
+			_set_geometry_transparency_recursive(leg_attachment, 1.0 - leg_alpha)
+	head_attachment.visible = not enabled
+
+func _set_geometry_transparency_recursive(node: Node, transparency: float) -> void:
+	if node is GeometryInstance3D:
+		(node as GeometryInstance3D).transparency = clampf(transparency, 0.0, 1.0)
+	for child: Node in node.get_children():
+		_set_geometry_transparency_recursive(child, transparency)
+
 func set_owner_head_visible(show_head: bool) -> void:
 	head_attachment.visible = show_head
 
@@ -649,11 +1114,15 @@ func begin_remote_pose(world_transform: Transform3D, initial_pose: PackedInt32Ar
 	# Capture the standing pose before limp overwrites it, so recovery
 	# blends back to the actual standing pose instead of the rest/T-pose.
 	_standing_pose = _capture_skeleton_pose()
+	_combat_body_pose = Vector3.ZERO
+	_movement_body_pose = Vector3.ZERO
 	var previous_transform: Transform3D = global_transform
 	top_level = true
 	global_transform = world_transform if world_transform.is_finite() else previous_transform
 	simulator.active = false
 	_remote_active = true
+	_leg_controller.call("reset")
+	_leg_pose_active = false
 	_set_right_arm_ik_active(false)
 	_set_left_arm_ik_active(false)
 	_set_right_rig_hand_visual_visible(true)
