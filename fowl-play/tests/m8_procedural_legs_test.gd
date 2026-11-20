@@ -176,13 +176,13 @@ func _check_footstep_planner() -> void:
 	var strafe: Vector3 = planner.call(
 		"get_landing_target", hip, Basis.IDENTITY, Vector3(5.0, 0.0, 0.0), -1.0
 	)
-	if strafe.x <= hip.x or not is_equal_approx(strafe.z, hip.z):
-		_fail("Strafing targets should follow movement intent along the character's right axis")
+	if strafe.x <= hip.x or strafe.z <= hip.z:
+		_fail("Rightward strafing should move the right foot ahead while keeping its front/back lane")
 	var strafe_left: Vector3 = planner.call(
 		"get_landing_target", hip, Basis.IDENTITY, Vector3(5.0, 0.0, 0.0), 1.0
 	)
-	if strafe_left.x <= strafe.x or strafe_left.distance_to(strafe) < 0.35:
-		_fail("The authored left foot must remain on positive X and separated during rightward strafing")
+	if strafe_left.x <= hip.x or strafe_left.z >= hip.z or strafe_left.distance_to(strafe) < 0.35:
+		_fail("Sideways foot lanes should separate along the character's forward axis instead of crossing the centerline")
 	var diagonal_left: Vector3 = planner.call(
 		"get_landing_target", hip, Basis.IDENTITY, Vector3(5.0, 0.0, -5.0), 1.0
 	)
@@ -206,9 +206,17 @@ func _check_footstep_planner() -> void:
 	var crossed_left: Vector3 = planner.call("constrain_anatomical_side", hip, hip, Basis.IDENTITY, 1.0, 0.20)
 	var crossed_right: Vector3 = planner.call("constrain_anatomical_side", hip, hip, Basis.IDENTITY, -1.0, 0.20)
 	if crossed_left.x < hip.x + 0.199:
-		_fail("Left landing targets must be clamped to the rig's positive-X side")
+		_fail("Forward-walking left landing targets must remain on the rig's positive-X side")
 	if crossed_right.x > hip.x - 0.199:
-		_fail("Right landing targets must be clamped to the rig's negative-X side")
+		_fail("Forward-walking right landing targets must remain on the rig's negative-X side")
+	var strafe_constrained_left: Vector3 = planner.call(
+		"constrain_anatomical_side", hip, hip, Basis.IDENTITY, 1.0, 0.20, Vector3(5.0, 0.0, 0.0)
+	)
+	var strafe_constrained_right: Vector3 = planner.call(
+		"constrain_anatomical_side", hip, hip, Basis.IDENTITY, -1.0, 0.20, Vector3(5.0, 0.0, 0.0)
+	)
+	if strafe_constrained_left.z >= hip.z - 0.199 or strafe_constrained_right.z <= hip.z + 0.199:
+		_fail("Sideways replant constraints must use stable front/back lanes instead of anatomical left/right lanes")
 
 func _check_foot_plant_targets() -> void:
 	var tracker: RefCounted = FOOT_PLANT_SCRIPT.new()
