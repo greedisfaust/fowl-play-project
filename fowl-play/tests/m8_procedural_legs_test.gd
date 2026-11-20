@@ -33,7 +33,7 @@ func _check_controller_gait() -> void:
 	var right_thigh: Quaternion = controller.get("right_thigh_rotation")
 	if phase_after_walk <= 0.0:
 		_fail("Grounded movement should advance the gait phase")
-	var expected_phase: float = (5.0 / TUNING.LEG_STEP_CYCLE_DISTANCE_M) * TAU * 0.125
+	var expected_phase: float = (5.0 / TUNING.LEG_STEP_CYCLE_DISTANCE_M) * TAU * TUNING.LEG_GAIT_RATE_MULTIPLIER * 0.125
 	if not is_equal_approx(phase_after_walk, expected_phase):
 		_fail("Gait phase should advance at the configured stride cadence")
 	if TUNING.LEG_STEP_CYCLE_DISTANCE_M >= 2.0:
