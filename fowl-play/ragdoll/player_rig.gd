@@ -426,7 +426,13 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 
 func _debug_leg_status(_args: Array[Variant]) -> String:
 	var phase_value: float = float(_leg_controller.get("phase"))
-	return "active=%s phase=%.2f" % [_leg_pose_active, phase_value]
+	var left_state: String = "swing" if bool(_leg_controller.get("left_in_swing")) else "stance"
+	var right_state: String = "swing" if bool(_leg_controller.get("right_in_swing")) else "stance"
+	var left_progress: float = float(_leg_controller.get("left_swing_progress"))
+	var right_progress: float = float(_leg_controller.get("right_swing_progress"))
+	return "active=%s phase=%.2f left=%s(%.2f) right=%s(%.2f)" % [
+		_leg_pose_active, phase_value, left_state, left_progress, right_state, right_progress
+	]
 
 func update_procedural_right_arm(wrist_target_world: Vector3, delta: float) -> bool:
 	var applied: bool = _update_procedural_arm_chain(
