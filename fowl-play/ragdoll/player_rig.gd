@@ -475,8 +475,10 @@ func _apply_procedural_leg_ik(
 	shin_index: int,
 	foot_index: int,
 	foot_target_world: Vector3,
+	foot_ground_normal: Vector3,
 	base_thigh_rotation: Quaternion,
 	base_shin_rotation: Quaternion,
+	base_foot_rotation: Quaternion,
 	ik_weight: float
 ) -> bool:
 	if thigh_index < 0 or shin_index < 0 or foot_index < 0 or not foot_target_world.is_finite():
@@ -514,6 +516,14 @@ func _apply_procedural_leg_ik(
 	var lower_target_rotation: Quaternion = Quaternion(lower_rest_axis, lower_direction_local.normalized())
 	var blended_shin: Quaternion = base_shin_rotation.slerp(lower_target_rotation, blend_weight)
 	skeleton.set_bone_pose_rotation(shin_index, blended_shin)
+	skeleton.force_update_all_bone_transforms()
+	var foot_parent_index: int = skeleton.get_bone_parent(foot_index)
+	if foot_parent_index >= 0 and foot_ground_normal.is_finite() and foot_ground_normal.length_squared() > 0.5:
+		var foot_parent_world_basis: Basis = skeleton.global_basis * skeleton.get_bone_global_pose(foot_parent_index).basis
+		var normal_parent_local: Vector3 = (foot_parent_world_basis.inverse() * foot_ground_normal.normalized()).normalized()
+		var foot_surface_rotation: Quaternion = Quaternion(Vector3.UP, normal_parent_local)
+		var blended_foot: Quaternion = base_foot_rotation.slerp(foot_surface_rotation, blend_weight)
+		skeleton.set_bone_pose_rotation(foot_index, blended_foot)
 	return true
 
 func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: float) -> bool:
@@ -580,7 +590,8 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 	if _left_leg_ik_weight > 0.01:
 		var left_ik_applied: bool = _apply_procedural_leg_ik(
 			_left_thigh_bone_index, _left_shin_bone_index, _left_foot_bone_index,
-			_left_foot_ground_target_world, left_thigh_rotation, left_shin_rotation, _left_leg_ik_weight
+			_left_foot_ground_target_world, _left_foot_ground_normal,
+			left_thigh_rotation, left_shin_rotation, left_foot_rotation, _left_leg_ik_weight
 		)
 		_left_leg_ik_active = left_ik_applied
 	else:
@@ -588,7 +599,8 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 	if _right_leg_ik_weight > 0.01:
 		var right_ik_applied: bool = _apply_procedural_leg_ik(
 			_right_thigh_bone_index, _right_shin_bone_index, _right_foot_bone_index,
-			_right_foot_ground_target_world, right_thigh_rotation, right_shin_rotation, _right_leg_ik_weight
+			_right_foot_ground_target_world, _right_foot_ground_normal,
+			right_thigh_rotation, right_shin_rotation, right_foot_rotation, _right_leg_ik_weight
 		)
 		_right_leg_ik_active = right_ik_applied
 	else:
@@ -608,9 +620,9 @@ func _debug_leg_status(_args: Array[Variant]) -> String:
 	]
 
 func _debug_leg_ground_status(_args: Array[Variant]) -> String:
-	return "left_hit=%s left_ik=%s left_weight=%.2f left_target=%s left_normal=%s right_hit=%s right_ik=%s right_weight=%.2f right_target=%s right_normal=%s" % [
-		_left_foot_grounded, _left_leg_ik_active, _left_leg_ik_weight, _left_foot_ground_target_world, _left_foot_ground_normal,
-		_right_foot_grounded, _right_leg_ik_active, _right_leg_ik_weight, _right_foot_ground_target_world, _right_foot_ground_normal
+	return "left_hit=%s left_ik=%s left_weight=%.2f left_anchor=%s left_target=%s left_normal=%s right_hit=%s right_ik=%s right_weight=%.2f right_anchor=%s right_target=%s right_normal=%s" % [
+		_left_foot_grounded, _left_leg_ik_active, _left_leg_ik_weight, _left_foot_plant.get("anchor_world"), _left_foot_ground_target_world, _left_foot_ground_normal,
+		_right_foot_grounded, _right_leg_ik_active, _right_leg_ik_weight, _right_foot_plant.get("anchor_world"), _right_foot_ground_target_world, _right_foot_ground_normal
 	]
 
 func update_procedural_right_arm(wrist_target_world: Vector3, delta: float) -> bool:
