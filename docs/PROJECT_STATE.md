@@ -592,3 +592,9 @@ Foot planting now records both a world-space target and, when the ground hit bel
 - Split the procedural gait into independent walking and sprint profiles. Walking uses a longer cycle distance, a shorter planted phase, reduced thigh swing and knee flexion, and a low 0.09 m foot arc to keep steps grounded and alternating.
 - Sprint smoothly blends toward the previous faster 1.4 m cycle, longer stance, larger thigh swing, stronger knee flexion, and 0.20 m swing arc. Emergency replant retains its separate 0.30 m recovery lift.
 - Updated M8 regression checks for cadence, profile separation, stance reach, and normal swing height. Turning and jump launch tuning are unchanged. Godot tests and in-game verification have not been run by the assistant.
+
+
+### Walking rhythm alignment — 2026-11-20
+
+- Corrected a mismatch between the gait controller's separate walking profile and the rig's footstep landing predictor. Landing travel now uses the active blended cycle distance and stance fraction, so the foot planner and alternating leg phases share one timing model.
+- Added M8 checks for mutually exclusive left/right swing and a real double-support window during ordinary walking. Sprint and jump/turn tuning remain unchanged. Godot tests and in-game verification have not been run by the assistant.
