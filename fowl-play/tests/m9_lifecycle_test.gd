@@ -29,8 +29,9 @@ func _run() -> void:
 	check(is_equal_approx(remote_player.rotation.y, 0.7), "initial snapshot applies host yaw")
 	check(is_equal_approx((remote_player.get_node("Head") as Node3D).rotation.x, 0.2), "initial snapshot applies host pitch")
 	check(bool(remote_player.get("_remote_grounded")), "initial snapshot applies grounded state")
-	check(not bool(remote_player.call("apply_initial_player_state", 1, Vector3(NAN, 0.0, 0.0), Vector3.ZERO, 0.0, 0.0, true)), "non-finite baseline is rejected")
-	check(remote_player.global_position.distance_to(baseline) < 0.001, "rejected baseline leaves position unchanged")
+	remote_player.call("receive_movement", 5, baseline + Vector3(1.0, 0.0, 0.0), Vector3.ZERO, 0.8, 0.0, true)
+	check(not bool(remote_player.call("apply_initial_player_state", 4, baseline, Vector3.ZERO, 0.7, 0.0, true)), "older reliable baseline cannot overwrite a newer movement sample")
+	check(not bool(remote_player.call("apply_initial_player_state", 6, Vector3(NAN, 0.0, 0.0), Vector3.ZERO, 0.0, 0.0, true)), "non-finite baseline is rejected")
 
 	var pending_player: CharacterBody3D = PLAYER_SCENE.instantiate() as CharacterBody3D
 	pending_player.name = "3"

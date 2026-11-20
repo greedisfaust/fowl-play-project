@@ -487,6 +487,13 @@ func receive_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pi
 ## Seeds a newly joined peer with the host's current standing capsule state.
 ## Recovery is represented by its authoritative standing position; the new peer
 ## starts from a stable pose rather than replaying a get-up animation mid-clip.
+func get_movement_sync_sequence() -> int:
+	if is_local_player:
+		return _movement_sequence
+	if _movement.samples.is_empty():
+		return 0
+	return int(_movement.samples.back().get("sequence", 0))
+
 func apply_initial_player_state(sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float, grounded: bool) -> bool:
 	if is_local_player or is_limp or sequence < 0:
 		return false
@@ -494,6 +501,12 @@ func apply_initial_player_state(sequence: int, at: Vector3, speed: Vector3, yaw:
 		return false
 	if absf(pitch) > deg_to_rad(85.1):
 		return false
+	# A newer unreliable movement sample may beat this reliable baseline across
+	# channels. Never rewind that newer state when the baseline arrives later.
+	if not _movement.samples.is_empty():
+		var newest_sequence: int = int(_movement.samples.back().get("sequence", -1))
+		if newest_sequence > sequence:
+			return false
 	var now: float = Time.get_ticks_msec() / 1000.0
 	_movement.reset(at, now)
 	_movement.push(sequence, at, speed, yaw, pitch, now, grounded)

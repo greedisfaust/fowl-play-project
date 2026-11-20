@@ -573,7 +573,7 @@ func _sync_active_player_states(peer_id: int) -> void:
 		var grounded: bool = true
 		if not bool(player.get("is_recovering")):
 			grounded = bool(player.call("is_on_floor")) if bool(player.get("is_local_player")) else bool(player.get("_remote_grounded"))
-		var sequence: int = int(player.get("_movement_sequence"))
+		var sequence: int = int(player.call("get_movement_sync_sequence"))
 		var player_rotation: Vector3 = Vector3(player.get("rotation"))
 		_player_state_sync.rpc_id(
 			peer_id,
