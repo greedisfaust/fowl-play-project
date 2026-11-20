@@ -169,7 +169,7 @@ const ARM_IK_POLE_FORWARD_WEIGHT: float = 0.22
 const ARM_IK_MAX_STRETCH_RATIO: float = 1.12
 const LEG_GROUND_PROBE_UP_M: float = 0.35
 const LEG_GROUND_PROBE_DOWN_M: float = 0.85
-const LEG_GROUND_FOOT_CLEARANCE_M: float = 0.04
+const LEG_GROUND_FOOT_CLEARANCE_M: float = 0.015
 const LEG_GROUND_MIN_NORMAL_Y: float = 0.45
 const LEG_IK_BLEND_RESPONSE: float = 8.0
 const LEG_IK_POLE_FORWARD_WEIGHT: float = 1.0
@@ -583,12 +583,12 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 	var left_target: Vector3 = _left_foot_plant.call(
 		"update_target", left_foot_world, _left_foot_ground_target_world,
 		_left_foot_grounded, bool(_leg_controller.get("left_in_swing")),
-		float(_leg_controller.get("left_swing_progress")), 0.12
+		float(_leg_controller.get("left_swing_progress")), 0.28
 	)
 	var right_target: Vector3 = _right_foot_plant.call(
 		"update_target", right_foot_world, _right_foot_ground_target_world,
 		_right_foot_grounded, bool(_leg_controller.get("right_in_swing")),
-		float(_leg_controller.get("right_swing_progress")), 0.12
+		float(_leg_controller.get("right_swing_progress")), 0.28
 	)
 	_left_foot_ground_target_world = left_target
 	_right_foot_ground_target_world = right_target
