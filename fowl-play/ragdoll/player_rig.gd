@@ -477,7 +477,7 @@ func _apply_procedural_leg_ik(
 	foot_target_world: Vector3,
 	base_thigh_rotation: Quaternion,
 	base_shin_rotation: Quaternion,
-	delta: float
+	ik_weight: float
 ) -> bool:
 	if thigh_index < 0 or shin_index < 0 or foot_index < 0 or not foot_target_world.is_finite():
 		return false
@@ -502,7 +502,7 @@ func _apply_procedural_leg_ik(
 	var upper_direction_parent: Vector3 = parent_world_basis.inverse() * (knee_world - hip_world).normalized()
 	var upper_rest_axis: Vector3 = upper_rest_offset.normalized()
 	var upper_target_rotation: Quaternion = Quaternion(upper_rest_axis, upper_direction_parent.normalized())
-	var blend_weight: float = 1.0 - exp(-LEG_IK_BLEND_RESPONSE * maxf(delta, 0.0))
+	var blend_weight: float = clampf(ik_weight, 0.0, 1.0)
 	var blended_thigh: Quaternion = base_thigh_rotation.slerp(upper_target_rotation, blend_weight)
 	skeleton.set_bone_pose_rotation(thigh_index, blended_thigh)
 	skeleton.force_update_all_bone_transforms()
@@ -582,7 +582,7 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 	if _left_leg_ik_weight > 0.01:
 		var left_ik_applied: bool = _apply_procedural_leg_ik(
 			_left_thigh_bone_index, _left_shin_bone_index, _left_foot_bone_index,
-			_left_foot_ground_target_world, left_thigh_rotation, left_shin_rotation, delta
+			_left_foot_ground_target_world, left_thigh_rotation, left_shin_rotation, _left_leg_ik_weight
 		)
 		_left_leg_ik_active = left_ik_applied
 	else:
@@ -590,7 +590,7 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 	if _right_leg_ik_weight > 0.01:
 		var right_ik_applied: bool = _apply_procedural_leg_ik(
 			_right_thigh_bone_index, _right_shin_bone_index, _right_foot_bone_index,
-			_right_foot_ground_target_world, right_thigh_rotation, right_shin_rotation, delta
+			_right_foot_ground_target_world, right_thigh_rotation, right_shin_rotation, _right_leg_ik_weight
 		)
 		_right_leg_ik_active = right_ik_applied
 	else:
