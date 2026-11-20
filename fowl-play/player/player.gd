@@ -342,7 +342,7 @@ func _process(delta: float) -> void:
 func _update_owner_view_visibility() -> void:
 	if not is_local_player or not is_instance_valid(rig) or is_limp or is_recovering:
 		return
-	var leg_visibility: float = float(OWNER_VIEW_PRESENTATION_SCRIPT.call("leg_visibility_weight", _pitch_radians))
+	var leg_visibility: float = OWNER_VIEW_PRESENTATION_SCRIPT.leg_visibility_weight(_pitch_radians)
 	rig.call("set_owner_view_visibility", true, leg_visibility)
 
 func _update_first_person_camera_presentation(delta: float) -> void:
