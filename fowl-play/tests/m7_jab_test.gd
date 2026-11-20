@@ -139,6 +139,14 @@ func _check_world_hit_and_recoil() -> void:
 	second_lunge_target.global_position = Vector3(0.0, 0.0, -2.7)
 	for frame_index: int in range(4):
 		await physics_frame
+	var attacker_left_guard: Hand = attacker.get_node("Head/Camera3D/ViewmodelHands/LeftHand") as Hand
+	var attacker_right_guard: Hand = attacker.get_node("Head/Camera3D/ViewmodelHands/RightHand") as Hand
+	if attacker_left_guard.guard_position_offset.y < 0.25 or attacker_right_guard.guard_position_offset.y < 0.25:
+		_fail("Boxer guard should lift both closed fists into a higher defensive position")
+	if attacker_left_guard.guard_position_offset.x >= 0.0 or attacker_right_guard.guard_position_offset.x >= 0.0:
+		_fail("Mirrored Viewmodel hands should use inward local offsets to bring both fists toward the centerline")
+	if not attacker_left_guard.guard_rotation_degrees.is_equal_approx(attacker_right_guard.guard_rotation_degrees):
+		_fail("Mirrored Viewmodel hands should retain a consistent defensive wrist angle")
 	var camera: Camera3D = attacker.get_node("Head/Camera3D") as Camera3D
 	var lunge_targets: Array[Dictionary] = HIT_DETECTOR.trace_lunge_targets(
 		attacker,
