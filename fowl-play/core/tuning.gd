@@ -32,6 +32,8 @@ const LEG_SWING_FOOT_LIFT_RAD: float = deg_to_rad(16.0)
 const LEG_STANCE_TOE_ROLL_RAD: float = deg_to_rad(7.0)
 const LEG_BLEND_RESPONSE: float = 10.0
 const LEG_VELOCITY_RESPONSE: float = 20.0
+const LEG_DIRECTION_CHANGE_DOT: float = 0.55
+const LEG_TURN_RESPONSE: float = 42.0
 const MAX_PUNCH_POS_ERROR_M: float = 6.0
 
 const TAP_MAX_SECONDS: float = 0.25
