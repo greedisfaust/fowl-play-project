@@ -616,7 +616,7 @@ Foot planting now records both a world-space target and, when the ground hit bel
 
 ## 2026-11-20 — M7.2 jab presentation
 
-- Added a local procedural Chest-bone pose curve and animated fist offset: the hand pulls back during anticipation, then extends with the torso through follow-through before returning to neutral.
+- Added a local procedural Chest-bone pose curve and animated fist offset: the hand pulls back during anticipation, then extends with the torso through follow-through before returning to its authored rest offset.
 - The hand remains curled through the jab extension/return and then releases back to its ordinary pose; the existing hand action controls wrist reach.
 - Standing targets now combine the existing movement recoil with a brief upper-body lean/twist response.
 - `CombatPresentation.advance()` runs before PlayerRig's procedural arm IK pass. The IK therefore solves from the animated shoulder and continues following the Viewmodel wrist target.

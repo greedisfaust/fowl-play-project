@@ -1,4 +1,4 @@
-## Headless checks for M7.1 jab timing, ray targeting and limp impulse behavior.
+## Headless checks for M7.1 jab gameplay and M7.2 presentation curves.
 extends SceneTree
 const PLAYER_SCENE: PackedScene = preload("res://player/player.tscn")
 const TUNING = preload("res://core/tuning.gd")
@@ -40,8 +40,15 @@ func _check_presentation_curves() -> void:
 	var extension: Vector3 = COMBAT_PRESENTATION.get_jab_body_pose(0.10, Vector3.FORWARD)
 	var follow_through: Vector3 = COMBAT_PRESENTATION.get_jab_body_pose(0.20, Vector3.FORWARD)
 	var returned: Vector3 = COMBAT_PRESENTATION.get_jab_body_pose(COMBAT_PRESENTATION.JAB_POSE_DURATION_S, Vector3.FORWARD)
+	var base_hand_offset: Vector3 = Vector3(-0.025, -0.025, 0.075)
+	var windup_hand: Vector3 = COMBAT_PRESENTATION.get_windup_hand_offset(base_hand_offset, 0.20)
+	var jab_start_hand: Vector3 = COMBAT_PRESENTATION.get_jab_hand_offset(base_hand_offset, 0.0)
+	var jab_extension_hand: Vector3 = COMBAT_PRESENTATION.get_jab_hand_offset(base_hand_offset, 0.10)
+	var jab_return_hand: Vector3 = COMBAT_PRESENTATION.get_jab_hand_offset(base_hand_offset, COMBAT_PRESENTATION.JAB_POSE_DURATION_S)
 	if windup.x >= 0.0 or extension.x <= 0.0:
 		_fail("Jab presentation should move from anticipation lean into a forward extension")
+	if windup_hand.z <= base_hand_offset.z or jab_start_hand.z <= base_hand_offset.z or jab_extension_hand.z >= base_hand_offset.z or not jab_return_hand.is_equal_approx(base_hand_offset):
+		_fail("Fist should pull back, extend forward, and return to its authored offset")
 	if follow_through.x <= 0.0:
 		_fail("Jab should hold a readable forward follow-through")
 	if absf(returned.x) > 0.001 or absf(returned.y) > 0.001 or absf(returned.z) > 0.001:

@@ -112,8 +112,8 @@ static func get_windup_hand_offset(base_offset: Vector3, elapsed: float) -> Vect
 static func get_jab_hand_offset(base_offset: Vector3, elapsed: float) -> Vector3:
 	var t: float = clampf(elapsed / JAB_POSE_DURATION_S, 0.0, 1.0)
 	var pullback_to_extension: float = smoothstep(0.0, 0.18, t)
-	var depth: float = lerpf(0.14, -0.045, pullback_to_extension) if t < 0.18 else -0.045 * sin(PI * t)
-	var height: float = lerpf(0.025, 0.02, pullback_to_extension) if t < 0.18 else 0.02
+	var depth: float = lerpf(0.14, -0.045, pullback_to_extension) if t < 0.18 else -0.045 * cos(PI * (t - 0.18) / (2.0 * 0.82))
+	var height: float = 0.025 * sin(PI * t)
 	return base_offset + Vector3(0.0, height, depth)
 
 static func get_jab_body_pose(elapsed: float, local_direction: Vector3) -> Vector3:
