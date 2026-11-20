@@ -421,7 +421,7 @@ Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep a
 
 ## 2026-11-20 — nameplate text clarity and head clearance
 
-- Raised the runtime HeadAttachment offset from 0.38 m to 0.62 m so the plate sits more comfortably above the head.
+- Raised the runtime HeadAttachment offset from 0.56 m to 0.62 m so the plate sits more comfortably above the head.
 - Split opacity treatment: the dark backing, identity accent rail, and divider fade from the resting opacity to full opacity when aimed at. Nickname and status text remain fully opaque at all times for quick player identification.
 - The existing distance fade continues to apply to the decorative panel only; text remains readable independently of hover and panel opacity.
 - The current visual design is a functional first pass, not a locked final design. Keep the existing scene hierarchy; future styling can replace or add authored decorative UI elements without changing identity networking or ragdoll attachment.
