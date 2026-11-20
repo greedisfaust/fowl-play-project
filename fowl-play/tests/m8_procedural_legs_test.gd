@@ -2,6 +2,7 @@
 extends SceneTree
 
 const LEG_CONTROLLER_SCRIPT = preload("res://ragdoll/procedural_leg_controller.gd")
+const FOOT_PLANT_SCRIPT = preload("res://ragdoll/procedural_foot_plant.gd")
 const RIG_SCENE: PackedScene = preload("res://ragdoll/player_rig.tscn")
 
 var _failed: bool = false
@@ -11,6 +12,7 @@ func _initialize() -> void:
 
 func _run() -> void:
 	_check_controller_gait()
+	_check_foot_plant_targets()
 	_check_rig_ownership()
 	if _failed:
 		quit(1)
@@ -102,6 +104,37 @@ func _check_stance_swing_articulation() -> void:
 
 	if bool(controller.get("right_in_swing")) == bool(controller.get("left_in_swing")):
 		_fail("Opposite feet should occupy opposite gait phases")
+
+
+func _check_foot_plant_targets() -> void:
+	var tracker: RefCounted = FOOT_PLANT_SCRIPT.new()
+	var current: Vector3 = Vector3(0.0, 0.1, 0.0)
+	var first_landing: Vector3 = Vector3(0.0, 0.05, 0.0)
+	var planted: Vector3 = tracker.call("update_target", current, first_landing, true, false, 0.0, 0.12)
+	if planted.distance_to(first_landing) > 0.001:
+		_fail("A new stance should capture the grounded landing target")
+
+	var moved_root_foot: Vector3 = current + Vector3(0.0, 0.0, -0.4)
+	var locked: Vector3 = tracker.call("update_target", moved_root_foot, first_landing, true, false, 0.0, 0.12)
+	if locked.distance_to(first_landing) > 0.001:
+		_fail("A planted foot should remain locked in world space while the player moves")
+
+	var next_landing: Vector3 = Vector3(0.0, 0.05, -0.8)
+	var swing_start: Vector3 = tracker.call("update_target", moved_root_foot, next_landing, true, true, 0.0, 0.12)
+	if swing_start.distance_to(first_landing) > 0.001:
+		_fail("A swing should begin at the previous planted anchor")
+	var swing_middle: Vector3 = tracker.call("update_target", moved_root_foot, next_landing, true, true, 0.5, 0.12)
+	if swing_middle.z >= first_landing.z or swing_middle.z <= next_landing.z:
+		_fail("The swing target should interpolate between the old and next foot positions")
+	if swing_middle.y <= first_landing.y:
+		_fail("The swing target should lift above the ground during mid-swing")
+	var landed: Vector3 = tracker.call("update_target", next_landing, next_landing, true, false, 0.0, 0.12)
+	if landed.distance_to(next_landing) > 0.001:
+		_fail("The foot should lock to its new landing point when stance begins")
+
+	var airborne: Vector3 = tracker.call("update_target", next_landing + Vector3.UP, next_landing, false, false, 0.0, 0.12)
+	if airborne.distance_to(next_landing + Vector3.UP) > 0.001:
+		_fail("Foot planting should yield to the current foot position while airborne")
 
 func _check_rig_ownership() -> void:
 	var rig: Node3D = RIG_SCENE.instantiate() as Node3D
