@@ -4,6 +4,7 @@ extends SceneTree
 const TUNING = preload("res://core/tuning.gd")
 const LEG_CONTROLLER_SCRIPT = preload("res://ragdoll/procedural_leg_controller.gd")
 const FOOT_PLANT_SCRIPT = preload("res://ragdoll/procedural_foot_plant.gd")
+const FOOTSTEP_PLANNER_SCRIPT = preload("res://ragdoll/procedural_footstep_planner.gd")
 const LEG_IK = preload("res://ragdoll/procedural_arm_ik.gd")
 const RIG_SCENE: PackedScene = preload("res://ragdoll/player_rig.tscn")
 
@@ -14,6 +15,7 @@ func _initialize() -> void:
 
 func _run() -> void:
 	_check_controller_gait()
+	_check_footstep_planner()
 	_check_foot_plant_targets()
 	_check_two_bone_solver()
 	await _check_rig_ownership()
@@ -125,6 +127,36 @@ func _check_stance_swing_articulation() -> void:
 	if bool(controller.get("right_in_swing")) == bool(controller.get("left_in_swing")):
 		_fail("Opposite feet should occupy opposite gait phases")
 
+
+func _check_footstep_planner() -> void:
+	var planner: RefCounted = FOOTSTEP_PLANNER_SCRIPT.new()
+	var hip: Vector3 = Vector3(2.0, 1.0, 3.0)
+	var forward_left: Vector3 = planner.call(
+		"get_landing_target", hip, Basis.IDENTITY, Vector3(0.0, 0.0, -5.0), -1.0
+	)
+	if forward_left.distance_to(Vector3(1.82, 1.0, 2.64)) > 0.001:
+		_fail("Forward foot targets should be placed ahead of the hips with left/right separation")
+	var forward_right: Vector3 = planner.call(
+		"get_landing_target", hip, Basis.IDENTITY, Vector3(0.0, 0.0, -5.0), 1.0
+	)
+	if forward_right.distance_to(Vector3(2.18, 1.0, 2.64)) > 0.001:
+		_fail("Right foot target should mirror the left foot's lateral offset")
+	var strafe: Vector3 = planner.call(
+		"get_landing_target", hip, Basis.IDENTITY, Vector3(5.0, 0.0, 0.0), 1.0
+	)
+	if strafe.x <= hip.x or absf(strafe.z - hip.z) < 0.1:
+		_fail("Strafing targets should follow movement intent while preserving foot separation")
+	var backward: Vector3 = planner.call(
+		"get_landing_target", hip, Basis.IDENTITY, Vector3(0.0, 0.0, 5.0), -1.0
+	)
+	if backward.z <= hip.z:
+		_fail("Backward movement should place the landing target behind the hips")
+	var rotated_basis: Basis = Basis(Vector3.UP, PI * 0.5)
+	var rotated_forward: Vector3 = planner.call(
+		"get_landing_target", hip, rotated_basis, Vector3(0.0, 0.0, -5.0), -1.0
+	)
+	if rotated_forward.x <= hip.x:
+		_fail("Footstep targets should respect the rig's world-facing orientation")
 
 func _check_foot_plant_targets() -> void:
 	var tracker: RefCounted = FOOT_PLANT_SCRIPT.new()
