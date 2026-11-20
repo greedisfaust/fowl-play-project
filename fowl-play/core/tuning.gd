@@ -21,6 +21,7 @@ const LEG_REPLANT_LIFT_M: float = 0.30
 const LEG_MIN_LANDING_LATERAL_M: float = 0.20
 const LEG_IK_SWING_KNEE_FORWARD_BIAS_M: float = 0.35
 const LEG_IK_MAX_STRETCH_RATIO: float = 1.14
+const LEG_NORMAL_FORWARD_PLACEMENT_M: float = 0.40
 const LEG_EMERGENCY_FORWARD_PLACEMENT_M: float = 0.12
 const LEG_MIN_WALK_SPEED_MPS: float = 0.15
 const LEG_MAX_THIGH_SWING_RAD: float = deg_to_rad(46.0)
