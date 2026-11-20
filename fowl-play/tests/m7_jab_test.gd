@@ -1,4 +1,4 @@
-## Headless checks for M7.1 jab gameplay and M7.2 presentation curves.
+## Headless checks for M7.1 jab gameplay and M7.2 presentation/recoil behavior.
 extends SceneTree
 const PLAYER_SCENE: PackedScene = preload("res://player/player.tscn")
 const TUNING = preload("res://core/tuning.gd")
@@ -91,6 +91,7 @@ func _check_world_hit_and_recoil() -> void:
 	if (mask & (1 << (LAYERS.WORLD_STATIC - 1))) == 0 or (mask & (1 << (LAYERS.DEVICES - 1))) == 0 or (mask & (1 << (LAYERS.CARRIED - 1))) == 0 or (mask & (1 << (LAYERS.ELEVATOR - 1))) == 0:
 		_fail("Jab ray should include world, device, carried-prop and elevator layers so obstacles block hits")
 	var network: Node = root.get_node("Network")
+	var target_position_before_recoil: Vector3 = target.global_position
 	var jab_count_before_cancel: int = int(network.get("combat_jabs"))
 	if not bool(network.call("_receive_combat_input", 1, true)):
 		_fail("Host should accept a punch press before cancellation")
@@ -110,7 +111,9 @@ func _check_world_hit_and_recoil() -> void:
 	if int(network.get("combat_jabs")) != 1 or int(network.get("combat_hits")) != 1:
 		_fail("A clear in-range jab should be accepted and confirm exactly one hit")
 	if target.velocity.z >= -0.5:
-		_fail("A standing target should receive a weak movement recoil")
+		_fail("A standing target should retain a readable recoil velocity after the hit")
+	if target.global_position.z >= target_position_before_recoil.z - 0.08:
+		_fail("A standing target should be displaced by the independent recoil impulse")
 	target.set("auto_recovery_enabled", false)
 	if not bool(network.call("start_ragdoll_spike", 2)):
 		_fail("The test target should enter host-simulated limp")

@@ -46,6 +46,8 @@ var limp_epoch: int = 0
 
 const MOVEMENT_STREAM = preload("res://core/movement_stream.gd")
 var _movement: MOVEMENT_STREAM = MOVEMENT_STREAM.new()
+## A short external impulse, kept separate from player-controlled locomotion.
+var _combat_recoil_velocity: Vector3 = Vector3.ZERO
 var _send_elapsed: float = 0.0
 var _movement_sequence: int = 0
 var _ragdoll_send_elapsed: float = 0.0
@@ -461,12 +463,14 @@ func receive_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pi
 func set_terminal_movement_locked(locked: bool) -> void:
 	terminal_movement_locked = locked
 	if locked:
+		_combat_recoil_velocity = Vector3.ZERO
 		velocity.x = 0.0
 		velocity.z = 0.0
 
 func correct_movement(at: Vector3) -> void:
 	if is_limp or is_recovering:
 		return
+	_combat_recoil_velocity = Vector3.ZERO
 	_jump_controller.call("reset")
 	global_position = at
 	velocity = Vector3.ZERO
@@ -522,9 +526,11 @@ func _physics_process(delta: float) -> void:
 	velocity.y = float(jump_state.get("vertical_velocity", velocity.y))
 
 	if movement_locked:
-		velocity.x = 0.0
-		velocity.z = 0.0
+		_combat_recoil_velocity *= exp(-TUNING.JAB_RECOIL_DECAY_RATE * delta)
+		velocity.x = _combat_recoil_velocity.x
+		velocity.z = _combat_recoil_velocity.z
 		move_and_slide()
+		_project_combat_recoil_from_collisions()
 		return
 
 	var input_vector: Vector2 = Input.get_vector(
@@ -539,9 +545,12 @@ func _physics_process(delta: float) -> void:
 	if move_direction != Vector3.ZERO and Input.is_action_pressed("sprint"):
 		target_speed = TUNING.PLAYER_RUN_SPEED_MPS
 	var air_control: float = 1.0 if grounded_before_move and not bool(jump_state.get("jumped", false)) else TUNING.PLAYER_AIR_CONTROL_MULTIPLIER
+	# Remove the independently simulated hit impulse before applying player input.
+	# Otherwise normal acceleration/deceleration can erase the recoil almost instantly.
+	var locomotion_velocity: Vector3 = Vector3(velocity.x, 0.0, velocity.z) - _combat_recoil_velocity
 	var horizontal_velocity: Vector3 = _movement_controller.call(
 		"advance_horizontal_velocity",
-		Vector3(velocity.x, 0.0, velocity.z),
+		locomotion_velocity,
 		move_direction,
 		target_speed,
 		TUNING.PLAYER_ACCELERATION_MPS2 * air_control,
@@ -549,13 +558,25 @@ func _physics_process(delta: float) -> void:
 		delta,
 		TUNING.PLAYER_TURN_ACCELERATION_MPS2 * air_control
 	)
-	velocity.x = horizontal_velocity.x
-	velocity.z = horizontal_velocity.z
+	_combat_recoil_velocity *= exp(-TUNING.JAB_RECOIL_DECAY_RATE * delta)
+	velocity.x = horizontal_velocity.x + _combat_recoil_velocity.x
+	velocity.z = horizontal_velocity.z + _combat_recoil_velocity.z
 
 	move_and_slide()
+	_project_combat_recoil_from_collisions()
 
 ## Host-only: called when another player grabs this limp player's Interactable.
 ## Delegates to Network.host_begin_carry so host validation applies.
+func _project_combat_recoil_from_collisions() -> void:
+	# A wall should absorb the part of the impulse pointing into it. Keep the
+	# remaining tangent component so the recoil cannot repeatedly push through it.
+	for collision_index: int in get_slide_collision_count():
+		var collision: KinematicCollision3D = get_slide_collision(collision_index)
+		var normal: Vector3 = collision.get_normal()
+		var into_surface: float = _combat_recoil_velocity.dot(normal)
+		if into_surface < 0.0:
+			_combat_recoil_velocity -= normal * into_surface
+
 func _on_limp_interacted(actor: Node, action: StringName) -> void:
 	if action != &"grab":
 		return
@@ -569,6 +590,7 @@ func _on_limp_interacted(actor: Node, action: StringName) -> void:
 func begin_host_limp() -> bool:
 	if is_limp or is_recovering or rig == null or (network.get("peer") != null and not bool(network.get("is_host"))):
 		return false
+	_combat_recoil_velocity = Vector3.ZERO
 	if is_carrying():
 		network.call("force_drop_carry", input_peer_id, "entered limp")
 	collision_layer = 0
@@ -682,6 +704,7 @@ func _recovery_candidate(at: Vector3, collider_transform: Transform3D, params: P
 func begin_remote_limp(epoch: int, world_transform: Transform3D, initial_pose: PackedInt32Array) -> bool:
 	if is_limp or is_recovering or epoch <= limp_epoch or rig == null:
 		return false
+	_combat_recoil_velocity = Vector3.ZERO
 	_combat_controller.call("cancel")
 	_combat_presentation.call("cancel")
 	if not bool(rig.call("begin_remote_pose", world_transform, initial_pose)):
@@ -854,7 +877,9 @@ func apply_combat_recoil(direction: Vector3, strength: float = 1.0) -> void:
 	if horizontal.length_squared() < 0.0001:
 		return
 	var bounded_strength: float = clampf(strength, 1.0, 1.35)
-	velocity += horizontal.normalized() * TUNING.JAB_RECOIL_SPEED_MPS * bounded_strength
+	_combat_recoil_velocity += horizontal.normalized() * TUNING.JAB_RECOIL_SPEED_MPS * bounded_strength
+	velocity.x += horizontal.normalized().x * TUNING.JAB_RECOIL_SPEED_MPS * bounded_strength
+	velocity.z += horizontal.normalized().z * TUNING.JAB_RECOIL_SPEED_MPS * bounded_strength
 	_combat_presentation.call("play_recoil", direction, bounded_strength)
 
 func _rotate_view(mouse_delta: Vector2) -> void:

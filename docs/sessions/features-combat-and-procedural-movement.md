@@ -321,6 +321,7 @@ Implemented:
 - Reduced jab pose duration to 0.30 s, extension to 0.085 s, and contact hold to 0.025 s.
 - Reworked standing weak-hit presentation into a single strong backward chest snap with directional yaw/roll and damped recovery over 0.34 s. It does not oscillate or change the Weak reaction tier.
 - Host samples the attacker's actual velocity projected toward the target at impact. Impact scaling ranges from 1.0× at rest to 1.35× at 8 m/s toward the target; sideways or retreating movement stays at baseline. The host relays this bounded multiplier with the recoil event; target movement impulse and torso pose use the same multiplier.
+- Standing recoil now has a separate exponentially decaying velocity component, so normal player acceleration/deceleration does not erase the hit impulse on the next physics tick. Wall collisions remove only the component pushing into the surface; limp/recovery transitions clear the standing impulse.
 - Limp impulse and recovery lifecycle remain unchanged. No scene hierarchy changes.
 
 Verification:

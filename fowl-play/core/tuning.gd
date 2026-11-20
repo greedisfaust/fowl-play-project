@@ -57,6 +57,7 @@ const JAB_COOLDOWN_SECONDS: float = 0.35
 const QUICK_PUNCH_RANGE_M: float = 2.5
 const QUICK_PUNCH_DURATION_S: float = 0.10
 const JAB_RECOIL_SPEED_MPS: float = 1.6
+const JAB_RECOIL_DECAY_RATE: float = 4.5
 const JAB_LIMP_IMPULSE_MPS: float = 2.0
 const CHARGED_PUNCH_RANGE_M: float = 3.5
 const LUNGE_SPEED_MPS: float = 12.0
