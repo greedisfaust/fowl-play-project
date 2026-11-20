@@ -443,3 +443,10 @@ Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep a
 - User confirmed player identity coloring works in-game across the character presentation, including hands and ragdoll; the nameplate uses the assigned identity color as its accent while keeping nickname text legible.
 - This branch is archived as the implementation baseline for identity, terminal/world-kit presentation, and interaction feedback. Do not carry the three resolved issues forward as open tasks.
 - No claim is made here that the assistant ran Godot tests. Preserve explicit pending status for automated checks or visual checks that were not independently confirmed.
+
+
+### Procedural leg stopping refinement — 2026-11-20
+
+- Fixed the gait phase freezing in mid-swing when horizontal movement stopped. The controller now gently advances the remaining cycle to the shared double-stance phase while the motion blend fades, then holds a neutral standing phase.
+- Added an M8 regression check that stops the controller during swing and verifies both feet settle into stance.
+- This addresses the suspended-foot case visible in the user's playtest. Foot sole alignment and surface-normal orientation remain separate visual-contact refinements; Godot test execution and in-game verification are still pending.
