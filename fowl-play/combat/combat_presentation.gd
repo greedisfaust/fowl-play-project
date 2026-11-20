@@ -16,9 +16,13 @@ var _phase_elapsed: float = 0.0
 var _recoil_elapsed: float = -1.0
 var _jab_direction: Vector3 = Vector3.FORWARD
 var _recoil_direction: Vector3 = Vector3.FORWARD
+var _base_punch_position_offset: Vector3 = Vector3.ZERO
 
 func configure(player: Node) -> void:
 	_player = player
+	var hand: Hand = _get_right_hand()
+	if hand != null:
+		_base_punch_position_offset = hand.punch_position_offset
 
 func begin_windup() -> void:
 	if not _can_present():
@@ -28,6 +32,7 @@ func begin_windup() -> void:
 	var hand: Hand = _get_right_hand()
 	if hand != null:
 		hand.set_punching(true)
+		hand.punch_position_offset = _base_punch_position_offset + Vector3(0.0, 0.025, 0.14)
 
 func play_jab(direction: Vector3) -> void:
 	var hand: Hand = _get_right_hand()
@@ -42,6 +47,7 @@ func play_jab(direction: Vector3) -> void:
 	_phase_elapsed = 0.0
 	_jab_direction = direction.normalized()
 	hand.set_punching(true)
+	hand.punch_position_offset = _base_punch_position_offset
 	var target: Vector3 = camera.global_position + _jab_direction
 	if not hand.begin_action(target):
 		hand.set_punching(false)
@@ -64,13 +70,20 @@ func advance(delta: float) -> void:
 		Phase.WINDUP:
 			var windup_weight: float = 1.0 - exp(-14.0 * _phase_elapsed)
 			body_pose.x = WINDUP_LEAN_RAD * windup_weight
+			var windup_hand: Hand = _get_right_hand()
+			if windup_hand != null:
+				windup_hand.punch_position_offset = _base_punch_position_offset + Vector3(0.0, 0.025, 0.14 * windup_weight)
 		Phase.JAB:
 			body_pose += get_jab_body_pose(_phase_elapsed, _local_direction(_jab_direction))
+			var jab_hand: Hand = _get_right_hand()
+			if jab_hand != null:
+				var jab_t: float = clampf(_phase_elapsed / JAB_POSE_DURATION_S, 0.0, 1.0)
+				jab_hand.punch_position_offset = _base_punch_position_offset + Vector3(0.0, 0.02, -0.045 * sin(PI * jab_t))
 			if _phase_elapsed >= JAB_POSE_DURATION_S:
 				_phase = Phase.IDLE
-				var hand: Hand = _get_right_hand()
-				if hand != null:
-					hand.set_punching(false)
+				if jab_hand != null:
+					jab_hand.set_punching(false)
+					jab_hand.punch_position_offset = _base_punch_position_offset
 	if _recoil_elapsed >= 0.0:
 		body_pose += get_recoil_body_pose(_recoil_elapsed, _local_direction(_recoil_direction))
 		_recoil_elapsed += maxf(delta, 0.0)
@@ -87,6 +100,7 @@ func cancel() -> void:
 	var hand: Hand = _get_right_hand()
 	if hand != null:
 		hand.set_punching(false)
+		hand.punch_position_offset = _base_punch_position_offset
 	var rig: Node3D = _player.get("rig") as Node3D if is_instance_valid(_player) else null
 	if is_instance_valid(rig):
 		rig.call("set_combat_body_pose", Vector3.ZERO)
