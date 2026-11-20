@@ -403,7 +403,7 @@ Verification:
 
 ## M9 — multiplayer lifecycle hardening
 
-- Late join synchronization now has two explicit paths: active limp players receive the existing ragdoll begin/final-pose stream; non-limp players receive a reliable standing capsule baseline containing position, velocity, yaw, pitch, and grounded state.
+- Late join synchronization now has two explicit paths: active limp players receive the existing ragdoll begin/final-pose stream; non-limp players receive a reliable standing capsule baseline containing position, velocity, yaw, pitch, and grounded state. The baseline uses the latest known movement sequence so a delayed reliable snapshot cannot rewind a newer unreliable movement update.
 - Recovery intentionally synchronizes as a stable standing baseline at the host-approved recovery position. A late joiner does not replay a get-up animation from its midpoint, but it no longer sees the player at the spawn marker. Ordinary movement replication resumes when the host finishes recovery.
 - Player-state baselines that arrive before the corresponding MultiplayerSpawner Player has completed _ready() are cached and applied after registration. Pending ragdoll state is applied first and retains ownership priority.
 - Disconnect cleanup now clears the departing peer's combat wind-up, active jab/lunge/parry, cooldown, action-lock, and carry-action timing state. Host-owned active presentation is cancelled before those records are erased.

@@ -33,17 +33,16 @@ func _run() -> void:
 	check(not bool(remote_player.call("apply_initial_player_state", 4, baseline, Vector3.ZERO, 0.7, 0.0, true)), "older reliable baseline cannot overwrite a newer movement sample")
 	check(not bool(remote_player.call("apply_initial_player_state", 6, Vector3(NAN, 0.0, 0.0), Vector3.ZERO, 0.0, 0.0, true)), "non-finite baseline is rejected")
 
-	var pending_player: CharacterBody3D = PLAYER_SCENE.instantiate() as CharacterBody3D
-	pending_player.name = "3"
-	pending_player.set("input_peer_id", 3)
-	players.add_child(pending_player)
-	await physics_frame
 	var pending_states: Dictionary = network.get("_pending_player_states")
 	pending_states[3] = {
 		"sequence": 0, "position": Vector3(-4.0, 0.53, 2.0), "velocity": Vector3.ZERO,
 		"yaw": -0.4, "pitch": 0.1, "grounded": true
 	}
-	network.call("apply_pending_player_state", 3, pending_player)
+	var pending_player: CharacterBody3D = PLAYER_SCENE.instantiate() as CharacterBody3D
+	pending_player.name = "3"
+	pending_player.set("input_peer_id", 3)
+	players.add_child(pending_player)
+	await physics_frame
 	check(pending_player.global_position.distance_to(Vector3(-4.0, 0.53, 2.0)) < 0.001, "baseline received before Player registration is applied after ready")
 	check(int(network.get("player_state_sync_received")) == 1, "deferred baseline increments receive diagnostic")
 
