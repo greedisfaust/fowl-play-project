@@ -683,3 +683,11 @@ The M7.2 pose-curve assertions are included in `m7_jab_test.gd`; run them with `
 ### M10 first-person camera presentation
 
 The local first-person camera adds a restrained velocity-driven bob while walking/running, lateral sway while strafing, vertical response while airborne, and a short landing-compression pulse. Approved standing combat recoil also adds a brief directional camera impulse. These are local cosmetic effects and do not add network traffic or change movement authority. Ragdoll head-follow and the recovery camera blend retain ownership while limp/recovering; first-person movement effects are suspended during those states. The Player's exported `camera_motion_intensity` property scales the effect (0 disables it, 1 is the default, and values up to 1.5 amplify it). Camera offsets are composed with the authored `Head/Camera3D` transform rather than replacing its authored position; the same base transform is restored after ragdoll recovery. Run `tests/run_checks.ps1 -OnlyStage m10-camera` for the pure camera-controller and transform-composition regression checks. Godot execution and visual tuning remain user-run.
+
+
+### M10.4 ragdoll and recovery camera comfort
+
+- During limp, the local first-person camera should follow the ragdoll head with a smooth, responsive position/rotation filter. The head should still visibly tilt with the body; the filter is intended to soften physics/network jitter, not lock the view level.
+- Test a normal knockdown, a charged/parry launch, being carried, and being released. Confirm the camera catches up to the moving head without sharp snaps or excessive float.
+- During get-up, the camera should transition from the filtered ragdoll view to the authored standing camera pose without a sudden rotation or position jump. Normal camera bob/sway and wall avoidance should resume after recovery.
+- Run .\tests\run_checks.ps1 -OnlyStage m10-ragdoll-camera from fowl-play/. These checks and the in-game visual behavior have not been run by the assistant.

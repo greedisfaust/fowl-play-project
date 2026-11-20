@@ -650,3 +650,12 @@ Foot planting now records both a world-space target and, when the ground hit bel
 - Use/grab are rejected while Q is held for a possible charge and throughout the 2.0 s charged-punch cooldown/recovery lock. A shared parry gate is exposed for the later parry slice; parry itself is not implemented here.
 - Added charged-punch, lunge and active-lunge DebugHub watches plus regression assertions for threshold behavior, auto-fire while held, one-fire-per-press, steering limits and action gating.
 - No scenes or user-authored hierarchy were edited. Godot tests, imports and rendered host/client playtests have not been run by the assistant.
+
+
+## 2026-11-21 — M10.4 ragdoll and recovery camera comfort
+
+- Added a local-only ragdoll camera presenter that captures the current camera pose on limp entry and filters both position and rotation as the view follows the simulated/interpolated head eye transform. Filtering applies consistently to carried and uncarried ragdolls; natural head tilt remains visible without exposing the camera directly to every physics/network pose jitter.
+- Existing bounded limp look offsets remain layered on the filtered head orientation. Host ragdoll simulation, carry physics, pose replication, recovery placement, and gameplay authority are unchanged.
+- Recovery now uses quintic smootherstep easing between the last filtered ragdoll camera pose and the authored standing camera target.
+- Added the m10-ragdoll-camera focused regression stage. No scene hierarchy or .tscn files changed.
+- Godot execution and in-game visual verification have not been run by the assistant. User playtesting remains required for falling, carried/released ragdolls, and get-up camera handoff.

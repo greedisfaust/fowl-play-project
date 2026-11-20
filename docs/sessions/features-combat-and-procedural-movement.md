@@ -448,3 +448,12 @@ This is still the first M10 slice, not the complete milestone. Owner lower-body 
 - Added the m10-camera-collision focused test for clear path, immediate obstruction response, smooth release, and reset.
 - Godot execution and in-game visual/multiplayer verification have not been run by the assistant; test wall corners, pillars, props, elevators, and recovery camera handoff in-game.
 
+
+
+## M10.4 — ragdoll and recovery camera comfort
+
+- Added a dedicated local-only ragdoll camera presenter. On limp entry it captures the current first-person camera pose, then smoothly follows the simulated/interpolated head eye transform with separate position and rotation filtering. This now applies to both carried and uncarried ragdolls, preserving natural head tilt while damping abrupt physics/network pose jitter.
+- The camera remains detached from the Player root during limp, and the existing bounded owner look offsets remain layered on top of the filtered head orientation. No ragdoll physics, host authority, pose replication, or carry behavior changed.
+- Recovery captures the currently smoothed ragdoll camera pose and blends to the authored standing camera target with quintic smootherstep easing, reducing abrupt motion at the beginning and end of the get-up transition.
+- Added m10-ragdoll-camera regression coverage for continuous head-follow filtering, convergence, reset, and recovery easing. No .tscn files or scene hierarchy changed.
+- Focused check: .\tests\run_checks.ps1 -OnlyStage m10-ragdoll-camera from fowl-play/. Godot execution and in-game visual verification have not been run by the assistant.

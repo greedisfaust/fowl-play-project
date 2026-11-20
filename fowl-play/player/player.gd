@@ -13,6 +13,7 @@ const MOVEMENT_PRESENTATION_SCRIPT = preload("res://ragdoll/procedural_movement_
 const CAMERA_PRESENTATION_SCRIPT = preload("res://player/camera_presentation.gd")
 const OWNER_VIEW_PRESENTATION_SCRIPT = preload("res://player/owner_view_presentation.gd")
 const CAMERA_COLLISION_SCRIPT = preload("res://player/camera_collision_presentation.gd")
+const RAGDOLL_CAMERA_PRESENTATION_SCRIPT = preload("res://player/ragdoll_camera_presentation.gd")
 var _movement_controller: RefCounted = MOVEMENT_CONTROLLER_SCRIPT.new()
 var _jump_controller: RefCounted = JUMP_CONTROLLER_SCRIPT.new()
 var _combat_controller: RefCounted = COMBAT_CONTROLLER_SCRIPT.new()
@@ -21,6 +22,7 @@ var _parry_barrier: RefCounted = PARRY_BARRIER_SCRIPT.new()
 var _movement_presentation: RefCounted = MOVEMENT_PRESENTATION_SCRIPT.new()
 var _camera_presentation: RefCounted = CAMERA_PRESENTATION_SCRIPT.new()
 var _camera_collision: RefCounted = CAMERA_COLLISION_SCRIPT.new()
+var _ragdoll_camera_presentation: RefCounted = RAGDOLL_CAMERA_PRESENTATION_SCRIPT.new()
 var _camera_rest_transform: Transform3D = Transform3D.IDENTITY
 @export_range(0.0, 1.5, 0.05) var camera_motion_intensity: float = 1.0
 var _movement_presentation_last_yaw: float = 0.0
@@ -84,13 +86,6 @@ var _pitch_radians: float = 0.0
 var _remote_grounded: bool = true
 var _limp_look_yaw: float = 0.0
 var _limp_look_pitch: float = 0.0
-var _carry_camera_smoothing_initialized: bool = false
-var _carry_camera_smoothed_origin: Vector3 = Vector3.ZERO
-var _carry_camera_smoothed_rotation: Quaternion = Quaternion.IDENTITY
-
-# Smooth only the ragdoll-head contribution; mouse look and dynamic FOV stay untouched.
-const CARRY_CAMERA_ROTATION_RESPONSE: float = 9.0
-const CARRY_CAMERA_POSITION_RESPONSE: float = 14.0
 var _recovery_elapsed_s: float = 0.0
 var _recovery_camera_start: Transform3D
 var _recovery_camera_target: Transform3D
@@ -460,7 +455,6 @@ func set_carried(carried: bool, by: Node3D = null) -> void:
 		if _is_carried or not is_limp or is_recovering:
 			return
 		_is_carried = true
-		_carry_camera_smoothing_initialized = false
 		_set_limp_interaction_proxy(false)
 		if _has_host_authority() and rig != null:
 			rig.call("disable_collisions")
@@ -474,7 +468,6 @@ func set_carried(carried: bool, by: Node3D = null) -> void:
 	if not _is_carried:
 		return
 	_is_carried = false
-	_carry_camera_smoothing_initialized = false
 	if _has_host_authority() and is_limp and rig != null:
 		rig.call("end_carry_physics")
 		rig.call("stop_carry_support")
@@ -872,6 +865,7 @@ func _begin_limp_camera() -> void:
 	var camera_transform: Transform3D = camera.global_transform
 	camera.top_level = true
 	camera.global_transform = camera_transform
+	_ragdoll_camera_presentation.call("begin", camera_transform)
 	_limp_look_yaw = 0.0
 	_limp_look_pitch = clampf(_pitch_radians, -LIMP_LOOK_PITCH_LIMIT, LIMP_LOOK_PITCH_LIMIT)
 	# Keep the body visible without placing the camera inside its head mesh.
@@ -889,6 +883,7 @@ func _begin_recovery_camera() -> void:
 	_pitch_radians = _limp_look_pitch
 	head.rotation.x = _pitch_radians
 	_recovery_camera_start = camera.global_transform
+	_ragdoll_camera_presentation.call("reset")
 	_recovery_camera_target = head.global_transform * _camera_rest_transform
 	if rig != null:
 		rig.visible = true
@@ -899,8 +894,10 @@ func _update_recovery_camera(delta: float) -> void:
 	_recovery_elapsed_s += delta
 	if not is_local_player:
 		return
-	var weight: float = clampf(_recovery_elapsed_s / TUNING.GET_UP_BLEND_SECONDS, 0.0, 1.0)
-	var eased_weight: float = weight * weight * (3.0 - 2.0 * weight)
+	var eased_weight: float = RAGDOLL_CAMERA_PRESENTATION_SCRIPT.recovery_weight(
+		_recovery_elapsed_s,
+		TUNING.GET_UP_BLEND_SECONDS
+	)
 	var rotation: Quaternion = _recovery_camera_start.basis.get_rotation_quaternion().slerp(
 		_recovery_camera_target.basis.get_rotation_quaternion(),
 		eased_weight
@@ -918,6 +915,7 @@ func _finish_recovery() -> void:
 		camera.transform = _camera_rest_transform
 		_camera_presentation.call("reset", true)
 		_camera_collision.call("reset")
+		_ragdoll_camera_presentation.call("reset")
 		if rig != null:
 			rig.visible = true
 			rig.call("set_owner_view_visibility", true, float(OWNER_VIEW_PRESENTATION_SCRIPT.leg_visibility_weight(_pitch_radians)))
@@ -932,23 +930,11 @@ func _update_limp_camera(delta: float) -> void:
 	var eye_transform: Transform3D = rig.call("get_head_eye_transform")
 	if not eye_transform.is_finite():
 		return
-	var head_rotation: Quaternion = eye_transform.basis.get_rotation_quaternion().normalized()
-	var camera_origin: Vector3 = eye_transform.origin
-	if _is_carried:
-		# Follow the head-mounted eye point with a little inertia, filtering
-		# physics jolts without detaching the view or smoothing player mouse-look.
-		if not _carry_camera_smoothing_initialized:
-			_carry_camera_smoothed_origin = camera_origin
-			_carry_camera_smoothed_rotation = head_rotation
-			_carry_camera_smoothing_initialized = true
-		var rotation_weight: float = 1.0 - exp(-CARRY_CAMERA_ROTATION_RESPONSE * delta)
-		var position_weight: float = 1.0 - exp(-CARRY_CAMERA_POSITION_RESPONSE * delta)
-		_carry_camera_smoothed_rotation = _carry_camera_smoothed_rotation.slerp(head_rotation, rotation_weight).normalized()
-		_carry_camera_smoothed_origin = _carry_camera_smoothed_origin.lerp(camera_origin, position_weight)
-		head_rotation = _carry_camera_smoothed_rotation
-		camera_origin = _carry_camera_smoothed_origin
-	else:
-		_carry_camera_smoothing_initialized = false
+	# Filter every simulated-head update, not only carried ragdolls. This
+	# preserves natural head tilt while removing sharp physics/network jitter.
+	var smoothed_head: Transform3D = _ragdoll_camera_presentation.call("advance", eye_transform, delta)
+	var head_rotation: Quaternion = smoothed_head.basis.get_rotation_quaternion().normalized()
+	var camera_origin: Vector3 = smoothed_head.origin
 	var look_yaw: Basis = Basis(Vector3.UP, _limp_look_yaw)
 	var look_pitch: Basis = Basis(Vector3.RIGHT, _limp_look_pitch)
 	camera.global_transform = Transform3D(Basis(head_rotation) * look_yaw * look_pitch, camera_origin)
