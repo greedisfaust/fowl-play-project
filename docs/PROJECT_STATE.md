@@ -457,3 +457,6 @@ Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep a
 - The planner keeps left/right targets separated perpendicular to travel, supports forward/backward/strafe/diagonal movement, and predicts root travel over the swing interval before vertical ground probing.
 - Existing foot anchors, swing interpolation, two-bone IK, and ground-normal alignment remain in place.
 - Added M8 planner assertions. Godot tests and in-game verification have not been run by the assistant; user visual verification is pending.
+
+
+- Follow-up refinement: hip-relative predicted targets are used only for a foot that is actively in swing. Stance feet continue probing their current sole, so standing initialization and stop-settling cannot pull a planted foot toward a forward target. Both targets are calculated from the midpoint between the hips to avoid doubling the lateral separation.
