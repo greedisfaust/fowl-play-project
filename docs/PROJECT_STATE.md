@@ -565,3 +565,13 @@ Foot planting now records both a world-space target and, when the ground hit bel
 
 - Increased the sprint target from 7.0 m/s to 8.0 m/s after the initial walk/run implementation, keeping normal walking at 3.8 m/s. The acceleration and deceleration response are unchanged.
 - User playtesting is still needed to confirm the new run pace and gait feel appropriate.
+
+
+## 2026-11-20 — responsive jump movement
+
+- Added a small pure `JumpController` for coyote time (0.10 s), jump buffering (0.12 s), and variable jump height. Releasing the jump action during ascent scales upward velocity by 0.45 for a shorter hop; holding it preserves the full jump.
+- Reduced horizontal acceleration and deceleration while airborne to 55% of their grounded values, preserving more momentum while still allowing midair steering.
+- Integrated the controller into the existing Player physics loop. Console/terminal movement locks still block new jump input; gravity and collision movement remain active.
+- Added local debug watches for remaining coyote and jump-buffer time. No scene files, Input Map actions, or network messages were changed.
+- Extended the existing M3 movement checks to cover coyote acceptance/expiry, buffered landing jumps, variable jump release, full-height held jumps, and reduced air steering.
+- Godot import, automated checks, and in-game playtesting have **not** been run by the assistant. User verification remains required.
