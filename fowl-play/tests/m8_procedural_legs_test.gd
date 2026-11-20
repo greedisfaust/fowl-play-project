@@ -151,6 +151,7 @@ func _check_rig_ownership() -> void:
 	rig.name = "M8TestRig"
 	root.add_child(rig)
 	await physics_frame
+	await physics_frame
 	var skeleton: Skeleton3D = rig.get_node("Skeleton3D") as Skeleton3D
 	var left_thigh_index: int = skeleton.find_bone("Thigh_L")
 	if left_thigh_index < 0:
