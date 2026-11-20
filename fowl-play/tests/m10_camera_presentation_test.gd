@@ -9,6 +9,7 @@ func _initialize() -> void:
 
 func _run() -> void:
 	_check_idle_and_locomotion_blend()
+	_check_locomotion_intensity_tuning()
 	_check_authored_camera_transform_is_preserved()
 	_check_air_and_landing_response()
 	_check_directional_impact_and_decay()
@@ -44,6 +45,10 @@ func _check_idle_and_locomotion_blend() -> void:
 	var disabled: Dictionary = controller.call("advance", 0.2, Vector3.ZERO, 0.0, true, false)
 	if Vector3(disabled.offset).length() > peak_offset + 0.1:
 		_fail("Disabled presentation should remain bounded")
+
+func _check_locomotion_intensity_tuning() -> void:
+	if not is_equal_approx(CAMERA_PRESENTATION.LOCOMOTION_MOTION_SCALE, 0.75):
+		_fail("Locomotion camera bob and sway should use the 75% intensity tuning")
 
 func _check_authored_camera_transform_is_preserved() -> void:
 	var authored: Transform3D = Transform3D(Basis.IDENTITY, Vector3(0.0, -0.2, -1.2))

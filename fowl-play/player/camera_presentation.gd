@@ -6,6 +6,7 @@ const RUN_SPEED_MPS: float = 8.0
 const BLEND_RESPONSE: float = 8.0
 const IMPACT_DECAY: float = 8.5
 const LANDING_DECAY: float = 11.0
+const LOCOMOTION_MOTION_SCALE: float = 0.75
 
 var intensity: float = 1.0
 var _phase: float = 0.0
@@ -63,12 +64,12 @@ func advance(delta: float, local_velocity: Vector3, vertical_velocity: float, gr
 	var run_blend: float = clampf((horizontal_speed - WALK_SPEED_MPS) / maxf(RUN_SPEED_MPS - WALK_SPEED_MPS, 0.01), 0.0, 1.0)
 	# Make ordinary walking readable in first person while keeping sprint stronger.
 	# The ViewmodelHands are children of Camera3D, so they naturally follow this motion.
-	var bob_amplitude: float = lerpf(0.028, 0.055, run_blend) * _weight
+	var bob_amplitude: float = lerpf(0.028, 0.055, run_blend) * _weight * LOCOMOTION_MOTION_SCALE
 	var bob_y: float = sin(_phase) * bob_amplitude
 	var bob_x: float = sin(_phase * 0.5) * bob_amplitude * 0.4
-	var sway_roll: float = -clampf(local_velocity.x / RUN_SPEED_MPS, -1.0, 1.0) * 0.06 * _weight
-	var gait_pitch: float = sin(_phase * 2.0) * 0.012 * _weight
-	var gait_roll: float = sin(_phase * 0.5) * 0.028 * _weight
+	var sway_roll: float = -clampf(local_velocity.x / RUN_SPEED_MPS, -1.0, 1.0) * 0.06 * _weight * LOCOMOTION_MOTION_SCALE
+	var gait_pitch: float = sin(_phase * 2.0) * 0.012 * _weight * LOCOMOTION_MOTION_SCALE
+	var gait_roll: float = sin(_phase * 0.5) * 0.028 * _weight * LOCOMOTION_MOTION_SCALE
 	var air_pitch: float = clampf(-vertical_velocity * 0.0035, -0.035, 0.035) if enabled and not grounded else 0.0
 	var landing_pitch: float = -_landing_impulse * 0.055
 	var offset: Vector3 = (Vector3(bob_x, bob_y, 0.0) + _impact_offset) * intensity
