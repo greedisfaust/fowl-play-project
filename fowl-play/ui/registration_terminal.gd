@@ -153,8 +153,20 @@ func _handle_screen_click(event: InputEventMouseButton) -> bool:
 		return true
 	if not _menu.select_index(option_index) and _menu.get_selected_index() != option_index:
 		return true
+	# Mouse menu selection is handled locally rather than through Focus, so
+	# explicitly play the same first-person hand poke at the screen hit point.
+	_play_terminal_click_poke(hit_position)
 	_menu.confirm()
 	return true
+
+func _play_terminal_click_poke(world_point: Vector3) -> void:
+	if not is_instance_valid(_local_actor) or not world_point.is_finite():
+		return
+	var right_hand: Hand = _local_actor.get_node_or_null("Head/Camera3D/ViewmodelHands/RightHand") as Hand
+	if not is_instance_valid(right_hand):
+		return
+	if right_hand.begin_action(world_point):
+		right_hand.finish_action(true)
 
 func _release_mouse_for_menu() -> void:
 	if _mouse_released_for_menu:
