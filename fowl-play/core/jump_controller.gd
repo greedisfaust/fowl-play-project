@@ -4,6 +4,7 @@ extends RefCounted
 var _coyote_remaining_s: float = 0.0
 var _jump_buffer_remaining_s: float = 0.0
 var _jump_held: bool = false
+var _jump_input_held: bool = false
 
 func advance(
 	delta: float,
@@ -23,8 +24,11 @@ func advance(
 		_coyote_remaining_s = maxf(0.0, _coyote_remaining_s - safe_delta)
 	if jump_pressed:
 		_jump_buffer_remaining_s = maxf(buffer_time, 0.0)
+		_jump_input_held = true
 	else:
 		_jump_buffer_remaining_s = maxf(0.0, _jump_buffer_remaining_s - safe_delta)
+	if jump_released:
+		_jump_input_held = false
 
 	var next_vertical_velocity: float = vertical_velocity
 	var jumped: bool = false
@@ -33,8 +37,11 @@ func advance(
 		next_vertical_velocity = maxf(jump_speed, 0.0)
 		_jump_buffer_remaining_s = 0.0
 		_coyote_remaining_s = 0.0
-		_jump_held = true
+		_jump_held = _jump_input_held
 		jumped = true
+		if not _jump_held:
+			next_vertical_velocity *= clampf(release_multiplier, 0.0, 1.0)
+			jump_cut = true
 	elif jump_released:
 		if _jump_held and next_vertical_velocity > 0.0:
 			next_vertical_velocity *= clampf(release_multiplier, 0.0, 1.0)
@@ -59,3 +66,4 @@ func reset() -> void:
 	_coyote_remaining_s = 0.0
 	_jump_buffer_remaining_s = 0.0
 	_jump_held = false
+	_jump_input_held = false
