@@ -6,6 +6,8 @@ extends Node
 const TUNING = preload("res://core/tuning.gd")
 const LAYERS = preload("res://core/layers.gd")
 const PlayerIdentity = preload("res://core/player_identity.gd")
+const COMBAT_CONTROLLER_SCRIPT = preload("res://combat/combat_controller.gd")
+const COMBAT_HIT_DETECTOR = preload("res://combat/combat_hit_detector.gd")
 
 signal session_ended
 signal session_started
@@ -27,7 +29,13 @@ var movement_players: Dictionary = {}
 var movement_rejected: int = 0
 var interaction_rejected: int = 0
 var carry_rejected: int = 0
+var combat_rejected: int = 0
+var combat_jabs: int = 0
+var combat_hits: int = 0
 var _carry_times: Dictionary = {}
+var _combat_press_times: Dictionary = {}
+var _combat_jab_ready_times: Dictionary = {}
+var _active_jabs: Dictionary = {}
 var interaction_accepted: int = 0
 var hand_poke_sent: int = 0
 var hand_poke_received: int = 0
@@ -78,6 +86,9 @@ func _bootstrap() -> void:
 	hub.call("command", &"ragdoll_spike_start", _command_ragdoll_start, "Host test: start a player's ragdoll by peer ID.", true, true)
 	hub.call("command", &"ragdoll_spike_stop", _command_ragdoll_stop, "Host test: restore a player's standing state by peer ID.", true, true)
 	hub.call("watch", &"net/carry_rejected", func() -> int: return carry_rejected)
+	hub.call("watch", &"net/combat_rejected", func() -> int: return combat_rejected)
+	hub.call("watch", &"net/combat_jabs", func() -> int: return combat_jabs)
+	hub.call("watch", &"net/combat_hits", func() -> int: return combat_hits)
 	parse_args(OS.get_cmdline_args() + OS.get_cmdline_user_args())
 
 func parse_args(arguments: PackedStringArray) -> void:
@@ -239,6 +250,28 @@ func _switch_session(host_requested: bool, address: String) -> void:
 		join_server(address)
 	_switching_session = false
 
+func _physics_process(delta: float) -> void:
+	if _active_jabs.is_empty():
+		return
+	for owner_key: Variant in _active_jabs.keys():
+		var owner_id: int = int(owner_key)
+		if not _active_jabs.has(owner_id):
+			continue
+		var jab: Dictionary = _active_jabs[owner_id]
+		jab["elapsed"] = float(jab.get("elapsed", 0.0)) + delta
+		if not bool(jab.get("hit", false)):
+			var attacker: Node3D = movement_players.get(owner_id) as Node3D
+			if is_instance_valid(attacker) and not attacker.is_queued_for_deletion():
+				var result: Dictionary = COMBAT_HIT_DETECTOR.trace_jab(attacker, jab.get("origin", Vector3.ZERO), jab.get("direction", Vector3.ZERO), TUNING.QUICK_PUNCH_RANGE_M)
+				if result.has("target"):
+					_apply_jab_hit(result, jab.get("direction", Vector3.ZERO))
+					jab["hit"] = true
+					combat_hits += 1
+		if float(jab.get("elapsed", 0.0)) >= TUNING.QUICK_PUNCH_DURATION_S:
+			_active_jabs.erase(owner_id)
+		else:
+			_active_jabs[owner_id] = jab
+
 func validate_rpc(expected_sender: int = -1) -> bool:
 	var sender: int = multiplayer.get_remote_sender_id()
 	if sender <= 0 or sender == multiplayer.get_unique_id():
@@ -268,6 +301,9 @@ func unregister_movement_player(owner_id: int, player: Node) -> void:
 	if movement_players.get(owner_id) == player:
 		movement_players.erase(owner_id)
 		_pending_ragdoll_starts.erase(owner_id)
+		_combat_press_times.erase(owner_id)
+		_combat_jab_ready_times.erase(owner_id)
+		_active_jabs.erase(owner_id)
 
 func send_movement(owner_id: int, sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float, grounded: bool = true) -> void:
 	if peer == null or peer.get_connection_status() != MultiplayerPeer.CONNECTION_CONNECTED:
@@ -664,6 +700,148 @@ func _command_identity_set(args: Array[Variant]) -> String:
 	if args.size() == 2 and not str(args[1]).is_valid_int():
 		return "Color index must be an integer from 0 to 9."
 	return "Identity request submitted." if request_identity(str(args[0]), color_index) else "Identity request rejected."
+
+
+func submit_combat_input(owner_id: int, pressed: bool) -> bool:
+	if peer == null or is_host:
+		return _receive_combat_input(owner_id, pressed)
+	if peer.get_connection_status() != MultiplayerPeer.CONNECTION_CONNECTED:
+		return false
+	_submit_combat_input.rpc_id(TUNING.PEER_ID_HOST, pressed)
+	return true
+
+@rpc("any_peer", "call_remote", "reliable", 0)
+func _submit_combat_input(pressed: bool) -> void:
+	if not is_host or not validate_rpc():
+		return
+	_receive_combat_input(multiplayer.get_remote_sender_id(), pressed)
+
+func _receive_combat_input(owner_id: int, pressed: bool) -> bool:
+	if peer != null and not is_host:
+		return _combat_reject(owner_id, "not host")
+	var actor: Node3D = movement_players.get(owner_id) as Node3D
+	if not is_instance_valid(actor) or actor.is_queued_for_deletion():
+		return _combat_reject(owner_id, "no active player for sender")
+	var now: float = Time.get_ticks_msec() / 1000.0
+	if pressed:
+		if not _combat_actor_can_attack(actor, owner_id):
+			return _combat_reject(owner_id, "actor state blocks combat")
+		if _combat_press_times.has(owner_id):
+			return false
+		_combat_press_times[owner_id] = now
+		if peer != null:
+			_combat_windup.rpc(owner_id)
+		_play_combat_windup(owner_id)
+		_debug_log("Combat wind-up peer=%d" % owner_id)
+		return true
+	if not _combat_press_times.has(owner_id):
+		return _combat_reject(owner_id, "release without press")
+	var held_seconds: float = now - float(_combat_press_times[owner_id])
+	_combat_press_times.erase(owner_id)
+	if not COMBAT_CONTROLLER_SCRIPT.is_jab_tap(held_seconds):
+		_cancel_combat_windup(owner_id)
+		return true
+	if not _combat_actor_can_attack(actor, owner_id):
+		_cancel_combat_windup(owner_id)
+		return _combat_reject(owner_id, "actor state changed before jab")
+	if now < float(_combat_jab_ready_times.get(owner_id, 0.0)):
+		_cancel_combat_windup(owner_id)
+		return _combat_reject(owner_id, "jab cooldown")
+	var camera: Camera3D = actor.get_node_or_null("Head/Camera3D") as Camera3D
+	if camera == null:
+		_cancel_combat_windup(owner_id)
+		return _combat_reject(owner_id, "attacker camera missing")
+	var direction: Vector3 = -camera.global_basis.z
+	if direction.length_squared() < 0.0001 or not direction.is_finite():
+		_cancel_combat_windup(owner_id)
+		return _combat_reject(owner_id, "invalid attack direction")
+	direction = direction.normalized()
+	_combat_jab_ready_times[owner_id] = now + TUNING.JAB_COOLDOWN_SECONDS
+	_active_jabs[owner_id] = {"elapsed": 0.0, "origin": camera.global_position, "direction": direction, "hit": false}
+	combat_jabs += 1
+	if peer != null:
+		_combat_jab.rpc(owner_id, direction)
+	_play_combat_jab(owner_id, direction)
+	_debug_log("Jab accepted peer=%d" % owner_id)
+	return true
+
+func _combat_actor_can_attack(actor: Node3D, owner_id: int) -> bool:
+	if not is_instance_valid(actor) or actor.is_queued_for_deletion() or int(actor.get("input_peer_id")) != owner_id:
+		return false
+	if bool(actor.get("is_limp")) or bool(actor.get("is_recovering")) or bool(actor.get("terminal_movement_locked")):
+		return false
+	if bool(actor.call("is_carrying")) or bool(actor.call("is_carried")):
+		return false
+	return true
+
+func _combat_reject(owner_id: int, reason: String) -> bool:
+	combat_rejected += 1
+	_debug_warn("Combat input rejected peer=%d: %s" % [owner_id, reason])
+	return false
+
+func _play_combat_windup(owner_id: int) -> void:
+	var player: Node = movement_players.get(owner_id)
+	if is_instance_valid(player):
+		player.call("play_combat_windup")
+
+func _cancel_combat_windup(owner_id: int) -> void:
+	if peer != null:
+		_combat_cancel.rpc(owner_id)
+	_play_combat_cancel(owner_id)
+
+func _play_combat_cancel(owner_id: int) -> void:
+	var player: Node = movement_players.get(owner_id)
+	if is_instance_valid(player):
+		player.call("cancel_combat_presentation")
+
+func _play_combat_jab(owner_id: int, direction: Vector3) -> void:
+	var player: Node = movement_players.get(owner_id)
+	if is_instance_valid(player):
+		player.call("play_combat_jab", direction)
+
+func _apply_jab_hit(result: Dictionary, direction: Vector3) -> void:
+	var target: Node3D = result.get("target") as Node3D
+	if not is_instance_valid(target) or target.is_queued_for_deletion():
+		return
+	if bool(target.get("is_limp")):
+		var target_rig: Node3D = target.get("rig") as Node3D
+		if target_rig != null:
+			target_rig.call("apply_combat_impulse", direction, result.get("position", target.global_position), TUNING.JAB_LIMP_IMPULSE_MPS)
+	else:
+		var target_id: int = int(target.get("input_peer_id"))
+		if peer != null:
+			_combat_recoil.rpc(target_id, direction)
+		_receive_combat_recoil(target_id, direction)
+	_debug_log("Jab hit peer=%d limp=%s" % [int(target.get("input_peer_id")), bool(target.get("is_limp"))])
+
+func _receive_combat_recoil(target_id: int, direction: Vector3) -> void:
+	var target: Node = movement_players.get(target_id)
+	if is_instance_valid(target):
+		target.call("apply_combat_recoil", direction)
+
+@rpc("authority", "call_remote", "reliable", 0)
+func _combat_windup(owner_id: int) -> void:
+	if not validate_rpc(TUNING.PEER_ID_HOST):
+		return
+	_play_combat_windup(owner_id)
+
+@rpc("authority", "call_remote", "reliable", 0)
+func _combat_cancel(owner_id: int) -> void:
+	if not validate_rpc(TUNING.PEER_ID_HOST):
+		return
+	_play_combat_cancel(owner_id)
+
+@rpc("authority", "call_remote", "reliable", 0)
+func _combat_jab(owner_id: int, direction: Vector3) -> void:
+	if not validate_rpc(TUNING.PEER_ID_HOST) or not direction.is_finite() or direction.length_squared() < 0.0001:
+		return
+	_play_combat_jab(owner_id, direction.normalized())
+
+@rpc("authority", "call_remote", "reliable", 0)
+func _combat_recoil(target_id: int, direction: Vector3) -> void:
+	if not validate_rpc(TUNING.PEER_ID_HOST) or not direction.is_finite() or direction.length_squared() < 0.0001:
+		return
+	_receive_combat_recoil(target_id, direction.normalized())
 
 func _debug_log(message: String) -> void:
 	var debug_hub: Node = get_node_or_null("/root/DebugHub")

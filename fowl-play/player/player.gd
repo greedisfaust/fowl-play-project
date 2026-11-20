@@ -6,8 +6,12 @@ extends CharacterBody3D
 const TUNING = preload("res://core/tuning.gd")
 const MOVEMENT_CONTROLLER_SCRIPT = preload("res://core/movement_controller.gd")
 const JUMP_CONTROLLER_SCRIPT = preload("res://core/jump_controller.gd")
+const COMBAT_CONTROLLER_SCRIPT = preload("res://combat/combat_controller.gd")
+const COMBAT_PRESENTATION_SCRIPT = preload("res://combat/combat_presentation.gd")
 var _movement_controller: RefCounted = MOVEMENT_CONTROLLER_SCRIPT.new()
 var _jump_controller: RefCounted = JUMP_CONTROLLER_SCRIPT.new()
+var _combat_controller: RefCounted = COMBAT_CONTROLLER_SCRIPT.new()
+var _combat_presentation: RefCounted = COMBAT_PRESENTATION_SCRIPT.new()
 const LAYERS = preload("res://core/layers.gd")
 const PlayerIdentity = preload("res://core/player_identity.gd")
 const LIMP_LOOK_YAW_LIMIT: float = deg_to_rad(75.0)
@@ -92,6 +96,8 @@ func _ready() -> void:
 	_movement.reset(global_position, Time.get_ticks_msec() / 1000.0)
 	network.call("register_movement_player", input_peer_id, self)
 	is_local_player = input_peer_id == 0 or input_peer_id == multiplayer.get_unique_id()
+	_combat_controller.call("configure", self, network)
+	_combat_presentation.call("configure", self)
 	camera.current = is_local_player
 	if rig != null:
 		# Hide the owner's world model until the first-person body visibility pass.
@@ -165,6 +171,8 @@ func _ready() -> void:
 	network.call("apply_pending_ragdoll_start", input_peer_id, self)
 
 func _exit_tree() -> void:
+	_combat_controller.call("cancel")
+	_combat_presentation.call("cancel")
 	if (is_limp or is_recovering) and is_instance_valid(rig):
 		rig.call("stop_host_simulation")
 	if is_instance_valid(network):
@@ -330,6 +338,8 @@ func is_carrying() -> bool:
 ## Remote observers therefore see the same hand instances used for pointing/poking;
 ## ragdoll Rig hands remain dedicated to physical/ragdoll presentation.
 func _on_carry_started(item: Node3D) -> void:
+	_combat_controller.call("cancel")
+	_combat_presentation.call("cancel")
 	_set_carry_hand_pose(true, item)
 
 func _on_carry_ended() -> void:
@@ -469,11 +479,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		_rotate_view(mouse_event.relative)
 	elif event.is_action_pressed("ui_cancel"):
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-	elif event.is_action_pressed("punch"):
-		# While carrying, punch is owned by the Carrier (tap = drop, hold = throw).
-		# Do not also process it as combat input; M7 combat reads punch only when
-		# not carrying. When not carrying, fall through so M7 can claim it.
+	elif event.is_action_pressed("punch") or event.is_action_released("punch"):
+		# While carrying, punch remains exclusively owned by Carrier (drop/throw).
 		if is_carrying():
+			return
+		if _combat_controller.call("handle_input", event):
 			return
 	elif event is InputEventMouseButton:
 		var mouse_button: InputEventMouseButton = event
@@ -813,6 +823,30 @@ func _update_limp_camera(delta: float) -> void:
 	var look_yaw: Basis = Basis(Vector3.UP, _limp_look_yaw)
 	var look_pitch: Basis = Basis(Vector3.RIGHT, _limp_look_pitch)
 	camera.global_transform = Transform3D(Basis(head_rotation) * look_yaw * look_pitch, camera_origin)
+
+## Host-approved combat presentation, shared by first-person and remote copies.
+func play_combat_windup() -> void:
+	if is_limp or is_recovering or is_carrying():
+		return
+	_combat_presentation.call("begin_windup")
+
+func play_combat_jab(direction: Vector3) -> void:
+	if is_limp or is_recovering or is_carrying() or not direction.is_finite():
+		_combat_presentation.call("cancel")
+		return
+	_combat_presentation.call("play_jab", direction)
+
+func cancel_combat_presentation() -> void:
+	_combat_presentation.call("cancel")
+
+## Weak standing reactions are movement impulses, not knockdowns.
+func apply_combat_recoil(direction: Vector3) -> void:
+	if is_limp or is_recovering or not direction.is_finite():
+		return
+	var horizontal: Vector3 = Vector3(direction.x, 0.0, direction.z)
+	if horizontal.length_squared() < 0.0001:
+		return
+	velocity += horizontal.normalized() * TUNING.JAB_RECOIL_SPEED_MPS
 
 func _rotate_view(mouse_delta: Vector2) -> void:
 	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:

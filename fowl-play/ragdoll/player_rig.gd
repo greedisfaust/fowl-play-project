@@ -778,6 +778,27 @@ func update_procedural_left_arm(wrist_target_world: Vector3, delta: float) -> bo
 	_set_left_arm_ik_active(true)
 	return true
 
+## Add a small host-only velocity impulse to an already-simulating ragdoll.
+## This does not touch the Player limp lifecycle or recovery countdown.
+func apply_combat_impulse(direction: Vector3, hit_position: Vector3, impulse_speed: float) -> bool:
+	if not simulator.is_simulating_physics() or not direction.is_finite() or not is_finite(impulse_speed) or impulse_speed <= 0.0:
+		return false
+	var push_direction: Vector3 = direction.normalized()
+	if push_direction.length_squared() < 0.0001:
+		return false
+	var chosen_bone: PhysicalBone3D = _chest_physical_bone if _chest_physical_bone != null else _hips_physical_bone
+	if hit_position.is_finite() and not physical_bones.is_empty():
+		var nearest_distance: float = INF
+		for candidate: PhysicalBone3D in physical_bones:
+			var distance: float = candidate.global_position.distance_squared_to(hit_position)
+			if distance < nearest_distance:
+				nearest_distance = distance
+				chosen_bone = candidate
+	if chosen_bone == null:
+		return false
+	chosen_bone.linear_velocity += (push_direction + Vector3.UP * 0.12).normalized() * impulse_speed
+	return true
+
 func enable_host_collisions() -> void:
 	for physical_bone: PhysicalBone3D in physical_bones:
 		physical_bone.collision_layer = 1 << (LAYERS.LIMP_BODIES - 1)
