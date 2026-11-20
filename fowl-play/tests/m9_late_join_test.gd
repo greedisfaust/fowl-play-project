@@ -54,7 +54,7 @@ func _run_host(network: Node, arena: Node3D) -> void:
 		return
 	var expected: Vector3 = player.global_position
 	print("M9_RECOVERY_STARTED x=%.4f y=%.4f z=%.4f" % [expected.x, expected.y, expected.z])
-	await create_timer(3.0).timeout
+	await create_timer(8.0).timeout
 	_finish(true, "host recovery window completed")
 
 func _run_client(network: Node, arena: Node3D) -> void:

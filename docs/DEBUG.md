@@ -51,6 +51,8 @@ security secret.
 | `net/combat_lunge_hits` | core/network.gd | Host-confirmed charged-lunge knockdowns. |
 | `net/combat_lunges_active` | core/network.gd | Number of active host-tracked lunges. |
 
+The M9 watches `net/player_state_sync_sent` and `net/player_state_sync_received` report reliable standing/recovery baseline delivery to late joiners.
+
 ## Commands
 
 Enter a command plus whitespace-separated arguments in the command bar, then press Enter or Run. For example: `debug_disable net`, followed by `debug_enable net`. Quoted arguments are not supported yet.

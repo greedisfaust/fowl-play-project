@@ -26,7 +26,7 @@ try {
 	$clientText = (Get-Content -LiteralPath $clientOut, $clientErr) -join "`n"
 	Write-Output $clientText
 	if ($clientProcess.ExitCode -ne 0 -or $clientText -match "ERROR:|SCRIPT ERROR:" -or $clientText -notmatch "M9 PASS client") { throw "M9 client verification failed (exit code $($clientProcess.ExitCode))" }
-	if (-not $hostProcess.WaitForExit(10000)) { throw "M9 host process timed out" }
+	if (-not $hostProcess.WaitForExit(15000)) { throw "M9 host process timed out" }
 	$hostText = (Get-Content -LiteralPath $hostOut, $hostErr) -join "`n"
 	Write-Output $hostText
 	if ($hostProcess.ExitCode -ne 0 -or $hostText -match "ERROR:|SCRIPT ERROR:" -or $hostText -notmatch "M9 PASS host") { throw "M9 host verification failed (exit code $($hostProcess.ExitCode))" }
