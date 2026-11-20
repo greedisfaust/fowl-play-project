@@ -456,6 +456,7 @@ func set_terminal_movement_locked(locked: bool) -> void:
 func correct_movement(at: Vector3) -> void:
 	if is_limp or is_recovering:
 		return
+	_jump_controller.call("reset")
 	global_position = at
 	velocity = Vector3.ZERO
 	debug_hub.call("log", &"net", "Movement corrected for player %s" % name)
@@ -577,6 +578,7 @@ func begin_host_limp() -> bool:
 	_recovery_retry_s = 0.0
 	_recovery_blocked = false
 	wall_clearance_active = false
+	_jump_controller.call("reset")
 	velocity = Vector3.ZERO
 	if focus != null:
 		focus.call("set_active", false)
