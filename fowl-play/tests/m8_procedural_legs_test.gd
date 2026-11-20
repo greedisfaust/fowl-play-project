@@ -155,7 +155,7 @@ func _check_footstep_planner() -> void:
 	var rotated_forward: Vector3 = planner.call(
 		"get_landing_target", hip, rotated_basis, Vector3(0.0, 0.0, -5.0), -1.0
 	)
-	if rotated_forward.x <= hip.x:
+	if rotated_forward.x >= hip.x:
 		_fail("Footstep targets should respect the rig's world-facing orientation")
 
 func _check_foot_plant_targets() -> void:
