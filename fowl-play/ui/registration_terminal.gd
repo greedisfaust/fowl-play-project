@@ -32,7 +32,7 @@ func _ready() -> void:
 		_network.connect("identity_roster_changed", _on_identity_roster_changed)
 	set_process_input(true)
 
-func _exit_tree() -> void:
+	_set_actor_movement_locked(false)
 	_restore_mouse_mode()
 	if is_instance_valid(_network) and _network.is_connected("identity_roster_changed", _on_identity_roster_changed):
 		_network.disconnect("identity_roster_changed", _on_identity_roster_changed)
@@ -50,8 +50,8 @@ func close_registration_session() -> void:
 	if has_active_session():
 		end_session(END_CLOSED)
 
-func _on_terminal_session_started(actor: Node) -> void:
 	_local_actor = actor
+	_set_actor_movement_locked(false)
 	_session_active = true
 	_release_mouse_for_menu()
 	_editing_nickname = false
@@ -69,9 +69,9 @@ func _on_terminal_session_started(actor: Node) -> void:
 		_requested_color_index = 0
 	_show_main_menu()
 
-func _on_terminal_session_ended(actor: Node, reason: StringName) -> void:
 	if actor != _local_actor:
 		return
+	_set_actor_movement_locked(false)
 	if _menu.is_active():
 		_menu.close()
 	_editing_nickname = false
@@ -184,12 +184,14 @@ func _restore_mouse_mode() -> void:
 func _handle_nickname_key(event: InputEventKey) -> void:
 	if event.keycode == KEY_ESCAPE:
 		_editing_nickname = false
+		_set_actor_movement_locked(false)
 		_show_main_menu()
 	elif event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
 		_requested_nickname = _nickname_buffer.strip_edges()
 		if _requested_nickname.is_empty():
 			_requested_nickname = "Chicken"
 		_editing_nickname = false
+		_set_actor_movement_locked(false)
 		_show_main_menu()
 	elif event.keycode == KEY_BACKSPACE:
 		if not _nickname_buffer.is_empty():
@@ -236,11 +238,15 @@ func _show_color_menu() -> void:
 	)
 	_menu.select_index(_requested_color_index)
 
-func _begin_nickname_edit() -> void:
 	_menu.close()
 	_editing_nickname = true
+	_set_actor_movement_locked(true)
 	_nickname_buffer = _requested_nickname
 	_render_nickname_editor()
+
+func _set_actor_movement_locked(locked: bool) -> void:
+	if is_instance_valid(_local_actor) and _local_actor.has_method("set_terminal_movement_locked"):
+		_local_actor.call("set_terminal_movement_locked", locked)
 
 func _render_nickname_editor() -> void:
 	screen.show_layout(

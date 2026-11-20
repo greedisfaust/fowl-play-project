@@ -9,7 +9,8 @@ The Registration Terminal uses the reusable `InteractiveTerminal` lifecycle and 
 3. Pressing **E** or **M1** while focused on the screen begins the registration session. Proximity alone never opens the menu.
 4. The mouse cursor becomes visible while the menu is active. Left-clicking a rendered option selects and confirms it, while the local right hand performs its existing poke animation toward the clicked screen position.
 5. Arrow Up/Down and Enter navigate and confirm. Escape closes the session.
-6. The session ends when the player moves beyond the interaction distance or leaves the sensor. The player is never movement-locked.
+6. Player movement is locked only while the nickname editor is open. Enter confirms the nickname and restores movement; Escape cancels editing and also restores movement.
+7. The session ends when the player moves beyond the interaction distance or leaves the sensor; ending the session always releases any nickname-edit movement lock.
 7. Registration requests are still validated and assigned by the host through the existing Network identity API.
 
 ## Required scene structure
@@ -64,6 +65,8 @@ Then verify in the editor/game:
 - Entering the sensor shows the idle prompt, but does not open the menu.
 - E/M1 focused on the screen opens registration.
 - Mouse, arrow-key, Enter, nickname, and color interactions work.
+- Entering nickname editing prevents walking and jumping while preserving mouse look; Enter or Escape restores movement.
+- Closing the session or leaving range always releases the movement lock.
 - Moving beyond 3 m closes the session and displays a warning while still in the wake sensor.
 - Leaving the sensor sleeps the display.
 - Host and client both receive the host-assigned nickname/color identity.

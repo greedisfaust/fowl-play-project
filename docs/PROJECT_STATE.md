@@ -347,7 +347,7 @@ The latest user-authored FAT and SLIM scenes were inspected at commit `61409bf`.
 ## Registration Terminal foundation
 
 - Added RegistrationTerminal as a reusable local controller for the existing WorldScreen, ScreenMenu, PhysicalUseButton, Interactable, and host-authoritative PlayerIdentity systems.
-- Local menu flow supports nickname editing (16 characters), ten-color selection, registration submission, host-assigned success display, arrow-key navigation, Enter/Escape handling, physical USE confirmation, and free movement with a configurable horizontal proximity cutoff.
+- Local menu flow supports nickname editing (16 characters), ten-color selection, registration submission, host-assigned success display, arrow-key navigation, Enter/Escape handling, physical USE confirmation, and a configurable horizontal proximity cutoff. Movement is locked only while nickname editing is active.
 - Added a presentation-only local interaction-request signal to Interactable/Focus for immediate per-player screen input. Host validation and the authoritative interacted signal remain unchanged.
 - No scene/node construction or InputMap changes were made. Focused test stage: registration-terminal. Godot execution and editor-authored scene/host-client verification remain pending.
 
@@ -362,7 +362,7 @@ The latest user-authored FAT and SLIM scenes were inspected at commit `61409bf`.
 
 ### Registration movement-lock cleanup
 
-Removed the obsolete `registration_terminal_active` player flag, setter, and physics early-return branch. Registration is intended to remain fully movement-permissive; terminal sessions use proximity to disconnect/reset instead of immobilizing the player.
+Removed the obsolete session-wide `registration_terminal_active` lock. A narrow `Player.set_terminal_movement_locked()` control is now used only while the nickname editor is open; Enter, Escape, session end, range disconnect, and terminal teardown release it.
 
 
 ## Interactive Terminal foundation (Slice 1)

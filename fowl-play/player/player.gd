@@ -13,6 +13,7 @@ var input_peer_id: int = 0
 var is_local_player: bool = true
 var is_limp: bool = false
 var is_recovering: bool = false
+var terminal_movement_locked: bool = false
 var limp_epoch: int = 0
 
 @onready var head: Node3D = $Head
@@ -382,6 +383,14 @@ func receive_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pi
 	if not is_local_player:
 		_movement.push(sequence, at, speed, yaw, pitch, Time.get_ticks_msec() / 1000.0)
 
+## Locks standing movement while a local terminal text field is being edited.
+## Mouse look, gravity, collision, and other presentation remain active.
+func set_terminal_movement_locked(locked: bool) -> void:
+	terminal_movement_locked = locked
+	if locked:
+		velocity.x = 0.0
+		velocity.z = 0.0
+
 func correct_movement(at: Vector3) -> void:
 	if is_limp or is_recovering:
 		return
@@ -418,7 +427,7 @@ func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= TUNING.GRAVITY_MPS2 * delta
 
-	if bool(debug_hub.call("is_console_open")):
+	if bool(debug_hub.call("is_console_open")) or terminal_movement_locked:
 		velocity.x = 0.0
 		velocity.z = 0.0
 		move_and_slide()
