@@ -41,6 +41,14 @@ func _run() -> void:
 	_check(not _has_property(actor, "registration_terminal_active"), "Registration actor should not require the obsolete session-wide lock property")
 	var rendered: String = screen.get_screen_text().get_parsed_text()
 	_check(rendered.contains("PLAYER REGISTRATION") and rendered.contains("EDIT NICKNAME"), "Main menu should render")
+	terminal.registration_header = "CUSTOM REGISTRATION"
+	terminal.edit_nickname_option_label = "CUSTOM NAME LABEL"
+	terminal.call("_show_main_menu")
+	var customized: String = screen.get_screen_text().get_parsed_text()
+	_check(customized.contains("CUSTOM REGISTRATION") and customized.contains("CUSTOM NAME LABEL"), "Inspector copy exports should customize the rendered main menu")
+	terminal.registration_header = "PLAYER REGISTRATION"
+	terminal.edit_nickname_option_label = "EDIT NICKNAME"
+	terminal.call("_show_main_menu")
 	_check(bool(terminal.handle_menu_action(ScreenMenu.ACTION_DOWN)), "Menu navigation should be forwarded")
 	_check(menu.get_selected_option_id() == &"choose_color", "Down action should select color settings")
 	menu.select_index(0)

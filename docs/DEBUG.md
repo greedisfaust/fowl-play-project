@@ -409,3 +409,5 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 - Only local player bodies with `is_local_player == true` wake the display. Proximity alone does not begin a session.
 - E/M1 on the screen Interactable begins a session; repeated E/M1 confirms the active menu. The physical USE button is optional.
 - Focused tests: `interactive-terminal` and `registration-terminal` stages. Setup: `docs/REGISTRATION_TERMINAL_SETUP.md`.
+
+- Registration Terminal wording is configured on the `RegistrationTerminal` root under the **Registration Copy** Inspector group. Idle/wake wording uses inherited `idle_header`, `idle_description`, and `idle_prompt` exports. See `docs/REGISTRATION_TERMINAL_SETUP.md` for formatting placeholders.

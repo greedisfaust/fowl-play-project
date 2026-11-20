@@ -376,3 +376,8 @@ Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep a
 - Proximity wakes the screen but does not start registration. E/M1 on the screen Interactable starts the session; repeated E/M1 confirms the selected menu row.
 - A physical USE button is optional and is no longer referenced by RegistrationTerminal.
 - Setup: `docs/REGISTRATION_TERMINAL_SETUP.md`. Godot tests and rendered host/client verification remain pending.
+
+
+### Registration Terminal copy customization
+
+- RegistrationTerminal exposes visible menu labels, descriptions, prompts, and status messages in the Inspector under **Registration Copy**. Idle/wake wording remains on inherited InteractiveTerminal exports. Formatting placeholders are documented in `docs/REGISTRATION_TERMINAL_SETUP.md`.

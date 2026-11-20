@@ -4,6 +4,35 @@ extends InteractiveTerminal
 
 const PlayerIdentity = preload("res://core/player_identity.gd")
 
+@export_group("Registration Copy")
+@export var registration_header: String = "PLAYER REGISTRATION"
+		main_menu_description_format % [
+@export var main_menu_prompt: String = "CLICK OPTION  •  ARROWS MOVE  •  M1 / E / ENTER SELECT"
+@export var edit_nickname_option_label: String = "EDIT NICKNAME"
+@export var choose_color_option_label: String = "SELECT COLOR"
+@export var confirm_registration_option_label: String = "CONFIRM REGISTRATION"
+@export var close_terminal_option_label: String = "CLOSE TERMINAL"
+@export var color_menu_header: String = "SELECT PLAYER COLOR"
+@export_multiline var color_menu_description: String = "Choose a preferred color. If occupied, the host assigns the next available color."
+@export var color_menu_prompt: String = "CLICK OPTION  •  ARROWS MOVE  •  M1 / E / ENTER SELECT"
+@export var nickname_editor_header: String = "SET NICKNAME"
+@export var nickname_editor_instruction_format: String = "TYPE A NAME (MAX %d CHARACTERS)."
+		nickname_editor_prompt
+@export var connection_lost_header: String = "CONNECTION LOST"
+@export_multiline var connection_lost_description: String = "You moved too far from the terminal. Registration was reset."
+@export var connection_lost_prompt: String = "RETURN TO THE TERMINAL TO RECONNECT"
+@export var network_unavailable_header: String = "NETWORK UNAVAILABLE"
+@export_multiline var network_unavailable_description: String = "The identity service is not available."
+@export var reopen_prompt: String = "APPROACH TO REOPEN"
+@export var registration_rejected_header: String = "REGISTRATION REJECTED"
+@export_multiline var registration_rejected_description: String = "Connect to a host and try again. The request was not submitted."
+@export var registration_sent_header: String = "REGISTRATION SENT"
+@export_multiline var registration_sent_description: String = "Waiting for the host to assign your identity..."
+@export var please_wait_prompt: String = "PLEASE WAIT"
+@export var registration_success_header: String = "REGISTRATION COMPLETE"
+@export var registration_success_body_format: String = "%s\nCOLOR: %s"
+		registration_success_prompt
+
 var _menu: ScreenMenu = ScreenMenu.new()
 var _network: Node = null
 var _local_actor: Node = null
@@ -82,7 +111,7 @@ func _on_terminal_session_ended(actor: Node, reason: StringName) -> void:
 	_local_actor = null
 	_restore_mouse_mode()
 	if reason == END_RANGE:
-		screen.show_layout("warning", "CONNECTION LOST", "You moved too far from the terminal. Registration was reset.", "RETURN TO THE TERMINAL TO RECONNECT")
+		screen.show_layout("warning", connection_lost_header, connection_lost_description, connection_lost_prompt)
 	elif reason == END_CLOSED and is_awake():
 		screen.show_layout("information", idle_header, idle_description, idle_prompt)
 
@@ -206,20 +235,20 @@ func _handle_nickname_key(event: InputEventKey) -> void:
 
 func _show_main_menu() -> void:
 	var options: Array[Dictionary] = [
-		{"id": &"edit_nickname", "label": "EDIT NICKNAME"},
-		{"id": &"choose_color", "label": "SELECT COLOR"},
-		{"id": &"register", "label": "CONFIRM REGISTRATION"},
-		{"id": &"close", "label": "CLOSE TERMINAL"}
+{"id": &"edit_nickname", "label": edit_nickname_option_label}
+{"id": &"choose_color", "label": choose_color_option_label}
+{"id": &"register", "label": confirm_registration_option_label}
+{"id": &"close", "label": close_terminal_option_label}
 	]
 	_menu.open(
 		screen,
-		"PLAYER REGISTRATION",
-		"NICKNAME: %s\nCOLOR: %s\n\nChoose your identity settings." % [
+		registration_header,
+		main_menu_description_format % [
 			_requested_nickname,
 			PlayerIdentity.color_name_for_index(_requested_color_index).to_upper()
 		],
 		options,
-		"CLICK OPTION  •  ARROWS MOVE  •  M1 / E / ENTER SELECT"
+		main_menu_prompt
 	)
 
 func _show_color_menu() -> void:
@@ -234,10 +263,10 @@ func _show_color_menu() -> void:
 		})
 	_menu.open(
 		screen,
-		"SELECT PLAYER COLOR",
-		"Choose a preferred color. If occupied, the host assigns the next available color.",
+		color_menu_header,
+		color_menu_description,
 		options,
-		"CLICK OPTION  •  ARROWS MOVE  •  M1 / E / ENTER SELECT"
+		color_menu_prompt
 	)
 	_menu.select_index(_requested_color_index)
 
@@ -255,12 +284,12 @@ func _set_actor_movement_locked(locked: bool) -> void:
 func _render_nickname_editor() -> void:
 	screen.show_layout(
 		"information",
-		"SET NICKNAME",
-		"%s_\n\nTYPE A NAME (MAX %d CHARACTERS)." % [
+		nickname_editor_header,
+"%s_\n\n%s" % [_nickname_buffer, nickname_editor_instruction_format % [PlayerIdentity.MAX_NICKNAME_LENGTH]],
 			_nickname_buffer,
 			PlayerIdentity.MAX_NICKNAME_LENGTH
 		],
-		"ENTER ACCEPTS  •  ESC CANCELS  •  BACKSPACE ERASES"
+		nickname_editor_prompt
 	)
 
 func _on_option_confirmed(option_id: StringName, _option_label: String) -> void:
@@ -282,7 +311,7 @@ func _submit_registration() -> void:
 	if not is_instance_valid(_network):
 		_menu.close()
 		end_session(END_CLOSED)
-		screen.show_layout("warning", "NETWORK UNAVAILABLE", "The identity service is not available.", "APPROACH TO REOPEN")
+screen.show_layout("warning", network_unavailable_header, network_unavailable_description, reopen_prompt)
 		return
 	_pending_nickname = _requested_nickname
 	_registration_pending = true
@@ -291,11 +320,11 @@ func _submit_registration() -> void:
 		_registration_pending = false
 		_menu.close()
 		end_session(END_CLOSED)
-		screen.show_layout("warning", "REGISTRATION REJECTED", "Connect to a host and try again. The request was not submitted.", "APPROACH TO REOPEN")
+screen.show_layout("warning", registration_rejected_header, registration_rejected_description, reopen_prompt)
 		return
 	if _registration_pending:
 		_menu.close()
-		screen.show_layout("information", "REGISTRATION SENT", "Waiting for the host to assign your identity...", "PLEASE WAIT")
+screen.show_layout("information", registration_sent_header, registration_sent_description, please_wait_prompt)
 
 func _on_identity_roster_changed() -> void:
 	if not _registration_pending or not is_instance_valid(_network):
@@ -312,7 +341,7 @@ func _on_identity_roster_changed() -> void:
 	_menu.close()
 	screen.show_layout(
 		"success",
-		"REGISTRATION COMPLETE",
-		"%s\nCOLOR: %s" % [identity.get_display_label(), identity.get_color_name().to_upper()],
-		"IDENTITY ASSIGNED BY HOST"
+		registration_success_header,
+		registration_success_body_format % [identity.get_display_label(), identity.get_color_name().to_upper()],
+		registration_success_prompt
 	)

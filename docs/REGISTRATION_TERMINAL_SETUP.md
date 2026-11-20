@@ -13,6 +13,16 @@ The Registration Terminal uses the reusable `InteractiveTerminal` lifecycle and 
 7. The session ends when the player moves beyond the interaction distance or leaves the sensor; ending the session always releases any nickname-edit movement lock.
 8. Registration requests are still validated and assigned by the host through the existing Network identity API.
 
+## Editing terminal wording in the Inspector
+
+Select the **RegistrationTerminal** root in the scene tree and expand its **Registration Copy** export group. You can customize the main menu title and description format, option labels, prompts, color menu wording, nickname editor wording, connection/network feedback, and registration success/failure messages.
+
+- The main menu description format uses two `%s` placeholders: requested nickname, then selected color name.
+- The nickname editor instruction format uses one `%d` placeholder for the maximum nickname length.
+- The success body format uses two `%s` placeholders: assigned display name, then assigned color.
+- Idle/wake wording is separate: edit **Idle Header**, **Idle Description**, and **Idle Prompt** on the inherited InteractiveTerminal properties.
+- These are presentation-only settings; identity validation, palette assignment, network authority, and menu behavior are unchanged.
+
 ## Required scene structure
 
 Preserve the existing authored terminal root and its FAT/SLIM housing. Do not rebuild the screen or housing.
