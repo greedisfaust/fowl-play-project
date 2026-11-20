@@ -46,7 +46,7 @@ func advance(delta: float, local_velocity: Vector3, vertical_velocity: float, gr
 	_weight = lerpf(_weight, target_weight, 1.0 - exp(-BLEND_RESPONSE * step))
 	if enabled and grounded and horizontal_speed > 0.18:
 		var speed_ratio: float = clampf(horizontal_speed / RUN_SPEED_MPS, 0.0, 1.0)
-		var cadence: float = lerpf(7.0, 12.0, speed_ratio)
+		var cadence: float = lerpf(8.0, 12.0, speed_ratio)
 		_phase = fposmod(_phase + cadence * step, TAU)
 	if enabled and not grounded:
 		_peak_air_vertical_speed = maxf(_peak_air_vertical_speed, absf(vertical_velocity))
@@ -61,12 +61,16 @@ func advance(delta: float, local_velocity: Vector3, vertical_velocity: float, gr
 	_impact_rotation = _impact_rotation.lerp(Vector3.ZERO, 1.0 - exp(-IMPACT_DECAY * step))
 
 	var run_blend: float = clampf((horizontal_speed - WALK_SPEED_MPS) / maxf(RUN_SPEED_MPS - WALK_SPEED_MPS, 0.01), 0.0, 1.0)
-	var bob_amplitude: float = lerpf(0.012, 0.027, run_blend) * _weight
-	var bob_y: float = absf(sin(_phase)) * bob_amplitude
-	var bob_x: float = sin(_phase * 0.5) * bob_amplitude * 0.42
-	var sway_roll: float = -clampf(local_velocity.x / RUN_SPEED_MPS, -1.0, 1.0) * 0.018 * _weight
+	# Make ordinary walking readable in first person while keeping sprint stronger.
+	# The ViewmodelHands are children of Camera3D, so they naturally follow this motion.
+	var bob_amplitude: float = lerpf(0.028, 0.055, run_blend) * _weight
+	var bob_y: float = sin(_phase) * bob_amplitude
+	var bob_x: float = sin(_phase * 0.5) * bob_amplitude * 0.4
+	var sway_roll: float = -clampf(local_velocity.x / RUN_SPEED_MPS, -1.0, 1.0) * 0.06 * _weight
+	var gait_pitch: float = sin(_phase * 2.0) * 0.012 * _weight
+	var gait_roll: float = sin(_phase * 0.5) * 0.028 * _weight
 	var air_pitch: float = clampf(-vertical_velocity * 0.0035, -0.035, 0.035) if enabled and not grounded else 0.0
 	var landing_pitch: float = -_landing_impulse * 0.055
 	var offset: Vector3 = (Vector3(bob_x, bob_y, 0.0) + _impact_offset) * intensity
-	var rotation: Vector3 = (Vector3(air_pitch + landing_pitch, 0.0, sway_roll) + _impact_rotation) * intensity
+	var rotation: Vector3 = (Vector3(air_pitch + landing_pitch + gait_pitch, 0.0, sway_roll + gait_roll) + _impact_rotation) * intensity
 	return {"offset": offset, "rotation": rotation, "motion_weight": _weight, "landing_weight": _landing_impulse}

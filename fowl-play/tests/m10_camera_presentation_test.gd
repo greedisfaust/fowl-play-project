@@ -24,12 +24,25 @@ func _check_idle_and_locomotion_blend() -> void:
 	if Vector3(idle.offset).length() > 0.001:
 		_fail("Idle camera should settle to neutral")
 	var moving: Dictionary = {}
-	for index: int in range(24):
-		moving = controller.call("advance", 0.016, Vector3(0.0, 0.0, -5.5), 0.0, true, true)
-	if float(moving.motion_weight) < 0.5 or Vector3(moving.offset).length() < 0.001:
-		_fail("Walking/running should blend into subtle camera bob")
+	var peak_offset: float = 0.0
+	var peak_rotation: float = 0.0
+	for index: int in range(60):
+		moving = controller.call("advance", 0.016, Vector3(0.0, 0.0, -3.8), 0.0, true, true)
+		peak_offset = maxf(peak_offset, Vector3(moving.offset).length())
+		peak_rotation = maxf(peak_rotation, Vector3(moving.rotation).length())
+	if float(moving.motion_weight) < 0.5 or peak_offset < 0.02:
+		_fail("Ordinary walking should produce clearly measurable camera bob")
+	if peak_rotation < 0.01:
+		_fail("Walking should include a visible first-person gait rotation")
+	var strafe_controller: RefCounted = CAMERA_PRESENTATION.new()
+	var peak_strafe_roll: float = 0.0
+	for index: int in range(30):
+		var strafing: Dictionary = strafe_controller.call("advance", 0.016, Vector3(3.8, 0.0, 0.0), 0.0, true, true)
+		peak_strafe_roll = maxf(peak_strafe_roll, absf(Vector3(strafing.rotation).z))
+	if peak_strafe_roll < 0.02:
+		_fail("Strafing should visibly roll the first-person camera")
 	var disabled: Dictionary = controller.call("advance", 0.2, Vector3.ZERO, 0.0, true, false)
-	if Vector3(disabled.offset).length() > Vector3(moving.offset).length() + 0.1:
+	if Vector3(disabled.offset).length() > peak_offset + 0.1:
 		_fail("Disabled presentation should remain bounded")
 
 func _check_authored_camera_transform_is_preserved() -> void:
