@@ -63,3 +63,23 @@ Code and regression assertions are committed. Godot tests and in-game verificati
 - Increased the per-leg outward knee-pole bias from 0.30 m to 0.48 m so IK solutions favor separate knee bend planes.
 - Updated the gait phase regression expectation to include the cadence multiplier.
 - This is a soft anatomical separation constraint, not physical leg collision. Godot tests and visual verification remain pending.
+
+
+## Distance-triggered recovery and anatomical landing lanes — 2026-11-20
+
+### Problem addressed
+
+A world-space stance anchor correctly prevents foot sliding, but it can remain locked while the moving hip travels beyond a comfortable leg extension. The gait phase may not yet have requested a normal swing, leaving the foot visibly suspended or the leg overextended.
+
+### Implementation
+
+- Each leg derives its comfortable reach from the authored thigh-to-shin and shin-to-foot rest-bone lengths, multiplied by `LEG_REPLANT_MAX_REACH_RATIO` (0.82).
+- While a foot is in stance, PlayerRig checks hip-to-anchor distance every procedural update. Reaching the threshold requests a recovery step immediately, without waiting for the gait phase.
+- The emergency step captures a new hip-relative landing point, probes it against the same world-ground mask, and follows a short 0.18 s lifted trajectory. It then locks the new world-space anchor.
+- When both feet are overstretched, the controller recovers only the leg with the larger normalized stretch ratio. This prevents simultaneous emergency steps.
+- Normal and emergency landing targets pass through an anatomical side clamp: left remains at least 0.20 m on the rig's left side, right remains at least 0.20 m on its right side.
+- Debug ground status exposes emergency recovery state and normalized stretch ratios.
+
+### Regression coverage and verification
+
+M8 assertions now cover stretch-trigger detection, the lifted emergency trajectory, completion/anchor capture, and left/right centerline constraints. Godot tests and rendered in-game behavior have not been run by the assistant; user verification is still required. The side clamp constrains IK targets and is not a physical collision solver for overlapping leg meshes.
