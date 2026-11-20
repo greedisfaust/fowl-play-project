@@ -912,7 +912,7 @@ func _update_recovery_camera(delta: float) -> void:
 	var head_rotation: Quaternion = smoothed_head.basis.get_rotation_quaternion().normalized()
 	var look_yaw: Basis = Basis(Vector3.UP, _limp_look_yaw)
 	var look_pitch: Basis = Basis(Vector3.RIGHT, _limp_look_pitch)
-	camera.global_transform = Transform3D(head_rotation * look_yaw * look_pitch, smoothed_head.origin)
+	camera.global_transform = Transform3D(Basis(head_rotation) * look_yaw * look_pitch, smoothed_head.origin)
 
 	# After the rig finishes its animation, softly align with the authored FPS mount.
 	if _recovery_camera_alignment_elapsed >= 0.0:
