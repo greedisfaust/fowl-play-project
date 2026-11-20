@@ -54,6 +54,21 @@ func _check_controller_gait() -> void:
 	if left_forward.z >= -0.05:
 		_fail("Forward walking should swing the leg toward the character's forward axis")
 
+	# Rapid WASD-style direction changes should update the planner heading
+	# quickly rather than averaging several old directions into a stale vector.
+	var zigzag_controller: RefCounted = LEG_CONTROLLER_SCRIPT.new()
+	var zigzag_directions: Array[Vector3] = [
+		Vector3(0.0, 0.0, -5.0),
+		Vector3(5.0, 0.0, 0.0),
+		Vector3(0.0, 0.0, 5.0),
+		Vector3(-5.0, 0.0, 0.0)
+	]
+	for repeat_index: int in range(3):
+		for zigzag_direction: Vector3 in zigzag_directions:
+			zigzag_controller.call("update", 0.05, zigzag_direction, true)
+			var filtered_direction: Vector3 = zigzag_controller.get("smoothed_velocity")
+			if filtered_direction.length_squared() < 0.01 or filtered_direction.normalized().dot(zigzag_direction.normalized()) < 0.80:
+				_fail("Rapid directional changes should quickly redirect the footstep planner without stale heading")
 	_check_stance_swing_articulation()
 
 	var phase_before_air: float = phase_after_walk
