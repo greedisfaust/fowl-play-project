@@ -610,3 +610,5 @@ The authored rig's `Thigh_L` bone is on local +X and `Thigh_R` is on local -X. F
 | M7.1 | 6 | While carrying, tap/hold Q: existing drop/throw behavior remains unchanged. |
 
 Run only the jab regression stage from the `fowl-play/` directory with `.\tests\run_checks.ps1 -OnlyStage m7-jab`. Run the full suite with `.\tests\run_checks.ps1`.
+
+The M7.2 pose-curve assertions are included in `m7_jab_test.gd`; run them with `.\tests\run_checks.ps1 -OnlyStage m7-jab` from `fowl-play/`.

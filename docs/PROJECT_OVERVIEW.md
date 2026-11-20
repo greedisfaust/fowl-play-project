@@ -462,3 +462,7 @@ res://
 ### M7.1 implementation note — jab foundation
 
 The first jab slice uses a host-timed press/release request, a host-side obstruction-aware ray query, and a 0.1 s active hit window. The host alone selects the target. Standing recoil is applied through the target owner's movement simulation; an already-limp target receives a host-only physical-bone velocity impulse, with no limp lifecycle or recovery-timer mutation. The first-person/remote Viewmodel right hand has a dedicated curled-fist pose and short extension. Full torso lean, stumble/collapse escalation, camera feedback, feathers and impact VFX remain later presentation work.
+
+### M7.2 implementation note — jab animation and weak reaction
+
+The jab presentation now animates the Chest bone through a short anticipation lean, forward extension/follow-through, and smooth neutral return. Standing targets receive a brief upper-body recoil lean in addition to the existing movement impulse. `CombatPresentation.advance()` runs before the procedural arm IK updates, so the arm solver follows the animated shoulder rather than overwriting the torso pose. Host-approved wind-up/jab events already reach remote player copies, so this pose is derived locally on each peer without joint-transform streaming. Carry, limp, ragdoll and recovery continue to override combat presentation. Camera effects, strong stumble/collapse and impact VFX remain future slices.

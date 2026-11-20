@@ -613,3 +613,13 @@ Foot planting now records both a world-space target and, when the ground hit bel
 - The Viewmodel hand has a dedicated curled-fist pose and extension/return lifecycle.
 - Added M7.1 headless regression coverage and registered it in `tests/run_checks.ps1`.
 - No scenes were edited. Godot tests and in-game host/client playtests have not yet been run for this slice.
+
+## 2026-11-20 — M7.2 jab presentation
+
+- Added a local procedural Chest-bone pose curve: a short anticipation lean, forward extension/follow-through, and smooth return to neutral.
+- The hand remains curled through the jab extension/return and then releases back to its ordinary pose; the existing hand action controls wrist reach.
+- Standing targets now combine the existing movement recoil with a brief upper-body lean/twist response.
+- `CombatPresentation.advance()` runs before PlayerRig's procedural arm IK pass. The IK therefore solves from the animated shoulder and continues following the Viewmodel wrist target.
+- Host-approved wind-up and jab RPCs drive the same presentation on remote player copies. No per-bone animation replication was added.
+- Added deterministic pose-curve assertions to `m7_jab_test.gd`; run with `-OnlyStage m7-jab`.
+- No scenes or user-authored hierarchy were edited. Godot execution and in-game rendered pose checks remain pending.
