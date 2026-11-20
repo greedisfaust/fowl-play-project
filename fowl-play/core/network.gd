@@ -271,7 +271,7 @@ func _physics_process(delta: float) -> void:
 				var jab_origin: Vector3 = jab.get("origin", Vector3.ZERO)
 				var jab_direction: Vector3 = jab.get("direction", Vector3.ZERO)
 				var result: Dictionary = COMBAT_HIT_DETECTOR.trace_jab(attacker, jab_origin, jab_direction, TUNING.QUICK_PUNCH_RANGE_M)
-				if result.has("target") and _apply_jab_hit(result, jab_direction):
+				if result.has("target") and _apply_jab_hit(result, jab_direction, attacker.velocity):
 					jab["hit"] = true
 					combat_hits += 1
 		if float(jab.get("elapsed", 0.0)) >= TUNING.QUICK_PUNCH_DURATION_S:
@@ -830,16 +830,11 @@ func _play_combat_jab(owner_id: int, direction: Vector3) -> void:
 	if is_instance_valid(player):
 		player.call("play_combat_jab", direction)
 
-func _apply_jab_hit(result: Dictionary, direction: Vector3) -> bool:
+func _apply_jab_hit(result: Dictionary, direction: Vector3, attacker_velocity: Vector3) -> bool:
 	var target: Node3D = result.get("target") as Node3D
 	if not is_instance_valid(target) or target.is_queued_for_deletion() or bool(target.get("is_recovering")):
 		return false
-	var attacker_id: int = int(result.get("attacker_id", -1))
-	var attacker: Node3D = movement_players.get(attacker_id) as Node3D
-	var impact_strength: float = get_jab_impact_strength(
-		Vector3(attacker.velocity) if is_instance_valid(attacker) else Vector3.ZERO,
-		direction
-	)
+	var impact_strength: float = get_jab_impact_strength(attacker_velocity, direction)
 	if bool(target.get("is_limp")):
 		var target_rig: Node3D = target.get("rig") as Node3D
 		if target_rig == null:

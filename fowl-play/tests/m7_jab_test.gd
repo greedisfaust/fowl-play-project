@@ -65,9 +65,9 @@ func _check_presentation_curves() -> void:
 		_fail("Higher impact strength should visibly increase the recoil pose")
 	if not is_equal_approx(NETWORK.get_jab_impact_strength(Vector3.ZERO, Vector3.FORWARD), 1.0):
 		_fail("A stationary attacker should use baseline jab impact strength")
-	if not is_equal_approx(COMBAT_PRESENTATION.get_jab_impact_strength(Vector3(0.0, 0.0, -8.0), Vector3.FORWARD), 1.35):
+	if not is_equal_approx(NETWORK.get_jab_impact_strength(Vector3(0.0, 0.0, -8.0), Vector3.FORWARD), 1.35):
 		_fail("A fast attacker moving into the target should reach the bounded maximum strength")
-	if not is_equal_approx(COMBAT_PRESENTATION.get_jab_impact_strength(Vector3(8.0, 0.0, 0.0), Vector3.FORWARD), 1.0):
+	if not is_equal_approx(NETWORK.get_jab_impact_strength(Vector3(8.0, 0.0, 0.0), Vector3.FORWARD), 1.0):
 		_fail("Sideways attacker movement should not increase jab strength")
 
 func _check_world_hit_and_recoil() -> void:
