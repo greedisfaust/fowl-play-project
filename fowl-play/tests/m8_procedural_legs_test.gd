@@ -361,7 +361,7 @@ func _check_leg_reach_tuning() -> void:
 	if TUNING.LEG_WALK_SWING_LIFT_M >= 0.12 or TUNING.LEG_RUN_SWING_LIFT_M >= TUNING.LEG_REPLANT_LIFT_M:
 		_fail("Normal walk/run swing lifts should stay lower than emergency recovery steps")
 	if TUNING.LEG_MAX_KNEE_BEND_RAD < deg_to_rad(60.0):
-		_fail("Walking knee flex should be pronounced enough to read as a step")
+		_fail("Sprint knee flex should remain pronounced enough to read as a running step")
 
 func _check_two_bone_solver() -> void:
 	var hip: Vector3 = Vector3(0.0, 1.0, 0.0)
