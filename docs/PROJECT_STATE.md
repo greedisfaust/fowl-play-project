@@ -631,3 +631,11 @@ Foot planting now records both a world-space target and, when the ground hit bel
 - Reduced torso anticipation/follow-through magnitude and shortened the hand pullback so the jab reads as a compact boxer-like strike rather than a broad swing.
 - Kept host-authoritative hit timing, hit detection, cooldown, and weak-reaction gameplay unchanged. No scene files changed.
 - Added focused timing assertions to the M7 jab test. Godot execution and rendered in-game verification remain pending.
+
+
+### M7.2 jab feel refinement — pending playtest
+- Jab pose shortened to 0.30 s with a 0.085 s extension and 0.025 s contact hold; retraction remains smooth and readable.
+- Standing weak-hit recoil now uses a single fast chest snap with directional twist/roll and a damped 0.34 s settle, without oscillation or knockdown.
+- Host calculates impact strength from attacker velocity projected onto jab direction at impact. Strength is bounded from 1.0× to 1.35×; sideways/away movement does not amplify the hit. The bounded value is relayed to the target for matching movement and torso response.
+- Limp-body impulse behavior and recovery lifecycle are unchanged.
+- Focused check: ` .\tests\run_checks.ps1 -OnlyStage m7-jab` from `fowl-play/`. Godot execution and visual host/client verification remain pending.

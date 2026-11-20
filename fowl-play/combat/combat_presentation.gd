@@ -2,13 +2,15 @@
 ## Gameplay outcomes are host-authoritative; this script only animates the approved intent.
 extends RefCounted
 
-const JAB_POSE_DURATION_S: float = 0.34
-const JAB_EXTENSION_END_S: float = 0.11
-const JAB_CONTACT_HOLD_S: float = 0.035
-const RECOIL_POSE_DURATION_S: float = 0.28
+const JAB_POSE_DURATION_S: float = 0.30
+const JAB_EXTENSION_END_S: float = 0.085
+const JAB_CONTACT_HOLD_S: float = 0.025
+const RECOIL_POSE_DURATION_S: float = 0.34
 const WINDUP_LEAN_RAD: float = -0.07
 const JAB_FOLLOW_THROUGH_RAD: float = 0.16
-const RECOIL_LEAN_RAD: float = -0.13
+const RECOIL_LEAN_RAD: float = -0.24
+const RECOIL_TWIST_RAD: float = 0.18
+const RECOIL_ROLL_RAD: float = 0.14
 
 enum Phase { IDLE, WINDUP, JAB }
 
@@ -18,6 +20,7 @@ var _phase_elapsed: float = 0.0
 var _recoil_elapsed: float = -1.0
 var _jab_direction: Vector3 = Vector3.FORWARD
 var _recoil_direction: Vector3 = Vector3.FORWARD
+var _recoil_strength: float = 1.0
 var _base_punch_position_offset: Vector3 = Vector3.ZERO
 
 func configure(player: Node) -> void:
@@ -55,11 +58,12 @@ func play_jab(direction: Vector3) -> void:
 		_phase = Phase.IDLE
 
 ## A weak hit reaction is visual only; movement recoil remains owned by Player.
-func play_recoil(direction: Vector3) -> void:
+func play_recoil(direction: Vector3, strength: float = 1.0) -> void:
 	if not _can_present() or not direction.is_finite() or direction.length_squared() < 0.0001:
 		return
 	_recoil_direction = direction.normalized()
 	_recoil_elapsed = 0.0
+	_recoil_strength = clampf(strength, 1.0, 1.35)
 
 func advance(delta: float) -> void:
 	if not _can_present():
@@ -85,7 +89,7 @@ func advance(delta: float) -> void:
 					jab_hand.set_punching(false)
 					jab_hand.punch_position_offset = _base_punch_position_offset
 	if _recoil_elapsed >= 0.0:
-		body_pose += get_recoil_body_pose(_recoil_elapsed, _local_direction(_recoil_direction))
+		body_pose += get_recoil_body_pose(_recoil_elapsed, _local_direction(_recoil_direction), _recoil_strength)
 		_recoil_elapsed += maxf(delta, 0.0)
 		if _recoil_elapsed >= RECOIL_POSE_DURATION_S:
 			_recoil_elapsed = -1.0
@@ -97,6 +101,7 @@ func cancel() -> void:
 	_phase = Phase.IDLE
 	_phase_elapsed = 0.0
 	_recoil_elapsed = -1.0
+	_recoil_strength = 1.0
 	var hand: Hand = _get_right_hand()
 	if hand != null:
 		hand.set_punching(false)
@@ -135,11 +140,17 @@ static func get_jab_body_pose(elapsed: float, local_direction: Vector3) -> Vecto
 	var yaw: float = direction_yaw * 0.22 * sin(PI * clampf(t / JAB_POSE_DURATION_S, 0.0, 1.0))
 	return Vector3(pitch, yaw, -yaw * 0.18)
 
-static func get_recoil_body_pose(elapsed: float, local_direction: Vector3) -> Vector3:
+static func get_recoil_body_pose(elapsed: float, local_direction: Vector3, strength: float = 1.0) -> Vector3:
 	var t: float = clampf(elapsed / RECOIL_POSE_DURATION_S, 0.0, 1.0)
-	var weight: float = sin(PI * t)
+	# A fast initial snap followed by a damped settle: one clean hit, never vibration.
+	var snap: float = (1.0 - exp(-18.0 * t)) * (1.0 - smoothstep(0.42, 1.0, t))
+	var settle: float = smoothstep(0.42, 1.0, t)
 	var side: float = clampf(local_direction.x, -1.0, 1.0)
-	return Vector3(RECOIL_LEAN_RAD * weight, -side * 0.10 * weight, side * 0.12 * weight)
+	var impact_scale: float = clampf(strength, 1.0, 1.35)
+	var pitch: float = RECOIL_LEAN_RAD * snap * impact_scale
+	var yaw: float = -side * RECOIL_TWIST_RAD * snap * impact_scale
+	var roll: float = side * RECOIL_ROLL_RAD * snap * impact_scale
+	return Vector3(lerpf(pitch, 0.0, settle), lerpf(yaw, 0.0, settle), lerpf(roll, 0.0, settle)
 
 func _local_direction(world_direction: Vector3) -> Vector3:
 	var player_3d: Node3D = _player as Node3D

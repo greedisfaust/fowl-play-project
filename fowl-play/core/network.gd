@@ -834,6 +834,12 @@ func _apply_jab_hit(result: Dictionary, direction: Vector3) -> bool:
 	var target: Node3D = result.get("target") as Node3D
 	if not is_instance_valid(target) or target.is_queued_for_deletion() or bool(target.get("is_recovering")):
 		return false
+	var attacker_id: int = int(result.get("attacker_id", -1))
+	var attacker: Node3D = movement_players.get(attacker_id) as Node3D
+	var impact_strength: float = get_jab_impact_strength(
+		Vector3(attacker.velocity) if is_instance_valid(attacker) else Vector3.ZERO,
+		direction
+	)
 	if bool(target.get("is_limp")):
 		var target_rig: Node3D = target.get("rig") as Node3D
 		if target_rig == null:
@@ -844,15 +850,21 @@ func _apply_jab_hit(result: Dictionary, direction: Vector3) -> bool:
 	else:
 		var target_id: int = int(target.get("input_peer_id"))
 		if peer != null:
-			_combat_recoil.rpc(target_id, direction)
-		_receive_combat_recoil(target_id, direction)
-	_combat_log("Jab hit peer=%d limp=%s" % [int(target.get("input_peer_id")), bool(target.get("is_limp"))])
+			_combat_recoil.rpc(target_id, direction, impact_strength)
+		_receive_combat_recoil(target_id, direction, impact_strength)
+	_combat_log("Jab hit peer=%d limp=%s impact=%.2f" % [int(target.get("input_peer_id")), bool(target.get("is_limp")), impact_strength])
 	return true
 
-func _receive_combat_recoil(target_id: int, direction: Vector3) -> void:
+static func get_jab_impact_strength(attacker_velocity: Vector3, jab_direction: Vector3) -> float:
+	if not attacker_velocity.is_finite() or not jab_direction.is_finite() or jab_direction.length_squared() < 0.0001:
+		return 1.0
+	var forward_speed: float = maxf(attacker_velocity.dot(jab_direction.normalized()), 0.0)
+	return clampf(1.0 + (forward_speed / 8.0) * 0.35, 1.0, 1.35)
+
+func _receive_combat_recoil(target_id: int, direction: Vector3, strength: float = 1.0) -> void:
 	var target: Node = movement_players.get(target_id)
 	if is_instance_valid(target):
-		target.call("apply_combat_recoil", direction)
+		target.call("apply_combat_recoil", direction, clampf(strength, 1.0, 1.35))
 
 @rpc("authority", "call_remote", "reliable", 0)
 func _combat_windup(owner_id: int) -> void:
@@ -873,10 +885,10 @@ func _combat_jab(owner_id: int, direction: Vector3) -> void:
 	_play_combat_jab(owner_id, direction.normalized())
 
 @rpc("authority", "call_remote", "reliable", 0)
-func _combat_recoil(target_id: int, direction: Vector3) -> void:
+func _combat_recoil(target_id: int, direction: Vector3, strength: float = 1.0) -> void:
 	if not validate_rpc(TUNING.PEER_ID_HOST) or not direction.is_finite() or direction.length_squared() < 0.0001:
 		return
-	_receive_combat_recoil(target_id, direction.normalized())
+	_receive_combat_recoil(target_id, direction.normalized(), clampf(strength, 1.0, 1.35))
 
 func _combat_log(message: String) -> void:
 	var debug_hub: Node = get_node_or_null("/root/DebugHub")

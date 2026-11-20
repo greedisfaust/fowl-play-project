@@ -313,3 +313,16 @@ Verification: source and assertions are committed but have not been run in Godot
 - Made anticipation and torso follow-through more compact, with the fist reaching extension quickly and returning to its authored rest offset.
 - Gameplay timing, host validation, hit detection, cooldown, and weak reactions are unchanged. No scenes changed.
 - Added a regression assertion for the compact jab timing. Run `./tests/run_checks.ps1 -OnlyStage m7-jab` (PowerShell: `.\tests\run_checks.ps1 -OnlyStage m7-jab`). Godot execution and visual playtest are pending.
+
+
+### M7.2 follow-up — snappier jab and velocity-scaled recoil
+
+Implemented:
+- Reduced jab pose duration to 0.30 s, extension to 0.085 s, and contact hold to 0.025 s.
+- Reworked standing weak-hit presentation into a single strong backward chest snap with directional yaw/roll and damped recovery over 0.34 s. It does not oscillate or change the Weak reaction tier.
+- Host samples the attacker's actual velocity projected toward the target at impact. Impact scaling ranges from 1.0× at rest to 1.35× at 8 m/s toward the target; sideways or retreating movement stays at baseline. The host relays this bounded multiplier with the recoil event; target movement impulse and torso pose use the same multiplier.
+- Limp impulse and recovery lifecycle remain unchanged. No scene hierarchy changes.
+
+Verification:
+- Added assertions for the faster jab timing, clear recoil, bounded impact scaling, and directional velocity projection.
+- Godot tests and rendered host/client playtest have not been run by the assistant. Run ` .\tests\run_checks.ps1 -OnlyStage m7-jab` from `fowl-play/`, then test stationary, forward-moving, sideways-moving, and retreating jabs in two instances.

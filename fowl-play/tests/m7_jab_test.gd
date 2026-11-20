@@ -6,6 +6,7 @@ const LAYERS = preload("res://core/layers.gd")
 const COMBAT_CONTROLLER = preload("res://combat/combat_controller.gd")
 const HIT_DETECTOR = preload("res://combat/combat_hit_detector.gd")
 const COMBAT_PRESENTATION = preload("res://combat/combat_presentation.gd")
+const NETWORK = preload("res://core/network.gd")
 var _failed: bool = false
 func _initialize() -> void:
 	call_deferred("_run")
@@ -53,10 +54,21 @@ func _check_presentation_curves() -> void:
 		_fail("Jab should hold a readable forward follow-through")
 	if absf(returned.x) > 0.001 or absf(returned.y) > 0.001 or absf(returned.z) > 0.001:
 		_fail("Jab body pose should return smoothly to neutral")
-	if not is_equal_approx(COMBAT_PRESENTATION.JAB_POSE_DURATION_S, 0.34) or COMBAT_PRESENTATION.JAB_EXTENSION_END_S >= COMBAT_PRESENTATION.JAB_POSE_DURATION_S:\n\t\t_fail("Jab should use a compact 0.34 s pose with a fast extension")\n\tvar recoil_peak: Vector3 = COMBAT_PRESENTATION.get_recoil_body_pose(COMBAT_PRESENTATION.RECOIL_POSE_DURATION_S * 0.5, Vector3.FORWARD)
+	if not is_equal_approx(COMBAT_PRESENTATION.JAB_POSE_DURATION_S, 0.30) or not is_equal_approx(COMBAT_PRESENTATION.JAB_EXTENSION_END_S, 0.085) or COMBAT_PRESENTATION.JAB_EXTENSION_END_S >= COMBAT_PRESENTATION.JAB_POSE_DURATION_S:
+		_fail("Jab should use a compact 0.30 s pose with a fast, readable extension")
+	var recoil_peak: Vector3 = COMBAT_PRESENTATION.get_recoil_body_pose(COMBAT_PRESENTATION.RECOIL_POSE_DURATION_S * 0.25, Vector3.FORWARD, 1.0)
 	var recoil_end: Vector3 = COMBAT_PRESENTATION.get_recoil_body_pose(COMBAT_PRESENTATION.RECOIL_POSE_DURATION_S, Vector3.FORWARD)
-	if recoil_peak.x >= 0.0 or recoil_end.length() > 0.001:
-		_fail("Weak recoil should lean away from impact and return to neutral")
+	if recoil_peak.x >= -0.05 or recoil_end.length() > 0.001:
+		_fail("Weak recoil should have a clear backward chest snap and return to neutral")
+	var stronger_recoil: Vector3 = COMBAT_PRESENTATION.get_recoil_body_pose(COMBAT_PRESENTATION.RECOIL_POSE_DURATION_S * 0.25, Vector3.FORWARD, 1.35)
+	if stronger_recoil.x >= recoil_peak.x:
+		_fail("Higher impact strength should visibly increase the recoil pose")
+	if not is_equal_approx(NETWORK.get_jab_impact_strength(Vector3.ZERO, Vector3.FORWARD), 1.0):
+		_fail("A stationary attacker should use baseline jab impact strength")
+	if not is_equal_approx(COMBAT_PRESENTATION.get_jab_impact_strength(Vector3(0.0, 0.0, -8.0), Vector3.FORWARD), 1.35):
+		_fail("A fast attacker moving into the target should reach the bounded maximum strength")
+	if not is_equal_approx(COMBAT_PRESENTATION.get_jab_impact_strength(Vector3(8.0, 0.0, 0.0), Vector3.FORWARD), 1.0):
+		_fail("Sideways attacker movement should not increase jab strength")
 
 func _check_world_hit_and_recoil() -> void:
 	var players: Node3D = Node3D.new()

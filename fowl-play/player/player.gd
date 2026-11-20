@@ -847,14 +847,15 @@ func cancel_combat_presentation() -> void:
 	_combat_presentation.call("cancel")
 
 ## Weak standing reactions are movement impulses, not knockdowns.
-func apply_combat_recoil(direction: Vector3) -> void:
+func apply_combat_recoil(direction: Vector3, strength: float = 1.0) -> void:
 	if is_limp or is_recovering or not direction.is_finite():
 		return
 	var horizontal: Vector3 = Vector3(direction.x, 0.0, direction.z)
 	if horizontal.length_squared() < 0.0001:
 		return
-	velocity += horizontal.normalized() * TUNING.JAB_RECOIL_SPEED_MPS
-	_combat_presentation.call("play_recoil", direction)
+	var bounded_strength: float = clampf(strength, 1.0, 1.35)
+	velocity += horizontal.normalized() * TUNING.JAB_RECOIL_SPEED_MPS * bounded_strength
+	_combat_presentation.call("play_recoil", direction, bounded_strength)
 
 func _rotate_view(mouse_delta: Vector2) -> void:
 	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
