@@ -461,7 +461,7 @@ res://
 
 ### M7.1 implementation note — jab foundation
 
-The first jab slice uses a host-timed press/release request, a host-side obstruction-aware ray query, and a 0.1 s active hit window. The host alone selects the target. Standing recoil is applied through the target owner's movement simulation; an already-limp target receives a host-only physical-bone velocity impulse, with no limp lifecycle or recovery-timer mutation. The first-person/remote Viewmodel right hand has a dedicated curled-fist pose and short extension. Full torso lean, stumble/collapse escalation, camera feedback, feathers and impact VFX remain later presentation work.
+The first jab slice uses a host-timed press/release request, a host-side obstruction-aware ray query, and a 0.1 s active hit window. The host alone selects the target. Standing recoil is applied through the target owner's movement simulation; an already-limp target receives a host-only physical-bone velocity impulse, with no limp lifecycle or recovery-timer mutation. The first-person/remote Viewmodel right hand has a dedicated curled-fist pose and short extension. M7.2 subsequently added the torso lean and weak recoil pose; stumble/collapse escalation, camera feedback, feathers and impact VFX remain later presentation work.
 
 ### M7.2 implementation note — jab animation and weak reaction
 
