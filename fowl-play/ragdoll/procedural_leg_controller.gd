@@ -127,7 +127,7 @@ func _get_knee_shape(cycle: float, swing_progress: float, in_swing: bool) -> flo
 		var bend_in: float = sin(clampf(swing_progress / 0.42, 0.0, 1.0) * PI * 0.5)
 		var extend_out: float = smoothstep(0.72, 1.0, swing_progress)
 		return bend_in * (1.0 - extend_out)
-	var stance_progress: float = cycle / TUNING.LEG_STANCE_FRACTION
+	var stance_progress: float = cycle / stance_fraction
 	return 0.08 * sin(stance_progress * PI)
 
 func _get_foot_pitch(cycle: float, swing_progress: float, in_swing: bool) -> float:
