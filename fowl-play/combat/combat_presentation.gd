@@ -1,6 +1,8 @@
 ## Procedural jab, charged-lunge and weak-recoil presentation.
 ## Gameplay outcomes are host-authoritative; this script only animates approved intent.
 extends RefCounted
+
+const TUNING = preload("res://core/tuning.gd")
 const JAB_POSE_DURATION_S: float = 0.21
 const JAB_EXTENSION_END_S: float = 0.058
 const JAB_CONTACT_HOLD_S: float = 0.018
