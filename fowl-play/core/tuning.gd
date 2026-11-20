@@ -6,7 +6,7 @@ extends Node
 const INTERACT_REQUEST_INTERVAL_S: float = 0.15
 
 const PLAYER_SPEED_MPS: float = 3.8
-const PLAYER_RUN_SPEED_MPS: float = 7.0
+const PLAYER_RUN_SPEED_MPS: float = 8.0
 const PLAYER_ACCELERATION_MPS2: float = 14.0
 const PLAYER_DECELERATION_MPS2: float = 18.0
 const JUMP_SPEED_MPS: float = 6.5

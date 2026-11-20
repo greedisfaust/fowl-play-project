@@ -544,7 +544,7 @@ The authored rig's `Thigh_L` bone is on local +X and `Thigh_R` is on local -X. F
 
 ## Movement tuning — 2026-11-20
 
-- Normal movement uses `PLAYER_SPEED_MPS` (3.8 m/s); holding the `sprint` input action uses `PLAYER_RUN_SPEED_MPS` (7.0 m/s).
+- Normal movement uses `PLAYER_SPEED_MPS` (3.8 m/s); holding the `sprint` input action uses `PLAYER_RUN_SPEED_MPS` (8.0 m/s).
 - Horizontal velocity accelerates at `PLAYER_ACCELERATION_MPS2` and decelerates at `PLAYER_DECELERATION_MPS2`, including smooth directional changes. Sprint only changes the target speed while movement input is held.
 - The procedural gait blends its stride amplitude and cadence toward a more energetic run as measured speed rises. This remains cosmetic and does not change movement authority or replication.
 - Input Map handoff: create the `sprint` action and bind Left Shift. The player script intentionally does not edit project settings or scenes.
