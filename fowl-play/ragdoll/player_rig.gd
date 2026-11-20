@@ -1051,6 +1051,38 @@ func get_head_eye_transform() -> Transform3D:
 	var eye_offset: Transform3D = Transform3D(Basis.IDENTITY, Vector3(0.0, 0.17, -0.06))
 	return head_attachment.global_transform * eye_offset
 
+
+## Show only the lower body for the local first-person owner without changing the rig hierarchy.
+func set_owner_view_visibility(enabled: bool, lower_body_alpha: float = 1.0) -> void:
+	var upper_attachment_paths: Array[NodePath] = [
+		^"PelvisAttachment", ^"AbdomenAttachment", ^"ChestAttachment",
+		^"NeckAttachment", ^"HeadAttachment", ^"UpperArmAttachment_L",
+		^"ForearmAttachment_L", ^"UpperArmAttachment_R", ^"ForearmAttachment_R",
+		^"HandAttachment_L", ^"HandAttachment_R"
+	]
+	for attachment_path: NodePath in upper_attachment_paths:
+		var attachment: Node3D = get_node_or_null(NodePath("Skeleton3D/" + String(attachment_path))) as Node3D
+		if attachment != null:
+			attachment.visible = not enabled
+	var leg_alpha: float = clampf(lower_body_alpha, 0.0, 1.0) if enabled else 1.0
+	var leg_paths: Array[NodePath] = [
+		^"Skeleton3D/ThighAttachment_L", ^"Skeleton3D/ShinAttachment_L",
+		^"Skeleton3D/FootAttachment_L", ^"Skeleton3D/ThighAttachment_R",
+		^"Skeleton3D/ShinAttachment_R", ^"Skeleton3D/FootAttachment_R"
+	]
+	for leg_path: NodePath in leg_paths:
+		var leg_attachment: Node3D = get_node_or_null(leg_path) as Node3D
+		if leg_attachment != null:
+			leg_attachment.visible = true
+			_set_geometry_transparency_recursive(leg_attachment, 1.0 - leg_alpha)
+	head_attachment.visible = not enabled
+
+func _set_geometry_transparency_recursive(node: Node, transparency: float) -> void:
+	if node is GeometryInstance3D:
+		(node as GeometryInstance3D).transparency = clampf(transparency, 0.0, 1.0)
+	for child: Node in node.get_children():
+		_set_geometry_transparency_recursive(child, transparency)
+
 func set_owner_head_visible(show_head: bool) -> void:
 	head_attachment.visible = show_head
 

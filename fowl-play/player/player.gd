@@ -11,6 +11,7 @@ const COMBAT_PRESENTATION_SCRIPT = preload("res://combat/combat_presentation.gd"
 const PARRY_BARRIER_SCRIPT = preload("res://combat/parry_barrier_presentation.gd")
 const MOVEMENT_PRESENTATION_SCRIPT = preload("res://ragdoll/procedural_movement_presentation.gd")
 const CAMERA_PRESENTATION_SCRIPT = preload("res://player/camera_presentation.gd")
+const OWNER_VIEW_PRESENTATION_SCRIPT = preload("res://player/owner_view_presentation.gd")
 var _movement_controller: RefCounted = MOVEMENT_CONTROLLER_SCRIPT.new()
 var _jump_controller: RefCounted = JUMP_CONTROLLER_SCRIPT.new()
 var _combat_controller: RefCounted = COMBAT_CONTROLLER_SCRIPT.new()
@@ -117,8 +118,10 @@ func _ready() -> void:
 	_camera_rest_transform = camera.transform
 	camera.current = is_local_player
 	if rig != null:
-		# Hide the owner's world model until the first-person body visibility pass.
-		rig.visible = not is_local_player
+		# Keep the owner rig active; its upper body is hidden and legs fade in on look-down.
+		rig.visible = true
+		if is_local_player:
+			rig.call("set_owner_view_visibility", true, 0.0)
 	set_process_unhandled_input(is_local_player)
 	set_physics_process(is_local_player)
 	if focus != null:
@@ -307,6 +310,7 @@ func _process(delta: float) -> void:
 			_finish_recovery()
 		return
 	if is_local_player:
+		_update_owner_view_visibility()
 		_update_first_person_camera_presentation(delta)
 	_combat_presentation.call("advance", delta)
 	var grounded_for_legs: bool = is_on_floor() if is_local_player else _remote_grounded
@@ -334,6 +338,12 @@ func _process(delta: float) -> void:
 			rotation.y = snapshot.yaw
 			head.rotation.x = snapshot.pitch
 			_remote_grounded = bool(snapshot.get("grounded", true))
+
+func _update_owner_view_visibility() -> void:
+	if not is_local_player or not is_instance_valid(rig) or is_limp or is_recovering:
+		return
+	var leg_visibility: float = float(OWNER_VIEW_PRESENTATION_SCRIPT.call("leg_visibility_weight", _pitch_radians))
+	rig.call("set_owner_view_visibility", true, leg_visibility)
 
 func _update_first_person_camera_presentation(delta: float) -> void:
 	if not is_local_player or is_limp or is_recovering or not is_instance_valid(camera):
@@ -856,6 +866,7 @@ func _begin_limp_camera() -> void:
 	# Keep the body visible without placing the camera inside its head mesh.
 	if rig != null:
 		rig.visible = true
+		rig.call("set_owner_view_visibility", false, 1.0)
 		rig.call("set_owner_head_visible", false)
 
 func _begin_recovery_camera() -> void:
@@ -870,6 +881,7 @@ func _begin_recovery_camera() -> void:
 	_recovery_camera_target = head.global_transform * _camera_rest_transform
 	if rig != null:
 		rig.visible = true
+		rig.call("set_owner_view_visibility", false, 1.0)
 		rig.call("set_owner_head_visible", false)
 
 func _update_recovery_camera(delta: float) -> void:
@@ -895,8 +907,9 @@ func _finish_recovery() -> void:
 		camera.transform = _camera_rest_transform
 		_camera_presentation.call("reset", true)
 		if rig != null:
-			rig.call("set_owner_head_visible", true)
-			rig.visible = false
+			rig.visible = true
+			rig.call("set_owner_view_visibility", true, float(OWNER_VIEW_PRESENTATION_SCRIPT.call("leg_visibility_weight", _pitch_radians)))
+			rig.call("set_owner_head_visible", false)
 	if focus != null:
 		focus.call("set_active", is_local_player)
 	debug_hub.call("log", &"limp", "Player %s finished get-up blend." % name)

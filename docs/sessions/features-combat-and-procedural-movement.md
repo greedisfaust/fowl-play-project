@@ -427,3 +427,13 @@ M10.1 adds a dedicated local-only `player/camera_presentation.gd` controller. It
 The existing simulated-head limp camera and recovery transform blend remain the owners of the camera during those states. Procedural movement camera effects are suspended during limp/recovery and reset after the recovery handoff. The camera transform is composed with its captured scene-local rest transform. The first visual tuning pass was too restrained (roughly 1–2.7 cm of vertical bob), so the follow-up increased ordinary walking motion, sprint scaling, strafing roll, and added a small gait pitch/roll. After user playtesting confirmed the motion was visible but slightly too intense, the locomotion-only bob, sway, and gait rotation were reduced to 75% of that pass (25% less intense); airborne, landing, and combat-impact responses retain their existing tuning. The ViewmodelHands are children of Camera3D and inherit the camera movement without a separate hand animation. Regression checks measure perceptible walking bob/rotation, strafing roll, and the 75% tuning in `tests/m10_camera_presentation_test.gd`; the `m10-camera` stage remains the focused test.
 
 This is still the first M10 slice, not the complete milestone. Owner lower-body visibility/fade refinement and camera wall avoidance remain. The source and regression assertions are committed but have not been executed in Godot by the assistant; the user must run the focused stage and visual checks.
+
+
+## M10.2 — first-person owner body visibility
+
+- The local owner's rig stays active, but pelvis/torso, neck, head, arms, and world-hand attachments are hidden in normal first-person standing view. Camera-attached ViewmodelHands remain visible and continue to drive remote arm IK.
+- The owner's legs and feet fade in smoothly as the camera looks down: hidden at the horizon, partial through the downward transition, and fully visible when looking toward the feet. GeometryInstance3D transparency is used without replacing materials or changing the authored rig hierarchy.
+- Remote players retain the complete visible rig. Limp and recovery restore the full body presentation while keeping the owner's head hidden from the camera; normal owner-view filtering returns after recovery.
+- Added the `m10-owner-view` focused regression stage for horizon, partial downward fade, full downward visibility, and upward-look behavior. No `.tscn` files changed.
+- Godot execution and in-game visual verification have not been run by the assistant; owner and remote multiplayer presentation still require user playtesting.
+
