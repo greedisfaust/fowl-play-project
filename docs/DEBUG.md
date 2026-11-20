@@ -439,7 +439,7 @@ The test arena has an editor-authored `WorldEnvironment` with restrained Glow en
 ### Nameplate text and plate opacity
 - Nickname and status labels remain fully opaque (alpha 1.0) whether or not the player is being aimed at.
 - Only the decorative backing, identity accent rail, and divider use the hover opacity transition (default 12% idle, 100% aimed-at). The distance fade affects those decorative elements only.
-- The runtime HeadAttachment local Y offset is 0.62 m, raised from 0.38 m to improve clearance above the head.
+- The runtime HeadAttachment local Y offset is 0.62 m, raised from 0.56 m to improve clearance above the head.
 - The scene design is not final; the current hierarchy is a stable base for further visual polish. Add or restyle decorative elements in the user-authored scene without changing the required node names.
 
 
@@ -571,6 +571,6 @@ The authored rig's `Thigh_L` bone is on local +X and `Thigh_R` is on local -X. F
 
 ## Procedural walk/sprint gait calibration
 
-- Walking and sprinting use separate gait profiles instead of simply scaling one oversized stride. Walking uses a longer cycle distance (2.4 m), a 0.38 stance fraction, 24-degree thigh swing, 30-degree knee flex, and a 0.09 m normal swing arc. Sprint blends toward the existing 1.4 m cycle, 0.58 stance fraction, 46-degree thigh swing, 68-degree knee flex, and a 0.20 m swing arc.
+- Walking and sprinting use separate gait profiles instead of simply scaling one oversized stride. Walking uses a longer cycle distance (1.6 m), a 0.56 stance fraction, 24-degree thigh swing, 30-degree knee flex, and a 0.09 m normal swing arc. Sprint blends toward the existing 1.4 m cycle, 0.58 stance fraction, 46-degree thigh swing, 68-degree knee flex, and a 0.20 m swing arc.
 - The 0.30 m emergency replant arc remains separate so a stretched foot can still recover safely. Normal walking no longer uses that exaggerated recovery height.
 - M8 checks now cover distinct walk/sprint cadence, articulation, and lift tuning. Godot execution and in-game visual verification remain user-run.
