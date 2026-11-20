@@ -496,3 +496,10 @@ The `leg_ground_<player>` command now reports each foot's emergency-replant stat
 ## Procedural leg side and knee diagnostics
 
 The authored rig's `Thigh_L` bone is on local +X and `Thigh_R` is on local -X. Footstep planner and IK side arguments follow that exact mapping: left = +1, right = -1. The gait controller exposes per-leg knee bend weights; the IK pole uses those weights to increase forward knee flex during swing while retaining the outward anatomical bias.
+
+
+## Procedural leg reach and swing lift
+
+- Leg IK now allows a smoothed, cosmetic reach extension up to `LEG_IK_MAX_STRETCH_RATIO` (1.14). Both thigh and shin bone scales are adjusted along their authored bone axes, so attached limb meshes stretch with the IK chain rather than leaving the visible geometry behind. Scales return to identity when IK is no longer active or when ragdoll/other pose ownership takes over.
+- Swing and emergency recovery foot arcs use `LEG_REPLANT_LIFT_M` (0.30 m). Thigh swing is tuned to 46 degrees, knee flex to 68 degrees, and the IK pole adds a stronger forward bias while the knee is flexed.
+- M8 checks cover the configured stretch/lift range and a farther two-bone IK target.
