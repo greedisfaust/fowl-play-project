@@ -126,8 +126,9 @@ Code and documentation were updated on the feature branch. Godot parsing, automa
 ### Foot dragging / cadence
 
 - Gait phase and stride amplitude now use actual measured horizontal player speed instead of the lagging smoothed velocity magnitude. The smoothed vector remains responsible for direction transitions, and its response was increased from 12 to 20.
-- Restored cadence multiplier to 1.0 and shortened the full stride cycle distance from 1.8 m to 1.4 m. At the 0.58 stance fraction, a planted foot travels approximately 0.812 m during stance, less than the 0.94 m natural two-bone reach plus replant margin. The intended result is for the next swing to begin before the body pulls the foot into a long dragging reach.
-- The planner's predicted swing travel remains derived from the same stride distance and swing fraction, keeping the landing prediction consistent with the new cadence.
+- Restored cadence multiplier to 1.0 and shortened the full stride cycle distance from 1.8 m to 1.4 m. Normal swing targets now include 0.40 m of additional forward placement beyond predicted root travel during swing. At touchdown the foot is therefore 0.40 m ahead of the hip; by the end of the 0.58 stance fraction it is about 0.412 m behind. Combined with the 0.84 m vertical rest reach, this is about 0.936 m, within the 0.94 m replant margin.
+- Emergency replant targets now include measured player speed multiplied by the 0.18 s recovery duration, preventing the target from remaining behind while the character continues moving during the recovery arc.
+- The planner's predicted normal swing travel remains derived from the same stride distance and swing fraction, keeping the landing prediction consistent with the new cadence.
 
 ### Verification
 
