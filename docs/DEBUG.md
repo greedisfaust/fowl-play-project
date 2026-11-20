@@ -491,3 +491,8 @@ The test arena has an editor-authored `WorldEnvironment` with restrained Glow en
 ## Procedural leg recovery diagnostics
 
 The `leg_ground_<player>` command now reports each foot's emergency-replant state and current hip-to-anchor stretch ratio, normalized against that leg's comfortable reach. A stretch ratio at or above 1.0 requests a recovery step when the foot is in stance. Only the more-stretched foot is allowed to emergency-step at a time.
+
+
+## Procedural leg side and knee diagnostics
+
+The authored rig's `Thigh_L` bone is on local +X and `Thigh_R` is on local -X. Footstep planner and IK side arguments follow that exact mapping: left = +1, right = -1. The gait controller exposes per-leg knee bend weights; the IK pole uses those weights to increase forward knee flex during swing while retaining the outward anatomical bias.
