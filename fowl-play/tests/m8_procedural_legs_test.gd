@@ -17,6 +17,7 @@ func _run() -> void:
 	_check_controller_gait()
 	_check_footstep_planner()
 	_check_foot_plant_targets()
+	_check_emergency_replant()
 	_check_two_bone_solver()
 	await _check_rig_ownership()
 	if _failed:
@@ -180,6 +181,13 @@ func _check_footstep_planner() -> void:
 	if rotated_forward.x >= hip.x:
 		_fail("Footstep targets should respect the rig's world-facing orientation")
 
+	var crossed_left: Vector3 = planner.call("constrain_anatomical_side", hip, hip, Basis.IDENTITY, -1.0, 0.20)
+	var crossed_right: Vector3 = planner.call("constrain_anatomical_side", hip, hip, Basis.IDENTITY, 1.0, 0.20)
+	if crossed_left.x > hip.x - 0.199:
+		_fail("Left landing targets must be clamped to the left side of the hip centerline")
+	if crossed_right.x < hip.x + 0.199:
+		_fail("Right landing targets must be clamped to the right side of the hip centerline")
+
 func _check_foot_plant_targets() -> void:
 	var tracker: RefCounted = FOOT_PLANT_SCRIPT.new()
 	var current: Vector3 = Vector3(0.0, 0.1, 0.0)
@@ -212,6 +220,29 @@ func _check_foot_plant_targets() -> void:
 	var airborne: Vector3 = tracker.call("update_target", next_landing + Vector3.UP, next_landing, false, false, 0.0, 0.28)
 	if airborne.distance_to(next_landing + Vector3.UP) > 0.001:
 		_fail("Foot planting should yield to the current foot position while airborne")
+
+func _check_emergency_replant() -> void:
+	var tracker: RefCounted = FOOT_PLANT_SCRIPT.new()
+	var planted_foot: Vector3 = Vector3(-0.2, 0.05, 0.0)
+	var hip: Vector3 = Vector3(-0.2, 0.85, 0.0)
+	tracker.call("update_target", planted_foot, planted_foot, true, false, 0.0, 0.12)
+	if not bool(tracker.call("needs_replant", hip, 0.72)):
+		_fail("A planted foot beyond comfortable leg reach should request an emergency replant")
+	var new_landing: Vector3 = Vector3(-0.2, 0.05, -0.2)
+	var recovery_midpoint: Vector3 = tracker.call(
+		"update_target", planted_foot, new_landing, true, false, 0.0, 0.12,
+		0.09, hip, 0.72, 0.18, true
+	)
+	if not bool(tracker.get("emergency_replant_active")):
+		_fail("Emergency replant should enter its own recovery swing")
+	if recovery_midpoint.y <= planted_foot.y:
+		_fail("Emergency recovery should lift the foot instead of teleporting it")
+	var recovered: Vector3 = tracker.call(
+		"update_target", planted_foot, new_landing, true, false, 0.0, 0.12,
+		0.09, hip, 0.72, 0.18, false
+	)
+	if recovered.distance_to(new_landing) > 0.001 or bool(tracker.get("emergency_replant_active")):
+		_fail("Emergency recovery should capture its new ground anchor when complete")
 
 func _check_two_bone_solver() -> void:
 	var hip: Vector3 = Vector3(0.0, 1.0, 0.0)
