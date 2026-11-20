@@ -269,41 +269,41 @@ func unregister_movement_player(owner_id: int, player: Node) -> void:
 		movement_players.erase(owner_id)
 		_pending_ragdoll_starts.erase(owner_id)
 
-func send_movement(owner_id: int, sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float) -> void:
+func send_movement(owner_id: int, sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float, grounded: bool = true) -> void:
 	if peer == null or peer.get_connection_status() != MultiplayerPeer.CONNECTION_CONNECTED:
 		return
 	if is_host:
-		_receive_movement(owner_id, sequence, at, speed, yaw, pitch)
+		_receive_movement(owner_id, sequence, at, speed, yaw, pitch, grounded)
 	else:
-		_submit_movement.rpc_id(TUNING.PEER_ID_HOST, sequence, at, speed, yaw, pitch)
+		_submit_movement.rpc_id(TUNING.PEER_ID_HOST, sequence, at, speed, yaw, pitch, grounded)
 
 @rpc("any_peer", "call_remote", "unreliable_ordered", 1)
-func _submit_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float) -> void:
+func _submit_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float, grounded: bool) -> void:
 	if not is_host or not validate_rpc():
 		return
 	# Sender identity selects the player; clients cannot choose another player's ID.
-	_receive_movement(multiplayer.get_remote_sender_id(), sequence, at, speed, yaw, pitch)
+	_receive_movement(multiplayer.get_remote_sender_id(), sequence, at, speed, yaw, pitch, grounded)
 
-func _receive_movement(owner_id: int, sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float) -> void:
+func _receive_movement(owner_id: int, sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float, grounded: bool) -> void:
 	var player: Node = movement_players.get(owner_id)
 	if not is_instance_valid(player):
 		return
 	if bool(player.get("is_limp")):
 		return
-	if not bool(player.call("accept_movement", sequence, at, speed, yaw, pitch)):
+	if not bool(player.call("accept_movement", sequence, at, speed, yaw, pitch, grounded)):
 		movement_rejected += 1
 		if owner_id != TUNING.PEER_ID_HOST:
 			_correct_movement.rpc_id(owner_id, player.get("accepted_position"))
 		return
-	_publish_movement.rpc(owner_id, sequence, at, speed, yaw, pitch)
+	_publish_movement.rpc(owner_id, sequence, at, speed, yaw, pitch, grounded)
 
 @rpc("authority", "call_remote", "unreliable_ordered", 1)
-func _publish_movement(owner_id: int, sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float) -> void:
+func _publish_movement(owner_id: int, sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float, grounded: bool) -> void:
 	if not validate_rpc(TUNING.PEER_ID_HOST):
 		return
 	var player: Node = movement_players.get(owner_id)
 	if is_instance_valid(player):
-		player.call("receive_movement", sequence, at, speed, yaw, pitch)
+		player.call("receive_movement", sequence, at, speed, yaw, pitch, grounded)
 
 @rpc("authority", "call_remote", "reliable", 2)
 func _correct_movement(at: Vector3) -> void:

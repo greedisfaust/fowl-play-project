@@ -1,10 +1,10 @@
 # Fowl Play — Project State
 
-**Status:** Combat & Procedural Legs (Movement) is the active feature on `features/combat-and-procedural-movement`. The branch starts from the merged Player Identity & World Kit baseline. The read-only rig audit is complete; implementation has not started. Previous identity/world-kit work remains archived as implemented, with verification caveats retained below.
+**Status:** Combat & Procedural Legs (Movement) is active on `features/combat-and-procedural-movement`. The branch starts from the merged Player Identity & World Kit baseline. The read-only rig audit is complete and the first procedural gait slice is committed; Godot execution and in-game verification remain pending. Previous identity/world-kit work remains archived as implemented, with verification caveats retained below.
 
-## Last updated (2026-11-20; Player Identity & World Kit branch closeout)
+## Last updated (2026-11-20; initial procedural leg gait slice)
 
-- Current branch: `features/player-identity-and-world-kit` (host-authoritative player identity, reusable physical button, FAT/SLIM world screens, interactive menus, and proximity-aware registration terminal).
+- Current branch: `features/combat-and-procedural-movement` (based on merged `main` commit `1506c03746e158c74ffcd2da5df042b20435db25`). Read-only rig audit is complete; initial procedural gait slice is committed and awaiting Godot verification.
 - Godot 4.7 project: `fowl-play/`, using Jolt Physics, Forward+, and D3D12.
 - `fowl-play/project.godot` contains the project settings, input actions, and four autoload entries.
 - Foundation scripts exist in `fowl-play/core/`: `layers.gd`, `tuning.gd`, `network.gd`, and `debug_hub.gd`.
@@ -29,7 +29,7 @@
 | World kit — WorldScreen | Reusable size-adaptive 3D screen, CMD-style text renderer, and FAT/SLIM housings | Reusable content APIs, menus, FAT/SLIM controllers and glass treatments are implemented and documented. Automated housing checks and final rendered sizing/material verification remain unconfirmed in this archive. |
 | M6 Carry and throw | Props and limp bodies, auto-fire throw, dangling limbs | IMPLEMENTED; USER VISUAL-PLAYTESTED: host-authoritative carry/drop/throw; Chest spring/torque stabilisation at the carrier anchor; selective opposite-side limb self-collision; carried-only head/arm damping and narrower neck joint limits; smoothed head-mounted first-person camera while preserving mouse-look and dynamic FOV. Player root stays fixed, remote peers render host poses without local ragdoll collision, recovery pauses while carried, and each release resets a fresh 3.5 s countdown. Automated M6 test and full two-instance host/client verification remain pending. |
 | M7 Combat | Jab/recoil, charged punch, lunge, parry outcomes | Not started |
-| M8 Procedural legs | Cosmetic legs, zero network traffic | Not started |
+| M8 Procedural legs | Cosmetic legs, zero network traffic | IN PROGRESS: initial velocity-driven alternating thigh/shin/foot gait is implemented locally; grounded state is carried inside the existing movement snapshot. Foot planting, start/stop/turn refinement, owner-view leg visibility, visual tuning, and verification remain. |
 | M9 Camera + owner view | Camera follow target, owner legs visibility | Limp camera follows the simulated head position and orientation; the owner's head geometry is hidden and body visible. Head rotational stability is user-verified after physical head tuning; visual comfort, wall avoidance and final camera transitions remain. |
 | M10 Hardening | Cleanup matrix, weak-laptop budget, 4-player soak | Not started |
 

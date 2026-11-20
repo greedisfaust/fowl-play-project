@@ -5,6 +5,7 @@ const LAYERS = preload("res://core/layers.gd")
 const TUNING = preload("res://core/tuning.gd")
 const SELF_COLLISION = preload("res://ragdoll/self_collision_policy.gd")
 const ARM_IK = preload("res://ragdoll/procedural_arm_ik.gd")
+const LEG_CONTROLLER_SCRIPT = preload("res://ragdoll/procedural_leg_controller.gd")
 const EXPECTED_PHYSICAL_BONES: int = 11
 const POSE_VALUES_PER_BONE: int = 7
 const POSITION_QUANTIZATION: float = 1000.0
@@ -26,6 +27,16 @@ var _last_remote_sequence: int = -1
 var _last_remote_host_time_ms: int = -1
 var _latest_host_pose: PackedInt32Array = PackedInt32Array()
 var _hips_bone_index: int = -1
+var _left_thigh_bone_index: int = -1
+var _left_shin_bone_index: int = -1
+var _left_foot_bone_index: int = -1
+var _right_thigh_bone_index: int = -1
+var _right_shin_bone_index: int = -1
+var _right_foot_bone_index: int = -1
+var _leg_controller: RefCounted = LEG_CONTROLLER_SCRIPT.new()
+var _leg_pose_active: bool = false
+var _leg_status_watch_name: StringName
+var _leg_status_command_name: StringName
 var _chest_bone_index: int = -1
 var _right_viewmodel_upper_arm_bone_index: int = -1
 var _right_viewmodel_forearm_bone_index: int = -1
@@ -171,6 +182,12 @@ func _ready() -> void:
 		# not the character's forward axis. Preserve that bind-space offset.
 		_chest_rest_basis_offset = global_basis.inverse() * _chest_physical_bone.global_basis
 
+	_left_thigh_bone_index = skeleton.find_bone("Thigh_L")
+	_left_shin_bone_index = skeleton.find_bone("Shin_L")
+	_left_foot_bone_index = skeleton.find_bone("Foot_L")
+	_right_thigh_bone_index = skeleton.find_bone("Thigh_R")
+	_right_shin_bone_index = skeleton.find_bone("Shin_R")
+	_right_foot_bone_index = skeleton.find_bone("Foot_R")
 	_right_viewmodel_upper_arm_bone_index = skeleton.find_bone("UpperArm_L")
 	_right_viewmodel_forearm_bone_index = skeleton.find_bone("Forearm_L")
 	_right_viewmodel_hand_bone_index = skeleton.find_bone("Hand_L")
@@ -199,6 +216,8 @@ func _ready() -> void:
 				_left_rig_hand_visuals.append(left_visual_instance)
 	_left_rig_hand_visible_watch_name = StringName("rig/%s/left_rig_hand_visible" % get_parent().name)
 	_set_left_rig_hand_visual_visible(false)
+	_leg_status_watch_name = StringName("rig/%s/legs_active" % get_parent().name)
+	_leg_status_command_name = StringName("leg_status_%s" % get_parent().name)
 	_right_arm_ik_watch_name = StringName("rig/%s/right_arm_ik" % get_parent().name)
 	_right_arm_ik_command_name = StringName("arm_ik_status_%s" % get_parent().name)
 	_left_arm_ik_watch_name = StringName("rig/%s/left_arm_ik" % get_parent().name)
@@ -210,6 +229,8 @@ func _ready() -> void:
 	else:
 		debug_hub.call("log", &"ragdoll", "Rig %s prepared 11 dormant physical bones; %d selective self-contact pairs." % [get_parent().name, self_contact_pairs])
 	debug_hub.call("watch", _watch_name, func() -> int: return physical_bones.size())
+	debug_hub.call("watch", _leg_status_watch_name, func() -> bool: return _leg_pose_active)
+	debug_hub.call("command", _leg_status_command_name, _debug_leg_status, "Report this player procedural leg gait state.", false, false)
 	debug_hub.call("watch", _right_arm_ik_watch_name, func() -> bool: return _right_arm_ik_active)
 	debug_hub.call("watch", _right_rig_hand_visible_watch_name, _is_right_rig_hand_visual_visible)
 	debug_hub.call("watch", _left_arm_ik_watch_name, func() -> bool: return _left_arm_ik_active)
@@ -221,6 +242,8 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	if is_instance_valid(debug_hub):
 		debug_hub.call("unwatch", _watch_name)
+		debug_hub.call("unwatch", _leg_status_watch_name)
+		debug_hub.call("unregister_command", _leg_status_command_name)
 		debug_hub.call("unwatch", _right_arm_ik_watch_name)
 		debug_hub.call("unwatch", _left_arm_ik_watch_name)
 		debug_hub.call("unwatch", _right_rig_hand_visible_watch_name)
@@ -373,6 +396,38 @@ func _update_procedural_arm_chain(
 	skeleton.force_update_all_bone_transforms()
 	return true
 
+func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: float) -> bool:
+	if _left_thigh_bone_index < 0 or _left_shin_bone_index < 0 or _left_foot_bone_index < 0:
+		return false
+	if _right_thigh_bone_index < 0 or _right_shin_bone_index < 0 or _right_foot_bone_index < 0:
+		return false
+	if simulator.is_simulating_physics() or _remote_active or _pose_blend_active or _recovery_animation_active:
+		_leg_pose_active = false
+		return false
+	if not world_velocity.is_finite():
+		return false
+	var local_velocity: Vector3 = global_basis.inverse() * world_velocity
+	_leg_controller.call("update", delta, local_velocity, grounded)
+	var left_thigh_rotation: Quaternion = _leg_controller.get("left_thigh_rotation")
+	var left_shin_rotation: Quaternion = _leg_controller.get("left_shin_rotation")
+	var left_foot_rotation: Quaternion = _leg_controller.get("left_foot_rotation")
+	var right_thigh_rotation: Quaternion = _leg_controller.get("right_thigh_rotation")
+	var right_shin_rotation: Quaternion = _leg_controller.get("right_shin_rotation")
+	var right_foot_rotation: Quaternion = _leg_controller.get("right_foot_rotation")
+	skeleton.set_bone_pose_rotation(_left_thigh_bone_index, left_thigh_rotation)
+	skeleton.set_bone_pose_rotation(_left_shin_bone_index, left_shin_rotation)
+	skeleton.set_bone_pose_rotation(_left_foot_bone_index, left_foot_rotation)
+	skeleton.set_bone_pose_rotation(_right_thigh_bone_index, right_thigh_rotation)
+	skeleton.set_bone_pose_rotation(_right_shin_bone_index, right_shin_rotation)
+	skeleton.set_bone_pose_rotation(_right_foot_bone_index, right_foot_rotation)
+	skeleton.force_update_all_bone_transforms()
+	_leg_pose_active = bool(_leg_controller.call("is_active"))
+	return true
+
+func _debug_leg_status(_args: Array[Variant]) -> String:
+	var phase_value: float = float(_leg_controller.get("phase"))
+	return "active=%s phase=%.2f" % [_leg_pose_active, phase_value]
+
 func update_procedural_right_arm(wrist_target_world: Vector3, delta: float) -> bool:
 	var applied: bool = _update_procedural_arm_chain(
 		_right_viewmodel_upper_arm_bone_index,
@@ -421,6 +476,8 @@ func begin_host_simulation() -> bool:
 	# blends back to the actual standing pose instead of the rest/T-pose.
 	if not _remote_active:
 		_standing_pose = _capture_skeleton_pose()
+	_leg_controller.call("reset")
+	_leg_pose_active = false
 	_set_right_arm_ik_active(false)
 	_set_left_arm_ik_active(false)
 	_set_right_rig_hand_visual_visible(true)
@@ -460,6 +517,8 @@ func stop_host_simulation() -> void:
 	top_level = false
 	transform = Transform3D.IDENTITY
 	_latest_host_pose = PackedInt32Array()
+	_leg_controller.call("reset")
+	_leg_pose_active = false
 
 func stop_host_simulation_with_blend(duration: float, recovery_variant: StringName = &"") -> void:
 	# Outside modification_processed the host skeleton can contain the
@@ -654,6 +713,8 @@ func begin_remote_pose(world_transform: Transform3D, initial_pose: PackedInt32Ar
 	global_transform = world_transform if world_transform.is_finite() else previous_transform
 	simulator.active = false
 	_remote_active = true
+	_leg_controller.call("reset")
+	_leg_pose_active = false
 	_set_right_arm_ik_active(false)
 	_set_left_arm_ik_active(false)
 	_set_right_rig_hand_visual_visible(true)

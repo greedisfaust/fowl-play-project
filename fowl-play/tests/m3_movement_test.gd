@@ -24,6 +24,11 @@ func _initialize() -> void:
 	check(absf(sample.position.x - 1.0) < 0.001, "delayed interpolation midpoint")
 	check(absf(absf(sample.yaw) - PI) < 0.01, "yaw takes shortest arc")
 	check(stream.sample(5.0).position == Vector3(2, 0, 0), "holds last snapshot on loss")
+	stream.reset(Vector3.ZERO, 0.0)
+	stream.push(1, Vector3.ZERO, Vector3.ZERO, 0.0, 0.0, 1.0, false)
+	stream.push(2, Vector3(1.0, 0.0, 0.0), Vector3.ZERO, 0.0, 0.0, 1.2, true)
+	check(not bool(stream.sample(1.2).grounded), "grounded state remains false before the landing snapshot time")
+	check(bool(stream.sample(1.3).grounded), "grounded state changes at the landing snapshot time")
 	if not failed:
 		print("M3 movement checks passed")
 	quit(1 if failed else 0)

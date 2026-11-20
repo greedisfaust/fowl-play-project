@@ -1,7 +1,7 @@
 # Session plan: Combat & Procedural Legs (Movement)
 
 Branch: `features/combat-and-procedural-movement`
-Status: ACTIVE — branch created from merged main; read-only rig audit completed; implementation has not started.
+Status: ACTIVE — read-only rig audit completed; first procedural gait slice committed; Godot execution and visual verification pending.
 Created: 2026-11-20
 Previous baseline: `features/player-identity-and-world-kit`
 
@@ -74,6 +74,32 @@ Branch baseline: `features/combat-and-procedural-movement` initially matched `ma
 4. Preserve the current 11-body ragdoll setup and all existing collision policies.
 5. Owner-view legs must be shown selectively without exposing the hidden upper body.
 6. Add tests, DebugHub watches/commands, and documentation alongside each implementation slice. No tests or in-game visuals are claimed verified by this audit.
+
+
+
+## Implementation slice 1 — velocity-driven procedural gait
+
+Commit: this implementation slice is recorded in the feature branch history.
+
+Implemented:
+- Added a pure `RefCounted` gait controller that advances its phase from horizontal travel distance, alternates left/right leg swing, bends the knee during swing, and counter-rotates the foot.
+- Gait direction is transformed into Player-local space, so the swing plane follows forward/backward and lateral movement.
+- Gait weight blends in/out smoothly and freezes its step phase while airborne.
+- PlayerRig applies the six target rotations to the existing Thigh/Shin/Foot bones only while standing.
+- The controller resets when host or remote ragdoll ownership begins. Procedural updates are rejected during physical simulation, remote ragdoll playback, and recovery blending.
+- Existing 20 Hz movement snapshots now include the owner's grounded flag. This is a small addition to the existing movement packet, not a new animation stream or extra per-frame RPC.
+- Added an M8 headless test and movement-stream grounded-transition assertions; registered the new stage in `run_checks.ps1`.
+- Added DebugHub watch `rig/<name>/legs_active` and command `leg_status_<player>`.
+
+Not included yet:
+- Foot planting / ground raycasts and skating refinement.
+- Acceleration/deceleration shaping, turn-in-place, and directional transitions.
+- Owner-view selective leg visibility and fade behavior.
+- Combat implementation.
+
+Verification:
+- Code and tests are authored but have **not** been run in Godot by the assistant. Import, headless tests, and in-game host/client visual checks remain pending.
+- The first visual checkpoint should use two instances: each peer should see the other peer's legs animate while walking/strafe, and neither peer should see procedural leg motion during ragdoll or recovery.
 
 ## Combat scope
 

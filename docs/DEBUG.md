@@ -13,7 +13,7 @@ security secret.
 | limp | core/limp.gd | limp start/end, recovery, phase changes |
 | carry | core/carry.gd | pickup, carry, throw, drop, state |
 | hands | core/hands.gd | reach, hover, guard, shake, color changes |
-| legs | Planned; no procedural-leg owner script exists yet | Reserved for step, land, settle, and air movement once implemented |
+| legs | ragdoll/player_rig.gd and ragdoll/procedural_leg_controller.gd | Local gait phase, procedural leg pose activation, and ragdoll ownership gating |
 | props | core/props.gd | spawn, grab, throw, interact, state |
 | ragdoll | ragdoll/player_ragdoll_test.gd | isolated physical-bone test start/stop |
 | interact | player/focus.gd and interaction/interactable.gd | focus changes, accepted/rejected interaction requests |
@@ -36,6 +36,7 @@ security secret.
 | `interact/device/<name>/active` | interaction/debug_use_device.gd | Toggle state of the M1 test USE device. |
 | `props/<name>/pickup_allowed` | props/prop.gd | Whether the prop's assigned profile allows pickup. |
 | `hands/<name>/state` | hands/hand.gd | World mode, hover, guard, carry, limp, and speed state. |
+| `rig/<name>/legs_active` | ragdoll/player_rig.gd | Whether the local procedural gait is currently blended in. |
 | Carry pose | hands/hand.gd | While carrying, the palm's local +Y normal smoothly turns toward the carried prop; finger curl is still the shared carry pose. |
 | `ragdoll_test.simulating` | ragdoll/player_ragdoll_test.gd | Whether the isolated PhysicalBoneSimulator3D is simulating. |
 | `player/<name>/wall_clearance` | player/player.gd | Whether recovery placement had to move away from a wall/prop during limp recovery. |
@@ -67,6 +68,7 @@ Automated checks cover Enter/Run signal wiring, category toggles, feedback with 
 | `net_disconnect` | none | no | no | Disconnects this instance and clears its players. On the host, ends the session for clients. Use net_host/net_join afterward. |
 | `interact_use_<name>` | none | no | no | Submits the local player's focused interaction to the host. Remote-player commands reject locally. Submission is not acceptance; see interact logs. |
 | `hand_status_<name>` | none | no | no | Reports this hand's cosmetic state. |
+| `leg_status_<player>` | none | no | no | Reports procedural gait activation and current phase. |
 | `arm_ik_status_<player>` | none | no | no | Reports the Viewmodel-right arm IK target, active state, and mapped Rig bone chain. |
 | `arm_ik_status_left_<player>` | none | no | no | Reports the Viewmodel-left arm IK target, active state, and mapped Rig bone chain. |
 | `ragdoll_test_start` | none | no | yes | Starts the isolated player ragdoll simulation. |
@@ -92,6 +94,7 @@ Automated checks cover Enter/Run signal wiring, category toggles, feedback with 
 | M1 | 3 | Aim at the GRAB prop: `props/<name>/pickup_allowed=true`; press E and see `props: <name> grab accepted; carry is deferred to M6`. |
 | M2 | 1 | Hand registration shows `hands/<name>/state`; `hand_status_<name>` reports world/hover/guard/carry/limp state. |
 | M2/M3 | 1 | On an accepted USE/GRAB interaction, the initiating player sees the immediate first-person poke; other peers see that player's world right hand poke toward the target. `net/hand_poke_sent` increases on host; `net/hand_poke_received` increases on peers that animate a remote hand. Rejected interactions do not broadcast a poke. |
+| M8 | 1 | Walk forward and strafe while grounded: `rig/<name>/legs_active=true`; `leg_status_<player>` reports the current gait phase. While airborne or standing still, the gait blends toward neutral; during ragdoll/recovery, procedural legs yield to the rig lifecycle. |
 | M6 | 1 | Aim at a free prop or limp body: `props/<name>/pickup_allowed=true` or `player/<name>/limp_interactable_enabled=true`; press interact → `carry: Player <name> picked up <item>` on host and `carry/<name>/holding=<item>` watch appears. |
 | M6 | 2 | Press punch once and release quickly: `carry: Player <name> released <item>` and `props/<name> set carried=false`. |
 | M6 | 3 | Hold punch past auto-fire: `carry: Player <name> released <item>`; prop/body flies at `THROW_SPEED_MPS` (props) or `THROW_SPEED_LIMP_MPS` (limp bodies). |

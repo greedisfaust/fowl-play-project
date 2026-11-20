@@ -56,6 +56,7 @@ var accepted_position: Vector3
 var _is_carried: bool = false
 
 var _pitch_radians: float = 0.0
+var _remote_grounded: bool = true
 var _limp_look_yaw: float = 0.0
 var _limp_look_pitch: float = 0.0
 var _carry_camera_smoothing_initialized: bool = false
@@ -253,6 +254,9 @@ func _process(delta: float) -> void:
 		if rig != null and not bool(rig.call("is_pose_blending")):
 			_finish_recovery()
 		return
+	var grounded_for_legs: bool = is_on_floor() if is_local_player else _remote_grounded
+	if rig != null:
+		rig.call("update_procedural_legs", velocity, grounded_for_legs, delta)
 	# The camera-attached Viewmodel hand is the pose source for remote-visible arms.
 	# Its authored wrist pivot sits 0.32 hand-local units behind the palm.
 	if rig != null and is_instance_valid(viewmodel_right_hand_pose_root):
@@ -266,7 +270,7 @@ func _process(delta: float) -> void:
 		if _send_elapsed >= 1.0 / TUNING.MOVE_SEND_HZ:
 			_send_elapsed = 0.0
 			_movement_sequence += 1
-			network.call("send_movement", input_peer_id, _movement_sequence, global_position, velocity, rotation.y, _pitch_radians)
+			network.call("send_movement", input_peer_id, _movement_sequence, global_position, velocity, rotation.y, _pitch_radians, is_on_floor())
 	else:
 		var snapshot: Dictionary = _movement.sample(Time.get_ticks_msec() / 1000.0)
 		if not snapshot.is_empty():
@@ -274,6 +278,7 @@ func _process(delta: float) -> void:
 			velocity = snapshot.velocity
 			rotation.y = snapshot.yaw
 			head.rotation.x = snapshot.pitch
+			_remote_grounded = bool(snapshot.get("grounded", true))
 
 func _has_host_authority() -> bool:
 	return network.get("peer") == null or bool(network.get("is_host"))
@@ -295,14 +300,14 @@ func _update_limp_interaction_proxy() -> void:
 		return
 	limp_interaction_proxy.global_position = rig.call("get_hips_world_position")
 
-func accept_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float) -> bool:
+func accept_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float, grounded: bool = true) -> bool:
 	if is_limp or is_recovering:
 		return false
 	var now: float = Time.get_ticks_msec() / 1000.0
-	if not _movement.accept(sequence, at, speed, yaw, pitch, now):
+	if not _movement.accept(sequence, at, speed, yaw, pitch, now, grounded):
 		return false
 	accepted_position = at
-	receive_movement(sequence, at, speed, yaw, pitch)
+	receive_movement(sequence, at, speed, yaw, pitch, grounded)
 	return true
 
 ## Returns true while this player holds a carried item (prop or limp body).
@@ -422,11 +427,11 @@ func apply_release(at: Vector3, linear: Vector3, angular: Vector3) -> void:
 	global_position = at
 	velocity = linear
 
-func receive_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float) -> void:
+func receive_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float, grounded: bool = true) -> void:
 	if is_limp or is_recovering:
 		return
 	if not is_local_player:
-		_movement.push(sequence, at, speed, yaw, pitch, Time.get_ticks_msec() / 1000.0)
+		_movement.push(sequence, at, speed, yaw, pitch, Time.get_ticks_msec() / 1000.0, grounded)
 
 ## Locks standing movement while a local terminal text field is being edited.
 ## Mouse look, gravity, collision, and other presentation remain active.
