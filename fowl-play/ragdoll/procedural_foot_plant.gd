@@ -43,7 +43,8 @@ func update_target(
 	max_reach_m: float = 1000000.0,
 	recovery_duration: float = 0.18,
 	force_replant: bool = false,
-	landing_support: Node3D = null
+	landing_support: Node3D = null,
+	emergency_lift_height: float = -1.0
 ) -> Vector3:
 	if not current_foot_world.is_finite() or not landing_target_world.is_finite():
 		reset()
@@ -80,7 +81,8 @@ func update_target(
 		if is_instance_valid(emergency_replant_target_support):
 			emergency_replant_target_world = emergency_replant_target_support.global_transform * emergency_replant_target_support_local
 		var recovery_target: Vector3 = emergency_replant_start_world.lerp(emergency_replant_target_world, eased_recovery)
-		recovery_target.y += sin(recovery_progress * PI) * maxf(lift_height, 0.0)
+		var recovery_lift: float = emergency_lift_height if emergency_lift_height >= 0.0 else lift_height
+		recovery_target.y += sin(recovery_progress * PI) * maxf(recovery_lift, 0.0)
 		if recovery_progress >= 1.0:
 			anchor_world = emergency_replant_target_world
 			anchor_support = emergency_replant_target_support
