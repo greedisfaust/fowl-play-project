@@ -14,7 +14,7 @@ Base docs: `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `
 - The project is Godot 4.7, typed GDScript, Jolt, ENet, max four players; `fowl-play/` is the Godot project.
 - Existing reusable foundations include `Interactable` / `Focus`, `Network`, `PlayerIdentity`, `DebugHub`, and the current player/nameplate presentation.
 - The user's editor-authored scenes remain user-owned. Do not generate scene trees, meshes, collision shapes, or physical table art in code.
-- Phase 0 audit and initial architecture specification are the first deliverables. Implementation has not started.
+- Phase 0 repository audit and architecture specification are complete. Implementation has not started.
 
 ## Done (this branch)
 
@@ -26,12 +26,12 @@ Base docs: `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `
 
 ## In progress
 
-- [PARTIAL] Casino architecture specification — define stable BaseTable/game adapter/shared-service contracts and identify open decisions before coding.
-- [PARTIAL] Foundation implementation plan — after spec review, inspect precise integration seams and build the smallest tested vertical slice.
+- [DONE] Casino architecture specification — `docs/CASINO_FOUNDATION_DESIGN.md` records audited project seams, shared-service boundaries, BaseTable responsibilities, game-specific betting adapters, daily rules, and implementation sequence.
+- [PARTIAL] Foundation implementation plan — resolve the first wallet transaction policy gate, update the authoritative project overview to reflect the approved casino scope, then implement the smallest tested vertical slice.
 
 ## Exact next step
 
-Finish `docs/CASINO_FOUNDATION_DESIGN.md` with the audited contracts and user-approved rules. Then present the proposed first implementation slice for approval before changing gameplay scripts or scenes.
+Confirm the wager transaction policy: on bet confirmation, reserve/deduct the stake from available shared funds; allow edit/withdraw/refund before round start; lock at round start; never refund solely because the casino timer expires. Then update `docs/PROJECT_OVERVIEW.md` scope and implement the wallet transaction service with headless tests.
 
 ## Waiting on the user
 
@@ -124,4 +124,5 @@ Finish `docs/CASINO_FOUNDATION_DESIGN.md` with the audited contracts and user-ap
 ### Session 1 — 2026-11-21 — GPT-6
 - Audited branch baseline, project instructions, state, interaction/network/debug foundations, and current project tree.
 - Recorded current casino/world design decisions and open questions.
-- Next: complete architecture specification; no gameplay implementation yet.
+- Completed `docs/CASINO_FOUNDATION_DESIGN.md` and branch session/index/state documentation. No gameplay implementation yet.
+- Next: confirm the wager reservation timing, update project scope authority, then build and test the wallet transaction service.
