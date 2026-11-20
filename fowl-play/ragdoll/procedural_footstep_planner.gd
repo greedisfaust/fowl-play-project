@@ -36,3 +36,27 @@ func get_landing_target(
 	var forward_offset: Vector3 = move_direction_world * (maxf(forward_placement_m, 0.0) + maxf(predicted_swing_travel_m, 0.0))
 	var lateral_offset: Vector3 = lateral_axis_world * signf(foot_side) * maxf(lateral_placement_m, 0.0)
 	return hip_world + forward_offset + lateral_offset
+
+## Keep a candidate landing point on its assigned anatomical side of the hip midpoint.
+## This is a target-space guard, not physical collision between leg meshes.
+func constrain_anatomical_side(
+	target_world: Vector3,
+	hip_center_world: Vector3,
+	rig_basis: Basis,
+	foot_side: float,
+	minimum_lateral_m: float
+) -> Vector3:
+	if not target_world.is_finite() or not hip_center_world.is_finite():
+		return target_world
+	var lateral_axis_world: Vector3 = rig_basis * Vector3.RIGHT
+	lateral_axis_world.y = 0.0
+	if lateral_axis_world.length_squared() <= 0.0001:
+		lateral_axis_world = Vector3.RIGHT
+	else:
+		lateral_axis_world = lateral_axis_world.normalized()
+	var side_sign: float = -1.0 if foot_side < 0.0 else 1.0
+	var signed_lateral: float = (target_world - hip_center_world).dot(lateral_axis_world) * side_sign
+	var required_lateral: float = maxf(minimum_lateral_m, 0.0)
+	if signed_lateral < required_lateral:
+		target_world += lateral_axis_world * side_sign * (required_lateral - signed_lateral)
+	return target_world
