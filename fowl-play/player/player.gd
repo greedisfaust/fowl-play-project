@@ -5,7 +5,9 @@ extends CharacterBody3D
 
 const TUNING = preload("res://core/tuning.gd")
 const MOVEMENT_CONTROLLER_SCRIPT = preload("res://core/movement_controller.gd")
+const JUMP_CONTROLLER_SCRIPT = preload("res://core/jump_controller.gd")
 var _movement_controller: RefCounted = MOVEMENT_CONTROLLER_SCRIPT.new()
+var _jump_controller: RefCounted = JUMP_CONTROLLER_SCRIPT.new()
 const LAYERS = preload("res://core/layers.gd")
 const PlayerIdentity = preload("res://core/player_identity.gd")
 const LIMP_LOOK_YAW_LIMIT: float = deg_to_rad(75.0)
@@ -74,6 +76,8 @@ var _recovery_camera_target: Transform3D
 var _debug_command_name: StringName
 var _debug_speed_watch_name: StringName
 var _debug_floor_watch_name: StringName
+var _debug_coyote_watch_name: StringName
+var _debug_jump_buffer_watch_name: StringName
 var _debug_limp_watch_name: StringName
 var _debug_recovering_watch_name: StringName
 var _debug_limp_elapsed_watch_name: StringName
@@ -118,6 +122,8 @@ func _ready() -> void:
 		limp_interaction_proxy.collision_layer = 0
 	_debug_speed_watch_name = StringName("player/%s/speed_mps" % name)
 	_debug_floor_watch_name = StringName("player/%s/on_floor" % name)
+	_debug_coyote_watch_name = StringName("player/%s/jump_coyote_s" % name)
+	_debug_jump_buffer_watch_name = StringName("player/%s/jump_buffer_s" % name)
 	_debug_limp_watch_name = StringName("player/%s/limp" % name)
 	_debug_recovering_watch_name = StringName("player/%s/recovering" % name)
 	_debug_limp_elapsed_watch_name = StringName("player/%s/limp_elapsed_s" % name)
@@ -134,6 +140,8 @@ func _ready() -> void:
 		func() -> bool:
 			return is_on_floor()
 	)
+	debug_hub.call("watch", _debug_coyote_watch_name, func() -> float: return float(_jump_controller.call("get_coyote_remaining_s")))
+	debug_hub.call("watch", _debug_jump_buffer_watch_name, func() -> float: return float(_jump_controller.call("get_jump_buffer_remaining_s")))
 	debug_hub.call("watch", _debug_limp_watch_name, func() -> bool: return is_limp)
 	debug_hub.call("watch", _debug_recovering_watch_name, func() -> bool: return is_recovering)
 	debug_hub.call("watch", _debug_limp_elapsed_watch_name, func() -> float: return _limp_elapsed_s)
@@ -170,6 +178,8 @@ func _exit_tree() -> void:
 	debug_hub.call("unregister_command", _debug_hands_command_name)
 	debug_hub.call("unwatch", _debug_speed_watch_name)
 	debug_hub.call("unwatch", _debug_floor_watch_name)
+	debug_hub.call("unwatch", _debug_coyote_watch_name)
+	debug_hub.call("unwatch", _debug_jump_buffer_watch_name)
 	debug_hub.call("unwatch", _debug_limp_watch_name)
 	debug_hub.call("unwatch", _debug_recovering_watch_name)
 	debug_hub.call("unwatch", _debug_limp_elapsed_watch_name)
@@ -476,16 +486,32 @@ func _physics_process(delta: float) -> void:
 		return
 	if is_recovering:
 		return
-	if not is_on_floor():
+	var grounded_before_move: bool = is_on_floor()
+	if not grounded_before_move:
 		velocity.y -= TUNING.GRAVITY_MPS2 * delta
 
-	if bool(debug_hub.call("is_console_open")) or terminal_movement_locked:
+	var movement_locked: bool = bool(debug_hub.call("is_console_open")) or terminal_movement_locked
+	var jump_pressed: bool = not movement_locked and Input.is_action_just_pressed("jump")
+	var jump_released: bool = Input.is_action_just_released("jump")
+	var jump_state: Dictionary = _jump_controller.call(
+		"advance",
+		delta,
+		grounded_before_move,
+		jump_pressed,
+		jump_released,
+		velocity.y,
+		TUNING.JUMP_SPEED_MPS,
+		TUNING.JUMP_COYOTE_TIME_S,
+		TUNING.JUMP_BUFFER_TIME_S,
+		TUNING.JUMP_RELEASE_MULTIPLIER
+	)
+	velocity.y = float(jump_state.get("vertical_velocity", velocity.y))
+
+	if movement_locked:
 		velocity.x = 0.0
 		velocity.z = 0.0
 		move_and_slide()
 		return
-	if is_on_floor() and Input.is_action_just_pressed("jump"):
-		velocity.y = TUNING.JUMP_SPEED_MPS
 
 	var input_vector: Vector2 = Input.get_vector(
 		"move_left",
@@ -498,13 +524,14 @@ func _physics_process(delta: float) -> void:
 	var target_speed: float = TUNING.PLAYER_SPEED_MPS
 	if move_direction != Vector3.ZERO and Input.is_action_pressed("sprint"):
 		target_speed = TUNING.PLAYER_RUN_SPEED_MPS
+	var air_control: float = 1.0 if grounded_before_move and not bool(jump_state.get("jumped", false)) else TUNING.PLAYER_AIR_CONTROL_MULTIPLIER
 	var horizontal_velocity: Vector3 = _movement_controller.call(
 		"advance_horizontal_velocity",
 		Vector3(velocity.x, 0.0, velocity.z),
 		move_direction,
 		target_speed,
-		TUNING.PLAYER_ACCELERATION_MPS2,
-		TUNING.PLAYER_DECELERATION_MPS2,
+		TUNING.PLAYER_ACCELERATION_MPS2 * air_control,
+		TUNING.PLAYER_DECELERATION_MPS2 * air_control,
 		delta
 	)
 	velocity.x = horizontal_velocity.x
