@@ -473,3 +473,12 @@ This is still the first M10 slice, not the complete milestone. Owner lower-body 
 - Extended the lifecycle regression test to seed every peer-owned timer, cooldown, active-action, pending-ragdoll, and pending-player-state dictionary, then call `Network.shutdown()` and assert all caches, Player registrations, connected peers, and roster entries are cleared.
 - Focused check remains ` .\\tests\\run_checks.ps1 -OnlyStage m9-lifecycle` from `fowl-play/`. Godot execution and multiplayer runtime verification have not been performed by the assistant.
 - M11.1 is not complete yet: continue auditing interrupted carry/ragdoll/recovery transitions and verify the cleanup matrix in Godot before moving to M11.2.
+
+
+### M11.1 — interrupted carrier removal
+
+- The Carrier exit path now asks the host to perform and broadcast a normal forced release while the carrier is still registered and the session is active. This preserves the carried item's release transform and inherited velocity instead of relying only on each peer's local detach fallback.
+- Offline shutdown and non-host teardown retain the local detach fallback, so a held item is not left frozen if no authoritative release can be sent.
+- Extended the M6 carry regression test: remove a carrier while it is holding a limp player and assert carried state clears, carry support stops, ragdoll collision returns, and inherited carrier velocity is applied.
+- Focused check: `.\\tests\\run_checks.ps1 -OnlyStage m6` from `fowl-play/`. Godot execution and host/client runtime verification remain user-run.
+- M11.1 remains in progress pending the focused tests and the remaining interruption/transition audit.

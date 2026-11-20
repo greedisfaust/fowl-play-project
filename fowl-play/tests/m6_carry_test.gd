@@ -92,6 +92,17 @@ func _run() -> void:
 	check(proxy.top_level, "remote query proxy follows hips independently of the Player root")
 	check(bool((remote_visual.get_node("Interactable") as Interactable).enabled), "remote limp target is enabled for interaction")
 
+	# Removing a carrier mid-carry must run the host release path before the
+	# Carrier node disappears, preserving the limp target's physics handoff.
+	check(bool(network.call("host_begin_carry", carrier_player, carried_player)), "carrier can pick up the limp target before carrier removal")
+	carrier_player.velocity = Vector3(1.5, 0.0, 0.5)
+	carrier_player.queue_free()
+	await process_frame
+	check(not bool(carried_player.call("is_carried")), "carrier removal releases the carried player")
+	check(not bool(rig.get("_carry_support_active")), "carrier removal stops carried-body support")
+	check(hips.collision_layer == 1 << 5 and hips.collision_mask != 0, "carrier removal restores limp collision")
+	check(carried_player.velocity.x > 0.1, "carrier removal preserves inherited carrier velocity")
+
 	if not failed:
 		print("M6 carry checks passed")
 	quit(1 if failed else 0)
