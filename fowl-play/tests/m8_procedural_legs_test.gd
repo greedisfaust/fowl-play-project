@@ -100,6 +100,24 @@ func _check_controller_gait() -> void:
 			var filtered_direction: Vector3 = zigzag_controller.get("smoothed_velocity")
 			if filtered_direction.length_squared() < 0.01 or filtered_direction.normalized().dot(zigzag_direction.normalized()) < 0.80:
 				_fail("Rapid directional changes should quickly redirect the footstep planner without stale heading")
+	# At ordinary walk speed, opposite leg phases must never enter swing
+	# together, and the longer walk stance must create a real double-support
+	# window where both feet are planted.
+	var walk_phase_controller: RefCounted = LEG_CONTROLLER_SCRIPT.new()
+	walk_phase_controller.call("update", 1.0 / 60.0, Vector3(0.0, 0.0, -TUNING.PLAYER_SPEED_MPS), true)
+	var saw_double_support: bool = false
+	for phase_step: int in range(240):
+		walk_phase_controller.call("update", 1.0 / 60.0, Vector3(0.0, 0.0, -TUNING.PLAYER_SPEED_MPS), true)
+		var left_swinging: bool = bool(walk_phase_controller.get("left_in_swing"))
+		var right_swinging: bool = bool(walk_phase_controller.get("right_in_swing"))
+		if left_swinging and right_swinging:
+			_fail("Walking must never swing both legs forward at the same time")
+		if not left_swinging and not right_swinging:
+			saw_double_support = true
+	if not saw_double_support:
+		_fail("Walking should include a brief double-support interval with both feet planted")
+	if float(walk_phase_controller.get("run_weight")) > 0.01:
+		_fail("The walk rhythm check should remain in the dedicated walking profile")
 	_check_stance_swing_articulation()
 
 	var phase_before_air: float = phase_after_walk
