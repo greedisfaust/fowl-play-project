@@ -26,8 +26,8 @@ func get_landing_target(
 		move_direction_world = Vector3(0.0, 0.0, -1.0)
 	else:
 		move_direction_world = move_direction_world.normalized()
-	# Keep each foot on its anatomical side of the body. Using the movement
-	# perpendicular as the side axis makes the feet swap sides while strafing.
+	# The authored skeleton places Thigh_L at local +X and Thigh_R at local -X.
+	# Keep this rig-relative side axis fixed even while strafing.
 	var lateral_axis_world: Vector3 = rig_basis * Vector3.RIGHT
 	lateral_axis_world.y = 0.0
 	if lateral_axis_world.length_squared() <= 0.0001:
@@ -55,7 +55,7 @@ func constrain_anatomical_side(
 		lateral_axis_world = Vector3.RIGHT
 	else:
 		lateral_axis_world = lateral_axis_world.normalized()
-	var side_sign: float = -1.0 if foot_side < 0.0 else 1.0
+	var side_sign: float = signf(foot_side)
 	var signed_lateral: float = (target_world - hip_center_world).dot(lateral_axis_world) * side_sign
 	var required_lateral: float = maxf(minimum_lateral_m, 0.0)
 	if signed_lateral < required_lateral:
