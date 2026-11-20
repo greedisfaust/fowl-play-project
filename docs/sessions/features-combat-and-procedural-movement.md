@@ -305,3 +305,11 @@ Implemented:
 Not included yet: charged punch, lunge, parry, strong stumble/collapse, camera response, feathers, impact VFX and audio.
 
 Verification: source and assertions are committed but have not been run in Godot here. The user should verify first-person fist timing, remote torso motion, movement blending, and pose cleanup on carry/limp transitions.
+
+
+### M7.2 follow-up — boxer-like jab timing
+
+- Shortened the procedural body/hand jab pose to 0.34 s: 0.11 s fast extension, 0.035 s brief contact hold, then smooth retraction.
+- Made anticipation and torso follow-through more compact, with the fist reaching extension quickly and returning to its authored rest offset.
+- Gameplay timing, host validation, hit detection, cooldown, and weak reactions are unchanged. No scenes changed.
+- Added a regression assertion for the compact jab timing. Run `./tests/run_checks.ps1 -OnlyStage m7-jab` (PowerShell: `.\tests\run_checks.ps1 -OnlyStage m7-jab`). Godot execution and visual playtest are pending.

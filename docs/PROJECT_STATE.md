@@ -623,3 +623,11 @@ Foot planting now records both a world-space target and, when the ground hit bel
 - Host-approved wind-up and jab RPCs drive the same presentation on remote player copies. No per-bone animation replication was added.
 - Added deterministic pose-curve assertions to `m7_jab_test.gd`; run with `-OnlyStage m7-jab`.
 - No scenes or user-authored hierarchy were edited. Godot execution and in-game rendered pose checks remain pending.
+
+
+## 2026-11-20 — jab timing refinement
+
+- Tightened the M7.2 jab presentation from 0.38 s to 0.34 s, with a quick 0.11 s extension, a brief 0.035 s contact hold, and a smooth return.
+- Reduced torso anticipation/follow-through magnitude and shortened the hand pullback so the jab reads as a compact boxer-like strike rather than a broad swing.
+- Kept host-authoritative hit timing, hit detection, cooldown, and weak-reaction gameplay unchanged. No scene files changed.
+- Added focused timing assertions to the M7 jab test. Godot execution and rendered in-game verification remain pending.

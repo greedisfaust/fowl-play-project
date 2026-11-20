@@ -37,13 +37,13 @@ func _check_jab_endpoint() -> void:
 		_fail("A zero direction must not produce a jab ray")
 func _check_presentation_curves() -> void:
 	var windup: Vector3 = COMBAT_PRESENTATION.get_jab_body_pose(0.0, Vector3.FORWARD)
-	var extension: Vector3 = COMBAT_PRESENTATION.get_jab_body_pose(0.10, Vector3.FORWARD)
-	var follow_through: Vector3 = COMBAT_PRESENTATION.get_jab_body_pose(0.20, Vector3.FORWARD)
+	var extension: Vector3 = COMBAT_PRESENTATION.get_jab_body_pose(COMBAT_PRESENTATION.JAB_EXTENSION_END_S, Vector3.FORWARD)
+	var follow_through: Vector3 = COMBAT_PRESENTATION.get_jab_body_pose(COMBAT_PRESENTATION.JAB_EXTENSION_END_S + COMBAT_PRESENTATION.JAB_CONTACT_HOLD_S, Vector3.FORWARD)
 	var returned: Vector3 = COMBAT_PRESENTATION.get_jab_body_pose(COMBAT_PRESENTATION.JAB_POSE_DURATION_S, Vector3.FORWARD)
 	var base_hand_offset: Vector3 = Vector3(-0.025, -0.025, 0.075)
 	var windup_hand: Vector3 = COMBAT_PRESENTATION.get_windup_hand_offset(base_hand_offset, 0.20)
 	var jab_start_hand: Vector3 = COMBAT_PRESENTATION.get_jab_hand_offset(base_hand_offset, 0.0)
-	var jab_extension_hand: Vector3 = COMBAT_PRESENTATION.get_jab_hand_offset(base_hand_offset, 0.10)
+	var jab_extension_hand: Vector3 = COMBAT_PRESENTATION.get_jab_hand_offset(base_hand_offset, COMBAT_PRESENTATION.JAB_EXTENSION_END_S)
 	var jab_return_hand: Vector3 = COMBAT_PRESENTATION.get_jab_hand_offset(base_hand_offset, COMBAT_PRESENTATION.JAB_POSE_DURATION_S)
 	if windup.x >= 0.0 or extension.x <= 0.0:
 		_fail("Jab presentation should move from anticipation lean into a forward extension")
@@ -53,7 +53,7 @@ func _check_presentation_curves() -> void:
 		_fail("Jab should hold a readable forward follow-through")
 	if absf(returned.x) > 0.001 or absf(returned.y) > 0.001 or absf(returned.z) > 0.001:
 		_fail("Jab body pose should return smoothly to neutral")
-	var recoil_peak: Vector3 = COMBAT_PRESENTATION.get_recoil_body_pose(COMBAT_PRESENTATION.RECOIL_POSE_DURATION_S * 0.5, Vector3.FORWARD)
+	if not is_equal_approx(COMBAT_PRESENTATION.JAB_POSE_DURATION_S, 0.34) or COMBAT_PRESENTATION.JAB_EXTENSION_END_S >= COMBAT_PRESENTATION.JAB_POSE_DURATION_S:\n\t\t_fail("Jab should use a compact 0.34 s pose with a fast extension")\n\tvar recoil_peak: Vector3 = COMBAT_PRESENTATION.get_recoil_body_pose(COMBAT_PRESENTATION.RECOIL_POSE_DURATION_S * 0.5, Vector3.FORWARD)
 	var recoil_end: Vector3 = COMBAT_PRESENTATION.get_recoil_body_pose(COMBAT_PRESENTATION.RECOIL_POSE_DURATION_S, Vector3.FORWARD)
 	if recoil_peak.x >= 0.0 or recoil_end.length() > 0.001:
 		_fail("Weak recoil should lean away from impact and return to neutral")

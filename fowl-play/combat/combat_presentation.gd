@@ -2,10 +2,12 @@
 ## Gameplay outcomes are host-authoritative; this script only animates the approved intent.
 extends RefCounted
 
-const JAB_POSE_DURATION_S: float = 0.38
+const JAB_POSE_DURATION_S: float = 0.34
+const JAB_EXTENSION_END_S: float = 0.11
+const JAB_CONTACT_HOLD_S: float = 0.035
 const RECOIL_POSE_DURATION_S: float = 0.28
-const WINDUP_LEAN_RAD: float = -0.12
-const JAB_FOLLOW_THROUGH_RAD: float = 0.20
+const WINDUP_LEAN_RAD: float = -0.07
+const JAB_FOLLOW_THROUGH_RAD: float = 0.16
 const RECOIL_LEAN_RAD: float = -0.13
 
 enum Phase { IDLE, WINDUP, JAB }
@@ -67,7 +69,7 @@ func advance(delta: float) -> void:
 	var body_pose: Vector3 = Vector3.ZERO
 	match _phase:
 		Phase.WINDUP:
-			var windup_weight: float = 1.0 - exp(-14.0 * _phase_elapsed)
+			var windup_weight: float = 1.0 - exp(-18.0 * _phase_elapsed)
 			body_pose.x = WINDUP_LEAN_RAD * windup_weight
 			var windup_hand: Hand = _get_right_hand()
 			if windup_hand != null:
@@ -106,27 +108,31 @@ func cancel() -> void:
 		rig.call("set_combat_body_pose", Vector3.ZERO)
 
 static func get_windup_hand_offset(base_offset: Vector3, elapsed: float) -> Vector3:
-	var weight: float = 1.0 - exp(-14.0 * maxf(elapsed, 0.0))
-	return base_offset + Vector3(0.0, 0.025 * weight, 0.14 * weight)
+	var weight: float = 1.0 - exp(-18.0 * maxf(elapsed, 0.0))
+	return base_offset + Vector3(0.0, 0.018 * weight, 0.14 * weight)
 
 static func get_jab_hand_offset(base_offset: Vector3, elapsed: float) -> Vector3:
-	var t: float = clampf(elapsed / JAB_POSE_DURATION_S, 0.0, 1.0)
-	var pullback_to_extension: float = smoothstep(0.0, 0.18, t)
-	var depth: float = lerpf(0.14, -0.045, pullback_to_extension) if t < 0.18 else -0.045 * cos(PI * (t - 0.18) / (2.0 * 0.82))
-	var height: float = 0.025 * sin(PI * t)
+	var t: float = maxf(elapsed, 0.0)
+	var pullback_to_extension: float = smoothstep(0.0, JAB_EXTENSION_END_S, t)
+	var extension_depth: float = lerpf(0.14, -0.045, pullback_to_extension)
+	var return_start: float = JAB_EXTENSION_END_S + JAB_CONTACT_HOLD_S
+	var return_weight: float = smoothstep(return_start, JAB_POSE_DURATION_S, t)
+	var depth: float = lerpf(extension_depth, 0.0, return_weight) if t > return_start else extension_depth
+	var height: float = 0.018 * sin(PI * clampf(t / JAB_POSE_DURATION_S, 0.0, 1.0))
 	return base_offset + Vector3(0.0, height, depth)
 
 static func get_jab_body_pose(elapsed: float, local_direction: Vector3) -> Vector3:
-	var t: float = clampf(elapsed / JAB_POSE_DURATION_S, 0.0, 1.0)
-	var pitch: float = 0.0
-	if t < 0.18:
-		pitch = lerpf(WINDUP_LEAN_RAD, JAB_FOLLOW_THROUGH_RAD, smoothstep(0.0, 0.18, t))
-	elif t < 0.42:
+	var t: float = maxf(elapsed, 0.0)
+	var return_start: float = JAB_EXTENSION_END_S + JAB_CONTACT_HOLD_S
+	var pitch: float
+	if t < JAB_EXTENSION_END_S:
+		pitch = lerpf(WINDUP_LEAN_RAD, JAB_FOLLOW_THROUGH_RAD, smoothstep(0.0, JAB_EXTENSION_END_S, t))
+	elif t < return_start:
 		pitch = JAB_FOLLOW_THROUGH_RAD
 	else:
-		pitch = lerpf(JAB_FOLLOW_THROUGH_RAD, 0.0, smoothstep(0.42, 1.0, t))
+		pitch = lerpf(JAB_FOLLOW_THROUGH_RAD, 0.0, smoothstep(return_start, JAB_POSE_DURATION_S, t))
 	var direction_yaw: float = clampf(atan2(-local_direction.x, -local_direction.z), -0.6, 0.6)
-	var yaw: float = direction_yaw * 0.28 * sin(PI * t)
+	var yaw: float = direction_yaw * 0.22 * sin(PI * clampf(t / JAB_POSE_DURATION_S, 0.0, 1.0))
 	return Vector3(pitch, yaw, -yaw * 0.18)
 
 static func get_recoil_body_pose(elapsed: float, local_direction: Vector3) -> Vector3:
