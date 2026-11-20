@@ -11,7 +11,8 @@ func get_landing_target(
 	local_velocity: Vector3,
 	foot_side: float,
 	forward_placement_m: float = DEFAULT_FORWARD_PLACEMENT_M,
-	lateral_placement_m: float = DEFAULT_LATERAL_PLACEMENT_M
+	lateral_placement_m: float = DEFAULT_LATERAL_PLACEMENT_M,
+	predicted_swing_travel_m: float = 0.0
 ) -> Vector3:
 	if not hip_world.is_finite() or not local_velocity.is_finite():
 		return hip_world
@@ -25,6 +26,6 @@ func get_landing_target(
 		lateral_axis_world = body_right_world
 	elif lateral_axis_world.dot(body_right_world) < 0.0:
 		lateral_axis_world = -lateral_axis_world
-	var forward_offset: Vector3 = move_direction_world * maxf(forward_placement_m, 0.0)
+	var forward_offset: Vector3 = move_direction_world * (maxf(forward_placement_m, 0.0) + maxf(predicted_swing_travel_m, 0.0))
 	var lateral_offset: Vector3 = lateral_axis_world * signf(foot_side) * maxf(lateral_placement_m, 0.0)
 	return hip_world + forward_offset + lateral_offset
