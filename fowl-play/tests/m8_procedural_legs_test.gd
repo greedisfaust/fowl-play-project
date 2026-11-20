@@ -54,6 +54,27 @@ func _check_controller_gait() -> void:
 	if left_sideways.x <= 0.05:
 		_fail("Strafing should orient the leg swing plane toward lateral movement")
 
+	var transition_controller: RefCounted = LEG_CONTROLLER_SCRIPT.new()
+	transition_controller.call("update", 0.125, Vector3(0.0, 0.0, -5.0), true)
+	var velocity_before_turn: Vector3 = transition_controller.get("smoothed_velocity")
+	transition_controller.call("update", 0.02, Vector3(5.0, 0.0, 0.0), true)
+	var velocity_during_turn: Vector3 = transition_controller.get("smoothed_velocity")
+	if velocity_during_turn.x <= 0.0 or velocity_during_turn.z >= 0.0:
+		_fail("Directional changes should blend through the previous movement direction")
+	if velocity_during_turn.distance_to(Vector3(5.0, 0.0, 0.0)) < velocity_before_turn.length() * 0.1:
+		_fail("A direction change should not snap instantly to the new velocity")
+
+	var weight_before_stop: float = float(transition_controller.get("motion_weight"))
+	var speed_before_stop: float = velocity_during_turn.length()
+	for stop_step: int in range(5):
+		transition_controller.call("update", 0.1, Vector3.ZERO, true)
+	var speed_after_stop: float = Vector3(transition_controller.get("smoothed_velocity")).length()
+	var weight_after_stop: float = float(transition_controller.get("motion_weight"))
+	if speed_after_stop >= speed_before_stop:
+		_fail("Smoothed movement speed should decay after the player stops")
+	if weight_after_stop >= weight_before_stop:
+		_fail("Leg motion weight should ease down after stopping")
+
 func _check_rig_ownership() -> void:
 	var rig: Node3D = RIG_SCENE.instantiate() as Node3D
 	rig.name = "M8TestRig"
