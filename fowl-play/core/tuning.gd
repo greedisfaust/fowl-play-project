@@ -22,6 +22,12 @@ const MOVE_SANITY_MAX_SPEED_MPS: float = 15.0
 const MOVE_SEND_HZ: float = 20.0
 
 const LEG_STEP_CYCLE_DISTANCE_M: float = 1.4
+const LEG_WALK_STEP_CYCLE_DISTANCE_M: float = 2.4
+const LEG_WALK_STANCE_FRACTION: float = 0.38
+const LEG_WALK_MAX_THIGH_SWING_RAD: float = deg_to_rad(24.0)
+const LEG_WALK_MAX_KNEE_BEND_RAD: float = deg_to_rad(30.0)
+const LEG_WALK_SWING_LIFT_M: float = 0.09
+const LEG_RUN_SWING_LIFT_M: float = 0.20
 const LEG_GAIT_RATE_MULTIPLIER: float = 1.0
 const LEG_REPLANT_EXTRA_STRETCH_M: float = 0.10
 const LEG_REPLANT_RECOVERY_SECONDS: float = 0.18
