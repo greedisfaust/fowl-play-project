@@ -19,6 +19,7 @@ const LEG_MAX_THIGH_SWING_RAD: float = deg_to_rad(24.0)
 const LEG_MAX_KNEE_BEND_RAD: float = deg_to_rad(36.0)
 const LEG_FOOT_COUNTER_ROTATION: float = 0.6
 const LEG_BLEND_RESPONSE: float = 10.0
+const LEG_VELOCITY_RESPONSE: float = 12.0
 const MAX_PUNCH_POS_ERROR_M: float = 6.0
 
 const TAP_MAX_SECONDS: float = 0.25
