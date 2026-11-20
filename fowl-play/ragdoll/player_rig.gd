@@ -216,8 +216,8 @@ func _ready() -> void:
 	_right_thigh_bone_index = skeleton.find_bone("Thigh_R")
 	_right_shin_bone_index = skeleton.find_bone("Shin_R")
 	_right_foot_bone_index = skeleton.find_bone("Foot_R")
-	_left_leg_replant_distance_m = _get_leg_chain_length(_left_thigh_bone_index, _left_shin_bone_index, _left_foot_bone_index) * TUNING.LEG_REPLANT_MAX_REACH_RATIO
-	_right_leg_replant_distance_m = _get_leg_chain_length(_right_thigh_bone_index, _right_shin_bone_index, _right_foot_bone_index) * TUNING.LEG_REPLANT_MAX_REACH_RATIO
+	_left_leg_replant_distance_m = _get_leg_replant_distance(_left_thigh_bone_index, _left_foot_bone_index)
+	_right_leg_replant_distance_m = _get_leg_replant_distance(_right_thigh_bone_index, _right_foot_bone_index)
 	_right_viewmodel_upper_arm_bone_index = skeleton.find_bone("UpperArm_L")
 	_right_viewmodel_forearm_bone_index = skeleton.find_bone("Forearm_L")
 	_right_viewmodel_hand_bone_index = skeleton.find_bone("Hand_L")
@@ -442,12 +442,15 @@ func _physics_process(_delta: float) -> void:
 	_left_ground_probe.clear()
 	_right_ground_probe.clear()
 
-func _get_leg_chain_length(thigh_index: int, shin_index: int, foot_index: int) -> float:
-	if thigh_index < 0 or shin_index < 0 or foot_index < 0:
+func _get_leg_replant_distance(thigh_index: int, foot_index: int) -> float:
+	if thigh_index < 0 or foot_index < 0:
 		return 0.0
-	var upper_length: float = skeleton.get_bone_rest(shin_index).origin.length()
-	var lower_length: float = skeleton.get_bone_rest(foot_index).origin.length()
-	return upper_length + lower_length
+	# Measure the authored neutral standing reach so normal straight-legged idle
+	# posture does not constantly trigger recovery. Replant only after the hip
+	# travels an additional margin away from its original planted-foot distance.
+	var hip_world: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(thigh_index).origin)
+	var foot_world: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(foot_index).origin)
+	return hip_world.distance_to(foot_world) + TUNING.LEG_REPLANT_EXTRA_STRETCH_M
 
 func _probe_ground_at_target(foot_world: Vector3) -> Dictionary:
 	if not foot_world.is_finite():
