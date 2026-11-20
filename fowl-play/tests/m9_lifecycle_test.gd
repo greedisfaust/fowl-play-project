@@ -108,10 +108,10 @@ func _run() -> void:
 	network.get("roster").append(6)
 	network.call("shutdown")
 	for state_name: String in shutdown_state_names:
-		check((network.get(state_name) as Dictionary).is_empty(), "session shutdown clears %s" % state_name)
-	check((network.get("movement_players") as Dictionary).is_empty(), "session shutdown clears Player registrations")
-	check((network.get("connected_peers") as Array).is_empty(), "session shutdown clears connected peers")
-	check((network.get("roster") as Array).is_empty(), "session shutdown clears the published roster")
+		check(network.get(state_name).is_empty(), "session shutdown clears %s" % state_name)
+	check(network.get("movement_players").is_empty(), "session shutdown clears Player registrations")
+	check(network.get("connected_peers").is_empty(), "session shutdown clears connected peers")
+	check(network.get("roster").is_empty(), "session shutdown clears the published roster")
 	check(str(network.get("status")) == "disconnected", "session shutdown sets the disconnected status")
 
 	if not failed:
