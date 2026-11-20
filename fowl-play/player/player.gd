@@ -10,12 +10,15 @@ const COMBAT_CONTROLLER_SCRIPT = preload("res://combat/combat_controller.gd")
 const COMBAT_PRESENTATION_SCRIPT = preload("res://combat/combat_presentation.gd")
 const PARRY_BARRIER_SCRIPT = preload("res://combat/parry_barrier_presentation.gd")
 const MOVEMENT_PRESENTATION_SCRIPT = preload("res://ragdoll/procedural_movement_presentation.gd")
+const CAMERA_PRESENTATION_SCRIPT = preload("res://player/camera_presentation.gd")
 var _movement_controller: RefCounted = MOVEMENT_CONTROLLER_SCRIPT.new()
 var _jump_controller: RefCounted = JUMP_CONTROLLER_SCRIPT.new()
 var _combat_controller: RefCounted = COMBAT_CONTROLLER_SCRIPT.new()
 var _combat_presentation: RefCounted = COMBAT_PRESENTATION_SCRIPT.new()
 var _parry_barrier: RefCounted = PARRY_BARRIER_SCRIPT.new()
 var _movement_presentation: RefCounted = MOVEMENT_PRESENTATION_SCRIPT.new()
+var _camera_presentation: RefCounted = CAMERA_PRESENTATION_SCRIPT.new()
+@export_range(0.0, 1.5, 0.05) var camera_motion_intensity: float = 1.0
 var _movement_presentation_last_yaw: float = 0.0
 var _movement_presentation_yaw_initialized: bool = false
 var _parry_active: bool = false
@@ -301,6 +304,8 @@ func _process(delta: float) -> void:
 		if rig != null and not bool(rig.call("is_pose_blending")):
 			_finish_recovery()
 		return
+	if is_local_player:
+		_update_first_person_camera_presentation(delta)
 	_combat_presentation.call("advance", delta)
 	var grounded_for_legs: bool = is_on_floor() if is_local_player else _remote_grounded
 	if rig != null:
@@ -327,6 +332,15 @@ func _process(delta: float) -> void:
 			rotation.y = snapshot.yaw
 			head.rotation.x = snapshot.pitch
 			_remote_grounded = bool(snapshot.get("grounded", true))
+
+func _update_first_person_camera_presentation(delta: float) -> void:
+	if not is_local_player or is_limp or is_recovering or not is_instance_valid(camera):
+		return
+	_camera_presentation.set("intensity", clampf(camera_motion_intensity, 0.0, 1.5))
+	var local_velocity: Vector3 = global_basis.inverse() * velocity
+	var presentation: Dictionary = _camera_presentation.call("advance", delta, local_velocity, velocity.y, is_on_floor(), not is_carrying())
+	camera.position = Vector3(presentation.get("offset", Vector3.ZERO))
+	camera.rotation = Vector3(presentation.get("rotation", Vector3.ZERO))
 
 func _has_host_authority() -> bool:
 	return network.get("peer") == null or bool(network.get("is_host"))
@@ -830,6 +844,7 @@ func _set_viewmodel_hands_visible(visible: bool) -> void:
 func _begin_limp_camera() -> void:
 	if not is_local_player:
 		return
+	_camera_presentation.call("reset", false)
 	var camera_transform: Transform3D = camera.global_transform
 	camera.top_level = true
 	camera.global_transform = camera_transform
@@ -875,6 +890,7 @@ func _finish_recovery() -> void:
 	if is_local_player:
 		camera.top_level = false
 		camera.transform = Transform3D.IDENTITY
+		_camera_presentation.call("reset", true)
 		if rig != null:
 			rig.call("set_owner_head_visible", true)
 			rig.visible = false
@@ -991,6 +1007,8 @@ func apply_combat_recoil(direction: Vector3, strength: float = 1.0) -> void:
 		return
 	var bounded_strength: float = clampf(strength, 1.0, 1.35)
 	_combat_presentation.call("play_recoil", direction, bounded_strength)
+	if is_local_player:
+		_camera_presentation.call("add_impact", direction, bounded_strength, global_basis)
 
 func _rotate_view(mouse_delta: Vector2) -> void:
 	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
