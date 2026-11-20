@@ -70,6 +70,8 @@ func _check_controller_gait() -> void:
 		_fail("Sprint stride cycle distance should keep planted feet within natural reach")
 	if TUNING.LEG_WALK_STEP_CYCLE_DISTANCE_M <= TUNING.LEG_STEP_CYCLE_DISTANCE_M:
 		_fail("Walking cadence should be slower than sprint cadence")
+	if TUNING.LEG_WALK_STANCE_FRACTION >= 0.50:
+		_fail("The longer walking cycle must keep stance duration within comfortable leg reach")
 	var stance_travel_m: float = TUNING.LEG_STEP_CYCLE_DISTANCE_M * TUNING.LEG_STANCE_FRACTION
 	var walk_stance_travel_m: float = TUNING.LEG_WALK_STEP_CYCLE_DISTANCE_M * TUNING.LEG_WALK_STANCE_FRACTION
 	var natural_leg_reach_m: float = 0.84 + TUNING.LEG_REPLANT_EXTRA_STRETCH_M
