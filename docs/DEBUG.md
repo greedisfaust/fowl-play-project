@@ -600,6 +600,7 @@ The authored rig's `Thigh_L` bone is on local +X and `Thigh_R` is on local -X. F
 - The jab ray includes static world, elevator, props and player layers. World geometry and props block hits; the jab cannot hit through an obstruction.
 - Standing targets receive a small movement recoil. Already-limp targets receive a host-only physical-bone velocity impulse; their limp state and recovery timer are not restarted.
 - The right Viewmodel hand uses a dedicated curled-fist pose and short extension/return. Carry and limp pose priorities override combat.
+- M7.2 adds a procedural Chest-bone anticipation lean, forward punch follow-through, smooth neutral return, and a brief weak-recoil lean on standing targets. The body pose is applied before arm IK; the existing viewmodel wrist target continues to drive the visible arm on remote rigs.
 
 | M7.1 | 1 | Tap Q: a short fist wind-up and jab extension play; `net/combat_jabs` increases once. |
 | M7.1 | 2 | Aim at another standing player within 2.5 m and tap Q: `net/combat_hits` increases and the target receives a small recoil. |

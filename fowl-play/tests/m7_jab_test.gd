@@ -17,7 +17,7 @@ func _run() -> void:
 	if _failed:
 		quit(1)
 		return
-	print("M7.1 jab checks passed")
+	print("M7.2 jab presentation and M7.1 jab checks passed")
 	quit(0)
 func _check_tap_window() -> void:
 	if not COMBAT_CONTROLLER.is_jab_tap(0.10):

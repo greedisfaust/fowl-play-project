@@ -292,6 +292,16 @@ Implemented on `features/combat-and-procedural-movement`:
 - No `.tscn` or user-authored scene hierarchy changes.
 - Tests have not been run in Godot in this environment. Host/client and rendered pose behavior remain for user playtest.
 
-### Known presentation scope for this first slice
+### M7.2 — procedural jab animation and weak reaction
 
-The first jab has a curled-fist anticipation and short hand extension. Full torso lean, remote full-body pose layering, balance-loss stumble/collapse escalation, camera response, feathers and stylized impact VFX are intentionally not claimed complete; these will be layered in subsequent M7 presentation slices after the first hit path is verified.
+Implemented:
+- `CombatPresentation` now owns a short anticipation → extension/follow-through → return pose curve for the Chest bone, plus a brief weak target recoil pose.
+- The right hand stays curled through the extension/return, then releases to its ordinary pose. Its existing action lifecycle still drives the wrist target.
+- `Player._process` advances combat presentation before procedural leg and arm IK. `PlayerRig.set_combat_body_pose()` applies the Chest pose; the following arm IK pass then solves from the rotated shoulder.
+- The existing host-approved wind-up/jab events are used for remote presentation. The pose is evaluated locally; no per-joint network stream is introduced.
+- Added deterministic jab/recoil pose-curve assertions to `m7_jab_test.gd` and kept the focused `m7-jab` test stage.
+- Carry, limp, ragdoll and recovery remain higher priority. No scene hierarchy changes.
+
+Not included yet: charged punch, lunge, parry, strong stumble/collapse, camera response, feathers, impact VFX and audio.
+
+Verification: source and assertions are committed but have not been run in Godot here. The user should verify first-person fist timing, remote torso motion, movement blending, and pose cleanup on carry/limp transitions.
