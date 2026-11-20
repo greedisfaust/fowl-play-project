@@ -55,7 +55,7 @@ func _check_presentation_curves() -> void:
 	if absf(returned.x) > 0.001 or absf(returned.y) > 0.001 or absf(returned.z) > 0.001:
 		_fail("Jab body pose should return smoothly to neutral")
 	if not is_equal_approx(COMBAT_PRESENTATION.JAB_POSE_DURATION_S, 0.21) or not is_equal_approx(COMBAT_PRESENTATION.JAB_EXTENSION_END_S, 0.058) or COMBAT_PRESENTATION.JAB_EXTENSION_END_S >= COMBAT_PRESENTATION.JAB_POSE_DURATION_S:
-		_fail("Jab should use a compact 0.30 s pose with a fast, readable extension")
+		_fail("Jab should use a compact 0.21 s pose with a fast, readable extension")
 	var recoil_peak: Vector3 = COMBAT_PRESENTATION.get_recoil_body_pose(0.0, Vector3.FORWARD, 1.0)
 	var recoil_overshoot: Vector3 = COMBAT_PRESENTATION.get_recoil_body_pose(0.20, Vector3.FORWARD)
 	var recoil_end: Vector3 = COMBAT_PRESENTATION.get_recoil_body_pose(COMBAT_PRESENTATION.RECOIL_POSE_DURATION_S, Vector3.FORWARD)

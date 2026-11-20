@@ -845,7 +845,7 @@ func play_combat_jab(direction: Vector3) -> void:
 func cancel_combat_presentation() -> void:
 	_combat_presentation.call("cancel")
 
-## Weak standing reactions are movement impulses, not knockdowns.
+## Weak standing reactions are visual torso impulses, not player knockback or knockdowns.
 func apply_combat_recoil(direction: Vector3, strength: float = 1.0) -> void:
 	if is_limp or is_recovering or not direction.is_finite():
 		return
