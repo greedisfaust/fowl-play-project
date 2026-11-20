@@ -43,6 +43,9 @@ var _left_foot_ground_target_world: Vector3 = Vector3.ZERO
 var _right_foot_ground_target_world: Vector3 = Vector3.ZERO
 var _left_foot_ground_normal: Vector3 = Vector3.UP
 var _right_foot_ground_normal: Vector3 = Vector3.UP
+var _left_ground_probe: Dictionary = {}
+var _right_ground_probe: Dictionary = {}
+var _last_leg_world_velocity: Vector3 = Vector3.ZERO
 var _leg_ground_status_command_name: StringName
 var _leg_pose_active: bool = false
 var _leg_status_watch_name: StringName
@@ -255,6 +258,7 @@ func _ready() -> void:
 	debug_hub.call("command", _right_arm_ik_command_name, _debug_right_arm_ik_status, "Report the procedural Viewmodel right-arm target and ownership state.", false, false)
 	debug_hub.call("command", _left_arm_ik_command_name, _debug_left_arm_ik_status, "Report the procedural Viewmodel left-arm target and ownership state.", false, false)
 	set_process(false)
+	set_physics_process(true)
 
 func _exit_tree() -> void:
 	if is_instance_valid(debug_hub):
@@ -414,6 +418,19 @@ func _update_procedural_arm_chain(
 	skeleton.force_update_all_bone_transforms()
 	return true
 
+func _physics_process(_delta: float) -> void:
+	if simulator.is_simulating_physics() or _remote_active or _pose_blend_active or _recovery_animation_active:
+		_left_ground_probe.clear()
+		_right_ground_probe.clear()
+		return
+	if _left_foot_bone_index < 0 or _right_foot_bone_index < 0:
+		return
+	skeleton.force_update_all_bone_transforms()
+	var left_foot_world: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(_left_foot_bone_index).origin)
+	var right_foot_world: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(_right_foot_bone_index).origin)
+	_left_ground_probe = _probe_ground_beneath_foot(left_foot_world, _last_leg_world_velocity)
+	_right_ground_probe = _probe_ground_beneath_foot(right_foot_world, _last_leg_world_velocity)
+
 func _probe_ground_beneath_foot(foot_world: Vector3, step_direction_world: Vector3) -> Dictionary:
 	if not foot_world.is_finite():
 		return {}
@@ -460,13 +477,14 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 		return false
 	if not world_velocity.is_finite():
 		return false
+	_last_leg_world_velocity = world_velocity
 	var local_velocity: Vector3 = global_basis.inverse() * world_velocity
 	_leg_controller.call("update", delta, local_velocity, grounded)
 	skeleton.force_update_all_bone_transforms()
 	var left_foot_world: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(_left_foot_bone_index).origin)
 	var right_foot_world: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(_right_foot_bone_index).origin)
-	var left_ground_hit: Dictionary = _probe_ground_beneath_foot(left_foot_world, world_velocity)
-	var right_ground_hit: Dictionary = _probe_ground_beneath_foot(right_foot_world, world_velocity)
+	var left_ground_hit: Dictionary = _left_ground_probe
+	var right_ground_hit: Dictionary = _right_ground_probe
 	_left_foot_grounded = grounded and not left_ground_hit.is_empty()
 	_right_foot_grounded = grounded and not right_ground_hit.is_empty()
 	_left_foot_ground_target_world = left_ground_hit.get("position", left_foot_world)
