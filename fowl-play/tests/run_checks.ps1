@@ -64,8 +64,10 @@ foreach ($stage in $stages) {
 		throw "Godot $stage failed (exit code: $exitCode)."
 	}
 }
-& (Join-Path $PSScriptRoot "run_m0_checks.ps1") -GodotExecutable $godot
-& (Join-Path $PSScriptRoot "run_m3_roster_checks.ps1") -GodotExecutable $godot
-& (Join-Path $PSScriptRoot "run_m4_ragdoll_checks.ps1") -GodotExecutable $godot
-& (Join-Path $PSScriptRoot "run_m5_recovery_checks.ps1") -GodotExecutable $godot
-& (Join-Path $PSScriptRoot "run_m9_late_join_checks.ps1") -GodotExecutable $godot
+if ($OnlyStage -eq "all") {
+	& (Join-Path $PSScriptRoot "run_m0_checks.ps1") -GodotExecutable $godot
+	& (Join-Path $PSScriptRoot "run_m3_roster_checks.ps1") -GodotExecutable $godot
+	& (Join-Path $PSScriptRoot "run_m4_ragdoll_checks.ps1") -GodotExecutable $godot
+	& (Join-Path $PSScriptRoot "run_m5_recovery_checks.ps1") -GodotExecutable $godot
+	& (Join-Path $PSScriptRoot "run_m9_late_join_checks.ps1") -GodotExecutable $godot
+}
