@@ -32,7 +32,7 @@
 | M8 Procedural legs and coordinated movement | Hybrid locomotion, jump/landing, body coordination, zero per-bone network traffic | IMPLEMENTED IN SOURCE: local velocity-driven gait, foot planting and two-bone IK, moving-support anchors, airborne/landing leg poses, acceleration/braking lean, strafing counterbalance, turning response, and layered combat/movement torso presentation are committed. Remaining polish includes owner-view leg visibility and terrain-specific visual tuning. Godot/headless and rendered host/client verification remain pending. |
 | M9 Multiplayer lifecycle hardening | Late-join state, ragdoll/recovery handoffs, carry/drop/throw cleanup, combat disconnect cleanup | IMPLEMENTED IN SOURCE: late joiners receive a reliable standing/recovery capsule baseline while active limp players continue through the existing ragdoll snapshot path. Pending snapshots are applied after Player registration, stale baselines cannot rewind newer movement samples, and disconnect cleanup clears peer-owned combat/carry timing state. Focused offline and two-process recovery-join tests are added; Godot execution and in-game verification remain pending. |
 | M10 Camera + owner view | Responsive first-person motion, impact feedback, owner legs, ragdoll/recovery comfort, wall avoidance | COMPLETE — M10.1–M10.4 implemented; user confirmed camera motion, owner-view visibility, camera collision, and live-head recovery camera in-game. |
-| M11 Hardening | Cleanup matrix, weak-laptop target, four-player stability | IN PROGRESS — M11.1 cleanup fixes and regression coverage are committed; focused M6/M9 lifecycle checks remain user-run. M11.2 qualitative testing is user-confirmed smooth across four instances, movement, ragdolls/carry/recovery, and combat/parry; no optimization was justified. M11.3 extended 10–15 minute soak is deferred due to the user's 8 GB RAM limit; short stress scenarios passed by user report. M11.4 documentation and verification closeout is underway; no Godot test execution is claimed. |
+| M11 Hardening | Cleanup matrix, weak-laptop target, four-player stability | COMPLETE — user confirmed both focused M6 and M9 lifecycle test stages passed. M11.1 cleanup regression coverage is verified by the user's test run. M11.2 practical multiplayer movement, physics, and combat scenarios were user-reported smooth; no speculative optimization was needed. M11.3 extended 10–15 minute soak remains explicitly deferred due to the user's 8 GB RAM limit, not passed. M11.4 documentation and verification closeout complete. |
 
 ## Open decisions (from PROJECT_OVERVIEW.md §24)
 
@@ -677,3 +677,12 @@ Foot planting now records both a world-space target and, when the ground hit bel
 - No performance optimization was made. Source-inspection candidates (procedural leg skeleton refreshes/ground probes, local camera obstruction query, host combat iteration, ragdoll pose publishing) remain profiling candidates only; user experience did not indicate a need to risk behavior changes.
 - M11.3 extended 10–15 minute soak is DEFERRED because running four instances is too demanding for the user's 8 GB RAM machine. Short four-instance stress scenarios were user-reported smooth; extended stability is not marked passed.
 - M11.4 closeout: preserve current gameplay behavior, retain outstanding focused test commands, and do not label unrun Godot checks as passed.
+
+
+## 2026-11-21 — M11 final verification complete
+
+- USER CONFIRMED both focused regression stages passed: ` .\\tests\\run_checks.ps1 -OnlyStage m6` and ` .\\tests\\run_checks.ps1 -OnlyStage m9-lifecycle`.
+- M11.1 lifecycle cleanup implementation and regression coverage are now user-verified by those focused checks.
+- M11.2 practical multiplayer movement, physics-heavy play, and combat/parry scenarios were previously user-reported smooth. No measured 60 FPS guarantee or long-session memory result is claimed.
+- M11.3 extended 10–15 minute soak remains DEFERRED because four instances are too demanding for the user's 8 GB RAM system. This is a documented scope limitation, not a failed test and not a passed test.
+- M11.4 closeout is complete. M11 is marked COMPLETE with the soak limitation explicitly retained.

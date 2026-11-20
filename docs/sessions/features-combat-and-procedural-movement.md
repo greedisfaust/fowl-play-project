@@ -526,3 +526,14 @@ This is still the first M10 slice, not the complete milestone. Owner lower-body 
 - No Godot tests were run by the assistant in this closeout. The committed test runner exposes these stages; passing source assertions are not equivalent to runtime verification.
 - No source or scene changes were necessary for this documentation closeout. Do not treat the extended soak as passed or claim a measured 60 FPS guarantee.
 - Remaining final acceptance: user runs the two focused stages above and reports results. If both pass, M11.1 cleanup coverage can be marked verified; M11.3 remains explicitly deferred.
+
+
+## M11 — final verification and milestone closure
+
+- USER CONFIRMED both required focused test stages passed:
+  - ` .\\tests\\run_checks.ps1 -OnlyStage m6`
+  - ` .\\tests\\run_checks.ps1 -OnlyStage m9-lifecycle`
+- M11.1 lifecycle cleanup regression coverage is now user-verified. This covers the carrier-removal carry release path, active-parry/combat peer cleanup, recovery-time Player unregister cleanup, and session-shutdown cache/roster cleanup represented by the focused stages.
+- M11.2 practical multiplayer movement, physics-heavy play (ragdolls, carry, throw, recovery), and combat/parry scenarios were user-reported smooth. No speculative performance optimization was made; no measured sustained 60 FPS guarantee is claimed.
+- M11.3 planned 10–15 minute soak remains DEFERRED because four instances are too demanding for the user's 8 GB RAM system. It is neither marked passed nor treated as a blocker for closing this milestone.
+- M11.4 documentation and verification closeout is complete. M11 — Multiplayer & Performance Hardening is CLOSED.
