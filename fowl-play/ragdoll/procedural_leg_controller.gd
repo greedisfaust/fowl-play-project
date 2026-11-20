@@ -18,6 +18,8 @@ var left_in_swing: bool = false
 var right_in_swing: bool = false
 var left_swing_progress: float = 0.0
 var right_swing_progress: float = 0.0
+var left_knee_bend_weight: float = 0.0
+var right_knee_bend_weight: float = 0.0
 
 func update(delta: float, local_velocity: Vector3, grounded: bool) -> void:
 	if not local_velocity.is_finite():
@@ -71,8 +73,10 @@ func update(delta: float, local_velocity: Vector3, grounded: bool) -> void:
 	# not world-space IK or a tracked planted-foot target.
 	var left_knee_shape: float = _get_knee_shape(left_cycle, left_swing_progress, left_in_swing)
 	var right_knee_shape: float = _get_knee_shape(right_cycle, right_swing_progress, right_in_swing)
-	var left_knee: float = left_knee_shape * TUNING.LEG_MAX_KNEE_BEND_RAD * stride_weight * motion_weight
-	var right_knee: float = right_knee_shape * TUNING.LEG_MAX_KNEE_BEND_RAD * stride_weight * motion_weight
+	left_knee_bend_weight = clampf(left_knee_shape * stride_weight * motion_weight, 0.0, 1.0)
+	right_knee_bend_weight = clampf(right_knee_shape * stride_weight * motion_weight, 0.0, 1.0)
+	var left_knee: float = left_knee_bend_weight * TUNING.LEG_MAX_KNEE_BEND_RAD
+	var right_knee: float = right_knee_bend_weight * TUNING.LEG_MAX_KNEE_BEND_RAD
 	var left_foot_pitch: float = _get_foot_pitch(left_cycle, left_swing_progress, left_in_swing)
 	var right_foot_pitch: float = _get_foot_pitch(right_cycle, right_swing_progress, right_in_swing)
 
@@ -133,3 +137,5 @@ func reset() -> void:
 	right_in_swing = false
 	left_swing_progress = 0.0
 	right_swing_progress = 0.0
+	left_knee_bend_weight = 0.0
+	right_knee_bend_weight = 0.0
