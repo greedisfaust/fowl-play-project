@@ -222,7 +222,7 @@ Remaining ground-contact refinements:
 Implemented:
 - A swing captures its landing target once at lift-off. The target no longer drifts as the per-frame ground probe moves with the character's velocity lead.
 - On landing, stance locks to that captured landing point instead of the newest probe result, preventing a final-frame foot snap.
-- The foot bone now blends its orientation toward the detected ground normal while IK is active, preserving the gait foot rotation during the blend. Flat ground settles the foot toward level; walkable slopes tilt it with the surface.
+- During stance, the foot bone blends its orientation toward the detected ground normal. During swing, the existing gait toe-lift/foot articulation remains in control rather than being flattened by the ground normal. Flat ground settles the planted foot toward level; walkable slopes tilt it with the surface.
 - `leg_ground_<player>` now reports each foot's locked anchor alongside its current target, hit state, IK weight, and surface normal.
 - M8 tests cover a moving ground-probe target during swing and verify that the captured landing point remains stable.
 
