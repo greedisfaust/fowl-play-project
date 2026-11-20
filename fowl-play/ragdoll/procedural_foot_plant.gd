@@ -30,7 +30,7 @@ func update_target(
 		if not was_in_swing:
 			step_target_world = landing_target_world
 		var progress: float = clampf(swing_progress, 0.0, 1.0)
-		var eased_progress: float = progress * progress * (3.0 - 2.0 * progress)
+		var eased_progress: float = progress * progress * progress * (progress * (progress * 6.0 - 15.0) + 10.0)
 		var target: Vector3 = step_start_world.lerp(step_target_world, eased_progress)
 		target.y += sin(progress * PI) * maxf(lift_height, 0.0)
 		was_in_swing = true
