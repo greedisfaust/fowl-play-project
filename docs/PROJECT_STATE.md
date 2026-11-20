@@ -509,3 +509,11 @@ Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep a
 - Exposed smoothed per-leg knee-bend weights from the gait controller and fed them into the IK pole. During swing, the knee receives additional forward bend while the outward side bias remains active; the weight eases in and out with the gait's existing smooth swing curve.
 - Updated planner and gait regression assertions for the authored side mapping and IK knee bend handoff.
 - No scene files changed. Godot tests and in-game behavior have not been executed by the assistant.
+
+
+## 2026-11-20 — improve leg reach and high stepping
+
+- Added smoothed, controlled two-bone IK stretch up to 1.14x when the planted foot approaches the natural thigh-plus-shin reach. Both bones scale along their authored chain axes, so attached limb meshes follow the extended skeleton. Stretch eases back toward neutral and resets when IK ownership ends or ragdoll/other pose ownership takes over.
+- Increased swing/recovery foot arc height to 0.30 m, thigh swing to 46 degrees, knee flex to 68 degrees, and forward knee-pole guidance to make each step lift more visibly before extending toward landing.
+- Added M8 assertions for stretch/lift tuning and the farther reachable IK target.
+- No scene files changed. Godot tests and in-game behavior have not been executed by the assistant.
