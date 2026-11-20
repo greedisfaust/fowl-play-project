@@ -266,7 +266,7 @@ func _physics_process(delta: float) -> void:
 		var jab: Dictionary = _active_jabs[owner_id]
 		jab["elapsed"] = float(jab.get("elapsed", 0.0)) + delta
 		if not bool(jab.get("hit", false)):
-			var attacker: Node3D = movement_players.get(owner_id) as Node3D
+			var attacker: CharacterBody3D = movement_players.get(owner_id) as CharacterBody3D
 			if is_instance_valid(attacker) and not attacker.is_queued_for_deletion():
 				var jab_origin: Vector3 = jab.get("origin", Vector3.ZERO)
 				var jab_direction: Vector3 = jab.get("direction", Vector3.ZERO)
