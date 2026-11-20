@@ -607,3 +607,5 @@ The authored rig's `Thigh_L` bone is on local +X and `Thigh_R` is on local -X. F
 | M7.1 | 4 | Jab an already-limp player: the ragdoll physically reacts, but `player/<name>/limp_elapsed_s` continues without resetting. |
 | M7.1 | 5 | Hold Q longer than 0.25 s: no jab fires; the fist pose returns. Charged punch is not part of this slice. |
 | M7.1 | 6 | While carrying, tap/hold Q: existing drop/throw behavior remains unchanged. |
+
+Run only the jab regression stage from the `fowl-play/` directory with `.\tests\run_checks.ps1 -OnlyStage m7-jab`. Run the full suite with `.\tests\run_checks.ps1`.
