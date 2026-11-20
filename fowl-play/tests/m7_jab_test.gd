@@ -145,6 +145,8 @@ func _check_world_hit_and_recoil() -> void:
 		_fail("Boxer guard should lift both closed fists into a higher defensive position")
 	if attacker_left_guard.guard_position_offset.x >= 0.0 or attacker_right_guard.guard_position_offset.x >= 0.0:
 		_fail("Mirrored Viewmodel hands should use inward local offsets to bring both fists toward the centerline")
+	if attacker_left_guard.guard_rotation_degrees.x < 65.0 or attacker_right_guard.guard_rotation_degrees.x < 65.0:
+		_fail("Boxer guard should rotate the closed fists so their back/knuckle side faces an opponent in front")
 	if not attacker_left_guard.guard_rotation_degrees.is_equal_approx(attacker_right_guard.guard_rotation_degrees):
 		_fail("Mirrored Viewmodel hands should retain a consistent defensive wrist angle")
 	var camera: Camera3D = attacker.get_node("Head/Camera3D") as Camera3D

@@ -253,7 +253,7 @@ func _configure_boxer_guard_hands() -> void:
 		if not is_instance_valid(hand):
 			continue
 		hand.guard_position_offset = Vector3(-0.16, 0.27, -0.08)
-		hand.guard_rotation_degrees = Vector3(30.0, -10.0, 10.0)
+		hand.guard_rotation_degrees = Vector3(72.0, -10.0, 10.0)
 
 func _process(delta: float) -> void:
 	_parry_barrier.call("advance", delta)
