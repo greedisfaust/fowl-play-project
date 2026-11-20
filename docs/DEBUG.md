@@ -446,3 +446,11 @@ The test arena has an editor-authored `WorldEnvironment` with restrained Glow en
 - The Rig duplicates its visible geometry materials before tinting, preserving source resources and per-instance independence. The temporary `FacePhoto` placeholder is excluded.
 - The nameplate accent continues to use the same `PlayerIdentity.get_color()` value.
 - USER VERIFIED: player identity coloring works in-game, including the character presentation, world and first-person hands, and ragdoll. The nameplate's identity accent uses the same palette color; nickname text stays white for readability. Regression check: compare different host/client colors, then knock down, carry, throw, and recover each player to confirm colors persist.
+
+
+## Procedural footstep planner
+- Landing targets are calculated relative to each thigh/hip using the rig's smoothed movement direction, not by projecting a long distance from the current trailing foot.
+- The planner offsets left/right feet perpendicular to movement, preserving separation during forward/backward movement, strafing, and diagonals.
+- Forward landing prediction uses the root travel over the swing fraction: `LEG_STEP_CYCLE_DISTANCE_M * (1 - LEG_STANCE_FRACTION)`. The planner target is then raycast vertically at the current sole height.
+- `leg_ground_<player>` reports the captured world-space anchor and current planner/plant target. If the target is not where expected, inspect the rig's movement direction and hip position before changing the ground probe.
+- Focused regression coverage: M8 `procedural-legs` stage. Godot execution and in-game verification remain pending.
