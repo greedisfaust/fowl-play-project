@@ -188,8 +188,8 @@ func _refresh_identity_presentation() -> void:
 			gameplay_cursor.call("set_identity_color", identity.get_color())
 		else:
 			gameplay_cursor.call("reset_identity_color")
-	if is_instance_valid(nameplate) and nameplate.has_method("set_identity"):
-		nameplate.call("set_identity", identity, is_local_player)
+	if is_instance_valid(nameplate) and nameplate.has_method("apply_player_identity"):
+		nameplate.call("apply_player_identity", identity, is_local_player)
 
 func _process(delta: float) -> void:
 	if is_limp:

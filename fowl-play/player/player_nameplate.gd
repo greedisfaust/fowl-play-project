@@ -14,7 +14,7 @@ func _ready() -> void:
 	outline_size = outline_thickness
 	visible = false
 
-func set_identity(identity: PlayerIdentity, is_local_player: bool) -> void:
+func apply_player_identity(identity: PlayerIdentity, is_local_player: bool) -> void:
 	if identity == null:
 		text = ""
 		visible = false
