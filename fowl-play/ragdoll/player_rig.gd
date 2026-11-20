@@ -173,6 +173,7 @@ const LEG_GROUND_FOOT_CLEARANCE_M: float = 0.015
 const LEG_GROUND_MIN_NORMAL_Y: float = 0.45
 const LEG_IK_BLEND_RESPONSE: float = 8.0
 const LEG_IK_POLE_FORWARD_WEIGHT: float = 1.0
+const LEG_KNEE_OUTWARD_BIAS_M: float = 0.48
 const CARRY_HEAD_ANGULAR_DAMP: float = 12.0
 
 func _enter_tree() -> void:
@@ -493,7 +494,7 @@ func _apply_procedural_leg_ik(
 		return false
 	var parent_world_basis: Basis = skeleton.global_basis * skeleton.get_bone_global_pose(parent_index).basis
 	var pole_world: Vector3 = hip_world + global_basis * Vector3.FORWARD * LEG_IK_POLE_FORWARD_WEIGHT
-	pole_world += global_basis * Vector3.RIGHT * signf(foot_side) * 0.30
+	pole_world += global_basis * Vector3.RIGHT * signf(foot_side) * LEG_KNEE_OUTWARD_BIAS_M
 	var solution: Dictionary = LEG_IK.solve_two_bone(
 		hip_world, foot_target_world, pole_world, upper_length, lower_length
 	)
@@ -560,7 +561,7 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 	if bool(_leg_controller.get("left_in_swing")) and planner_velocity.length() > TUNING.LEG_MIN_WALK_SPEED_MPS:
 		left_landing_world = _footstep_planner.call(
 			"get_landing_target", hip_center_world, global_basis, planner_velocity, -1.0,
-			0.0, 0.18, TUNING.LEG_STEP_CYCLE_DISTANCE_M * (1.0 - TUNING.LEG_STANCE_FRACTION)
+			0.0, 0.24, TUNING.LEG_STEP_CYCLE_DISTANCE_M * (1.0 - TUNING.LEG_STANCE_FRACTION)
 		)
 	if bool(_leg_controller.get("right_in_swing")) and planner_velocity.length() > TUNING.LEG_MIN_WALK_SPEED_MPS:
 		right_landing_world = _footstep_planner.call(
