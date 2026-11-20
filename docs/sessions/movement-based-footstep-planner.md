@@ -140,3 +140,12 @@ M8 assertions were updated for actual-speed cadence, stance/reach margin, and ou
 The shared `ProceduralArmIK.solve_two_bone` solver projects its `pole` argument as a direction relative to the upper joint. The leg controller previously constructed a world-space pole position by adding the hip position, then passed that absolute position to the solver. This caused the bend plane to depend on the character's world position and could make the knee appear sideways regardless of facing direction.
 
 The leg controller now passes only the character-facing pole direction (forward plus a small mirrored outward component). Forward bias is 1.0, with up to 0.45 additional forward bias during swing; outward bias is 0.18. Tests now require forward and mild outward knee bend for both legs. Godot parsing and in-game verification remain pending.
+
+
+## Sideways gait lane correction — 2026-11-20
+
+The fixed anatomical left/right lane constraint conflicted with a landing target that advances along the movement vector. During a strafe, one foot's forward offset could cross the hip centerline; the anatomical clamp then pushed that foot back, preventing it from reaching its landing target and causing it to drag.
+
+The planner now derives the foot-lane axis perpendicular to movement. For forward/backward motion it remains the rig-right axis. For pure sideways motion, where rig-right is parallel to travel, it falls back to the character-forward axis, producing stable front/back lanes. The landing/replant constraint uses the same movement-relative axis. This allows both feet to alternate during left and right strafes without the leading target being forced across the centerline.
+
+M8 regression coverage includes both strafe directions, stable front/back separation, and movement-relative replant constraints. Godot tests and in-game verification remain pending.
