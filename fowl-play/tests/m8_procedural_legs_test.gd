@@ -38,8 +38,12 @@ func _check_controller_gait() -> void:
 	var expected_phase: float = (5.0 / TUNING.LEG_STEP_CYCLE_DISTANCE_M) * TAU * TUNING.LEG_GAIT_RATE_MULTIPLIER * 0.125
 	if not is_equal_approx(phase_after_walk, expected_phase):
 		_fail("Gait phase should advance at the configured stride cadence")
-	if TUNING.LEG_STEP_CYCLE_DISTANCE_M >= 2.0:
-		_fail("Procedural walking should use a brisker stride distance to avoid trailing")
+	if TUNING.LEG_STEP_CYCLE_DISTANCE_M >= 1.6:
+		_fail("Stride cycle distance should keep planted feet from exceeding natural reach before swing begins")
+	var stance_travel_m: float = TUNING.LEG_STEP_CYCLE_DISTANCE_M * TUNING.LEG_STANCE_FRACTION
+	var natural_leg_reach_m: float = 0.84 + TUNING.LEG_REPLANT_EXTRA_STRETCH_M
+	if stance_travel_m >= natural_leg_reach_m:
+		_fail("A stance foot should enter its next swing before the player outruns natural leg reach")
 	if left_thigh.angle_to(Quaternion.IDENTITY) < 0.1:
 		_fail("Walking should move the left thigh away from its rest rotation")
 	if right_thigh.angle_to(Quaternion.IDENTITY) < 0.1:
@@ -268,6 +272,20 @@ func _check_two_bone_solver() -> void:
 		_fail("Two-bone IK should preserve both authored leg segment lengths")
 	if knee.z >= 0.0:
 		_fail("The leg pole should bend the knee toward the character's forward side")
+	# Left and right knee poles must bend away from the body's centerline,
+	# while retaining a forward component for a natural walking knee.
+	var left_hip: Vector3 = Vector3(0.1, 1.0, 0.0)
+	var left_foot: Vector3 = Vector3(0.2, 0.0, -0.25)
+	var left_pole: Vector3 = left_hip + Vector3(0.0, 0.0, -0.55) + Vector3(0.95, 0.0, 0.0)
+	var left_solution: Dictionary = LEG_IK.solve_two_bone(left_hip, left_foot, left_pole, 0.42, 0.42)
+	if left_solution.is_empty() or Vector3(left_solution["elbow"]).x <= left_hip.x:
+		_fail("The left knee pole should bend outward, away from the body's centerline")
+	var right_hip: Vector3 = Vector3(-0.1, 1.0, 0.0)
+	var right_foot: Vector3 = Vector3(-0.2, 0.0, -0.25)
+	var right_pole: Vector3 = right_hip + Vector3(0.0, 0.0, -0.55) + Vector3(-0.95, 0.0, 0.0)
+	var right_solution: Dictionary = LEG_IK.solve_two_bone(right_hip, right_foot, right_pole, 0.42, 0.42)
+	if right_solution.is_empty() or Vector3(right_solution["elbow"]).x >= right_hip.x:
+		_fail("The right knee pole should bend outward, away from the body's centerline")
 	var stretched_solution: Dictionary = LEG_IK.solve_two_bone(
 		hip, Vector3(0.0, 0.1, 0.0), pole, 0.42 * 1.14, 0.42 * 1.14
 	)
