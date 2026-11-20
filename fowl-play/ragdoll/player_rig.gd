@@ -552,15 +552,22 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 	var right_hip_world: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(_right_thigh_bone_index).origin)
 	var hip_center_world: Vector3 = (left_hip_world + right_hip_world) * 0.5
 	var planner_velocity: Vector3 = _leg_controller.get("smoothed_velocity")
-	var left_landing_world: Vector3 = _footstep_planner.call(
-		"get_landing_target", hip_center_world, global_basis, planner_velocity, -1.0,
-		0.0, 0.18, TUNING.LEG_STEP_CYCLE_DISTANCE_M * (1.0 - TUNING.LEG_STANCE_FRACTION)
-	)
-	var right_landing_world: Vector3 = _footstep_planner.call(
-		"get_landing_target", hip_center_world, global_basis, planner_velocity, 1.0,
-		0.0, 0.18, TUNING.LEG_STEP_CYCLE_DISTANCE_M * (1.0 - TUNING.LEG_STANCE_FRACTION)
-	)
-	# Keep the probe height at the current sole; only X/Z come from the hip zone.
+	var left_landing_world: Vector3 = left_foot_world
+	var right_landing_world: Vector3 = right_foot_world
+	# Only swing feet request a new hip-relative landing point. During stance,
+	# probe the current sole so initialization and stopping cannot pull feet
+	# toward an artificial forward target.
+	if bool(_leg_controller.get("left_in_swing")) and planner_velocity.length() > TUNING.LEG_MIN_WALK_SPEED_MPS:
+		left_landing_world = _footstep_planner.call(
+			"get_landing_target", hip_center_world, global_basis, planner_velocity, -1.0,
+			0.0, 0.18, TUNING.LEG_STEP_CYCLE_DISTANCE_M * (1.0 - TUNING.LEG_STANCE_FRACTION)
+		)
+	if bool(_leg_controller.get("right_in_swing")) and planner_velocity.length() > TUNING.LEG_MIN_WALK_SPEED_MPS:
+		right_landing_world = _footstep_planner.call(
+			"get_landing_target", hip_center_world, global_basis, planner_velocity, 1.0,
+			0.0, 0.18, TUNING.LEG_STEP_CYCLE_DISTANCE_M * (1.0 - TUNING.LEG_STANCE_FRACTION)
+		)
+	# Keep each probe at its current sole height; only X/Z come from the hip zone.
 	left_landing_world.y = left_foot_world.y
 	right_landing_world.y = right_foot_world.y
 	_left_ground_probe = _probe_ground_at_target(left_landing_world)
