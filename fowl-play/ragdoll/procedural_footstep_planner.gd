@@ -25,12 +25,14 @@ func get_landing_target(
 		move_direction_world = Vector3(0.0, 0.0, -1.0)
 	else:
 		move_direction_world = move_direction_world.normalized()
-	var body_right_world: Vector3 = (rig_basis * Vector3.RIGHT).normalized()
-	var lateral_axis_world: Vector3 = move_direction_world.cross(Vector3.UP).normalized()
+	# Keep each foot on its anatomical side of the body. Using the movement
+	# perpendicular as the side axis makes the feet swap sides while strafing.
+	var lateral_axis_world: Vector3 = rig_basis * Vector3.RIGHT
+	lateral_axis_world.y = 0.0
 	if lateral_axis_world.length_squared() <= 0.0001:
-		lateral_axis_world = body_right_world
-	elif lateral_axis_world.dot(body_right_world) < 0.0:
-		lateral_axis_world = -lateral_axis_world
+		lateral_axis_world = Vector3.RIGHT
+	else:
+		lateral_axis_world = lateral_axis_world.normalized()
 	var forward_offset: Vector3 = move_direction_world * (maxf(forward_placement_m, 0.0) + maxf(predicted_swing_travel_m, 0.0))
 	var lateral_offset: Vector3 = lateral_axis_world * signf(foot_side) * maxf(lateral_placement_m, 0.0)
 	return hip_world + forward_offset + lateral_offset
