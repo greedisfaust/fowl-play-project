@@ -171,7 +171,7 @@ func _ready() -> void:
 	network.call("apply_pending_ragdoll_start", input_peer_id, self)
 
 func _exit_tree() -> void:
-	_combat_controller.call("cancel")
+	_combat_controller.call("abandon")
 	_combat_presentation.call("cancel")
 	if (is_limp or is_recovering) and is_instance_valid(rig):
 		rig.call("stop_host_simulation")

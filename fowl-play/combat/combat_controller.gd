@@ -32,6 +32,10 @@ func cancel() -> void:
 	_punch_held = false
 	if is_instance_valid(_network) and is_instance_valid(_player):
 		_network.call("submit_combat_input", int(_player.get("input_peer_id")), false)
+
+## Clear local input during teardown without submitting a possible last-moment jab.
+func abandon() -> void:
+	_punch_held = false
 func _can_submit() -> bool:
 	if not is_instance_valid(_player) or not is_instance_valid(_network):
 		return false

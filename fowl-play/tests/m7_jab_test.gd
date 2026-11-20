@@ -2,6 +2,7 @@
 extends SceneTree
 const PLAYER_SCENE: PackedScene = preload("res://player/player.tscn")
 const TUNING = preload("res://core/tuning.gd")
+const LAYERS = preload("res://core/layers.gd")
 const COMBAT_CONTROLLER = preload("res://combat/combat_controller.gd")
 const HIT_DETECTOR = preload("res://combat/combat_hit_detector.gd")
 var _failed: bool = false
@@ -52,7 +53,7 @@ func _check_world_hit_and_recoil() -> void:
 	if result.get("target") != target:
 		_fail("A clear ray within range should identify the target Player")
 	var mask: int = HIT_DETECTOR.get_jab_collision_mask()
-	if (mask & (1 << (1 - 1))) == 0 or (mask & (1 << (7 - 1))) == 0:
+	if (mask & (1 << (LAYERS.WORLD_STATIC - 1))) == 0 or (mask & (1 << (LAYERS.ELEVATOR - 1))) == 0:
 		_fail("Jab ray should include static world and elevator layers so obstacles block hits")
 	var network: Node = root.get_node("Network")
 	if not bool(network.call("_receive_combat_input", 1, true)):
