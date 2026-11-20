@@ -408,3 +408,12 @@ Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep a
 - Added smooth opacity targeting: 12% at rest, 100% while the local view ray intersects the nameplate quad, with the existing 18–28 m distance fade still applied. With mouse capture, the test uses the center-screen gameplay cursor; with a visible cursor, it uses the actual pointer position.
 - Player.gd reparents the nameplate to the existing Rig/Skeleton3D/HeadAttachment at runtime. This attachment follows the head bone during host ragdoll simulation, remote interpolated pose playback, and recovery blending. No ragdoll physics, network authority, or editor-authored scene files are changed.
 - Updated the identity-presentation contract to cover scale, centered nickname alignment, and opacity defaults. Godot execution and rendered multiplayer verification remain user-run.
+
+
+## 2026-11-20 — nameplate text clarity and head clearance
+
+- Raised the runtime HeadAttachment offset from 0.38 m to 0.62 m so the plate sits more comfortably above the head.
+- Split opacity treatment: the dark backing, identity accent rail, and divider fade from the resting opacity to full opacity when aimed at. Nickname and status text remain fully opaque at all times for quick player identification.
+- The existing distance fade continues to apply to the decorative panel only; text remains readable independently of hover and panel opacity.
+- The current visual design is a functional first pass, not a locked final design. Keep the existing scene hierarchy; future styling can replace or add authored decorative UI elements without changing identity networking or ragdoll attachment.
+- Added contract coverage for separate panel/text opacity behavior. Godot execution and in-game visual verification remain user-run.

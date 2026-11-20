@@ -22,6 +22,7 @@ const NAME_FONT: Font = preload("res://assets/fonts/JetBrainsMonoNL-Regular.ttf"
 @onready var accent: ColorRect = get_node_or_null("Display/UI/Accent") as ColorRect
 @onready var nickname_label: Label = get_node_or_null("Display/UI/Nickname") as Label
 @onready var status_label: Label = get_node_or_null("Display/UI/Status") as Label
+@onready var divider: ColorRect = get_node_or_null("Display/UI/Divider") as ColorRect
 
 var _identity_color: Color = Color("#E6A64A")
 
@@ -31,8 +32,7 @@ func _ready() -> void:
 	_configure_display()
 	_configure_ui()
 	_configure_panel()
-	if ui != null:
-		ui.modulate.a = idle_opacity
+	_set_plate_opacity(idle_opacity)
 
 func _process(delta: float) -> void:
 	if not visible:
@@ -52,8 +52,13 @@ func _process(delta: float) -> void:
 	var distance_alpha: float = 1.0 - clampf((distance - fade_start_distance) / fade_span, 0.0, 1.0)
 	var target_opacity: float = hover_opacity if _is_aimed_at_panel(camera) else idle_opacity
 	target_opacity *= distance_alpha
-	if ui != null:
-		ui.modulate.a = move_toward(ui.modulate.a, target_opacity, opacity_response * delta)
+	var current_opacity: float = _get_plate_opacity()
+	_set_plate_opacity(move_toward(current_opacity, target_opacity, opacity_response * delta))
+	# Identity text stays crisp and fully readable; only the decorative panel fades.
+	if nickname_label != null:
+		nickname_label.modulate.a = 1.0
+	if status_label != null:
+		status_label.modulate.a = 1.0
 
 ## The captured gameplay cursor is centered; when the OS cursor is visible,
 ## use its actual position. The test is against the rendered quad, not physics.
@@ -94,8 +99,29 @@ func apply_player_identity(identity: PlayerIdentity, is_local_player: bool) -> v
 	if status_label != null:
 		status_label.text = "PLAYER  /  REGISTERED"
 	visible = not (hide_for_local_player and is_local_player)
-	if ui != null:
-		ui.modulate.a = idle_opacity
+	_set_plate_opacity(idle_opacity)
+	if nickname_label != null:
+		nickname_label.modulate.a = 1.0
+	if status_label != null:
+		status_label.modulate.a = 1.0
+
+func _get_plate_opacity() -> float:
+	if background != null:
+		return background.modulate.a
+	if accent != null:
+		return accent.modulate.a
+	if divider != null:
+		return divider.modulate.a
+	return idle_opacity
+
+func _set_plate_opacity(value: float) -> void:
+	var alpha: float = clampf(value, 0.0, 1.0)
+	if background != null:
+		background.modulate.a = alpha
+	if accent != null:
+		accent.modulate.a = alpha
+	if divider != null:
+		divider.modulate.a = alpha
 
 func _configure_display() -> void:
 	if display == null:
@@ -144,7 +170,6 @@ func _configure_ui() -> void:
 		nickname_label.clip_text = true
 		nickname_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
-	var divider: ColorRect = get_node_or_null("Display/UI/Divider") as ColorRect
 	if divider != null:
 		divider.position = Vector2(28.0, 82.0)
 		divider.size = Vector2(450.0, 1.0)

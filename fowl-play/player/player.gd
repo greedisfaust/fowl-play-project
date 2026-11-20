@@ -187,7 +187,7 @@ func _attach_nameplate_to_ragdoll_head() -> void:
 	# to the Head bone keeps it aligned through host simulation, remote playback,
 	# and the recovery blend without changing any ragdoll physics.
 	nameplate.reparent(head_attachment, false)
-	nameplate.position = Vector3(0.0, 0.38, 0.0)
+	nameplate.position = Vector3(0.0, 0.62, 0.0)
 	nameplate.rotation = Vector3.ZERO
 
 func _on_identity_roster_changed() -> void:

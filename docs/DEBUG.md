@@ -426,3 +426,10 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 - Rest opacity is 12%; aiming the center-screen cursor at the plate (or moving a visible pointer over it) smoothly raises opacity to 100%. Distance fade still applies beyond 18–28 m.
 - Player.gd attaches the plate to `Rig/Skeleton3D/HeadAttachment`, so the plate follows the actual head bone during ragdoll, remote pose playback, and recovery. If it does not follow, inspect that the Player's `NamePlate` is a direct child before runtime; the controller reparents it during Player._ready().
 - Focused contract: `identity-presentation` stage. Run `tests/run_checks.ps1`; in-game visual and multiplayer checks remain required.
+
+
+### Nameplate text and plate opacity
+- Nickname and status labels remain fully opaque (alpha 1.0) whether or not the player is being aimed at.
+- Only the decorative backing, identity accent rail, and divider use the hover opacity transition (default 12% idle, 100% aimed-at). The distance fade affects those decorative elements only.
+- The runtime HeadAttachment local Y offset is 0.62 m, raised from 0.38 m to improve clearance above the head.
+- The scene design is not final; the current hierarchy is a stable base for further visual polish. Add or restyle decorative elements in the user-authored scene without changing the required node names.
