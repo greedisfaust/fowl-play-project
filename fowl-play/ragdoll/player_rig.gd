@@ -694,7 +694,7 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 			_left_foot_ground_normal if not bool(_leg_controller.get("left_in_swing")) and not bool(_left_foot_plant.get("emergency_replant_active")) else Vector3.ZERO,
 			left_thigh_rotation, left_shin_rotation, left_foot_rotation, _left_leg_ik_weight, 1.0,
 			float(_leg_controller.get("left_knee_bend_weight")), delta
-	)
+		)
 		_left_leg_ik_active = left_ik_applied
 	else:
 		_left_leg_ik_active = false
@@ -706,7 +706,7 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 			_right_foot_ground_normal if not bool(_leg_controller.get("right_in_swing")) and not bool(_right_foot_plant.get("emergency_replant_active")) else Vector3.ZERO,
 			right_thigh_rotation, right_shin_rotation, right_foot_rotation, _right_leg_ik_weight, -1.0,
 			float(_leg_controller.get("right_knee_bend_weight")), delta
-	)
+		)
 		_right_leg_ik_active = right_ik_applied
 	else:
 		_right_leg_ik_active = false
