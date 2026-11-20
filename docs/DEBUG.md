@@ -508,6 +508,6 @@ The authored rig's `Thigh_L` bone is on local +X and `Thigh_R` is on local -X. F
 ## Procedural gait sync and knee direction
 
 - Gait phase now advances from the measured horizontal player velocity rather than the smoothed direction-filter velocity. Direction still blends for smooth turning, while cadence no longer waits for the velocity filter to catch up.
-- Stride cycle distance is 1.4 m with a 1.0 cadence multiplier. At the current 0.58 stance fraction, nominal stance travel is 0.812 m, below the 0.94 m natural-reach-plus-replant margin (0.84 m two-bone rest reach + 0.10 m).
+- Stride cycle distance is 1.4 m with a 1.0 cadence multiplier. Normal landing targets are placed 0.40 m ahead of the hip at touchdown, after accounting for predicted swing travel. At the 0.58 stance fraction, the foot ends stance about 0.412 m behind the hip; combined with the 0.84 m vertical two-bone rest reach, this is about 0.936 m, within the 0.94 m replant margin. Emergency replants also predict root travel over the 0.18 s recovery arc.
 - Leg IK pole guidance now favors anatomical outward knee placement (0.95 m) with a reduced forward component (0.55 m base plus 0.35 m swing bias). Arm IK retains its independent pole tuning.
 - M8 checks assert stance travel remains below the leg reach margin and that mirrored left/right IK poles place each knee outward from the centerline.
