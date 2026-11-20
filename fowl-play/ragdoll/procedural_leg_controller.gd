@@ -7,6 +7,7 @@ const STOP_SETTLE_PHASE_SPEED_RAD_S: float = 16.0
 var phase: float = 0.0
 var motion_weight: float = 0.0
 var run_weight: float = 0.0
+var stride_weight: float = 0.0
 var smoothed_velocity: Vector3 = Vector3.ZERO
 
 var left_thigh_rotation: Quaternion = Quaternion.IDENTITY
@@ -67,7 +68,7 @@ func update(delta: float, local_velocity: Vector3, grounded: bool) -> void:
 			phase = PI
 	else:
 		phase = PI
-	var stride_weight: float = clampf(speed / TUNING.PLAYER_SPEED_MPS, 0.0, 1.0)
+	stride_weight = clampf(speed / TUNING.PLAYER_RUN_SPEED_MPS, 0.35, 1.0)
 	var run_stride_multiplier: float = lerpf(1.0, 1.15, run_weight)
 	var direction: Vector3 = smoothed_velocity.normalized() if smoothed_velocity.length_squared() > 0.001 else Vector3(0.0, 0.0, -1.0)
 	var swing_axis: Vector3 = direction.cross(Vector3.UP)
@@ -145,6 +146,7 @@ func reset() -> void:
 	phase = 0.0
 	motion_weight = 0.0
 	run_weight = 0.0
+	stride_weight = 0.0
 	smoothed_velocity = Vector3.ZERO
 	left_thigh_rotation = Quaternion.IDENTITY
 	left_shin_rotation = Quaternion.IDENTITY
