@@ -613,15 +613,22 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 	# Only swing feet request a new hip-relative landing point. During stance,
 	# probe the current sole so initialization and stopping cannot pull feet
 	# toward an artificial forward target.
+	# Keep landing prediction synchronized with the exact gait profile. A
+	# walk uses its longer cycle and longer double-support overlap; sprint uses
+	# its own shorter cycle and stance timing.
+	var gait_run_weight: float = float(_leg_controller.get("run_weight"))
+	var gait_cycle_distance: float = lerpf(TUNING.LEG_WALK_STEP_CYCLE_DISTANCE_M, TUNING.LEG_STEP_CYCLE_DISTANCE_M, gait_run_weight)
+	var gait_stance_fraction: float = lerpf(TUNING.LEG_WALK_STANCE_FRACTION, TUNING.LEG_STANCE_FRACTION, gait_run_weight)
+	var predicted_swing_travel: float = gait_cycle_distance * (1.0 - gait_stance_fraction)
 	if bool(_leg_controller.get("left_in_swing")) and planner_velocity.length() > TUNING.LEG_MIN_WALK_SPEED_MPS:
 		left_landing_world = _footstep_planner.call(
 			"get_landing_target", hip_center_world, global_basis, planner_velocity, 1.0,
-			TUNING.LEG_NORMAL_FORWARD_PLACEMENT_M, 0.24, TUNING.LEG_STEP_CYCLE_DISTANCE_M * (1.0 - TUNING.LEG_STANCE_FRACTION)
+			TUNING.LEG_NORMAL_FORWARD_PLACEMENT_M, 0.24, predicted_swing_travel
 		)
 	if bool(_leg_controller.get("right_in_swing")) and planner_velocity.length() > TUNING.LEG_MIN_WALK_SPEED_MPS:
 		right_landing_world = _footstep_planner.call(
 			"get_landing_target", hip_center_world, global_basis, planner_velocity, -1.0,
-			TUNING.LEG_NORMAL_FORWARD_PLACEMENT_M, 0.24, TUNING.LEG_STEP_CYCLE_DISTANCE_M * (1.0 - TUNING.LEG_STANCE_FRACTION)
+			TUNING.LEG_NORMAL_FORWARD_PLACEMENT_M, 0.24, predicted_swing_travel
 		)
 	var left_replant_requested: bool = false
 	var right_replant_requested: bool = false
