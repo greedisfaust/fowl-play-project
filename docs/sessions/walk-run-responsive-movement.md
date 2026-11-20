@@ -23,3 +23,10 @@ Create an Input Map action named `sprint` and bind Left Shift. The player script
 ## Follow-up tuning
 
 - Increased the run target to 8.0 m/s (from 7.0 m/s) at the user's request. Walking remains 3.8 m/s; acceleration and deceleration remain unchanged.
+
+
+## Walking cadence follow-up — 2026-11-20
+
+- Increased `LEG_WALK_STEP_CYCLE_DISTANCE_M` to 2.0 m to slow the walking cadence.
+- Set `LEG_WALK_STANCE_FRACTION` to 0.46 rather than extending stance to 0.62. At the 2.0 m cycle, a 0.62 stance would represent 1.24 m of planted travel, exceeding the current comfortable leg reach and likely causing emergency replants. The 0.46 stance represents 0.92 m and stays within the existing reach guard.
+- Sprint gait settings are unchanged. User in-game verification is pending.
