@@ -1,12 +1,9 @@
 # Active session files
 
-- **Active feature:** Combat, Procedural Movement & Multiplayer Lifecycle → [session](features-combat-and-procedural-movement.md). M7 combat, M8 coordinated movement, M9 lifecycle work, and M10 camera/owner-view polish are implemented; M10 is user-confirmed complete. M11.1 cleanup fixes and regression coverage are committed and user-verified: both focused M6 and M9 lifecycle checks passed. M11.2 practical four-instance movement, physics, and combat scenarios were user-reported smooth; no optimization was justified. M11.3 extended soak remains deferred due to the user's 8 GB RAM constraint. M11 is complete; next work can begin on the inner and outer gameplay loops.
+- **Active feature:** Casino Foundation & World Gameplay Loop → [session](environment-world-building-and-gameplay-loop.md). Branch `environment/world-building-and-gameplay-loop` starts from merged main `75675cc31456c3b0d7b5bb365ec82fd81ced9a72`. Phase 0 repository audit and architecture specification are in progress; no casino gameplay code or scenes have been added yet.
+- **Archived feature:** Combat, Procedural Movement & Multiplayer Lifecycle → [session](features-combat-and-procedural-movement.md). M6–M11 work was merged into main in PR #9; M11.1 cleanup checks were user-verified, practical four-instance scenarios were user-reported smooth, and the extended soak test remains deferred due to the 8 GB RAM constraint.
 - **Archived feature:** Player Identity & World Kit → [session](features-player-identity-and-world-kit.md) (implementation complete; user confirmed multiplayer hand synchronization, Interactive Terminal fixes, animated golden Interactable highlighting, and player identity coloring).
-- Prior feature: Highlight and Accessibility (gameplay cursor + interactable focus animation) → [session](features-highlight-and-accessibility.md).
-- Prior reference: Procedural Character Animation / reactive hands → [session](features-procedural-character-animation.md) (hand pose-priority foundation; host/client hover and poke synchronization subsequently fixed and user-verified; use as implementation reference for the new movement/combat work).
-- **Completed implementation:** features/carry-drop-throw -> [session](features-carry-drop-throw.md) (M6 carry/drop/throw is implemented and user visual-playtested; automated M6 test and full two-instance host/client verification remain pending).
-- Prior reference: features/player-rig-and-physics-implementation -> [session](features-player-rig-and-physics-implementation.md) (M4 ragdoll network checks and M5 recovery implementation; user visual check and get-up blend remain).
-- Prior reference: features/multiplayer -> [session](features-multiplayer.md) (multiplayer slice committed and verified; remaining M3 integration deferred).
-- Prior reference: features/m1-interaction-one-prop → [session](features-m1-interaction-one-prop.md) (READY TO RETIRE; M1 verified).
-- Prior reference: features/m0-multiplayer-network-spawning → [session and leaving note](features-m0-multiplayer-network-spawning.md) (M0 COMMITTED; ready to retire after confirmation).
-- Prior reference: features/debug-console → [completed session](features-debug-console.md) (READY TO RETIRE; retained).
+- Prior reference: Highlight and Accessibility (gameplay cursor + interactable focus animation) → [session](features-highlight-and-accessibility.md).
+- Prior reference: Procedural Character Animation / reactive hands → [session](features-procedural-character-animation.md).
+- Completed implementation: Carry, Drop & Throw → [session](features-carry-drop-throw.md).
+- Prior references: player rig/physics, multiplayer, interaction, debug console, and earlier milestones remain available in their respective session files.

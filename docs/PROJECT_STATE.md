@@ -2,7 +2,7 @@
 
 **Status:** Combat, Procedural Movement & Multiplayer Lifecycle is active on `features/combat-and-procedural-movement`. M7 combat, M8 coordinated movement, and M9 multiplayer lifecycle hardening are committed; the user reports the latest M9 build works correctly. A focused carry-hand and pointing-reach polish pass is now added ahead of M10.
 
-## Last updated (2026-11-20; carry-hand and pointing-reach polish)
+## Last updated (2026-11-21; casino foundation branch started)
 
 - Current branch: `features/combat-and-procedural-movement` (based on merged `main` commit `1506c03746e158c74ffcd2da5df042b20435db25`). Read-only rig and combat integration audits are complete; initial procedural gait, M7.1 jab gameplay and M7.2 jab presentation slices are committed and awaiting Godot verification.
 - Godot 4.7 project: `fowl-play/`, using Jolt Physics, Forward+, and D3D12.
