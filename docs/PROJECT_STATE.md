@@ -533,3 +533,10 @@ Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep a
 - Corrected a deeper IK issue: the shared two-bone solver expects a pole direction relative to the upper joint, but the leg code supplied an absolute world-space pole position. The solver was projecting that absolute position, making knee direction vary with world position and appear sideways across headings.
 - Leg IK now passes a hip-relative direction transformed by character facing. Forward bias is 1.0 plus up to 0.45 during swing; outward bias is reduced to 0.18 for a subtle anatomical angle.
 - M8 assertions now require forward and mild outward knee bend on both mirrored legs. No scene files changed. Godot tests and in-game verification have not been executed by the assistant.
+
+
+## 2026-11-20 — fix one-leg dragging during strafing
+
+- Identified a planner conflict: landing targets advanced along the strafe direction while the anatomical-side clamp continued enforcing fixed left/right lanes. For the leading leg, the forward offset could push the target across the centerline, then the clamp pulled it back, leaving one leg unable to complete its step.
+- Foot lanes are now perpendicular to movement. Forward/backward locomotion retains the rig-right lane axis; strafing switches to a stable character-forward axis, so the two feet occupy front/back lanes and both can alternate steps without being clamped against their travel direction.
+- Applied the same movement-relative axis to the landing/replant constraint and added symmetric left/right strafe regression checks. No scene files changed. Godot tests and in-game verification have not been executed by the assistant.
