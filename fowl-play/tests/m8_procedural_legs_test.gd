@@ -38,7 +38,8 @@ func _check_controller_gait() -> void:
 	var target_run_weight: float = smoothstep(TUNING.PLAYER_SPEED_MPS, TUNING.PLAYER_RUN_SPEED_MPS, 5.0)
 	var run_blend: float = 1.0 - exp(-TUNING.LEG_BLEND_RESPONSE * 0.125)
 	var expected_run_weight: float = target_run_weight * run_blend
-	var expected_phase: float = (5.0 / TUNING.LEG_STEP_CYCLE_DISTANCE_M) * TAU * TUNING.LEG_GAIT_RATE_MULTIPLIER * lerpf(1.0, 1.12, expected_run_weight) * 0.125
+	var expected_cycle_distance: float = lerpf(TUNING.LEG_WALK_STEP_CYCLE_DISTANCE_M, TUNING.LEG_STEP_CYCLE_DISTANCE_M, expected_run_weight)
+	var expected_phase: float = (5.0 / expected_cycle_distance) * TAU * TUNING.LEG_GAIT_RATE_MULTIPLIER * lerpf(1.0, 1.12, expected_run_weight) * 0.125
 	if not is_equal_approx(phase_after_walk, expected_phase):
 		_fail("Gait phase should advance at the configured stride cadence")
 	if TUNING.PLAYER_SPEED_MPS >= TUNING.PLAYER_RUN_SPEED_MPS:
@@ -51,8 +52,14 @@ func _check_controller_gait() -> void:
 		_fail("Movement acceleration and deceleration must be positive")
 	if float(controller.get("run_weight")) <= 0.0:
 		_fail("Higher movement speeds should blend the procedural gait toward its running style")
-	if float(controller.get("stride_weight")) >= 0.8:
-		_fail("Walking stride intensity should be restrained below full sprint intensity")
+	if float(controller.get("stride_weight")) >= 1.0:
+		_fail("Walking stride intensity should remain below the full sprint profile")
+	if float(controller.get("stance_fraction")) >= TUNING.LEG_STANCE_FRACTION:
+		_fail("Walking should use a shorter planted phase than the energetic sprint gait")
+	if float(controller.get("thigh_swing_limit")) >= TUNING.LEG_MAX_THIGH_SWING_RAD:
+		_fail("Walking thigh swing should be smaller than sprint thigh swing")
+	if float(controller.get("knee_bend_limit")) >= TUNING.LEG_MAX_KNEE_BEND_RAD:
+		_fail("Walking knee bend should be gentler than sprint knee lift")
 	var sprint_controller: RefCounted = LEG_CONTROLLER_SCRIPT.new()
 	sprint_controller.call("update", 0.125, Vector3(0.0, 0.0, -TUNING.PLAYER_RUN_SPEED_MPS), true)
 	if float(sprint_controller.get("stride_weight")) <= float(controller.get("stride_weight")):
@@ -60,11 +67,14 @@ func _check_controller_gait() -> void:
 	if not is_equal_approx(TUNING.JUMP_SPEED_MPS, 6.9):
 		_fail("Jump launch speed should use the slightly increased tuning value")
 	if TUNING.LEG_STEP_CYCLE_DISTANCE_M >= 1.6:
-		_fail("Stride cycle distance should keep planted feet from exceeding natural reach before swing begins")
+		_fail("Sprint stride cycle distance should keep planted feet within natural reach")
+	if TUNING.LEG_WALK_STEP_CYCLE_DISTANCE_M <= TUNING.LEG_STEP_CYCLE_DISTANCE_M:
+		_fail("Walking cadence should be slower than sprint cadence")
 	var stance_travel_m: float = TUNING.LEG_STEP_CYCLE_DISTANCE_M * TUNING.LEG_STANCE_FRACTION
+	var walk_stance_travel_m: float = TUNING.LEG_WALK_STEP_CYCLE_DISTANCE_M * TUNING.LEG_WALK_STANCE_FRACTION
 	var natural_leg_reach_m: float = 0.84 + TUNING.LEG_REPLANT_EXTRA_STRETCH_M
-	if stance_travel_m >= natural_leg_reach_m:
-		_fail("A stance foot should enter its next swing before the player outruns natural leg reach")
+	if stance_travel_m >= natural_leg_reach_m or walk_stance_travel_m >= natural_leg_reach_m:
+		_fail("Both walk and sprint stance phases should re-step before the player outruns natural leg reach")
 	if left_thigh.angle_to(Quaternion.IDENTITY) < 0.1:
 		_fail("Walking should move the left thigh away from its rest rotation")
 	if right_thigh.angle_to(Quaternion.IDENTITY) < 0.1:
@@ -347,7 +357,9 @@ func _check_leg_reach_tuning() -> void:
 	if TUNING.LEG_IK_MAX_STRETCH_RATIO < 1.10 or TUNING.LEG_IK_MAX_STRETCH_RATIO > 1.20:
 		_fail("Leg IK stretch should stay within a modest visual compensation range")
 	if TUNING.LEG_REPLANT_LIFT_M < 0.25:
-		_fail("Swing and emergency replant arcs should visibly clear the floor")
+		_fail("Emergency replant arcs should visibly clear the floor")
+	if TUNING.LEG_WALK_SWING_LIFT_M >= 0.12 or TUNING.LEG_RUN_SWING_LIFT_M >= TUNING.LEG_REPLANT_LIFT_M:
+		_fail("Normal walk/run swing lifts should stay lower than emergency recovery steps")
 	if TUNING.LEG_MAX_KNEE_BEND_RAD < deg_to_rad(60.0):
 		_fail("Walking knee flex should be pronounced enough to read as a step")
 
