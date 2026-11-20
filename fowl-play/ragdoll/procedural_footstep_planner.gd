@@ -5,6 +5,7 @@ extends RefCounted
 const DEFAULT_FORWARD_PLACEMENT_M: float = 0.36
 const DEFAULT_LATERAL_PLACEMENT_M: float = 0.18
 
+## foot_side is +1 for the authored Thigh_L (+X) and -1 for Thigh_R (-X).
 func get_landing_target(
 	hip_world: Vector3,
 	rig_basis: Basis,
