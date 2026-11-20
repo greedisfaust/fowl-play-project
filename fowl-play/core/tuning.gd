@@ -15,7 +15,7 @@ const MOVE_SEND_HZ: float = 20.0
 
 const LEG_STEP_CYCLE_DISTANCE_M: float = 1.8
 const LEG_GAIT_RATE_MULTIPLIER: float = 0.78
-const LEG_REPLANT_MAX_REACH_RATIO: float = 0.92
+const LEG_REPLANT_EXTRA_STRETCH_M: float = 0.10
 const LEG_REPLANT_RECOVERY_SECONDS: float = 0.18
 const LEG_REPLANT_LIFT_M: float = 0.12
 const LEG_MIN_LANDING_LATERAL_M: float = 0.20
