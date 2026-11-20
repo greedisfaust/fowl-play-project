@@ -65,6 +65,31 @@ func _run() -> void:
 	network.call("_on_peer_disconnected", 4)
 	check(not pending_states.has(4), "disconnect clears a deferred player-state baseline")
 
+	# Removing a Player node without a transport disconnect must also release
+	# every peer-owned timer/epoch, not just the combat dictionaries.
+	var tracked_player: Node = Node.new()
+	network.call("register_movement_player", 5, tracked_player)
+	var interaction_times: Dictionary = network.get("_interaction_times")
+	var carry_times: Dictionary = network.get("_carry_times")
+	var ragdoll_epochs: Dictionary = network.get("_ragdoll_epochs")
+	var jab_ready_times: Dictionary = network.get("_combat_jab_ready_times")
+	var charged_ready_times: Dictionary = network.get("_charged_punch_ready_times")
+	var parry_ready_times: Dictionary = network.get("_parry_ready_times")
+	interaction_times[5] = 1.0
+	carry_times[5] = 1.0
+	ragdoll_epochs[5] = 7
+	jab_ready_times[5] = 10.0
+	charged_ready_times[5] = 10.0
+	parry_ready_times[5] = 10.0
+	active_jabs[5] = {"elapsed": 0.01, "hit": false}
+	network.call("unregister_movement_player", 5, tracked_player)
+	check(not network.get("movement_players").has(5), "unregister removes the matching Player registration")
+	check(not interaction_times.has(5) and not carry_times.has(5), "unregister clears interaction and carry timing state")
+	check(not ragdoll_epochs.has(5), "unregister clears the departed Player ragdoll epoch")
+	check(not jab_ready_times.has(5) and not charged_ready_times.has(5) and not parry_ready_times.has(5), "unregister clears combat cooldown state")
+	check(not active_jabs.has(5), "unregister clears active combat actions")
+	tracked_player.free()
+
 	if not failed:
 		print("M9 lifecycle checks passed")
 	quit(1 if failed else 0)

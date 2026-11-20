@@ -362,20 +362,13 @@ func apply_pending_player_state(owner_id: int, player: Node) -> void:
 
 func unregister_movement_player(owner_id: int, player: Node) -> void:
 	if movement_players.get(owner_id) == player:
-		if _active_lunges.has(owner_id):
-			_finish_combat_lunge(owner_id, "player unregistered")
+		# Finish host-owned presentation/actions while the Player is still registered.
+		_clear_combat_peer_state(owner_id)
 		movement_players.erase(owner_id)
 		_pending_ragdoll_starts.erase(owner_id)
 		_pending_player_states.erase(owner_id)
-		_combat_press_times.erase(owner_id)
-		_combat_charged_presses.erase(owner_id)
-		_combat_jab_ready_times.erase(owner_id)
-		_charged_punch_ready_times.erase(owner_id)
-		_combat_action_lock_until.erase(owner_id)
-		_active_jabs.erase(owner_id)
-		_active_lunges.erase(owner_id)
-		_active_parries.erase(owner_id)
-		_parry_ready_times.erase(owner_id)
+		_interaction_times.erase(owner_id)
+		_ragdoll_epochs.erase(owner_id)
 
 func send_movement(owner_id: int, sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float, grounded: bool = true) -> void:
 	if peer == null or peer.get_connection_status() != MultiplayerPeer.CONNECTION_CONNECTED:
