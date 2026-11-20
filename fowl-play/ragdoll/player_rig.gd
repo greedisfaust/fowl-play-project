@@ -171,7 +171,7 @@ const LEG_GROUND_PROBE_UP_M: float = 0.35
 const LEG_GROUND_PROBE_DOWN_M: float = 0.85
 const LEG_GROUND_FOOT_CLEARANCE_M: float = 0.04
 const LEG_GROUND_MIN_NORMAL_Y: float = 0.45
-const LEG_IK_BLEND_RESPONSE: float = 14.0
+const LEG_IK_BLEND_RESPONSE: float = 8.0
 const LEG_IK_POLE_FORWARD_WEIGHT: float = 1.0
 const CARRY_HEAD_ANGULAR_DAMP: float = 12.0
 
@@ -476,7 +476,8 @@ func _apply_procedural_leg_ik(
 	base_thigh_rotation: Quaternion,
 	base_shin_rotation: Quaternion,
 	base_foot_rotation: Quaternion,
-	ik_weight: float
+	ik_weight: float,
+	foot_side: float
 ) -> bool:
 	if thigh_index < 0 or shin_index < 0 or foot_index < 0 or not foot_target_world.is_finite():
 		return false
@@ -492,6 +493,7 @@ func _apply_procedural_leg_ik(
 		return false
 	var parent_world_basis: Basis = skeleton.global_basis * skeleton.get_bone_global_pose(parent_index).basis
 	var pole_world: Vector3 = hip_world + global_basis * Vector3.FORWARD * LEG_IK_POLE_FORWARD_WEIGHT
+	pole_world += global_basis * Vector3.RIGHT * signf(foot_side) * 0.30
 	var solution: Dictionary = LEG_IK.solve_two_bone(
 		hip_world, foot_target_world, pole_world, upper_length, lower_length
 	)
@@ -612,8 +614,8 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 			_left_thigh_bone_index, _left_shin_bone_index, _left_foot_bone_index,
 			_left_foot_ground_target_world,
 			_left_foot_ground_normal if not bool(_leg_controller.get("left_in_swing")) else Vector3.ZERO,
-			left_thigh_rotation, left_shin_rotation, left_foot_rotation, _left_leg_ik_weight
-		)
+			left_thigh_rotation, left_shin_rotation, left_foot_rotation, _left_leg_ik_weight, -1.0
+	)
 		_left_leg_ik_active = left_ik_applied
 	else:
 		_left_leg_ik_active = false
@@ -622,8 +624,8 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 			_right_thigh_bone_index, _right_shin_bone_index, _right_foot_bone_index,
 			_right_foot_ground_target_world,
 			_right_foot_ground_normal if not bool(_leg_controller.get("right_in_swing")) else Vector3.ZERO,
-			right_thigh_rotation, right_shin_rotation, right_foot_rotation, _right_leg_ik_weight
-		)
+			right_thigh_rotation, right_shin_rotation, right_foot_rotation, _right_leg_ik_weight, 1.0
+	)
 		_right_leg_ik_active = right_ik_applied
 	else:
 		_right_leg_ik_active = false
