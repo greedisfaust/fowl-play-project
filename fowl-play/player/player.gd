@@ -533,7 +533,8 @@ func _physics_process(delta: float) -> void:
 		target_speed,
 		TUNING.PLAYER_ACCELERATION_MPS2 * air_control,
 		TUNING.PLAYER_DECELERATION_MPS2 * air_control,
-		delta
+		delta,
+		TUNING.PLAYER_TURN_ACCELERATION_MPS2 * air_control
 	)
 	velocity.x = horizontal_velocity.x
 	velocity.z = horizontal_velocity.z
