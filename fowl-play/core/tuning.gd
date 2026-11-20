@@ -14,6 +14,7 @@ const MOVE_SANITY_MAX_SPEED_MPS: float = 15.0
 const MOVE_SEND_HZ: float = 20.0
 
 const LEG_STEP_CYCLE_DISTANCE_M: float = 1.8
+const LEG_GAIT_RATE_MULTIPLIER: float = 0.78
 const LEG_MIN_WALK_SPEED_MPS: float = 0.15
 const LEG_MAX_THIGH_SWING_RAD: float = deg_to_rad(32.0)
 const LEG_MAX_KNEE_BEND_RAD: float = deg_to_rad(48.0)
