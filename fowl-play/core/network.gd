@@ -722,6 +722,30 @@ func _submit_combat_input(pressed: bool) -> void:
 		return
 	_receive_combat_input(multiplayer.get_remote_sender_id(), pressed)
 
+func cancel_combat_input(owner_id: int) -> bool:
+	if peer == null or is_host:
+		return _receive_combat_cancel(owner_id)
+	if peer.get_connection_status() != MultiplayerPeer.CONNECTION_CONNECTED:
+		return false
+	_submit_combat_cancel.rpc_id(TUNING.PEER_ID_HOST)
+	return true
+
+@rpc("any_peer", "call_remote", "reliable", 0)
+func _submit_combat_cancel() -> void:
+	if not is_host or not validate_rpc():
+		return
+	_receive_combat_cancel(multiplayer.get_remote_sender_id())
+
+func _receive_combat_cancel(owner_id: int) -> bool:
+	if peer != null and not is_host:
+		return false
+	if not _combat_press_times.has(owner_id):
+		return false
+	_combat_press_times.erase(owner_id)
+	_cancel_combat_windup(owner_id)
+	_combat_log("Wind-up cancelled peer=%d" % owner_id)
+	return true
+
 func _receive_combat_input(owner_id: int, pressed: bool) -> bool:
 	if peer != null and not is_host:
 		return _combat_reject(owner_id, "not host")

@@ -31,7 +31,7 @@ func cancel() -> void:
 		return
 	_punch_held = false
 	if is_instance_valid(_network) and is_instance_valid(_player):
-		_network.call("submit_combat_input", int(_player.get("input_peer_id")), false)
+		_network.call("cancel_combat_input", int(_player.get("input_peer_id")))
 
 ## Clear local input during teardown without submitting a possible last-moment jab.
 func abandon() -> void:

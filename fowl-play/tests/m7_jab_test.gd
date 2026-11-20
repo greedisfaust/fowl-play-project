@@ -58,6 +58,13 @@ func _check_world_hit_and_recoil() -> void:
 	if (mask & (1 << (LAYERS.WORLD_STATIC - 1))) == 0 or (mask & (1 << (LAYERS.ELEVATOR - 1))) == 0:
 		_fail("Jab ray should include static world and elevator layers so obstacles block hits")
 	var network: Node = root.get_node("Network")
+	var jab_count_before_cancel: int = int(network.get("combat_jabs"))
+	if not bool(network.call("_receive_combat_input", 1, true)):
+		_fail("Host should accept a punch press before cancellation")
+	if not bool(network.call("_receive_combat_cancel", 1)):
+		_fail("Host should accept an explicit combat-input cancellation")
+	if int(network.get("combat_jabs")) != jab_count_before_cancel or (network.get("_combat_press_times") as Dictionary).has(1):
+		_fail("Cancelling a wind-up must not accidentally fire a jab or leave the press latched")
 	if not bool(network.call("_receive_combat_input", 1, true)):
 		_fail("Host should accept the local player's punch press")
 	for frame_index: int in range(3):

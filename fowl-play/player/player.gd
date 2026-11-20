@@ -473,6 +473,8 @@ func correct_movement(at: Vector3) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if bool(debug_hub.call("is_console_open")):
+		if event.is_action_released("punch"):
+			_combat_controller.call("cancel")
 		return
 	if event is InputEventMouseMotion:
 		var mouse_event: InputEventMouseMotion = event
@@ -570,6 +572,8 @@ func begin_host_limp() -> bool:
 		network.call("force_drop_carry", input_peer_id, "entered limp")
 	collision_layer = 0
 	collision_mask = 0
+	_combat_controller.call("cancel")
+	_combat_presentation.call("cancel")
 	if not bool(rig.call("begin_host_simulation")):
 		collision_layer = 1 << (LAYERS.HEALTHY_PLAYERS - 1)
 		collision_mask = LAYERS.LAYER_MASK_HEALTHY_PLAYERS
@@ -677,6 +681,8 @@ func _recovery_candidate(at: Vector3, collider_transform: Transform3D, params: P
 func begin_remote_limp(epoch: int, world_transform: Transform3D, initial_pose: PackedInt32Array) -> bool:
 	if is_limp or is_recovering or epoch <= limp_epoch or rig == null:
 		return false
+	_combat_controller.call("cancel")
+	_combat_presentation.call("cancel")
 	if not bool(rig.call("begin_remote_pose", world_transform, initial_pose)):
 		return false
 	limp_epoch = epoch
