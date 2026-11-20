@@ -90,6 +90,7 @@ Implemented:
 - Existing 20 Hz movement snapshots now include the owner's grounded flag. This is a small addition to the existing movement packet, not a new animation stream or extra per-frame RPC.
 - Added an M8 headless test and movement-stream grounded-transition assertions; registered the new stage in `run_checks.ps1`.
 - Added DebugHub watch `rig/<name>/legs_active` and command `leg_status_<player>`.
+- Centralized the gait's stride distance, speed threshold, swing angles, foot counter-rotation, and blend response in `core/tuning.gd`.
 
 Not included yet:
 - Foot planting / ground raycasts and skating refinement.

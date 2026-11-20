@@ -12,6 +12,13 @@ const MOUSE_SENSITIVITY: float = 0.003
 const MOVE_INTERP_DELAY_S: float = 0.1
 const MOVE_SANITY_MAX_SPEED_MPS: float = 15.0
 const MOVE_SEND_HZ: float = 20.0
+
+const LEG_STEP_CYCLE_DISTANCE_M: float = 2.5
+const LEG_MIN_WALK_SPEED_MPS: float = 0.15
+const LEG_MAX_THIGH_SWING_RAD: float = deg_to_rad(24.0)
+const LEG_MAX_KNEE_BEND_RAD: float = deg_to_rad(36.0)
+const LEG_FOOT_COUNTER_ROTATION: float = 0.6
+const LEG_BLEND_RESPONSE: float = 10.0
 const MAX_PUNCH_POS_ERROR_M: float = 6.0
 
 const TAP_MAX_SECONDS: float = 0.25
