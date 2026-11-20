@@ -274,6 +274,31 @@ func _check_foot_plant_targets() -> void:
 	if airborne.distance_to(next_landing + Vector3.UP) > 0.001:
 		_fail("Foot planting should yield to the current foot position while airborne")
 
+	# A planted foot on a moving support must follow the support's local contact point.
+	var moving_support: Node3D = Node3D.new()
+	root.add_child(moving_support)
+	var moving_tracker: RefCounted = FOOT_PLANT_SCRIPT.new()
+	var support_contact: Vector3 = Vector3(0.0, 0.05, 0.0)
+	var initial_support_target: Vector3 = moving_tracker.call(
+		"update_target", support_contact, support_contact, true, false, 0.0, 0.28,
+		0.0, Vector3.ZERO, 1000000.0, 0.18, false, moving_support
+	)
+	moving_support.position = Vector3(1.0, 0.0, 0.0)
+	var carried_support_target: Vector3 = moving_tracker.call(
+		"update_target", initial_support_target, support_contact, true, false, 0.0, 0.28,
+		0.0, Vector3.ZERO, 1000000.0, 0.18, false, moving_support
+	)
+	if not is_equal_approx(carried_support_target.x, initial_support_target.x + 1.0):
+		_fail("A planted foot should follow a translating moving support without sliding")
+	moving_support.rotation.y = PI * 0.5
+	var rotated_support_target: Vector3 = moving_tracker.call(
+		"update_target", carried_support_target, support_contact, true, false, 0.0, 0.28,
+		0.0, Vector3.ZERO, 1000000.0, 0.18, false, moving_support
+	)
+	if rotated_support_target.distance_to(moving_support.global_transform * support_contact) > 0.001:
+		_fail("A planted foot should preserve its local contact point when its support rotates")
+	moving_support.queue_free()
+
 func _check_emergency_replant() -> void:
 	var tracker: RefCounted = FOOT_PLANT_SCRIPT.new()
 	var planted_foot: Vector3 = Vector3(-0.2, 0.05, 0.0)
