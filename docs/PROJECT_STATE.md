@@ -1,10 +1,10 @@
 # Fowl Play — Project State
 
-**Status:** Combat, Procedural Movement & Multiplayer Lifecycle is active on `features/combat-and-procedural-movement`. M7 combat, M8 coordinated movement, and M9 multiplayer lifecycle hardening are committed; the user reports the latest M9 build works correctly. A focused carry-hand and pointing-reach polish pass is now added ahead of M10.
+**Status:** Casino Foundation & World Gameplay Loop is active on `environment/world-building-and-gameplay-loop`, based on merged main commit `75675cc31456c3b0d7b5bb365ec82fd81ced9a72`. Phase 0 repository audit and architecture specification are underway; no casino gameplay code or scenes have been added yet.
 
 ## Last updated (2026-11-21; casino foundation branch started)
 
-- Current branch: `features/combat-and-procedural-movement` (based on merged `main` commit `1506c03746e158c74ffcd2da5df042b20435db25`). Read-only rig and combat integration audits are complete; initial procedural gait, M7.1 jab gameplay and M7.2 jab presentation slices are committed and awaiting Godot verification.
+- Current branch: `environment/world-building-and-gameplay-loop` (based on merged main commit `75675cc31456c3b0d7b5bb365ec82fd81ced9a72`). The read-only casino foundation audit is underway; the initial architecture specification is recorded in `docs/CASINO_FOUNDATION_DESIGN.md`.
 - Godot 4.7 project: `fowl-play/`, using Jolt Physics, Forward+, and D3D12.
 - `fowl-play/project.godot` contains the project settings, input actions, and four autoload entries.
 - Foundation scripts exist in `fowl-play/core/`: `layers.gd`, `tuning.gd`, `network.gd`, and `debug_hub.gd`.
@@ -34,15 +34,15 @@
 | M10 Camera + owner view | Responsive first-person motion, impact feedback, owner legs, ragdoll/recovery comfort, wall avoidance | COMPLETE — M10.1–M10.4 implemented; user confirmed camera motion, owner-view visibility, camera collision, and live-head recovery camera in-game. |
 | M11 Hardening | Cleanup matrix, weak-laptop target, four-player stability | COMPLETE — user confirmed both focused M6 and M9 lifecycle test stages passed. M11.1 cleanup regression coverage is verified by the user's test run. M11.2 practical multiplayer movement, physics, and combat scenarios were user-reported smooth; no speculative optimization was needed. M11.3 extended 10–15 minute soak remains explicitly deferred due to the user's 8 GB RAM limit, not passed. M11.4 documentation and verification closeout complete. |
 
-## Open decisions (from PROJECT_OVERVIEW.md §24)
+## Remaining player/combat decisions
 
-1. Skeleton authoring resolved: manual Godot editor authoring, with humanoid legs.
-2. Dedicated wall-slam feedback beyond the approved general combat impact presentation.
-3. Final lobby/connection presentation beyond the implemented Registration Terminal identity flow.
-4. Per-bone ragdoll masses (M4 spike).
-5. Rebuilding the casino/economy layer, and when.
+1. Dedicated wall-slam feedback beyond the approved general combat impact presentation.
+2. Final lobby/connection presentation beyond the implemented Registration Terminal identity flow.
+3. Per-bone ragdoll masses (M4 spike).
 
 Late join is decided: allowed during the rest of a day, not during casino/elevator gameplay. Throw power is decided: fixed full power with auto-fire at one second.
+
+Casino foundation decisions and open questions are tracked in [the active casino session](sessions/environment-world-building-and-gameplay-loop.md) and [Casino Foundation Design](CASINO_FOUNDATION_DESIGN.md).
 
 ## Known limitations
 
@@ -64,7 +64,7 @@ Late join is decided: allowed during the rest of a day, not during casino/elevat
 
 The user also confirmed the latest player-color implementation works in-game. This is user verification, not a claim that the assistant ran Godot tests. Existing automated test stages and any unconfirmed WorldScreen visual checks remain recorded as pending rather than being silently marked passed.
 
-**Active feature:** Combat & Procedural Legs (Movement), branch `features/combat-and-procedural-movement`. Read-only rig audit completed; the gait controller, world-space foot target tracker, per-foot ground probes, and first two-bone IK integration are implemented. Next visually verify and tune the IK in Godot, then address owner-view leg visibility and terrain adaptation while preserving the scene hierarchy, movement stream, and ragdoll/recovery ownership. See [the active feature session](sessions/features-combat-and-procedural-movement.md).
+**Active feature:** Casino Foundation & World Gameplay Loop, branch `environment/world-building-and-gameplay-loop`. The branch starts from merged main commit `75675cc31456c3b0d7b5bb365ec82fd81ced9a72`. The read-only repository audit is underway; the first deliverable is `docs/CASINO_FOUNDATION_DESIGN.md`, followed by a reviewed BaseTable/shared-service contract. No casino code or scenes have been implemented yet. See [the active feature session](sessions/environment-world-building-and-gameplay-loop.md).
 
 ## Historical verification notes
 
