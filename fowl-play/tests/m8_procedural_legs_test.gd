@@ -278,7 +278,7 @@ func _check_foot_plant_targets() -> void:
 	var moving_support: Node3D = Node3D.new()
 	root.add_child(moving_support)
 	var moving_tracker: RefCounted = FOOT_PLANT_SCRIPT.new()
-	var support_contact: Vector3 = Vector3(0.0, 0.05, 0.0)
+	var support_contact: Vector3 = Vector3(0.2, 0.05, 0.1)
 	var initial_support_target: Vector3 = moving_tracker.call(
 		"update_target", support_contact, support_contact, true, false, 0.0, 0.28,
 		0.0, Vector3.ZERO, 1000000.0, 0.18, false, moving_support
