@@ -5,6 +5,7 @@ const TUNING = preload("res://core/tuning.gd")
 
 var phase: float = 0.0
 var motion_weight: float = 0.0
+var smoothed_velocity: Vector3 = Vector3.ZERO
 
 var left_thigh_rotation: Quaternion = Quaternion.IDENTITY
 var left_shin_rotation: Quaternion = Quaternion.IDENTITY
@@ -18,8 +19,10 @@ func update(delta: float, local_velocity: Vector3, grounded: bool) -> void:
 		reset()
 		return
 	var safe_delta: float = maxf(delta, 0.0)
-	var horizontal_velocity: Vector3 = Vector3(local_velocity.x, 0.0, local_velocity.z)
-	var speed: float = horizontal_velocity.length()
+	var target_velocity: Vector3 = Vector3(local_velocity.x, 0.0, local_velocity.z)
+	var velocity_blend: float = 1.0 - exp(-TUNING.LEG_VELOCITY_RESPONSE * safe_delta)
+	smoothed_velocity = smoothed_velocity.lerp(target_velocity, velocity_blend)
+	var speed: float = smoothed_velocity.length()
 	var moving: bool = grounded and speed > TUNING.LEG_MIN_WALK_SPEED_MPS
 	var target_weight: float = 1.0 if moving else 0.0
 	var blend_weight: float = 1.0 - exp(-TUNING.LEG_BLEND_RESPONSE * safe_delta)
@@ -30,7 +33,7 @@ func update(delta: float, local_velocity: Vector3, grounded: bool) -> void:
 			TAU
 		)
 	var stride_weight: float = clampf(speed / TUNING.PLAYER_SPEED_MPS, 0.0, 1.0)
-	var direction: Vector3 = horizontal_velocity.normalized() if speed > 0.001 else Vector3(0.0, 0.0, -1.0)
+	var direction: Vector3 = smoothed_velocity.normalized() if speed > 0.001 else Vector3(0.0, 0.0, -1.0)
 	var swing_axis: Vector3 = direction.cross(Vector3.UP)
 	if swing_axis.length_squared() < 0.0001:
 		swing_axis = Vector3.RIGHT
@@ -61,6 +64,7 @@ func is_active() -> bool:
 func reset() -> void:
 	phase = 0.0
 	motion_weight = 0.0
+	smoothed_velocity = Vector3.ZERO
 	left_thigh_rotation = Quaternion.IDENTITY
 	left_shin_rotation = Quaternion.IDENTITY
 	left_foot_rotation = Quaternion.IDENTITY
