@@ -926,13 +926,13 @@ func _update_recovery_camera(delta: float) -> void:
 			RECOVERY_CAMERA_ALIGNMENT_SECONDS
 		)
 		var target: Transform3D = head.global_transform * _camera_rest_transform
-		var aligned_rotation: Quaternion = camera.global_transform.basis.get_rotation_quaternion().slerp(
+		var aligned_rotation: Quaternion = _recovery_camera_alignment_start.basis.get_rotation_quaternion().slerp(
 			target.basis.get_rotation_quaternion(),
 			alignment_weight
 		)
 		camera.global_transform = Transform3D(
 			Basis(aligned_rotation),
-			camera.global_transform.origin.lerp(target.origin, alignment_weight)
+			_recovery_camera_alignment_start.origin.lerp(target.origin, alignment_weight)
 		)
 
 func _finish_recovery() -> void:
