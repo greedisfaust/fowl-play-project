@@ -138,14 +138,14 @@ func _check_footstep_planner() -> void:
 	var planner: RefCounted = FOOTSTEP_PLANNER_SCRIPT.new()
 	var hip: Vector3 = Vector3(2.0, 1.0, 3.0)
 	var forward_left: Vector3 = planner.call(
-		"get_landing_target", hip, Basis.IDENTITY, Vector3(0.0, 0.0, -5.0), -1.0
-	)
-	if forward_left.distance_to(Vector3(1.82, 1.0, 2.64)) > 0.001:
-		_fail("Forward foot targets should be placed ahead of the hips with left/right separation")
-	var forward_right: Vector3 = planner.call(
 		"get_landing_target", hip, Basis.IDENTITY, Vector3(0.0, 0.0, -5.0), 1.0
 	)
-	if forward_right.distance_to(Vector3(2.18, 1.0, 2.64)) > 0.001:
+	if forward_left.distance_to(Vector3(2.18, 1.0, 2.64)) > 0.001:
+		_fail("Forward foot targets should be placed ahead of the hips with left/right separation")
+	var forward_right: Vector3 = planner.call(
+		"get_landing_target", hip, Basis.IDENTITY, Vector3(0.0, 0.0, -5.0), -1.0
+	)
+	if forward_right.distance_to(Vector3(1.82, 1.0, 2.64)) > 0.001:
 		_fail("Right foot target should mirror the left foot's lateral offset")
 	var predicted_landing: Vector3 = planner.call(
 		"get_landing_target", hip, Basis.IDENTITY, Vector3(0.0, 0.0, -5.0), 1.0,
@@ -154,20 +154,20 @@ func _check_footstep_planner() -> void:
 	if predicted_landing.distance_to(Vector3(2.18, 1.0, 2.244)) > 0.001:
 		_fail("Predicted swing travel should move the landing target ahead of the current hip position")
 	var strafe: Vector3 = planner.call(
-		"get_landing_target", hip, Basis.IDENTITY, Vector3(5.0, 0.0, 0.0), 1.0
+		"get_landing_target", hip, Basis.IDENTITY, Vector3(5.0, 0.0, 0.0), -1.0
 	)
 	if strafe.x <= hip.x or not is_equal_approx(strafe.z, hip.z):
 		_fail("Strafing targets should follow movement intent along the character's right axis")
 	var strafe_left: Vector3 = planner.call(
-		"get_landing_target", hip, Basis.IDENTITY, Vector3(5.0, 0.0, 0.0), -1.0
+		"get_landing_target", hip, Basis.IDENTITY, Vector3(5.0, 0.0, 0.0), 1.0
 	)
 	if strafe_left.x <= strafe.x or strafe_left.distance_to(strafe) < 0.35:
 		_fail("The authored left foot must remain on positive X and separated during rightward strafing")
 	var diagonal_left: Vector3 = planner.call(
-		"get_landing_target", hip, Basis.IDENTITY, Vector3(5.0, 0.0, -5.0), -1.0
+		"get_landing_target", hip, Basis.IDENTITY, Vector3(5.0, 0.0, -5.0), 1.0
 	)
 	var diagonal_right: Vector3 = planner.call(
-		"get_landing_target", hip, Basis.IDENTITY, Vector3(5.0, 0.0, -5.0), 1.0
+		"get_landing_target", hip, Basis.IDENTITY, Vector3(5.0, 0.0, -5.0), -1.0
 	)
 	if diagonal_left.distance_to(diagonal_right) < 0.35:
 		_fail("Diagonal foot targets should preserve minimum left/right separation")
