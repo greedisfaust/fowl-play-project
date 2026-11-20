@@ -87,8 +87,6 @@ var _remote_grounded: bool = true
 var _limp_look_yaw: float = 0.0
 var _limp_look_pitch: float = 0.0
 var _recovery_elapsed_s: float = 0.0
-var _recovery_camera_start: Transform3D
-var _recovery_camera_target: Transform3D
 var _recovery_camera_alignment_start: Transform3D
 var _recovery_camera_alignment_elapsed: float = -1.0
 const RECOVERY_CAMERA_ALIGNMENT_SECONDS: float = 0.16
@@ -893,11 +891,9 @@ func _begin_recovery_camera() -> void:
 	# start and makes host/client recovery orientations disagree.
 	_pitch_radians = _limp_look_pitch
 	head.rotation.x = _pitch_radians
-	_recovery_camera_start = camera.global_transform
 	# Continue the same filtered head-follow stream through the get-up pose.
 	_ragdoll_camera_presentation.call("begin", camera.global_transform)
 	_recovery_camera_alignment_elapsed = -1.0
-	_recovery_camera_target = head.global_transform * _camera_rest_transform
 	if rig != null:
 		rig.visible = true
 		rig.call("set_owner_view_visibility", false, 1.0)
