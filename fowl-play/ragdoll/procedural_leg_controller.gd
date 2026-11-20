@@ -2,7 +2,7 @@
 extends RefCounted
 
 const TUNING = preload("res://core/tuning.gd")
-const STOP_SETTLE_PHASE_SPEED_RAD_S: float = 7.0
+const STOP_SETTLE_PHASE_SPEED_RAD_S: float = 16.0
 
 var phase: float = 0.0
 var motion_weight: float = 0.0
