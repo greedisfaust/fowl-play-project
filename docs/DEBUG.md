@@ -511,3 +511,10 @@ The authored rig's `Thigh_L` bone is on local +X and `Thigh_R` is on local -X. F
 - Stride cycle distance is 1.4 m with a 1.0 cadence multiplier. Normal landing targets are placed 0.40 m ahead of the hip at touchdown, after accounting for predicted swing travel. At the 0.58 stance fraction, the foot ends stance about 0.412 m behind the hip; combined with the 0.84 m vertical two-bone rest reach, this is about 0.936 m, within the 0.94 m replant margin. Emergency replants also predict root travel over the 0.18 s recovery arc.
 - Leg IK pole guidance now favors anatomical outward knee placement (0.95 m) with a reduced forward component (0.55 m base plus 0.35 m swing bias). Arm IK retains its independent pole tuning.
 - M8 checks assert stance travel remains below the leg reach margin and that mirrored left/right IK poles place each knee outward from the centerline.
+
+
+## Knee bend direction correction
+
+- The shared two-bone IK solver interprets its pole argument as a direction relative to the hip/shoulder, not a world-space pole position. The leg controller now passes a character-facing world direction directly instead of adding the hip world position first. This prevents character translation and heading from distorting the bend plane.
+- Forward pole weight is now 1.0, swing adds up to 0.45, and outward bias is a mild 0.18. The intended result is forward knee flex with a subtle outward anatomical angle at every heading.
+- M8 solver checks use hip-relative pole directions and require both forward and outward bend for mirrored legs.
