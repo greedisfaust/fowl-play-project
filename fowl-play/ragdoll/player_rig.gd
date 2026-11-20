@@ -7,6 +7,7 @@ const SELF_COLLISION = preload("res://ragdoll/self_collision_policy.gd")
 const ARM_IK = preload("res://ragdoll/procedural_arm_ik.gd")
 const LEG_CONTROLLER_SCRIPT = preload("res://ragdoll/procedural_leg_controller.gd")
 const FOOT_PLANT_SCRIPT = preload("res://ragdoll/procedural_foot_plant.gd")
+const FOOTSTEP_PLANNER_SCRIPT = preload("res://ragdoll/procedural_footstep_planner.gd")
 const LEG_IK = preload("res://ragdoll/procedural_arm_ik.gd")
 const EXPECTED_PHYSICAL_BONES: int = 11
 const POSE_VALUES_PER_BONE: int = 7
@@ -38,6 +39,7 @@ var _right_foot_bone_index: int = -1
 var _leg_controller: RefCounted = LEG_CONTROLLER_SCRIPT.new()
 var _left_foot_plant: RefCounted = FOOT_PLANT_SCRIPT.new()
 var _right_foot_plant: RefCounted = FOOT_PLANT_SCRIPT.new()
+var _footstep_planner: RefCounted = FOOTSTEP_PLANNER_SCRIPT.new()
 var _left_foot_grounded: bool = false
 var _right_foot_grounded: bool = false
 var _left_foot_ground_target_world: Vector3 = Vector3.ZERO
@@ -440,13 +442,10 @@ func _physics_process(_delta: float) -> void:
 func _probe_ground_beneath_foot(foot_world: Vector3, step_direction_world: Vector3) -> Dictionary:
 	if not foot_world.is_finite():
 		return {}
-	var horizontal_lead: Vector3 = step_direction_world
-	horizontal_lead.y = 0.0
-	if horizontal_lead.length_squared() > 0.0001:
-		var predicted_swing_travel: float = TUNING.LEG_STEP_CYCLE_DISTANCE_M * (1.0 - TUNING.LEG_STANCE_FRACTION)
-		horizontal_lead = horizontal_lead.normalized() * predicted_swing_travel
-	var probe_origin: Vector3 = foot_world + horizontal_lead + Vector3.UP * LEG_GROUND_PROBE_UP_M
-	var probe_end: Vector3 = foot_world + horizontal_lead - Vector3.UP * LEG_GROUND_PROBE_DOWN_M
+	# The planner supplies a hip-relative landing point. Probe vertically at
+	# that point instead of projecting a long distance from the trailing foot.
+	var probe_origin: Vector3 = foot_world + Vector3.UP * LEG_GROUND_PROBE_UP_M
+	var probe_end: Vector3 = foot_world - Vector3.UP * LEG_GROUND_PROBE_DOWN_M
 	var ground_mask: int = (1 << (LAYERS.WORLD_STATIC - 1)) | (1 << (LAYERS.PROPS - 1)) | (1 << (LAYERS.ELEVATOR - 1))
 	var excluded: Array[RID] = []
 	var player_body: CollisionObject3D = get_parent() as CollisionObject3D
@@ -550,6 +549,17 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 	skeleton.force_update_all_bone_transforms()
 	var left_foot_world: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(_left_foot_bone_index).origin)
 	var right_foot_world: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(_right_foot_bone_index).origin)
+	var left_hip_world: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(_left_thigh_bone_index).origin)
+	var right_hip_world: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(_right_thigh_bone_index).origin)
+	var planner_velocity: Vector3 = _leg_controller.get("smoothed_velocity")
+	var left_landing_world: Vector3 = _footstep_planner.call(
+		"get_landing_target", left_hip_world, global_basis, planner_velocity, -1.0
+	)
+	var right_landing_world: Vector3 = _footstep_planner.call(
+		"get_landing_target", right_hip_world, global_basis, planner_velocity, 1.0
+	)
+	_left_ground_probe = _probe_ground_beneath_foot(left_landing_world, Vector3.ZERO)
+	_right_ground_probe = _probe_ground_beneath_foot(right_landing_world, Vector3.ZERO)
 	var left_ground_hit: Dictionary = _left_ground_probe
 	var right_ground_hit: Dictionary = _right_ground_probe
 	_left_foot_grounded = grounded and not left_ground_hit.is_empty()
