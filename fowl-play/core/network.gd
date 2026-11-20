@@ -804,7 +804,7 @@ func _receive_parry_input(owner_id: int) -> bool:
 	var now: float = Time.get_ticks_msec() / 1000.0
 	_active_parries[owner_id] = {"expires_at": now + TUNING.PARRY_GRACE_SECONDS}
 	if peer != null:
-		_parry_start.rpc(owner_id)
+		_parry_start.rpc(owner_id, TUNING.PARRY_GRACE_SECONDS)
 	_play_parry_start(owner_id)
 	_combat_log("Parry started peer=%d window=%.2f s" % [owner_id, TUNING.PARRY_GRACE_SECONDS])
 	return true
@@ -1164,10 +1164,13 @@ func _resolve_parry(attacker_id: int, defender_id: int, impact_position: Vector3
 	return true
 
 @rpc("authority", "call_remote", "reliable", 0)
-func _parry_start(owner_id: int) -> void:
-	if not validate_rpc(TUNING.PEER_ID_HOST):
+func _parry_start(owner_id: int, remaining_seconds: float) -> void:
+	if not validate_rpc(TUNING.PEER_ID_HOST) or not is_finite(remaining_seconds):
 		return
-	_active_parries[owner_id] = {"expires_at": Time.get_ticks_msec() / 1000.0 + TUNING.PARRY_GRACE_SECONDS}
+	var remaining: float = clampf(remaining_seconds, 0.0, TUNING.PARRY_GRACE_SECONDS)
+	if remaining <= 0.0:
+		return
+	_active_parries[owner_id] = {"expires_at": Time.get_ticks_msec() / 1000.0 + remaining}
 	_play_parry_start(owner_id)
 
 @rpc("authority", "call_remote", "reliable", 0)
@@ -1613,8 +1616,13 @@ func _carry_release(owner_id: int, item_path: NodePath, at: Vector3, linear: Vec
  
 ## Late joiners learn who is already carrying what.
 func _sync_active_parries(peer_id: int) -> void:
+	var now: float = Time.get_ticks_msec() / 1000.0
 	for owner_key: Variant in _active_parries.keys():
-		_parry_start.rpc_id(peer_id, int(owner_key))
+		var owner_id: int = int(owner_key)
+		var parry: Dictionary = _active_parries.get(owner_id, {})
+		var remaining: float = maxf(0.0, float(parry.get("expires_at", now)) - now)
+		if remaining > 0.0:
+			_parry_start.rpc_id(peer_id, owner_id, remaining)
 
 func _sync_active_carries(peer_id: int) -> void:
 	if not is_host or peer == null or not connected_peers.has(peer_id):

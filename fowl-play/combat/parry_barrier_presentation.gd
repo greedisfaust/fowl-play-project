@@ -101,6 +101,9 @@ func begin() -> void:
 	_root.position.y = HEIGHT * 0.03
 	_shell_material.set_shader_parameter("opacity", 0.0)
 	_shell_material.set_shader_parameter("impact_age", -1.0)
+	var ring_color: Color = _ring_material.albedo_color
+	ring_color.a = 0.0
+	_ring_material.albedo_color = ring_color
 
 func play_impact(world_position: Vector3) -> void:
 	if not _active or not is_instance_valid(_player) or not world_position.is_finite():
