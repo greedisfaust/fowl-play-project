@@ -29,7 +29,9 @@ func update(delta: float, local_velocity: Vector3, grounded: bool) -> void:
 	var target_velocity: Vector3 = Vector3(local_velocity.x, 0.0, local_velocity.z)
 	var velocity_blend: float = 1.0 - exp(-TUNING.LEG_VELOCITY_RESPONSE * safe_delta)
 	smoothed_velocity = smoothed_velocity.lerp(target_velocity, velocity_blend)
-	var speed: float = smoothed_velocity.length()
+	# Drive cadence from actual measured root velocity, not the lagged
+	# direction filter. Otherwise the feet trail during acceleration and turns.
+	var speed: float = target_velocity.length()
 	var moving: bool = grounded and speed > TUNING.LEG_MIN_WALK_SPEED_MPS
 	var target_weight: float = 1.0 if moving else 0.0
 	var blend_weight: float = 1.0 - exp(-TUNING.LEG_BLEND_RESPONSE * safe_delta)
@@ -51,7 +53,7 @@ func update(delta: float, local_velocity: Vector3, grounded: bool) -> void:
 	else:
 		phase = PI
 	var stride_weight: float = clampf(speed / TUNING.PLAYER_SPEED_MPS, 0.0, 1.0)
-	var direction: Vector3 = smoothed_velocity.normalized() if speed > 0.001 else Vector3(0.0, 0.0, -1.0)
+	var direction: Vector3 = smoothed_velocity.normalized() if smoothed_velocity.length_squared() > 0.001 else Vector3(0.0, 0.0, -1.0)
 	var swing_axis: Vector3 = direction.cross(Vector3.UP)
 	if swing_axis.length_squared() < 0.0001:
 		swing_axis = Vector3.RIGHT
