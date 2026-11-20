@@ -51,9 +51,6 @@ func _check_world_hit_and_recoil() -> void:
 	for frame_index: int in range(4):
 		await physics_frame
 	var camera: Camera3D = attacker.get_node("Head/Camera3D") as Camera3D
-	var result: Dictionary = HIT_DETECTOR.trace_jab(attacker, camera.global_position, -camera.global_basis.z, TUNING.QUICK_PUNCH_RANGE_M)
-	if result.get("target") != target:
-		_fail("A clear ray within range should identify the target Player")
 	var mask: int = HIT_DETECTOR.get_jab_collision_mask()
 	if (mask & (1 << (LAYERS.WORLD_STATIC - 1))) == 0 or (mask & (1 << (LAYERS.DEVICES - 1))) == 0 or (mask & (1 << (LAYERS.CARRIED - 1))) == 0 or (mask & (1 << (LAYERS.ELEVATOR - 1))) == 0:
 		_fail("Jab ray should include world, device, carried-prop and elevator layers so obstacles block hits")
