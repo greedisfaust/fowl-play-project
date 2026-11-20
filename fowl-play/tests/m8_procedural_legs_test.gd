@@ -35,7 +35,9 @@ func _check_controller_gait() -> void:
 	var right_thigh: Quaternion = controller.get("right_thigh_rotation")
 	if phase_after_walk <= 0.0:
 		_fail("Grounded movement should advance the gait phase")
-	var expected_run_weight: float = smoothstep(TUNING.PLAYER_SPEED_MPS, TUNING.PLAYER_RUN_SPEED_MPS, 5.0)
+	var target_run_weight: float = smoothstep(TUNING.PLAYER_SPEED_MPS, TUNING.PLAYER_RUN_SPEED_MPS, 5.0)
+	var run_blend: float = 1.0 - exp(-TUNING.LEG_BLEND_RESPONSE * 0.125)
+	var expected_run_weight: float = target_run_weight * run_blend
 	var expected_phase: float = (5.0 / TUNING.LEG_STEP_CYCLE_DISTANCE_M) * TAU * TUNING.LEG_GAIT_RATE_MULTIPLIER * lerpf(1.0, 1.12, expected_run_weight) * 0.125
 	if not is_equal_approx(phase_after_walk, expected_phase):
 		_fail("Gait phase should advance at the configured stride cadence")
