@@ -181,6 +181,7 @@ func _ready() -> void:
 	if is_local_player and not bool(debug_hub.call("is_console_open")):
 		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	network.call("apply_pending_ragdoll_start", input_peer_id, self)
+	network.call("apply_pending_player_state", input_peer_id, self)
 
 func _exit_tree() -> void:
 	_combat_controller.call("abandon")
@@ -482,6 +483,26 @@ func receive_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pi
 		return
 	if not is_local_player:
 		_movement.push(sequence, at, speed, yaw, pitch, Time.get_ticks_msec() / 1000.0, grounded)
+
+## Seeds a newly joined peer with the host's current standing capsule state.
+## Recovery is represented by its authoritative standing position; the new peer
+## starts from a stable pose rather than replaying a get-up animation mid-clip.
+func apply_initial_player_state(sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float, grounded: bool) -> bool:
+	if is_local_player or is_limp or sequence < 0:
+		return false
+	if not at.is_finite() or not speed.is_finite() or not is_finite(yaw) or not is_finite(pitch):
+		return false
+	if absf(pitch) > deg_to_rad(85.1):
+		return false
+	var now: float = Time.get_ticks_msec() / 1000.0
+	_movement.reset(at, now)
+	_movement.push(sequence, at, speed, yaw, pitch, now, grounded)
+	global_position = at
+	velocity = speed
+	rotation.y = yaw
+	head.rotation.x = pitch
+	_remote_grounded = grounded
+	return true
 
 ## Locks standing movement while a local terminal text field is being edited.
 ## Mouse look, gravity, collision, and other presentation remain active.

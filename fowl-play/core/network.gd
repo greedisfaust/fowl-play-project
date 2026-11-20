@@ -54,6 +54,9 @@ var hand_hover_received: int = 0
 var _interaction_times: Dictionary = {}
 var _ragdoll_epochs: Dictionary = {}
 var _pending_ragdoll_starts: Dictionary = {}
+var _pending_player_states: Dictionary = {}
+var player_state_sync_sent: int = 0
+var player_state_sync_received: int = 0
 var ragdoll_pose_sent: int = 0
 var ragdoll_pose_received: int = 0
 var ragdoll_pose_data_bytes_sent: int = 0
@@ -87,6 +90,8 @@ func _bootstrap() -> void:
 	hub.call("watch", &"net/ragdoll_pose_data_bytes_sent", func() -> int: return ragdoll_pose_data_bytes_sent)
 	hub.call("watch", &"net/ragdoll_settled_sent", func() -> int: return ragdoll_settled_sent)
 	hub.call("watch", &"net/ragdoll_settled_received", func() -> int: return ragdoll_settled_received)
+	hub.call("watch", &"net/player_state_sync_sent", func() -> int: return player_state_sync_sent)
+	hub.call("watch", &"net/player_state_sync_received", func() -> int: return player_state_sync_received)
 	hub.call("command", &"net_status", _command_status, "Report local connection state.", false, false)
 	hub.call("command", &"net_disconnect", _command_disconnect, "Leave this local network session.", false, false)
 	hub.call("command", &"net_host", _command_host, "Host a game on this computer.", false, false)
@@ -203,6 +208,9 @@ func shutdown() -> void:
 	_interaction_times.clear()
 	_ragdoll_epochs.clear()
 	_pending_ragdoll_starts.clear()
+	_pending_player_states.clear()
+	player_state_sync_sent = 0
+	player_state_sync_received = 0
 	ragdoll_pose_sent = 0
 	ragdoll_pose_received = 0
 	ragdoll_pose_data_bytes_sent = 0
@@ -343,12 +351,22 @@ func apply_pending_ragdoll_start(owner_id: int, player: Node) -> void:
 		if bool(player.call("begin_remote_limp", pending.epoch, pending.world_transform, pending.pose)) and pending.has("settled_pose"):
 			player.call("receive_remote_settled_pose", pending.epoch, pending.settled_sequence, pending.settled_time_ms, pending.settled_pose)
 
+## Apply a late-join standing/recovery snapshot after the Player has finished _ready.
+func apply_pending_player_state(owner_id: int, player: Node) -> void:
+	if movement_players.get(owner_id) != player or not _pending_player_states.has(owner_id):
+		return
+	var pending: Dictionary = _pending_player_states[owner_id]
+	_pending_player_states.erase(owner_id)
+	if bool(player.call("apply_initial_player_state", pending.sequence, pending.position, pending.velocity, pending.yaw, pending.pitch, pending.grounded)):
+		player_state_sync_received += 1
+
 func unregister_movement_player(owner_id: int, player: Node) -> void:
 	if movement_players.get(owner_id) == player:
 		if _active_lunges.has(owner_id):
 			_finish_combat_lunge(owner_id, "player unregistered")
 		movement_players.erase(owner_id)
 		_pending_ragdoll_starts.erase(owner_id)
+		_pending_player_states.erase(owner_id)
 		_combat_press_times.erase(owner_id)
 		_combat_charged_presses.erase(owner_id)
 		_combat_jab_ready_times.erase(owner_id)
@@ -541,6 +559,50 @@ func _sync_active_ragdolls(peer_id: int) -> void:
 		if bool(player.get("_ragdoll_settled_sent")):
 			_ragdoll_settled.rpc_id(peer_id, owner_id, epoch, int(player.get("_ragdoll_sequence")), Time.get_ticks_msec(), current_pose)
 
+## Send a reliable baseline for players who are not currently ragdolled.
+## This includes players whose recovery blend is in progress and therefore are
+## temporarily not publishing ordinary movement snapshots.
+func _sync_active_player_states(peer_id: int) -> void:
+	if not is_host or peer == null or not connected_peers.has(peer_id):
+		return
+	for owner_key: Variant in movement_players.keys():
+		var owner_id: int = int(owner_key)
+		var player: Node = movement_players[owner_id]
+		if not is_instance_valid(player) or bool(player.get("is_limp")):
+			continue
+		var grounded: bool = true
+		if not bool(player.get("is_recovering")):
+			grounded = bool(player.call("is_on_floor")) if bool(player.get("is_local_player")) else bool(player.get("_remote_grounded"))
+		var sequence: int = int(player.get("_movement_sequence"))
+		var player_rotation: Vector3 = player.get("rotation") as Vector3
+		_player_state_sync.rpc_id(
+			peer_id,
+			owner_id,
+			sequence,
+			player.get("global_position"),
+			player.get("velocity"),
+			player_rotation.y,
+			float(player.get("_pitch_radians")),
+			grounded
+		)
+		player_state_sync_sent += 1
+
+@rpc("authority", "call_remote", "reliable", 0)
+func _player_state_sync(owner_id: int, sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float, grounded: bool) -> void:
+	if not validate_rpc(TUNING.PEER_ID_HOST) or owner_id <= 0 or sequence < 0:
+		return
+	if not at.is_finite() or not speed.is_finite() or not is_finite(yaw) or not is_finite(pitch) or absf(pitch) > deg_to_rad(85.1):
+		return
+	var player: Node = movement_players.get(owner_id)
+	if not is_instance_valid(player):
+		_pending_player_states[owner_id] = {
+			"sequence": sequence, "position": at, "velocity": speed,
+			"yaw": yaw, "pitch": pitch, "grounded": grounded
+		}
+		return
+	if bool(player.call("apply_initial_player_state", sequence, at, speed, yaw, pitch, grounded)):
+		player_state_sync_received += 1
+
 func _command_ragdoll_start(args: Array[Variant]) -> String:
 	if args.size() != 1 or not str(args[0]).is_valid_int():
 		return "Usage: ragdoll_spike_start <peer_id>"
@@ -564,11 +626,26 @@ func _on_peer_connected(peer_id: int) -> void:
 		_sync_active_ragdolls.call_deferred(peer_id)
 		_sync_active_carries.call_deferred(peer_id)
 		_sync_active_parries.call_deferred(peer_id)
+		_sync_active_player_states.call_deferred(peer_id)
 
 func _on_peer_disconnected(peer_id: int) -> void:
 	_interaction_times.erase(peer_id)
-	_active_parries.erase(peer_id)
-	_parry_ready_times.erase(peer_id)
+	_clear_combat_peer_state(peer_id)
+
+## Remove every combat timer/action owned by a departing peer.
+func _clear_combat_peer_state(owner_id: int) -> void:
+	if peer == null or is_host:
+		cancel_combat_state(owner_id)
+	_active_jabs.erase(owner_id)
+	_active_lunges.erase(owner_id)
+	_active_parries.erase(owner_id)
+	_combat_press_times.erase(owner_id)
+	_combat_charged_presses.erase(owner_id)
+	_combat_jab_ready_times.erase(owner_id)
+	_charged_punch_ready_times.erase(owner_id)
+	_combat_action_lock_until.erase(owner_id)
+	_parry_ready_times.erase(owner_id)
+	_carry_times.erase(owner_id)
 	force_drop_carry(peer_id, "disconnect")
 	_carry_times.erase(peer_id)
 	# G8 forced-exit cleanup: if a limp player disconnects, broadcast the

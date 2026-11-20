@@ -399,3 +399,14 @@ Verification:
 - Reduced the barrier shader brightness and alpha, slowed the internal energy pattern, lowered the ring emission/opacity, and reduced the white blend in the selected player color. The intent is a stylized colored energy shell with defined details rather than a blown-out light source. It remains a translucent cylinder with moving energy rings and a localized impact ripple.
 - Regression checks now cover the new launch/reach/radius tuning, restrained ring settings, and corrected guard-axis rotation. No scene files or authored hierarchy changed.
 - Verification: source and tests are committed, but Godot checks and in-game visuals have not been run by the assistant. Confirm the knuckle face from the opponent view, actual punch contact distance, ragdoll launch stability, and barrier brightness in the arena.
+
+
+## M9 — multiplayer lifecycle hardening
+
+- Late join synchronization now has two explicit paths: active limp players receive the existing ragdoll begin/final-pose stream; non-limp players receive a reliable standing capsule baseline containing position, velocity, yaw, pitch, and grounded state.
+- Recovery intentionally synchronizes as a stable standing baseline at the host-approved recovery position. A late joiner does not replay a get-up animation from its midpoint, but it no longer sees the player at the spawn marker. Ordinary movement replication resumes when the host finishes recovery.
+- Player-state baselines that arrive before the corresponding MultiplayerSpawner Player has completed _ready() are cached and applied after registration. Pending ragdoll state is applied first and retains ownership priority.
+- Disconnect cleanup now clears the departing peer's combat wind-up, active jab/lunge/parry, cooldown, action-lock, and carry-action timing state. Host-owned active presentation is cancelled before those records are erased.
+- Added m9-lifecycle focused checks for initial and deferred player-state application, invalid snapshots, and combat-state cleanup. Added a separate two-process late-join-during-recovery runner and registered it in the full test suite.
+- Debug watches net/player_state_sync_sent and net/player_state_sync_received expose baseline delivery counts.
+- Godot execution and rendered multiplayer verification have not been run by the assistant. Run tests/run_checks.ps1 -OnlyStage m9-lifecycle, then the full suite; the full suite includes tests/run_m9_late_join_checks.ps1.

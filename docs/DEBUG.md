@@ -176,6 +176,12 @@ Once `res://ragdoll/player_rig.gd` is attached to the visual Rig root, `rig/<pla
 
 `player/<player-id>/limp` reports the handoff state, and `player/<player-id>/recovering` reports the short get-up phase after limp ends. The host-only `begin_host_limp()` and `stop_host_limp()` methods are exercised by `tests/m4_limp_handoff_test.gd`. `limp` logs the two transitions plus `finished get-up blend`. During the handoff test, the Player root remains fixed while the rig simulates as a top-level node; capsule collisions are off. Stopping restores standing collisions and blends the saved ragdoll pose to the rest pose over `GET_UP_BLEND_SECONDS` (0.5 s) at the final hips position on walkable ground.
 
+### M9 late-join player lifecycle synchronization
+
+When a peer joins, the host sends reliable ragdoll snapshots for currently limp players and reliable capsule baselines for every non-limp player. The baseline includes position, velocity, yaw, pitch, and grounded state. A player who is midway through recovery is placed at the host-approved standing position; the joining peer starts from a stable standing pose instead of trying to replay a get-up clip halfway through. The next ordinary movement snapshots resume after recovery finishes. The net/player_state_sync_sent and net/player_state_sync_received watches count these baseline events. If a state arrives before its Player node is registered, it is held until Player._ready() completes; ragdoll ownership takes priority.
+
+Regression: run tests/run_m9_late_join_checks.ps1 -GodotExecutable <path>. The host begins recovery before the client connects; the client must see the host near the host-reported recovery position, not at the default spawn point. Existing M4 late-join tests continue to cover active and settled ragdolls. The test runner also waits for the host and client processes to exit cleanly.
+
 ### M4 replicated ragdoll spike
 
 The host can use `ragdoll_spike_start <peer_id>` and `ragdoll_spike_stop <peer_id>` as temporary cheat commands. They enter/leave the same host-owned handoff as the internal test, send reliable begin/end events, and stream quantized physical-bone poses at `RAGDOLL_SEND_HZ` while active. The owner cannot issue these commands from a client. `player/<peer_id>/limp` changes on both peers; `rig/<peer_id>/physical_bones` stays at 11. The start and end appear in `limp` and `net` logs. The two-process check in `tests/run_m4_ragdoll_checks.ps1` exercises both host-owned and client-owned targets and confirms that a client receives changing bone poses.
