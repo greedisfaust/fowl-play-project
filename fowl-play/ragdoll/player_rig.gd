@@ -52,7 +52,6 @@ var _left_leg_ik_active: bool = false
 var _right_leg_ik_active: bool = false
 var _left_ground_probe: Dictionary = {}
 var _right_ground_probe: Dictionary = {}
-var _last_leg_world_velocity: Vector3 = Vector3.ZERO
 var _leg_ground_status_command_name: StringName
 var _leg_pose_active: bool = false
 var _leg_status_watch_name: StringName
@@ -542,7 +541,6 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 		return false
 	if not world_velocity.is_finite():
 		return false
-	_last_leg_world_velocity = world_velocity
 	var local_velocity: Vector3 = global_basis.inverse() * world_velocity
 	_leg_controller.call("update", delta, local_velocity, grounded)
 	skeleton.force_update_all_bone_transforms()
