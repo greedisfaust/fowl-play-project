@@ -518,3 +518,10 @@ The authored rig's `Thigh_L` bone is on local +X and `Thigh_R` is on local -X. F
 - The shared two-bone IK solver interprets its pole argument as a direction relative to the hip/shoulder, not a world-space pole position. The leg controller now passes a character-facing world direction directly instead of adding the hip world position first. This prevents character translation and heading from distorting the bend plane.
 - Forward pole weight is now 1.0, swing adds up to 0.45, and outward bias is a mild 0.18. The intended result is forward knee flex with a subtle outward anatomical angle at every heading.
 - M8 solver checks use hip-relative pole directions and require both forward and outward bend for mirrored legs.
+
+
+## Sideways gait foot lanes
+
+- Footstep planning now keeps the two foot lanes perpendicular to the current movement direction instead of forcing them to remain on fixed anatomical left/right offsets. Forward/backward movement still uses the rig-right axis; pure strafing uses the character-forward axis, giving the feet stable front/back lanes.
+- The same movement-relative axis is used by landing-target separation constraints, so a leading foot is not pushed back across the hip centerline while strafing. Lane orientation remains stable for left and right strafes.
+- M8 coverage now checks rightward and leftward strafing, front/back separation, and movement-relative replant constraints.
