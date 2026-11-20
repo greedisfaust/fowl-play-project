@@ -28,7 +28,7 @@ The controller creates a unique round ID for each round opened on that table.
 - `update_wager(peer_id, wager_id, amount, payload)` / `withdraw_wager(peer_id, wager_id)`: enforce bettor ownership at the table boundary.
 - `start_round(peer_id)`: any nearby player may start, including a non-participant; the wallet rejects rounds without active wagers.
 - `begin_resolution()` / `settle_round(payouts)`: game implementation reports the authoritative outcome and gross returns.
-- `cancel_open_round(peer_id)`: cancels only an unstarted round and refunds its reserved wagers.
+- `cancel_open_round()`: host-side lifecycle operation; cancels only an unstarted round and refunds its reserved wagers. It is not a player-facing cancel permission.
 
 ## Departure behavior
 

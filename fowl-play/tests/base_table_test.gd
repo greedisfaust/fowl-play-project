@@ -63,7 +63,7 @@ func _run() -> void:
 	_check_result(table.call("open_round", 2), true, "Table can open another round")
 	_check_result(table.call("join_table", 2), true, "Player joins the next round")
 	_check_result(table.call("place_wager", 2, 50, {}), true, "Player reserves another wager")
-	_check_result(table.call("cancel_open_round", 2), true, "Open round can be cancelled")
+	_check_result(table.call("cancel_open_round"), true, "Open round can be cancelled")
 	_check(int(wallet.call("get_snapshot")["available_balance"]) == 1050, "Cancelling an open round refunds its wager")
 	_check(int(table.get("state")) == 0, "Cancelled table returns to idle")
 

@@ -157,6 +157,8 @@ func place_wager(peer_id: int, amount: int, payload: Dictionary = {}) -> Diction
 func update_wager(peer_id: int, wager_id: String, amount: int, payload: Dictionary = {}) -> Dictionary:
 	if not _is_authority():
 		return _failure("Only the host can edit a wager.")
+	if not _is_near_table(peer_id):
+		return _failure("Player is no longer within table proximity.")
 	var wager: Dictionary = _get_owned_current_wager(peer_id, wager_id)
 	if wager.is_empty():
 		return _failure("Wager does not belong to this player and table round.")
@@ -166,6 +168,8 @@ func update_wager(peer_id: int, wager_id: String, amount: int, payload: Dictiona
 func withdraw_wager(peer_id: int, wager_id: String) -> Dictionary:
 	if not _is_authority():
 		return _failure("Only the host can withdraw a wager.")
+	if not _is_near_table(peer_id):
+		return _failure("Player is no longer within table proximity.")
 	var wager: Dictionary = _get_owned_current_wager(peer_id, wager_id)
 	if wager.is_empty():
 		return _failure("Wager does not belong to this player and table round.")
@@ -220,13 +224,11 @@ func settle_round(payouts: Dictionary) -> Dictionary:
 	_log("Round %s settled." % settled_round_id)
 	return result
 
-func cancel_open_round(peer_id: int) -> Dictionary:
+func cancel_open_round() -> Dictionary:
 	if not _is_authority():
 		return _failure("Only the host can cancel a table round.")
 	if state != TableState.OPEN:
 		return _failure("Only an unstarted open round can be cancelled.")
-	if not _is_valid_peer(peer_id) or not _is_near_table(peer_id):
-		return _failure("Only a valid nearby player can cancel this table.")
 	var cancelled_round_id: String = current_round_id
 	var result: Dictionary = _wallet.call("cancel_open_round", table_id, cancelled_round_id)
 	if not bool(result.get("ok", false)):
@@ -307,7 +309,7 @@ func _is_valid_peer(peer_id: int) -> bool:
 	if network_peer == null:
 		return true
 	var roster_value: Variant = network.get("roster")
-	if not roster_value is Array:
+	if typeof(roster_value) != TYPE_ARRAY:
 		return false
 	var roster: Array = roster_value
 	return roster.has(peer_id)
