@@ -454,3 +454,6 @@ The test arena has an editor-authored `WorldEnvironment` with restrained Glow en
 - Forward landing prediction uses the root travel over the swing fraction: `LEG_STEP_CYCLE_DISTANCE_M * (1 - LEG_STANCE_FRACTION)`. The planner target is then raycast vertically at the current sole height.
 - `leg_ground_<player>` reports the captured world-space anchor and current planner/plant target. If the target is not where expected, inspect the rig's movement direction and hip position before changing the ground probe.
 - Focused regression coverage: M8 `procedural-legs` stage. Godot execution and in-game verification remain pending.
+
+
+- Follow-up refinement: hip-relative predicted targets are used only for a foot that is actively in swing. Stance feet continue probing their current sole, so standing initialization and stop-settling cannot pull a planted foot toward a forward target. Both targets are calculated from the midpoint between the hips to avoid doubling the lateral separation.
