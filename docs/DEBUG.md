@@ -626,3 +626,11 @@ The authored rig's `Thigh_L` bone is on local +X and `Thigh_R` is on local -X. F
 Run only the jab regression stage from the `fowl-play/` directory with `.\tests\run_checks.ps1 -OnlyStage m7-jab`. Run the full suite with `.\tests\run_checks.ps1`.
 
 The M7.2 pose-curve assertions are included in `m7_jab_test.gd`; run them with `.\tests\run_checks.ps1 -OnlyStage m7-jab` from `fowl-play/`.
+
+
+### M7.3 charged-punch refinement
+
+- Charged wind-up now builds a stronger backward torso lean/twist/counter-roll and draws the fist farther back before the lunge release. The presentation remains cosmetic and is evaluated locally from the host-approved wind-up/lunge events.
+- A charged hit launches the target away from the actual attacker-to-impact position. Side impacts push sideways; strike pitch and relative impact height contribute a bounded vertical component. The host enters limp first, then applies the impulse to the simulating physical rig.
+- Tuning: `CHARGED_PUNCH_LAUNCH_SPEED_MPS` is 10.5 m/s; `CHARGED_PUNCH_LAUNCH_BASE_LIFT` is 0.34 and `CHARGED_PUNCH_LAUNCH_MAX_LIFT` is 0.48. These are starting values for playtesting, not final balance claims.
+- Run `.\tests\run_checks.ps1 -OnlyStage m7-jab` from `fowl-play/`. Playtest front, side and elevated/low-angle charged hits, then repeat with host and client. Confirm the target flies away from the impact direction without excessive distance. These checks have not yet been run for this refinement.

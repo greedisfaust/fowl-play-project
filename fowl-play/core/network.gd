@@ -921,14 +921,47 @@ func _advance_combat_lunges(delta: float) -> void:
 
 func _apply_charged_lunge_hit(result: Dictionary, attacker_id: int) -> bool:
 	var target: Node3D = result.get("target") as Node3D
+	var attacker: Node3D = movement_players.get(attacker_id) as Node3D
 	if not is_instance_valid(target) or target.is_queued_for_deletion() or bool(target.get("is_limp")) or bool(target.get("is_recovering")):
 		return false
-	var target_id: int = int(target.get("input_peer_id"))
-	if target_id == attacker_id or not start_ragdoll_spike(target_id):
+	if not is_instance_valid(attacker) or attacker.is_queued_for_deletion():
 		return false
+	var target_id: int = int(target.get("input_peer_id"))
+	if target_id == attacker_id:
+		return false
+	var target_rig: Node3D = target.get("rig") as Node3D
+	if not is_instance_valid(target_rig) or not start_ragdoll_spike(target_id):
+		return false
+	var impact_position: Vector3 = result.get("position", target.global_position + Vector3.UP * 0.9)
+	var attack_direction: Vector3 = (impact_position - attacker.global_position).normalized()
+	var launch_direction: Vector3 = get_charged_launch_direction(attacker.global_position, impact_position, attack_direction)
+	var impulse_applied: bool = bool(target_rig.call("apply_combat_impulse", launch_direction, impact_position, TUNING.CHARGED_PUNCH_LAUNCH_SPEED_MPS))
 	combat_lunge_hits += 1
-	_combat_log("Charged lunge hit attacker=%d target=%d" % [attacker_id, target_id])
+	_combat_log("Charged lunge hit attacker=%d target=%d launch=%s impulse=%s" % [attacker_id, target_id, str(launch_direction), impulse_applied])
 	return true
+
+## Builds a bounded launch vector away from the actual attacker/impact position.
+## Horizontal direction follows the hit angle; elevation responds to the strike
+## pitch and relative impact height without turning the hit into a huge launch.
+static func get_charged_launch_direction(attacker_position: Vector3, impact_position: Vector3, attack_direction: Vector3) -> Vector3:
+	if not attacker_position.is_finite() or not impact_position.is_finite():
+		return attack_direction.normalized() if attack_direction.is_finite() and attack_direction.length_squared() > 0.0001 else Vector3.FORWARD
+	var away: Vector3 = impact_position - attacker_position
+	var horizontal: Vector3 = Vector3(away.x, 0.0, away.z)
+	var horizontal_distance: float = horizontal.length()
+	if horizontal_distance < 0.0001:
+		horizontal = Vector3(attack_direction.x, 0.0, attack_direction.z)
+		horizontal_distance = horizontal.length()
+	if horizontal_distance < 0.0001:
+		horizontal = Vector3.FORWARD
+		horizontal_distance = 1.0
+	horizontal = horizontal.normalized()
+	var relative_slope: float = clampf(away.y / maxf(horizontal_distance, 0.5), -0.35, 0.35)
+	var aim_elevation: float = 0.0
+	if attack_direction.is_finite() and attack_direction.length_squared() > 0.0001:
+		aim_elevation = clampf(attack_direction.normalized().y, -0.75, 0.75)
+	var lift: float = clampf(TUNING.CHARGED_PUNCH_LAUNCH_BASE_LIFT + aim_elevation * 0.14 + relative_slope * 0.18, 0.22, TUNING.CHARGED_PUNCH_LAUNCH_MAX_LIFT)
+	return (horizontal + Vector3.UP * lift).normalized()
 
 func _finish_combat_lunge(owner_id: int, reason: String) -> void:
 	if not _active_lunges.has(owner_id):

@@ -65,9 +65,9 @@ func _check_presentation_curves() -> void:
 	var jab_start_hand: Vector3 = COMBAT_PRESENTATION.get_jab_hand_offset(base_hand_offset, 0.0)
 	var jab_extension_hand: Vector3 = COMBAT_PRESENTATION.get_jab_hand_offset(base_hand_offset, COMBAT_PRESENTATION.JAB_EXTENSION_END_S)
 	var jab_return_hand: Vector3 = COMBAT_PRESENTATION.get_jab_hand_offset(base_hand_offset, COMBAT_PRESENTATION.JAB_POSE_DURATION_S)
-	if charged_windup_start.x >= 0.0 or charged_windup_mid.x >= charged_windup_start.x or charged_windup_mid.x <= charged_windup_full.x or charged_windup_full.x > -0.18:
+	if charged_windup_start.x >= 0.0 or charged_windup_mid.x >= charged_windup_start.x or charged_windup_mid.x <= charged_windup_full.x or charged_windup_full.x > -0.25:
 		_fail("Charged wind-up should progressively build a strong backward lean across the full one-second hold")
-	if not charged_hand_start.is_equal_approx(base_hand_offset) or charged_hand_full.z <= charged_hand_start.z + 0.10 or charged_hand_full.y <= base_hand_offset.y:
+	if not charged_hand_start.is_equal_approx(base_hand_offset) or charged_hand_full.z <= charged_hand_start.z + 0.18 or charged_hand_full.y <= base_hand_offset.y + 0.06:
 		_fail("Charged wind-up should progressively lift, draw back and load the fist")
 	if not charged_lunge_start.is_equal_approx(charged_windup_full) or charged_lunge_hand_start.z <= base_hand_offset.z:
 		_fail("Charged lunge should release from the fully loaded body and fist pose without snapping to neutral")
@@ -94,6 +94,14 @@ func _check_presentation_curves() -> void:
 	var stronger_recoil: Vector3 = COMBAT_PRESENTATION.get_recoil_body_pose(0.0, Vector3.FORWARD, 1.35)
 	if stronger_recoil.x >= recoil_peak.x:
 		_fail("Higher impact strength should visibly increase the recoil pose")
+	var side_launch: Vector3 = NETWORK.get_charged_launch_direction(Vector3.ZERO, Vector3(2.0, 0.9, 0.0), Vector3.RIGHT)
+	var upward_launch: Vector3 = NETWORK.get_charged_launch_direction(Vector3.ZERO, Vector3(2.0, 0.9, 0.0), Vector3(0.0, 0.8, -0.6))
+	if side_launch.x <= 0.9 or absf(side_launch.z) > 0.001:
+		_fail("Charged punch launch should send a target away along the actual side-impact angle")
+	if upward_launch.y <= side_launch.y or upward_launch.length_squared() < 0.99:
+		_fail("Charged punch launch elevation should respond to the strike angle while remaining normalized")
+	if upward_launch.y > 0.5:
+		_fail("Charged punch launch elevation should remain bounded")
 	if not is_equal_approx(NETWORK.get_jab_impact_strength(Vector3.ZERO, Vector3.FORWARD), 1.0):
 		_fail("A stationary attacker should use baseline jab impact strength")
 	if not is_equal_approx(NETWORK.get_jab_impact_strength(Vector3(0.0, 0.0, -8.0), Vector3.FORWARD), 1.35):

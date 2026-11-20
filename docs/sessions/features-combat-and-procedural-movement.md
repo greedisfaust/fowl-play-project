@@ -358,3 +358,12 @@ Implemented:
 
 Verification:
 - Source and regression assertions are committed, but Godot import/headless checks and rendered first-person/remote visual playtesting have not been run by the assistant. Run ` .\tests\run_checks.ps1 -OnlyStage m7-jab` from `fowl-play/`, then inspect the full one-second wind-up, early-release jab, charge-to-lunge transition, and remote player presentation in two instances.
+
+
+## M7.3 refinement — charged-punch wind-up and launch direction
+
+- Strengthened the existing one-second anticipation pose: the torso now builds a deeper backward lean, more pronounced twist and counter-roll while the fist draws farther back and lifts. The release transitions directly from that loaded pose into a more committed forward follow-through.
+- Charged-lunge hits now derive their launch direction from the actual attacker-to-impact vector instead of a fixed forward vector. The horizontal launch follows the side/front angle of contact; elevation responds modestly to strike pitch and relative impact height.
+- Added bounded launch tuning at 10.5 m/s with a capped elevation component. The host starts the target's existing limp lifecycle first, then applies the impulse to the newly simulating physical rig so the handoff's initial velocity reset cannot erase the hit.
+- Added regression assertions for stronger full-charge pose progression, fist draw-back, side-angle launch direction, pitch-sensitive elevation, and the launch elevation cap.
+- Godot headless checks and in-game/multiplayer verification remain pending; this commit has not been run in the Godot runtime by the assistant.

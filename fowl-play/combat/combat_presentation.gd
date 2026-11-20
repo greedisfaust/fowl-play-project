@@ -146,7 +146,7 @@ static func get_windup_hand_offset(base_offset: Vector3, elapsed: float) -> Vect
 	var progress: float = clampf(maxf(elapsed, 0.0) / TUNING.CHARGED_PUNCH_HOLD_SECONDS, 0.0, 1.0)
 	var weight: float = smoothstep(0.0, 1.0, progress)
 	var tension: float = sin(progress * PI) * 0.012
-	return base_offset + Vector3(-0.035 * weight, (0.055 * weight) + tension, 0.23 * weight)
+	return base_offset + Vector3(-0.055 * weight, (0.085 * weight) + tension, 0.30 * weight)
 static func get_jab_hand_offset(base_offset: Vector3, elapsed: float) -> Vector3:
 	var t: float = maxf(elapsed, 0.0)
 	var progress: float = clampf(t / JAB_EXTENSION_END_S, 0.0, 1.0)
@@ -174,22 +174,24 @@ static func get_charged_windup_body_pose(elapsed: float, local_direction: Vector
 	var progress: float = clampf(maxf(elapsed, 0.0) / TUNING.CHARGED_PUNCH_HOLD_SECONDS, 0.0, 1.0)
 	var load: float = smoothstep(0.0, 1.0, progress)
 	var direction_yaw: float = clampf(atan2(-local_direction.x, -local_direction.z), -0.6, 0.6)
-	var twist: float = 0.19 * load
-	var aim_follow: float = direction_yaw * 0.28 * load
-	var settle: float = sin(progress * PI) * 0.012
-	return Vector3(lerpf(WINDUP_LEAN_RAD, -0.22, load) - settle, twist + aim_follow, -0.055 * load - direction_yaw * 0.10 * load)
+	var twist: float = 0.27 * load
+	var aim_follow: float = direction_yaw * 0.34 * load
+	var settle: float = sin(progress * PI) * 0.016
+	var loaded_lean: float = lerpf(WINDUP_LEAN_RAD, -0.28, load)
+	var loaded_roll: float = -0.10 * load - direction_yaw * 0.12 * load
+	return Vector3(loaded_lean - settle, twist + aim_follow, loaded_roll)
 static func get_charged_lunge_body_pose(elapsed: float, local_direction: Vector3) -> Vector3:
 	var t: float = clampf(maxf(elapsed, 0.0) / LUNGE_POSE_DURATION_S, 0.0, 1.0)
 	var drive: float = 1.0 - pow(1.0 - t, 3.0)
 	var loaded_pose: Vector3 = get_charged_windup_body_pose(TUNING.CHARGED_PUNCH_HOLD_SECONDS, local_direction)
 	var direction_yaw: float = clampf(atan2(-local_direction.x, -local_direction.z), -0.6, 0.6)
-	var follow_through: Vector3 = Vector3(LUNGE_FOLLOW_THROUGH_RAD, direction_yaw * 0.18, -direction_yaw * 0.12)
+	var follow_through: Vector3 = Vector3(LUNGE_FOLLOW_THROUGH_RAD + 0.04, direction_yaw * 0.22, -0.035 - direction_yaw * 0.14)
 	return loaded_pose.lerp(follow_through, drive)
 static func get_charged_lunge_hand_offset(base_offset: Vector3, elapsed: float) -> Vector3:
 	var t: float = clampf(maxf(elapsed, 0.0) / 0.12, 0.0, 1.0)
 	var extension: float = 1.0 - pow(1.0 - t, 3.0)
 	var loaded_hand: Vector3 = get_windup_hand_offset(base_offset, TUNING.CHARGED_PUNCH_HOLD_SECONDS)
-	var strike_hand: Vector3 = base_offset + Vector3(0.0, -0.025, -0.20)
+	var strike_hand: Vector3 = base_offset + Vector3(0.0, -0.04, -0.24)
 	return loaded_hand.lerp(strike_hand, extension)
 static func get_recoil_body_pose(elapsed: float, local_direction: Vector3, strength: float = 1.0) -> Vector3:
 	var t: float = maxf(elapsed, 0.0)
