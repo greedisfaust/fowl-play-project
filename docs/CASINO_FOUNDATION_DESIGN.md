@@ -18,7 +18,7 @@ This is a Godot 4.7 / typed GDScript project. The user and groupmates author phy
 Verified in the current branch tree and source:
 
 - Godot project: `fowl-play/`; engine configuration declares Godot 4.7, Forward+, and Jolt Physics.
-- Existing autoloads: `Layers`, `Tuning`, `Network`, and `DebugHub`.
+- Baseline autoloads: `Layers`, `Tuning`, `Network`, and `DebugHub`. The casino foundation adds `CasinoWallet` as a fifth autoload.
 - `Network` owns ENet peer/session state, host/client flags, player roster, player identities, RPC validation, and current gameplay network diagnostics.
 - `PlayerIdentity` is a reusable peer-ID/nickname/color data model.
 - `Interactable` is the existing interaction contract. It exposes availability checks and interaction signals; casino devices must use it rather than inventing a second focus/interaction system.

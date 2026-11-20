@@ -1,13 +1,13 @@
 # Fowl Play — Project State
 
-**Status:** Casino Foundation & World Gameplay Loop is active on `environment/world-building-and-gameplay-loop`, based on merged main commit `75675cc31456c3b0d7b5bb365ec82fd81ced9a72`. Phase 0 audit and architecture specification are complete. The host-authoritative shared wallet and headless lifecycle test are implemented; BaseTable and game integration have not started yet.
+**Status:** Casino Foundation & World Gameplay Loop is active on `environment/world-building-and-gameplay-loop`, based on merged main commit `75675cc31456c3b0d7b5bb365ec82fd81ced9a72`. Phase 0 audit and architecture specification are complete. The host-authoritative shared wallet, diagnostics, and headless lifecycle test are implemented; Godot execution is pending, and BaseTable/game integration has not started.
 
-## Last updated (2026-11-21; casino foundation branch started)
+## Last updated (2026-11-21; shared wallet implementation slice)
 
 - Current branch: `environment/world-building-and-gameplay-loop` (based on merged main commit `75675cc31456c3b0d7b5bb365ec82fd81ced9a72`). The first wallet implementation slice is committed. Shared wallet API and test are in `fowl-play/casino/shared_wallet.gd` and `fowl-play/tests/casino_wallet_test.gd`; no BaseTable or casino scenes exist yet.
 - Godot 4.7 project: `fowl-play/`, using Jolt Physics, Forward+, and D3D12.
-- `fowl-play/project.godot` contains the project settings, input actions, and four autoload entries.
-- Foundation scripts exist in `fowl-play/core/`: `layers.gd`, `tuning.gd`, `network.gd`, and `debug_hub.gd`.
+- `fowl-play/project.godot` contains the project settings, input actions, and five autoload entries, including the new `CasinoWallet` service.
+- Foundation scripts exist in `fowl-play/core/`: `layers.gd`, `tuning.gd`, `network.gd`, and `debug_hub.gd`. The shared casino wallet is `fowl-play/casino/shared_wallet.gd`.
 - Debug-console work is committed as `762c00f`; M0 is committed as `017f1cb`.
 - D0, M1, M2 hand checks, and M0 network checks pass with Godot 4.7.2. Prop/profile and hand scripts import cleanly.
 - Console command arguments are implemented and user-playtested. Player watch/command cleanup is headless verified, including network disconnects; manual disconnect checks are user-verified.

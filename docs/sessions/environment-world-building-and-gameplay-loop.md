@@ -10,18 +10,18 @@ Base docs: `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `
 ## Current state (rewrite every session)
 
 - The branch exists and was verified at `75675cc31456c3b0d7b5bb365ec82fd81ced9a72`, matching the merged main baseline at the time of audit.
-- No casino gameplay code or casino scenes have been added on this branch.
+- The shared wallet/wager ledger has been added; no BaseTable, game rules, or casino physical scenes have been added yet.
 - The project is Godot 4.7, typed GDScript, Jolt, ENet, max four players; `fowl-play/` is the Godot project.
 - Existing reusable foundations include `Interactable` / `Focus`, `Network`, `PlayerIdentity`, `DebugHub`, and the current player/nameplate presentation.
 - The user's editor-authored scenes remain user-owned. Do not generate scene trees, meshes, collision shapes, or physical table art in code.
-- Phase 0 repository audit and architecture specification are complete. Implementation has not started.
+- Phase 0 repository audit and architecture specification are complete. The first shared financial service slice is implemented; BaseTable/game implementation is not started.
 
 ## Done (this branch)
 
 - [DONE] Verified branch existence and base commit against GitHub ref API — branch head `75675cc31456c3b0d7b5bb365ec82fd81ced9a72`.
 - [DONE] Read project instructions, session-memory rules, project overview/state, gameplay overview, active session index, GDScript rules, and relevant interaction/network/debug scripts.
 - [DONE] Confirmed existing interaction contract: `fowl-play/interaction/interactable.gd`; physical button presentation: `fowl-play/interaction/physical_use_button.gd`.
-- [DONE] Confirmed project autoloads currently include `Layers`, `Tuning`, `Network`, and `DebugHub`; no casino service exists in the inspected project tree.
+- [DONE] Audited baseline autoloads `Layers`, `Tuning`, `Network`, and `DebugHub`; added `CasinoWallet` as the fifth autoload for the first casino service slice.
 - [DONE] Captured user-approved casino design decisions below.
 
 ## In progress
@@ -67,6 +67,7 @@ Pull the latest branch commit, then run `.\tests\run_checks.ps1 -OnlyStage casin
 | 20 | Blessed target may repeat; selection weighting increasingly favors players not blessed recently. Watched target cannot be the previous day's Watched player. Targets must differ. | Variety and avoid consecutive-day curse targeting. | Same player cursed on consecutive days. |
 | 21 | Blessings/curses are one compatible modifier per selected player per day, clear and reselect next day; effects are visible before wagers, do not secretly alter game odds, and loss penalties are capped. | Playful stakes without run-destroying or opaque manipulation. | Hidden odds manipulation or uncapped loss multipliers. |
 | 22 | Apartment is host/join lobby, introduction space, and Day 10 return destination for both endings. | Circular narrative framing. | Apartment as casino gameplay room. |
+| 23 | Confirming a wager immediately reserves its stake from the shared available balance; edits/withdrawals refund while open; round start locks it; settlement credits gross return; timer expiry never refunds locked stakes. | Prevent shared-wallet overspending and make the deadline meaningful. | Allow simultaneous unreserved spending or refund active bets at the deadline. |
 
 ## Open questions (do not decide alone)
 
@@ -127,6 +128,12 @@ Pull the latest branch commit, then run `.\tests\run_checks.ps1 -OnlyStage casin
 > Read `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `docs/PROJECT_STATE.md`, and this session file. Verify the branch and files against GitHub and the local checkout. Recap in at most eight lines and wait for the user's go before implementing.
 
 ## Session log
+
+### Session 1 update — 2026-11-21 — GPT-6
+- User approved commits directly to the feature branch; no push is authorized or performed.
+- User confirmed immediate wager reservation from the shared wallet; edits/withdrawals refund before round start, round start locks wagers, settlement credits gross returns, and timer expiry never refunds locked wagers.
+- Added the `CasinoWallet` autoload, host-only wallet/wager ledger, DebugHub watches and commands, headless regression test, and `casino-wallet` test-runner stage.
+- Updated project overview, casino design, project state, and active session documentation. Godot tests have not been executed in this environment.
 
 ### Session 1 update — 2026-11-21 — GPT-6
 - User approved commits directly to the feature branch (no push).
