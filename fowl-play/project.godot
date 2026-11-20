@@ -21,6 +21,7 @@ Layers="res://core/layers.gd"
 Tuning="res://core/tuning.gd"
 Network="res://core/network.gd"
 DebugHub="res://core/debug_hub.gd"
+CasinoWallet="res://casino/shared_wallet.gd"
 
 [display]
 

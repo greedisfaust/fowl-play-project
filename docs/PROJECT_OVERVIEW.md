@@ -23,8 +23,9 @@ Fowl Play is a first-person party game for four players who share one bank accou
 
 ## 2. Scope of this repository
 
-- **In scope (now):** the Player (movement, camera, body/skeleton, procedural legs, hands, ragdoll/limp, carry/throw, combat), interaction, props, devices, collision layers, networking for all of these, a small test arena, headless tests.
-- **OPEN (later):** the casino/economy layer (tables, wallet, quota, day cycle, elevator rooms). It existed in an earlier prototype. Ask whether to rebuild it after the milestones below; do not build it now. Anything that depends on it (for example a wallet penalty on a charged hit) is out of scope until then.
+- **In scope (now):** the Player (movement, camera, body/skeleton, procedural legs, hands, ragdoll/limp, carry/throw, combat), interaction, props, devices, collision layers, multiplayer networking, the casino/economy foundation (shared wallet, wager lifecycle, tables, quota/day progression, and casino rooms), a small test arena, and headless tests. The casino foundation is being rebuilt on `environment/world-building-and-gameplay-loop`; see [Casino Foundation Design](CASINO_FOUNDATION_DESIGN.md).
+- **Casino implementation rule:** build the shared host-authoritative financial and table contracts first, then validate them through Chicken Cross. Physical scenes and table hierarchies remain editor-authored by the user/groupmates.
+- **Non-goal unless separately approved:** do not add a wallet penalty to combat hits merely because the casino wallet exists.
 
 **Non-goals (do not build unless asked):** Steam/online relay, rollback netcode, client-side prediction, skinned/deforming meshes, Blender-authored assets (editor-only rigging is preferred; Blender only after approval).
 
@@ -421,7 +422,7 @@ res://
 9. **M8 Procedural legs.**
 10. **M9 Camera and owner view — GATE:** camera follow approach, owner legs visibility.
 11. **M10 Hardening:** the full cleanup matrix, the bone budget on a weak laptop, a four-player soak test.
-12. **Later (OPEN):** the casino/economy layer.
+12. **Casino foundation (active):** shared wallet and wager lifecycle → BaseTable contract → Chicken Cross reference game → groupmate development kit → dynamic six-of-twelve daily roster.
 
 ## 24. Decisions log and open questions
 
@@ -447,11 +448,18 @@ res://
 - Big wind-ups, torso/body lean, arm extension, follow-through and recoil are approved presentation goals. Stumbles and convincing collapses are desired where the existing rig/physics can support them.
 - Audio is deferred until suitable assets are available; leave integration points but do not block implementation on audio.
 
+**Casino/economy decisions (user-approved, 2026-11-21):**
+- The team shares one wallet; there are no separate player balances. The host owns the authoritative available balance and every individual wager record.
+- Confirming a wager immediately reserves its stake from available funds. Before round start, the wager can be edited or withdrawn; increasing reserves only the difference and decreasing/withdrawing returns the appropriate funds.
+- Starting a round locks its wagers. Locked wagers cannot be edited or withdrawn. Settlement credits gross returns (stake plus winnings); a loss returns zero.
+- Open/unstarted rounds can be cancelled and their reserved wagers refunded. Casino timer expiry does not refund locked wagers; quota uses available funds, so unresolved committed stakes can cause a quota failure.
+- The financial backend is shared, while physical betting interfaces are game-specific. See `CASINO_FOUNDATION_DESIGN.md` for the full contract and remaining open questions.
+
 **Still open:**
 1. Whether to add dedicated wall-slam feedback beyond the approved general impact presentation.
 2. Final lobby, nickname and color flow.
 3. Per-bone ragdoll masses (spike).
-4. Rebuilding the casino/economy layer, and when.
+4. Final quota tuning and game roster/rules (casino foundation is now approved and active; see `CASINO_FOUNDATION_DESIGN.md`).
 
 
 ### Player identity presentation

@@ -20,6 +20,7 @@ const CATEGORY_LEGS: StringName = &"legs"
 const CATEGORY_PROPS: StringName = &"props"
 const CATEGORY_RAGDOLL: StringName = &"ragdoll"
 const CATEGORY_SCREEN: StringName = &"screen"
+const CATEGORY_WALLET: StringName = &"wallet"
 
 var _active: bool = false
 var _log_lines: Array[String] = []
@@ -43,6 +44,7 @@ func _ready() -> void:
 		CATEGORY_PROPS,
 		CATEGORY_RAGDOLL,
 		CATEGORY_SCREEN,
+		CATEGORY_WALLET,
 	]:
 		_enabled_categories[category] = true
 	command(&"debug_categories", _command_list_categories,

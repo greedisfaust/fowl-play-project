@@ -27,11 +27,14 @@ Base docs: `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `
 ## In progress
 
 - [DONE] Casino architecture specification — `docs/CASINO_FOUNDATION_DESIGN.md` records audited project seams, shared-service boundaries, BaseTable responsibilities, game-specific betting adapters, daily rules, and implementation sequence.
-- [PARTIAL] Foundation implementation plan — resolve the first wallet transaction policy gate, update the authoritative project overview to reflect the approved casino scope, then implement the smallest tested vertical slice.
+- [DONE] Wallet transaction policy gate — user approved immediate reservation on confirmation, editable/refundable while open, locked at round start, gross-return settlement, and no timer-expiry refund.
+- [DONE] Shared wallet implementation — host-authoritative `CasinoWallet` autoload, per-wager attribution, round open/edit/withdraw/lock/cancel/settle lifecycle, DebugHub watches/commands, and headless test script added.
+- [DONE] Authoritative project overview updated to include the approved casino foundation scope and wallet rules.
+- [PARTIAL] Wallet test execution — test and runner stage are authored; Godot execution still needs to be run in the user's local environment.
 
 ## Exact next step
 
-Confirm the wager transaction policy: on bet confirmation, reserve/deduct the stake from available shared funds; allow edit/withdraw/refund before round start; lock at round start; never refund solely because the casino timer expires. Then update `docs/PROJECT_OVERVIEW.md` scope and implement the wallet transaction service with headless tests.
+Pull the latest branch commit, then run `.\tests\run_checks.ps1 -OnlyStage casino-wallet` from `fowl-play/`. Report the result. If it passes, proceed to the first BaseTable lifecycle slice after reviewing any test failures or engine warnings.
 
 ## Waiting on the user
 
@@ -67,7 +70,7 @@ Confirm the wager transaction policy: on bet confirmation, reserve/deduct the st
 
 ## Open questions (do not decide alone)
 
-- Exact financial timing for a confirmed wager (deduct immediately vs reserve) and precise edit/refund transaction rules.
+- Exact scope of early-departure force-refund for already-started rounds (open rounds are refunded; locked rounds cannot use the open-round cancellation path).
 - Exact settlement treatment for active rounds at timer expiry after the quota check; no refund is decided, but whether the visual game finishes after day closure is open.
 - Whether early-departure force-refund includes already-started rounds or only unresolved/open wagers; user said force refund, confirm scope before implementation.
 - Exact 45-second inactivity definition and whether timeout cancels/refunds all open wagers.
@@ -84,8 +87,8 @@ Confirm the wager transaction policy: on bet confirmation, reserve/deduct the st
 
 ## Known bugs and gotchas
 
-- No casino implementation currently exists in the inspected tree.
-- Existing project overview still contains historical wording that casino/economy is out of scope until asked. User has now explicitly authorized this new casino/world feature branch; update the overview's scope section after architecture decisions are finalized.
+- Shared wallet implementation now exists; no BaseTable or casino physical scene implementation exists yet.
+- Project overview now marks casino/economy foundation as active scope; do not revert it to the historical out-of-scope wording.
 - Do not assume historical GDD values/rules are current.
 - User owns scene construction. Never edit scenes open in the user's editor.
 - Do not claim Godot tests or in-game verification unless actually run.
@@ -97,13 +100,17 @@ Confirm the wager transaction policy: on bet confirmation, reserve/deduct the st
 - `docs/sessions/_ACTIVE.md` — active feature pointer.
 - `docs/PROJECT_STATE.md` — durable active branch/status.
 - `docs/CASINO_FOUNDATION_DESIGN.md` — architecture contract and implementation plan.
+- `fowl-play/casino/shared_wallet.gd` — host-authoritative shared wallet and wager ledger.
+- `fowl-play/tests/casino_wallet_test.gd` — headless wallet lifecycle regression test.
+- `fowl-play/project.godot` — `CasinoWallet` autoload registration.
+- `fowl-play/core/debug_hub.gd` — wallet diagnostics category.
 
 ## How to verify
 
 - Verify branch head and changed paths through GitHub.
 - User pulls the branch before local Godot work.
-- No gameplay test is claimed until an actual Godot 4.7 test run is recorded.
-- First future test slice should include host/offline wallet transaction and wager lifecycle checks, then multi-process host/client authority checks.
+- The wallet test script and runner stage are committed, but have not been executed in this environment. User should run the `casino-wallet` stage locally before the next implementation slice.
+- The committed `casino-wallet` headless test covers reservation, overspend rejection, edit, withdrawal, locking, gross-return settlement, loss settlement, open-round cancellation, and run reset. A separate multi-process host/client authority test remains required when client RPCs are introduced.
 
 ## Contracts to not break
 
@@ -120,6 +127,12 @@ Confirm the wager transaction policy: on bet confirmation, reserve/deduct the st
 > Read `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `docs/PROJECT_STATE.md`, and this session file. Verify the branch and files against GitHub and the local checkout. Recap in at most eight lines and wait for the user's go before implementing.
 
 ## Session log
+
+### Session 1 update — 2026-11-21 — GPT-6
+- User approved commits directly to the feature branch (no push).
+- User confirmed immediate wager reservation from the shared wallet; edits/withdrawals refund before round start, round start locks wagers, and timer expiry never refunds locked wagers.
+- Implemented `CasinoWallet` service and lifecycle test; added autoload, DebugHub diagnostics, test runner stage, and updated project/design/session docs.
+- Tests are authored but not executed in this environment.
 
 ### Session 1 — 2026-11-21 — GPT-6
 - Audited branch baseline, project instructions, state, interaction/network/debug foundations, and current project tree.

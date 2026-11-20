@@ -1,6 +1,6 @@
 # Casino Foundation Design
 
-Status: DESIGN DRAFT — user-approved direction, implementation contracts still subject to review.
+Status: APPROVED FOUNDATION CONTRACT — initial shared wallet slice implemented; table/game contracts remain subject to staged validation.
 Branch: `environment/world-building-and-gameplay-loop`
 Last updated: 2026-11-21
 Base commit: `75675cc31456c3b0d7b5bb365ec82fd81ced9a72`
@@ -163,10 +163,16 @@ The existing shared terminal concept (numeric keys, MIN, ¼, ½, MAX, delete, cl
 
 ### Shared wallet
 
-- One shared team wallet.
+- One shared team wallet; no per-player balances.
 - Individual bettor attribution for every confirmed wager.
 - Host-side atomic validation prevents concurrent confirmations from overspending the wallet.
-- Wager edit/withdraw/refund/settlement operations must be race-safe and idempotent.
+- **DECIDED:** confirming a wager immediately reserves its stake from available funds.
+- **DECIDED:** editing an open wager reserves or returns only the difference; withdrawing an open wager returns the full current stake.
+- **DECIDED:** starting a round locks all reserved wagers. Locked wagers cannot be edited or withdrawn.
+- **DECIDED:** settlement credits gross return (stake plus winnings); a loss returns zero.
+- **DECIDED:** cancelling an unstarted round refunds all still-reserved wagers. Timer expiry does not refund locked wagers.
+- Wager operations are synchronous and atomic on the host's main thread. Future RPCs must submit intents to the host; clients do not mutate an authoritative local wallet.
+- Initial implementation lives in `fowl-play/casino/shared_wallet.gd` and is registered as the `CasinoWallet` autoload. Its headless test is `fowl-play/tests/casino_wallet_test.gd`.
 
 ### Casino timer expiry
 
@@ -177,7 +183,7 @@ User decision:
 - Money committed to an unresolved wager can therefore leave the team below quota and cause failure, even if the wager might otherwise have won.
 - The House may comment on this greed-driven failure in its announcement/report.
 
-Open implementation detail: whether the table's visual round is allowed to finish after the day has already failed, or is force-closed as a loss. The no-refund and deadline quota check are fixed; post-deadline presentation/cleanup is not.
+Open implementation detail: whether the table's visual round is allowed to finish after the day has already failed, or is force-closed as a loss. The no-refund and deadline quota check are fixed; post-deadline presentation/cleanup is not. The wallet ledger leaves locked wagers reserved until the game/run manager explicitly settles or finalizes them.
 
 ### Early departure
 
@@ -261,7 +267,7 @@ Do not implement every service at once. Build and test a vertical slice, then ex
 
 The following must be resolved or deliberately isolated behind configurable policy before their dependent code is written:
 
-1. Wager money timing: immediate deduction vs reserved balance; how amount edits change the reservation.
+1. Wager money timing is DECIDED: confirmation immediately reserves the stake; edits reserve/return the difference; withdrawal refunds while open; start locks; settlement credits gross return.
 2. Early-exit refund scope for already-started rounds.
 3. Timer-expiry post-deadline handling of visual/game simulation after the quota check.
 4. Exact 45-second timeout activity definition and cancellation/refund behavior.
@@ -269,4 +275,4 @@ The following must be resolved or deliberately isolated behind configurable poli
 6. Whether multiple betting adapters can submit different bet payload types to the same round (recommended yes).
 7. Whether game-specific modifiers are calculated before or after base payout; settlement ordering must be deterministic.
 
-Recommended default for the first vertical slice: one active round per table; one normalized wager record per player per round unless a game explicitly opts into multiple distinct wagers; all balance changes through an atomic host transaction API; adapter payload is game-defined but schema-versioned.
+Recommended default for the first vertical slice: one active round per table; one normalized wager record per player per round unless a game explicitly opts into multiple distinct wagers; all balance changes through an atomic host transaction API; adapter payload is game-defined but schema-versioned. The wallet ledger currently permits multiple distinct wager records per bettor per round so games such as Roulette can add multiple selections; the game/table contract will decide whether to restrict that.

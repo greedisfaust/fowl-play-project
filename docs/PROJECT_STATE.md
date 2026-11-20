@@ -1,10 +1,10 @@
 # Fowl Play — Project State
 
-**Status:** Casino Foundation & World Gameplay Loop is active on `environment/world-building-and-gameplay-loop`, based on merged main commit `75675cc31456c3b0d7b5bb365ec82fd81ced9a72`. Phase 0 repository audit and architecture specification are underway; no casino gameplay code or scenes have been added yet.
+**Status:** Casino Foundation & World Gameplay Loop is active on `environment/world-building-and-gameplay-loop`, based on merged main commit `75675cc31456c3b0d7b5bb365ec82fd81ced9a72`. Phase 0 audit and architecture specification are complete. The host-authoritative shared wallet and headless lifecycle test are implemented; BaseTable and game integration have not started yet.
 
 ## Last updated (2026-11-21; casino foundation branch started)
 
-- Current branch: `environment/world-building-and-gameplay-loop` (based on merged main commit `75675cc31456c3b0d7b5bb365ec82fd81ced9a72`). The read-only casino foundation audit is underway; the initial architecture specification is recorded in `docs/CASINO_FOUNDATION_DESIGN.md`.
+- Current branch: `environment/world-building-and-gameplay-loop` (based on merged main commit `75675cc31456c3b0d7b5bb365ec82fd81ced9a72`). The first wallet implementation slice is committed. Shared wallet API and test are in `fowl-play/casino/shared_wallet.gd` and `fowl-play/tests/casino_wallet_test.gd`; no BaseTable or casino scenes exist yet.
 - Godot 4.7 project: `fowl-play/`, using Jolt Physics, Forward+, and D3D12.
 - `fowl-play/project.godot` contains the project settings, input actions, and four autoload entries.
 - Foundation scripts exist in `fowl-play/core/`: `layers.gd`, `tuning.gd`, `network.gd`, and `debug_hub.gd`.
