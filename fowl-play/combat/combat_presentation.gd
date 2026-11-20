@@ -32,7 +32,7 @@ func begin_windup() -> void:
 	var hand: Hand = _get_right_hand()
 	if hand != null:
 		hand.set_punching(true)
-		hand.punch_position_offset = _base_punch_position_offset + Vector3(0.0, 0.025, 0.14)
+		hand.punch_position_offset = _base_punch_position_offset
 
 func play_jab(direction: Vector3) -> void:
 	var hand: Hand = _get_right_hand()
@@ -47,7 +47,6 @@ func play_jab(direction: Vector3) -> void:
 	_phase_elapsed = 0.0
 	_jab_direction = direction.normalized()
 	hand.set_punching(true)
-	hand.punch_position_offset = _base_punch_position_offset
 	var target: Vector3 = camera.global_position + _jab_direction
 	if not hand.begin_action(target):
 		hand.set_punching(false)
@@ -72,13 +71,12 @@ func advance(delta: float) -> void:
 			body_pose.x = WINDUP_LEAN_RAD * windup_weight
 			var windup_hand: Hand = _get_right_hand()
 			if windup_hand != null:
-				windup_hand.punch_position_offset = _base_punch_position_offset + Vector3(0.0, 0.025, 0.14 * windup_weight)
+				windup_hand.punch_position_offset = get_windup_hand_offset(_base_punch_position_offset, _phase_elapsed)
 		Phase.JAB:
 			body_pose += get_jab_body_pose(_phase_elapsed, _local_direction(_jab_direction))
 			var jab_hand: Hand = _get_right_hand()
 			if jab_hand != null:
-				var jab_t: float = clampf(_phase_elapsed / JAB_POSE_DURATION_S, 0.0, 1.0)
-				jab_hand.punch_position_offset = _base_punch_position_offset + Vector3(0.0, 0.02, -0.045 * sin(PI * jab_t))
+				jab_hand.punch_position_offset = get_jab_hand_offset(_base_punch_position_offset, _phase_elapsed)
 			if _phase_elapsed >= JAB_POSE_DURATION_S:
 				_phase = Phase.IDLE
 				if jab_hand != null:
@@ -106,6 +104,17 @@ func cancel() -> void:
 		rig = _player.get("rig") as Node3D
 	if is_instance_valid(rig):
 		rig.call("set_combat_body_pose", Vector3.ZERO)
+
+static func get_windup_hand_offset(base_offset: Vector3, elapsed: float) -> Vector3:
+	var weight: float = 1.0 - exp(-14.0 * maxf(elapsed, 0.0))
+	return base_offset + Vector3(0.0, 0.025 * weight, 0.14 * weight)
+
+static func get_jab_hand_offset(base_offset: Vector3, elapsed: float) -> Vector3:
+	var t: float = clampf(elapsed / JAB_POSE_DURATION_S, 0.0, 1.0)
+	var pullback_to_extension: float = smoothstep(0.0, 0.18, t)
+	var depth: float = lerpf(0.14, -0.045, pullback_to_extension) if t < 0.18 else -0.045 * sin(PI * t)
+	var height: float = lerpf(0.025, 0.02, pullback_to_extension) if t < 0.18 else 0.02
+	return base_offset + Vector3(0.0, height, depth)
 
 static func get_jab_body_pose(elapsed: float, local_direction: Vector3) -> Vector3:
 	var t: float = clampf(elapsed / JAB_POSE_DURATION_S, 0.0, 1.0)
