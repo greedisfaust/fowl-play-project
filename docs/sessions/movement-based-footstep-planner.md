@@ -133,3 +133,10 @@ Code and documentation were updated on the feature branch. Godot parsing, automa
 ### Verification
 
 M8 assertions were updated for actual-speed cadence, stance/reach margin, and outward knee poles. No scene files changed. Godot tests and in-game verification have not been executed by the assistant.
+
+
+## Knee pole coordinate-space fix — 2026-11-20
+
+The shared `ProceduralArmIK.solve_two_bone` solver projects its `pole` argument as a direction relative to the upper joint. The leg controller previously constructed a world-space pole position by adding the hip position, then passed that absolute position to the solver. This caused the bend plane to depend on the character's world position and could make the knee appear sideways regardless of facing direction.
+
+The leg controller now passes only the character-facing pole direction (forward plus a small mirrored outward component). Forward bias is 1.0, with up to 0.45 additional forward bias during swing; outward bias is 0.18. Tests now require forward and mild outward knee bend for both legs. Godot parsing and in-game verification remain pending.
