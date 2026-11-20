@@ -1,3 +1,7 @@
+param(
+	[string]$OnlyStage = "all"
+)
+
 $ErrorActionPreference = "Stop"
 
 $godot = $env:FOWL_PLAY_GODOT
@@ -13,7 +17,14 @@ if (-not (Test-Path -LiteralPath $godot)) {
 	throw "Godot executable not found. Set FOWL_PLAY_GODOT or add godot to PATH."
 }
 $project = Join-Path $PSScriptRoot ".."
-foreach ($stage in @("import", "d0", "m1", "m1-cursor", "m2", "m2-arm-ik", "m7-jab", "m3", "m3-interaction", "m4-handoff", "m6", "procedural-legs", "identity", "identity-presentation", "physical-button", "screen-text", "world-screen", "slim-world-screen", "fat-world-screen", "screen-menu", "registration-terminal", "interactive-terminal")) {
+$stages = @("import", "d0", "m1", "m1-cursor", "m2", "m2-arm-ik", "m7-jab", "m3", "m3-interaction", "m4-handoff", "m6", "procedural-legs", "identity", "identity-presentation", "physical-button", "screen-text", "world-screen", "slim-world-screen", "fat-world-screen", "screen-menu", "registration-terminal", "interactive-terminal")
+if ($OnlyStage -ne "all") {
+	if ($stages -notcontains $OnlyStage) {
+		throw "Unknown test stage '$OnlyStage'. Available stages: $($stages -join ', ')"
+	}
+	$stages = @($OnlyStage)
+}
+foreach ($stage in $stages) {
 	$checkStdout = [System.IO.Path]::GetTempFileName()
 	$checkStderr = [System.IO.Path]::GetTempFileName()
 	$arguments = @("--headless", "--path", ('"{0}"' -f $project))

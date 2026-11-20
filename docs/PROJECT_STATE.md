@@ -2,9 +2,9 @@
 
 **Status:** Combat & Procedural Legs (Movement) is active on `features/combat-and-procedural-movement`. The read-only combat integration audit is complete and the first M7.1 jab foundation is committed alongside ongoing procedural gait work. Godot execution and in-game verification of the jab remain pending. Previous identity/world-kit work remains archived as implemented, with verification caveats retained below.
 
-## Last updated (2026-11-20; two-bone procedural leg IK)
+## Last updated (2026-11-20; M7.1 jab foundation)
 
-- Current branch: `features/combat-and-procedural-movement` (based on merged `main` commit `1506c03746e158c74ffcd2da5df042b20435db25`). Read-only rig audit is complete; initial procedural gait slice is committed and awaiting Godot verification.
+- Current branch: `features/combat-and-procedural-movement` (based on merged `main` commit `1506c03746e158c74ffcd2da5df042b20435db25`). Read-only rig and combat integration audits are complete; initial procedural gait and M7.1 jab slices are committed and awaiting Godot verification.
 - Godot 4.7 project: `fowl-play/`, using Jolt Physics, Forward+, and D3D12.
 - `fowl-play/project.godot` contains the project settings, input actions, and four autoload entries.
 - Foundation scripts exist in `fowl-play/core/`: `layers.gd`, `tuning.gd`, `network.gd`, and `debug_hub.gd`.
