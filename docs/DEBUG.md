@@ -486,3 +486,8 @@ The test arena has an editor-authored `WorldEnvironment` with restrained Glow en
 - Increased the per-leg outward knee-pole bias from 0.30 m to 0.48 m so IK solutions favor separate knee bend planes.
 - Updated the gait phase regression expectation to include the cadence multiplier.
 - This is a soft anatomical separation constraint, not physical leg collision. Godot tests and visual verification remain pending.
+
+
+## Procedural leg recovery diagnostics
+
+The `leg_ground_<player>` command now reports each foot's emergency-replant state and current hip-to-anchor stretch ratio, normalized against that leg's comfortable reach. A stretch ratio at or above 1.0 requests a recovery step when the foot is in stance. Only the more-stretched foot is allowed to emergency-step at a time.
