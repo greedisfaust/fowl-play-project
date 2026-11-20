@@ -154,8 +154,9 @@ M2 hand names: the first instance retains its node-name command/watch suffix. Co
 - The local first-person right hand points at the focused interactable. The host relays the hover state and world target to remote world hands; the left hand remains relaxed.
 - `net/hand_hover_sent` counts host relays and `net/hand_hover_received` counts hover states applied to remote world hands on clients. These are cosmetic pose updates, not gameplay authority.
 - On an accepted interaction, `net/hand_poke_sent` counts host poke broadcasts and `net/hand_poke_received` counts world-hand poke animations accepted on clients. Rejected interactions do not produce a remote poke.
-- Two-instance check: aim at an interactable without clicking. The other instance should see that player's right hand point at it. Move aim away and the remote hand should return to idle. Then click; the other instance should see the poke and smooth return.
-- If the counters remain at zero, inspect `net/roster` and `interact` logs first. If sent rises but received stays zero, inspect the client RPC/owner lookup. If received rises but the pose is invisible, inspect the remote Player Rig visibility and the world-hand attachment.
+- USER VERIFIED: host/client hover pointing and accepted-interaction poke synchronization were fixed and confirmed working in-game. The counters and checks below remain useful regression diagnostics.
+- Regression check: aim at an Interactable without clicking; the other instance should see that player's right hand point at it. Move aim away and confirm it returns to idle, then click and confirm the remote poke and smooth return.
+- If a regression occurs, inspect `net/roster` and `interact` logs first. If sent rises but received stays zero, inspect the client RPC/owner lookup. If received rises but the pose is invisible, inspect remote Player Rig visibility and the world-hand attachment.
 
 ### M4 live rig preparation
 
@@ -276,7 +277,7 @@ Every `Interactable` component automatically adds an inverted-hull silhouette ov
 - The `interact` log reports focus-driven highlight state changes.
 - `tests/m1_interaction_test.gd` checks automatic idle outlines, no outline on a sibling mesh without an Interactable, gold/glow focus state, return to idle, and restoration of the original overlay.
 
-The test arena now has an editor-authored `WorldEnvironment` with restrained Glow enabled. The interactable outline emits HDR gold while focused so Godot's Glow post-process can create a real soft halo. Glow is scene-wide as a rendering pass, but only bright pixels (including focused outline emission) should contribute significantly. The environment is currently attached to `test_arena.tscn`; when a shared production world/environment is introduced, move or reuse these settings there rather than duplicating per-level environments. The outline remains an inverted-hull shader and does not depend on custom post-process code.
+The test arena has an editor-authored `WorldEnvironment` with restrained Glow enabled. USER VERIFIED: the animated golden outline/highlight treatment is implemented and working. Glow is scene-wide as a rendering pass, but only bright pixels (including focused outline emission) should contribute significantly. The environment is currently attached to `test_arena.tscn`; when a shared production world/environment is introduced, move or reuse these settings there rather than duplicating per-level environments. The outline remains an inverted-hull shader and does not depend on custom post-process code.
 
 
 
@@ -285,9 +286,9 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 - The center-screen cursor is a CanvasLayer under Player, and only the local player's instance is enabled while the mouse is captured.
 - Idle: a small translucent white circle with a thin dark outline.
 - Focused: it smoothly grows, blends toward its configurable identity accent, and gains three soft translucent glow rings. A gentle 1.8-second breathing pulse scales the cursor while focused.
-- The color is deliberately a temporary fallback, not a network/player-color lookup. Future lobby identity code should call GameplayCursor.set_identity_color(color) with the assigned player's color.
+- `GameplayCursor.set_identity_color(color)` receives the host-assigned identity color. Its configured accent is used as a fallback when identity data is unavailable (offline/startup/shutdown).
 - The focused Interactable outline has a separate, slower 2-second breathing glow. Only emission intensity pulses; outline width and silhouette stay stable. The existing test-arena WorldEnvironment Glow creates the soft bloom.
-- Run tests/run_checks.ps1 for the cursor contract check and tests/m1_interaction_test.gd for the interactable outline checks. Godot runtime and visual verification remain user-run.
+- Focused regression checks: `tests/run_checks.ps1` for the cursor contract and `tests/m1_interaction_test.gd` for the Interactable outline. User has confirmed the in-game golden highlight works; the assistant has not independently rerun Godot here.
 
 
 ### Player identity core
@@ -299,7 +300,7 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 - If a requested color is occupied, the host checks subsequent palette entries in wraparound order and assigns the first free color. A peer's existing color is excluded when that peer changes its own selection.
 - A reliable host-published identity roster carries the authoritative records. Disconnect and shutdown remove identity records.
 - `tests/m3_identity_test.gd` checks peer IDs, display labels, nickname suffixing, blank-name fallback, palette size, color uniqueness, next-color fallback, and invalid requests. It is registered as the `identity` stage in `tests/run_checks.ps1`.
-- Godot execution and live two-instance replication/security verification have not yet been run for this slice.
+- USER VERIFIED: the identity registration/color flow and host/client presentation work in-game. The focused identity test remains available for regression checks; the assistant did not independently rerun Godot for this archive.
 
 
 ### Physical USE button
@@ -386,6 +387,7 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 
 ## Registration Terminal
 
+- USER VERIFIED: the terminal interaction/registration flow and the fixes to its wake/session/proximity behavior are working. Keep the checks below as regression guidance.
 - Attach `ui/registration_terminal.gd` to the existing terminal root; it inherits InteractiveTerminal.
 - Assign inherited `screen`, `screen_interactable` (on the physical screen target), and `proximity_area` references in the Inspector. The sensor CollisionShape3D should match the 5 m wake distance.
 - Arrow Up/Down navigate, Enter confirms, Escape closes; E/M1 on the screen Interactable begins the session or confirms the selected menu item. Players can move freely; the base ends the session outside interaction_distance (default 3 m, horizontal distance). Nickname entry supports printable keys, Backspace, Enter, and Escape.
@@ -439,4 +441,4 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 - Each spawned Player resolves its host-assigned PlayerIdentity color and passes it to the world Rig, both attached Rig hands, and both camera-attached Viewmodel hands.
 - The Rig duplicates its visible geometry materials before tinting, preserving source resources and per-instance independence. The temporary `FacePhoto` placeholder is excluded.
 - The nameplate accent continues to use the same `PlayerIdentity.get_color()` value.
-- Multiplayer check: choose different palette colors on host and client; verify each peer sees matching body, arms, legs, hands, and nickname accent. Knock down, carry, throw, and recover each player to confirm the color persists through ragdoll and recovery. Also verify the local first-person hands use the local identity color.
+- USER VERIFIED: player identity coloring works in-game, including the character presentation, world and first-person hands, and ragdoll. The nameplate's identity accent uses the same palette color; nickname text stays white for readability. Regression check: compare different host/client colors, then knock down, carry, throw, and recover each player to confirm colors persist.

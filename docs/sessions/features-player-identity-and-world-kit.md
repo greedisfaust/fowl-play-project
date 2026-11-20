@@ -3,8 +3,8 @@
 Branch: features/player-identity-and-world-kit
 Base commit: abb3643d4f9326f0c32a31bfe2ba9b9b46c00b83
 Goal: Establish host-authoritative player identities and reusable physical world interaction/display components, then integrate identity presentation into gameplay.
-Status: IN PROGRESS — Player Identity Core, Physical USE Button, reusable WorldScreen content, FAT/SLIM housing controllers, ScreenMenu, and RegistrationTerminal code are implemented; terminal editor fixture and Godot/multiplayer verification pending.
-Last updated: 2026-11-19 by GPT-6 (session #1)
+Status: ARCHIVED — implementation complete; user confirmed multiplayer hand synchronization, Interactive Terminal fixes, golden Interactable highlighting, and player identity coloring in-game.
+Last updated: 2026-11-20 by GPT-6 (closeout)
 Base docs: CLAUDE.md, docs/PROJECT_OVERVIEW.md, docs/PROJECT_STATE.md
 
 ## Current state
@@ -230,3 +230,13 @@ Pull the Registration Terminal implementation. In the editor, create the termina
 - Rig materials are duplicated per instance before tinting so shared scene resources are not mutated. The temporary FacePhoto placeholder is excluded.
 - No scenes, meshes, or authored node trees were changed.
 - Not done: Godot tests/import and in-game host/client verification have not been run. Verify standing colors, first-person hands, ragdoll, carried ragdoll, and recovery.
+
+
+### Session 17 — 2026-11-20 — Branch closeout
+- User confirmed the previously outstanding multiplayer hand hover/poke synchronization is fixed and working.
+- User confirmed the Interactive Terminal implementation and its follow-up fixes are complete and working.
+- User confirmed the animated golden Interactable outline/highlight is implemented and fixed.
+- User confirmed player identity coloring works in-game across the player presentation, including world/first-person hands and ragdoll. The nameplate carries the assigned identity color in its accent; nickname text remains white for readability.
+- Updated the project state, debug reference, technical overview, and active-session index to distinguish user-verified behavior from automated checks not rerun by the assistant.
+- No gameplay scripts or scenes were changed in this closeout; this is a documentation-only archive commit.
+- Next feature: Combat & Procedural Legs (Movement), beginning with a read-only rig audit. See `features-combat-and-procedural-movement.md`.

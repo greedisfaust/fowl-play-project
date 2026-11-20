@@ -1,8 +1,9 @@
 # Active session files
 
-- **Active feature:** Player Identity & World Kit (player identity, reusable physical USE button, reusable world screens, registration terminal) → [session](features-player-identity-and-world-kit.md).
+- **Active feature:** Combat & Procedural Legs (Movement) → [session](features-combat-and-procedural-movement.md).
+- **Archived feature:** Player Identity & World Kit → [session](features-player-identity-and-world-kit.md) (implementation complete; user confirmed multiplayer hand synchronization, Interactive Terminal fixes, animated golden Interactable highlighting, and player identity coloring).
 - Prior feature: Highlight and Accessibility (gameplay cursor + interactable focus animation) → [session](features-highlight-and-accessibility.md).
-- Prior active work: Procedural Character Animation (hands first; combat presentation, legs, and body coordination planned) → [session](features-procedural-character-animation.md).
+- Prior reference: Procedural Character Animation / reactive hands → [session](features-procedural-character-animation.md) (hand pose-priority foundation; host/client hover and poke synchronization subsequently fixed and user-verified; use as implementation reference for the new movement/combat work).
 - **Completed implementation:** features/carry-drop-throw -> [session](features-carry-drop-throw.md) (M6 carry/drop/throw is implemented and user visual-playtested; automated M6 test and full two-instance host/client verification remain pending).
 - Prior reference: features/player-rig-and-physics-implementation -> [session](features-player-rig-and-physics-implementation.md) (M4 ragdoll network checks and M5 recovery implementation; user visual check and get-up blend remain).
 - Prior reference: features/multiplayer -> [session](features-multiplayer.md) (multiplayer slice committed and verified; remaining M3 integration deferred).

@@ -1,8 +1,8 @@
 # Fowl Play — Project State
 
-**Status:** Player Identity Core with player body/hand color presentation, reusable Physical USE Button, WorldScreen/ScreenText content APIs and presentation presets, and FAT/SLIM housing controllers are implemented on `features/player-identity-and-world-kit`. The screen system is documented in [WORLD_SCREENS_AND_SCREEN_TEXT.md](WORLD_SCREENS_AND_SCREEN_TEXT.md). Godot checks and full rendered verification remain pending.
+**Status:** Player Identity & World Kit is archived as implemented on `features/player-identity-and-world-kit`. The user has confirmed the multiplayer hand-sync fixes, Interactive Terminal fixes, golden Interactable highlighting, and player identity coloring in-game. Remaining automated/rendered checks are recorded as unverified where applicable; see the archived session and [DEBUG.md](DEBUG.md).
 
-## Last updated (2026-11-19; identity and Physical USE Button implementation pending verification)
+## Last updated (2026-11-20; Player Identity & World Kit branch closeout)
 
 - Current branch: `features/player-identity-and-world-kit` (host-authoritative player identity, reusable physical button, FAT/SLIM world screens, interactive menus, and proximity-aware registration terminal).
 - Godot 4.7 project: `fowl-play/`, using Jolt Physics, Forward+, and D3D12.
@@ -22,11 +22,11 @@
 | D0 Debug infrastructure | DebugHub, tuning debug values, local log buffer, watches, commands, D0 headless check | Verified: `fowl-play/tests/run_checks.ps1` passes |
 | M0 Foundation | Project settings, layers, tuning, input map, networking autoload, test runner, arena, capsule movement, camera, spawn/despawn | Verified: automated tests and user host/join/disconnect/rejoin playtests; console scrolling fix confirmed; committed as `017f1cb` |
 | M1 Interaction + one prop | Interactable component, focus/highlight, one USE device, one GRAB prop | Verified: host/offline focus/use/grab playtest; reusable prop scene/profile saved |
-| M2 Hands | Scene-backed hand + finger scenes, first-person + world modes | In progress: hand/finger scenes and pose preview verified; player first-person/world integration pending; visual proposal in HAND_DESIGN.md |
+| M2 Hands | Scene-backed hand + finger scenes, first-person + world modes | Integrated; host/client hover pointing and poke synchronization are USER VERIFIED fixed. Further pose/visual polish can continue with procedural animation. |
 | M3 Networking slice 1 | Movement authority gate, roster, remote smoothing, intent RPC, validation helper | Gate approved; first standing movement snapshot/validation/interpolation slice implemented. Two-process movement tests pass; user verified movement works and looks smooth in two instances. Remaining M3 work deferred to subsequent slices. |
 | M4 Ragdoll spike | Skeleton, 11 physical bones, Jolt joints, sync measurements at 15/30/60 Hz | User verified both peers see the ragdoll and approved the head camera/look limit. Two-process checks pass for host/client targets, mid-limp and already-settled late joins, reliable settled pose, and latest-snapshot hips error <0.25 m with 40 ms interpolation. One-client host ENet send rates at 15/30/60 Hz were roughly 4–7/8–12/21–22 KB/s across runs (natural settling and other game traffic affect totals). A new 10-pair selective self-contact policy passes exception-map, multiplayer, and four-ragdoll 7-second headless checks; remote peers render replicated bones without local collision shapes. Symmetric ragdoll contact remains a host-authoritative design task; the attempted remote-bone collision experiment was rolled back after inconsistent hard-obstacle/phasing behavior. 30 Hz remains the default. |
 | M5 Limp lifecycle | Knockdown → ground → recovery (G1–G3, G8) | PARTIAL: host timer recovers after 3.5 s plus slow bones or at 6 s hard cap. Host plants capsule under final hips and reliably sends both standing position, final ragdoll pose, and the selected face-up/face-down recovery variant to clients. Wall-clearance search (floor + capsule overlap + spiral outward to 1.5 m) is implemented; forced-exit G8 cleanup broadcasts a reliable `_ragdoll_end` when a limp peer disconnects so remaining clients complete a get-up blend. PUNCH_HITBOX ↔ LIMP_BODIES collision is now bidirectional. |
-| World kit — WorldScreen | Reusable size-adaptive 3D screen, CMD-style text renderer, and FAT/SLIM housings | WorldScreen content sizing is implemented. FAT and SLIM controllers now resize their editor-authored chassis and shared glass PlaneMesh; shared optical glass shader adds view-angle Fresnel, a soft diagonal sheen, and subtle edge highlights. Focused housing tests are registered but not run. Controller scripts still need attaching to both scene roots in the Inspector; rendered verification remains pending. |
+| World kit — WorldScreen | Reusable size-adaptive 3D screen, CMD-style text renderer, and FAT/SLIM housings | Reusable content APIs, menus, FAT/SLIM controllers and glass treatments are implemented and documented. Automated housing checks and final rendered sizing/material verification remain unconfirmed in this archive. |
 | M6 Carry and throw | Props and limp bodies, auto-fire throw, dangling limbs | IMPLEMENTED; USER VISUAL-PLAYTESTED: host-authoritative carry/drop/throw; Chest spring/torque stabilisation at the carrier anchor; selective opposite-side limb self-collision; carried-only head/arm damping and narrower neck joint limits; smoothed head-mounted first-person camera while preserving mouse-look and dynamic FOV. Player root stays fixed, remote peers render host poses without local ragdoll collision, recovery pauses while carried, and each release resets a fresh 3.5 s countdown. Automated M6 test and full two-instance host/client verification remain pending. |
 | M7 Combat | Jab/recoil, charged punch, lunge, parry outcomes | Not started |
 | M8 Procedural legs | Cosmetic legs, zero network traffic | Not started |
@@ -38,7 +38,7 @@
 1. Skeleton authoring resolved: manual Godot editor authoring, with humanoid legs.
 2. Whether punches affect already-limp bodies.
 3. Whether to include impact/wall-slam feedback.
-4. Final lobby, nickname, and color flow.
+4. Final lobby/connection presentation beyond the implemented Registration Terminal identity flow.
 5. Per-bone ragdoll masses (M4 spike).
 6. Rebuilding the casino/economy layer, and when.
 
@@ -53,9 +53,18 @@ Late join is decided: allowed during the rest of a day, not during casino/elevat
 - Ragdoll contact is asymmetric by design of the current authority model: the host simulates real physical-bone contact, while clients render remote ragdolls without local ragdoll collision. Do not re-enable remote PhysicalBone3D collision as a shortcut; the attempted 11-body experiment produced hard-obstacle and speed-dependent phasing behavior.
 - The gameplay loop overview is background design material, not the current technical authority.
 
-## Next action
+## Branch closeout and next feature
 
-On `features/player-identity-and-world-kit`, pull the latest commit, attach `slim_world_screen.gd` to the `SlimWorldScreen` scene root and `fat_world_screen.gd` to the `FatWorldScreen` scene root, then run the `slim-world-screen` and `fat-world-screen` stages in `fowl-play/tests/run_checks.ps1`. Visually inspect both glass treatments and verify resizing. These checks have not been run by the assistant; do not mark them passed until verified.
+`features/player-identity-and-world-kit` is archived as the completed identity/world-kit implementation branch. The user confirmed these previously open items are fixed and implemented:
+
+- Multiplayer hover-pointing and poke synchronization between host and client.
+- Interactive Terminal wake/session/registration behavior and its movement/proximity fixes.
+- Interactable golden focus treatment, including the animated outline and restrained glow.
+- Player identity color presentation across the character rig, ragdoll, hands, and nameplate identity accent.
+
+The user also confirmed the latest player-color implementation works in-game. This is user verification, not a claim that the assistant ran Godot tests. Existing automated test stages and any unconfirmed WorldScreen visual checks remain recorded as pending rather than being silently marked passed.
+
+**Next feature:** Combat & Procedural Legs (Movement), planned branch `features/combat-and-procedural-movement`. Begin with a read-only rig audit, then implement combat and procedural locomotion in isolated, testable slices. See [the next feature session](sessions/features-combat-and-procedural-movement.md).
 
 ## Historical verification notes
 
@@ -424,3 +433,13 @@ Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep a
 - Rig geometry materials are duplicated per player before tinting; the temporary `FacePhoto` placeholder is excluded.
 - No scene files or authored node hierarchies were changed. The user's existing rig and nameplate scenes remain intact.
 - Pending: run the focused Godot test suite and verify host/client color consistency, including ragdoll, carried ragdoll, and recovery.
+
+
+## 2026-11-20 — Player Identity & World Kit closeout
+
+- User confirmed multiplayer hand hover/poke synchronization is fixed and working.
+- User confirmed the Interactive Terminal work is implemented and its issues are fixed.
+- User confirmed the animated golden Interactable highlighting is implemented and fixed.
+- User confirmed player identity coloring works in-game across the character presentation, including hands and ragdoll; the nameplate uses the assigned identity color as its accent while keeping nickname text legible.
+- This branch is archived as the implementation baseline for identity, terminal/world-kit presentation, and interaction feedback. Do not carry the three resolved issues forward as open tasks.
+- No claim is made here that the assistant ran Godot tests. Preserve explicit pending status for automated checks or visual checks that were not independently confirmed.
