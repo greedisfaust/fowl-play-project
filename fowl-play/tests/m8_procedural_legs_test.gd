@@ -68,7 +68,8 @@ func _check_controller_gait() -> void:
 	var speed_before_stop: float = velocity_during_turn.length()
 	for stop_step: int in range(5):
 		transition_controller.call("update", 0.1, Vector3.ZERO, true)
-	var speed_after_stop: float = Vector3(transition_controller.get("smoothed_velocity")).length()
+	var velocity_after_stop: Vector3 = transition_controller.get("smoothed_velocity")
+	var speed_after_stop: float = velocity_after_stop.length()
 	var weight_after_stop: float = float(transition_controller.get("motion_weight"))
 	if speed_after_stop >= speed_before_stop:
 		_fail("Smoothed movement speed should decay after the player stops")
