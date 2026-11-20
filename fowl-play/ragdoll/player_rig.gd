@@ -558,8 +558,6 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 		_right_foot_grounded, bool(_leg_controller.get("right_in_swing")),
 		float(_leg_controller.get("right_swing_progress")), 0.12
 	)
-	# Targets are intentionally diagnostic-only in this slice. The next IK slice
-	# will turn these world-space positions into thigh/shin rotations.
 	_left_foot_ground_target_world = left_target
 	_right_foot_ground_target_world = right_target
 	var left_thigh_rotation: Quaternion = _leg_controller.get("left_thigh_rotation")
@@ -610,9 +608,9 @@ func _debug_leg_status(_args: Array[Variant]) -> String:
 	]
 
 func _debug_leg_ground_status(_args: Array[Variant]) -> String:
-	return "left_hit=%s left_target=%s left_normal=%s right_hit=%s right_target=%s right_normal=%s" % [
-		_left_foot_grounded, _left_foot_ground_target_world, _left_foot_ground_normal,
-		_right_foot_grounded, _right_foot_ground_target_world, _right_foot_ground_normal
+	return "left_hit=%s left_ik=%s left_weight=%.2f left_target=%s left_normal=%s right_hit=%s right_ik=%s right_weight=%.2f right_target=%s right_normal=%s" % [
+		_left_foot_grounded, _left_leg_ik_active, _left_leg_ik_weight, _left_foot_ground_target_world, _left_foot_ground_normal,
+		_right_foot_grounded, _right_leg_ik_active, _right_leg_ik_weight, _right_foot_ground_target_world, _right_foot_ground_normal
 	]
 
 func update_procedural_right_arm(wrist_target_world: Vector3, delta: float) -> bool:
