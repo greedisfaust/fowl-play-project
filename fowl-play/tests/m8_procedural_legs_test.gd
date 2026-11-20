@@ -82,6 +82,18 @@ func _check_controller_gait() -> void:
 	if weight_after_stop >= weight_before_stop:
 		_fail("Leg motion weight should ease down after stopping")
 
+	# A stop in mid-swing must complete into a stable two-foot stance. Otherwise
+	# the foot target tracker can keep one shoe suspended indefinitely.
+	var settling_controller: RefCounted = LEG_CONTROLLER_SCRIPT.new()
+	settling_controller.set("phase", TAU * 0.80)
+	settling_controller.set("motion_weight", 1.0)
+	for settle_frame: int in range(120):
+		settling_controller.call("update", 1.0 / 60.0, Vector3.ZERO, true)
+	if bool(settling_controller.get("left_in_swing")) or bool(settling_controller.get("right_in_swing")):
+		_fail("A stopped gait should settle both feet into stance")
+	if absf(float(settling_controller.get("phase")) - PI) > 0.001:
+		_fail("A stopped gait should settle at the shared double-stance phase")
+
 func _check_stance_swing_articulation() -> void:
 	var controller: RefCounted = LEG_CONTROLLER_SCRIPT.new()
 	controller.set("phase", TAU * 0.30)
