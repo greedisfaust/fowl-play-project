@@ -34,19 +34,21 @@ func _check_jab_endpoint() -> void:
 	if not HIT_DETECTOR.get_jab_endpoint(origin, Vector3.ZERO, 2.0).is_equal_approx(origin):
 		_fail("A zero direction must not produce a jab ray")
 func _check_world_hit_and_recoil() -> void:
-	var arena: Node3D = load("res://arena/test_arena.tscn").instantiate() as Node3D
-	root.add_child(arena)
-	for frame_index: int in range(3):
-		await physics_frame
-	var players: Node3D = arena.get_node("Players") as Node3D
-	var attacker: CharacterBody3D = players.get_node("1") as CharacterBody3D
+	var players: Node3D = Node3D.new()
+	players.name = "Players"
+	root.add_child(players)
+	var attacker: CharacterBody3D = PLAYER_SCENE.instantiate() as CharacterBody3D
+	attacker.name = "1"
+	attacker.set("input_peer_id", 1)
+	players.add_child(attacker)
+	attacker.global_position = Vector3.ZERO
 	attacker.set_physics_process(false)
 	var target: CharacterBody3D = PLAYER_SCENE.instantiate() as CharacterBody3D
 	target.name = "2"
 	target.set("input_peer_id", 2)
 	players.add_child(target)
-	target.global_position = attacker.global_position + Vector3(0.0, 0.0, -1.5)
-	for frame_index: int in range(3):
+	target.global_position = Vector3(0.0, 0.0, -1.5)
+	for frame_index: int in range(4):
 		await physics_frame
 	var camera: Camera3D = attacker.get_node("Head/Camera3D") as Camera3D
 	var result: Dictionary = HIT_DETECTOR.trace_jab(attacker, camera.global_position, -camera.global_basis.z, TUNING.QUICK_PUNCH_RANGE_M)
@@ -69,7 +71,6 @@ func _check_world_hit_and_recoil() -> void:
 	if target.velocity.z >= -0.5:
 		_fail("A standing target should receive a weak movement recoil")
 	target.set("auto_recovery_enabled", false)
-	var network: Node = root.get_node("Network")
 	if not bool(network.call("start_ragdoll_spike", 2)):
 		_fail("The test target should enter host-simulated limp")
 		return
@@ -90,7 +91,8 @@ func _check_world_hit_and_recoil() -> void:
 			_fail("The struck limp physical bone should receive a forward velocity change")
 		if not is_equal_approx(float(target.get("_limp_elapsed_s")), limp_elapsed_before):
 			_fail("A limp-player jab must not reset or extend the recovery timer")
-	arena.queue_free()
+	players.queue_free()
+
 func _fail(message: String) -> void:
 	_failed = true
 	push_error(message)
