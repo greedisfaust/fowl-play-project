@@ -6,6 +6,7 @@ const TUNING = preload("res://core/tuning.gd")
 const SELF_COLLISION = preload("res://ragdoll/self_collision_policy.gd")
 const ARM_IK = preload("res://ragdoll/procedural_arm_ik.gd")
 const LEG_CONTROLLER_SCRIPT = preload("res://ragdoll/procedural_leg_controller.gd")
+const FOOT_PLANT_SCRIPT = preload("res://ragdoll/procedural_foot_plant.gd")
 const EXPECTED_PHYSICAL_BONES: int = 11
 const POSE_VALUES_PER_BONE: int = 7
 const POSITION_QUANTIZATION: float = 1000.0
@@ -34,6 +35,15 @@ var _right_thigh_bone_index: int = -1
 var _right_shin_bone_index: int = -1
 var _right_foot_bone_index: int = -1
 var _leg_controller: RefCounted = LEG_CONTROLLER_SCRIPT.new()
+var _left_foot_plant: RefCounted = FOOT_PLANT_SCRIPT.new()
+var _right_foot_plant: RefCounted = FOOT_PLANT_SCRIPT.new()
+var _left_foot_grounded: bool = false
+var _right_foot_grounded: bool = false
+var _left_foot_ground_target_world: Vector3 = Vector3.ZERO
+var _right_foot_ground_target_world: Vector3 = Vector3.ZERO
+var _left_foot_ground_normal: Vector3 = Vector3.UP
+var _right_foot_ground_normal: Vector3 = Vector3.UP
+var _leg_ground_status_command_name: StringName
 var _leg_pose_active: bool = false
 var _leg_status_watch_name: StringName
 var _leg_status_command_name: StringName
@@ -148,6 +158,11 @@ const CARRY_FOREARM_ANGULAR_DAMP: float = 11.0
 const ARM_IK_BLEND_SPEED: float = 18.0
 const ARM_IK_POLE_FORWARD_WEIGHT: float = 0.22
 const ARM_IK_MAX_STRETCH_RATIO: float = 1.12
+const LEG_GROUND_PROBE_UP_M: float = 0.35
+const LEG_GROUND_PROBE_DOWN_M: float = 0.85
+const LEG_GROUND_PROBE_LEAD_M: float = 0.12
+const LEG_GROUND_FOOT_CLEARANCE_M: float = 0.04
+const LEG_GROUND_MIN_NORMAL_Y: float = 0.45
 const CARRY_HEAD_ANGULAR_DAMP: float = 12.0
 
 func _enter_tree() -> void:
@@ -218,6 +233,7 @@ func _ready() -> void:
 	_set_left_rig_hand_visual_visible(false)
 	_leg_status_watch_name = StringName("rig/%s/legs_active" % get_parent().name)
 	_leg_status_command_name = StringName("leg_status_%s" % get_parent().name)
+	_leg_ground_status_command_name = StringName("leg_ground_%s" % get_parent().name)
 	_right_arm_ik_watch_name = StringName("rig/%s/right_arm_ik" % get_parent().name)
 	_right_arm_ik_command_name = StringName("arm_ik_status_%s" % get_parent().name)
 	_left_arm_ik_watch_name = StringName("rig/%s/left_arm_ik" % get_parent().name)
@@ -231,6 +247,7 @@ func _ready() -> void:
 	debug_hub.call("watch", _watch_name, func() -> int: return physical_bones.size())
 	debug_hub.call("watch", _leg_status_watch_name, func() -> bool: return _leg_pose_active)
 	debug_hub.call("command", _leg_status_command_name, _debug_leg_status, "Report this player procedural leg gait state.", false, false)
+	debug_hub.call("command", _leg_ground_status_command_name, _debug_leg_ground_status, "Report both procedural foot ground probes and world-space targets.", false, false)
 	debug_hub.call("watch", _right_arm_ik_watch_name, func() -> bool: return _right_arm_ik_active)
 	debug_hub.call("watch", _right_rig_hand_visible_watch_name, _is_right_rig_hand_visual_visible)
 	debug_hub.call("watch", _left_arm_ik_watch_name, func() -> bool: return _left_arm_ik_active)
@@ -244,6 +261,7 @@ func _exit_tree() -> void:
 		debug_hub.call("unwatch", _watch_name)
 		debug_hub.call("unwatch", _leg_status_watch_name)
 		debug_hub.call("unregister_command", _leg_status_command_name)
+		debug_hub.call("unregister_command", _leg_ground_status_command_name)
 		debug_hub.call("unwatch", _right_arm_ik_watch_name)
 		debug_hub.call("unwatch", _left_arm_ik_watch_name)
 		debug_hub.call("unwatch", _right_rig_hand_visible_watch_name)
@@ -396,6 +414,38 @@ func _update_procedural_arm_chain(
 	skeleton.force_update_all_bone_transforms()
 	return true
 
+func _probe_ground_beneath_foot(foot_world: Vector3, step_direction_world: Vector3) -> Dictionary:
+	if not foot_world.is_finite():
+		return {}
+	var horizontal_lead: Vector3 = step_direction_world
+	horizontal_lead.y = 0.0
+	if horizontal_lead.length_squared() > 0.0001:
+		horizontal_lead = horizontal_lead.normalized() * LEG_GROUND_PROBE_LEAD_M
+	var probe_origin: Vector3 = foot_world + horizontal_lead + Vector3.UP * LEG_GROUND_PROBE_UP_M
+	var probe_end: Vector3 = foot_world + horizontal_lead - Vector3.UP * LEG_GROUND_PROBE_DOWN_M
+	var ground_mask: int = (1 << (LAYERS.WORLD_STATIC - 1)) | (1 << (LAYERS.PROPS - 1)) | (1 << (LAYERS.ELEVATOR - 1))
+	var excluded: Array[RID] = []
+	var player_body: CollisionObject3D = get_parent() as CollisionObject3D
+	if player_body != null:
+		excluded.append(player_body.get_rid())
+	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(probe_origin, probe_end, ground_mask, excluded)
+	query.collide_with_areas = false
+	query.collide_with_bodies = true
+	var world: World3D = get_world_3d()
+	if world == null:
+		return {}
+	var hit: Dictionary = world.direct_space_state.intersect_ray(query)
+	if hit.is_empty():
+		return {}
+	var hit_normal: Vector3 = hit.get("normal", Vector3.UP)
+	if hit_normal.y < LEG_GROUND_MIN_NORMAL_Y:
+		return {}
+	return {
+		"position": hit.get("position", foot_world) + Vector3.UP * LEG_GROUND_FOOT_CLEARANCE_M,
+		"normal": hit_normal,
+		"collider": hit.get("collider")
+	}
+
 func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: float) -> bool:
 	if _left_thigh_bone_index < 0 or _left_shin_bone_index < 0 or _left_foot_bone_index < 0:
 		return false
@@ -403,11 +453,40 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 		return false
 	if simulator.is_simulating_physics() or _remote_active or _pose_blend_active or _recovery_animation_active:
 		_leg_pose_active = false
+		_left_foot_grounded = false
+		_right_foot_grounded = false
+		_left_foot_plant.call("reset")
+		_right_foot_plant.call("reset")
 		return false
 	if not world_velocity.is_finite():
 		return false
 	var local_velocity: Vector3 = global_basis.inverse() * world_velocity
 	_leg_controller.call("update", delta, local_velocity, grounded)
+	skeleton.force_update_all_bone_transforms()
+	var left_foot_world: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(_left_foot_bone_index).origin)
+	var right_foot_world: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(_right_foot_bone_index).origin)
+	var left_ground_hit: Dictionary = _probe_ground_beneath_foot(left_foot_world, world_velocity)
+	var right_ground_hit: Dictionary = _probe_ground_beneath_foot(right_foot_world, world_velocity)
+	_left_foot_grounded = grounded and not left_ground_hit.is_empty()
+	_right_foot_grounded = grounded and not right_ground_hit.is_empty()
+	_left_foot_ground_target_world = left_ground_hit.get("position", left_foot_world)
+	_right_foot_ground_target_world = right_ground_hit.get("position", right_foot_world)
+	_left_foot_ground_normal = left_ground_hit.get("normal", Vector3.UP)
+	_right_foot_ground_normal = right_ground_hit.get("normal", Vector3.UP)
+	var left_target: Vector3 = _left_foot_plant.call(
+		"update_target", left_foot_world, _left_foot_ground_target_world,
+		_left_foot_grounded, bool(_leg_controller.get("left_in_swing")),
+		float(_leg_controller.get("left_swing_progress")), 0.12
+	)
+	var right_target: Vector3 = _right_foot_plant.call(
+		"update_target", right_foot_world, _right_foot_ground_target_world,
+		_right_foot_grounded, bool(_leg_controller.get("right_in_swing")),
+		float(_leg_controller.get("right_swing_progress")), 0.12
+	)
+	# Targets are intentionally diagnostic-only in this slice. The next IK slice
+	# will turn these world-space positions into thigh/shin rotations.
+	_left_foot_ground_target_world = left_target
+	_right_foot_ground_target_world = right_target
 	var left_thigh_rotation: Quaternion = _leg_controller.get("left_thigh_rotation")
 	var left_shin_rotation: Quaternion = _leg_controller.get("left_shin_rotation")
 	var left_foot_rotation: Quaternion = _leg_controller.get("left_foot_rotation")
@@ -432,6 +511,12 @@ func _debug_leg_status(_args: Array[Variant]) -> String:
 	var right_progress: float = float(_leg_controller.get("right_swing_progress"))
 	return "active=%s phase=%.2f left=%s(%.2f) right=%s(%.2f)" % [
 		_leg_pose_active, phase_value, left_state, left_progress, right_state, right_progress
+	]
+
+func _debug_leg_ground_status(_args: Array[Variant]) -> String:
+	return "left_hit=%s left_target=%s left_normal=%s right_hit=%s right_target=%s right_normal=%s" % [
+		_left_foot_grounded, _left_foot_ground_target_world, _left_foot_ground_normal,
+		_right_foot_grounded, _right_foot_ground_target_world, _right_foot_ground_normal
 	]
 
 func update_procedural_right_arm(wrist_target_world: Vector3, delta: float) -> bool:
