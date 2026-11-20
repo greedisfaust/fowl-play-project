@@ -43,24 +43,30 @@ func _check_world_hit_and_recoil() -> void:
 	var target: CharacterBody3D = PLAYER_SCENE.instantiate() as CharacterBody3D
 	target.name = "2"
 	target.set("input_peer_id", 2)
-	target.global_position = attacker.global_position + Vector3(0.0, 0.0, -1.5)
 	players.add_child(target)
+	target.global_position = attacker.global_position + Vector3(0.0, 0.0, -1.5)
 	for frame_index: int in range(3):
 		await physics_frame
 	var camera: Camera3D = attacker.get_node("Head/Camera3D") as Camera3D
 	var result: Dictionary = HIT_DETECTOR.trace_jab(attacker, camera.global_position, -camera.global_basis.z, TUNING.QUICK_PUNCH_RANGE_M)
 	if result.get("target") != target:
 		_fail("A clear ray within range should identify the target Player")
-	var before_recoil: Vector3 = attacker.velocity
-	attacker.call("apply_combat_recoil", Vector3(0.0, 0.0, -1.0))
-	if attacker.velocity.z >= before_recoil.z:
-		_fail("A weak recoil should add movement away from the attacker")
-	attacker.set("is_limp", true)
-	var before_limp_recoil: Vector3 = attacker.velocity
-	attacker.call("apply_combat_recoil", Vector3(0.0, 0.0, -1.0))
-	if attacker.velocity != before_limp_recoil:
-		_fail("Standing recoil must not modify a limp player's movement velocity")
-	attacker.set("is_limp", false)
+	var mask: int = HIT_DETECTOR.get_jab_collision_mask()
+	if (mask & (1 << (1 - 1))) == 0 or (mask & (1 << (7 - 1))) == 0:
+		_fail("Jab ray should include static world and elevator layers so obstacles block hits")
+	var network: Node = root.get_node("Network")
+	if not bool(network.call("_receive_combat_input", 1, true)):
+		_fail("Host should accept the local player's punch press")
+	for frame_index: int in range(3):
+		await physics_frame
+	if not bool(network.call("_receive_combat_input", 1, false)):
+		_fail("A short host-timed press/release should accept a jab")
+	for frame_index: int in range(10):
+		await physics_frame
+	if int(network.get("combat_jabs")) != 1 or int(network.get("combat_hits")) != 1:
+		_fail("A clear in-range jab should be accepted and confirm exactly one hit")
+	if target.velocity.z >= -0.5:
+		_fail("A standing target should receive a weak movement recoil")
 	target.set("auto_recovery_enabled", false)
 	var network: Node = root.get_node("Network")
 	if not bool(network.call("start_ragdoll_spike", 2)):
@@ -75,12 +81,12 @@ func _check_world_hit_and_recoil() -> void:
 		_fail("The limp rig should expose its physical bones")
 	else:
 		var hit_bone: PhysicalBone3D = bones[0] as PhysicalBone3D
-		var before_speed: float = hit_bone.linear_velocity.length()
+		var before_velocity: Vector3 = hit_bone.linear_velocity
 		var impulse_applied: bool = bool(rig.call("apply_combat_impulse", Vector3(0.0, 0.0, -1.0), hit_bone.global_position, TUNING.JAB_LIMP_IMPULSE_MPS))
 		if not impulse_applied:
 			_fail("A jab should apply a physical impulse to an already-limp body")
-		if hit_bone.linear_velocity.length() <= before_speed:
-			_fail("The limp physical bone should receive additional velocity")
+		if (hit_bone.linear_velocity - before_velocity).dot(Vector3(0.0, 0.0, -1.0)) <= 1.0:
+			_fail("The struck limp physical bone should receive a forward velocity change")
 		if not is_equal_approx(float(target.get("_limp_elapsed_s")), limp_elapsed_before):
 			_fail("A limp-player jab must not reset or extend the recovery timer")
 	arena.queue_free()

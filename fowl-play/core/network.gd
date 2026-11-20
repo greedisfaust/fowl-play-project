@@ -189,6 +189,12 @@ func shutdown() -> void:
 	ragdoll_send_hz = TUNING.RAGDOLL_SEND_HZ
 	carry_rejected = 0
 	_carry_times.clear()
+	combat_rejected = 0
+	combat_jabs = 0
+	combat_hits = 0
+	_combat_press_times.clear()
+	_combat_jab_ready_times.clear()
+	_active_jabs.clear()
 	status = "disconnected"
 	session_ended.emit()
 	_debug_log("Network shut down")
@@ -732,7 +738,7 @@ func _receive_combat_input(owner_id: int, pressed: bool) -> bool:
 		if peer != null:
 			_combat_windup.rpc(owner_id)
 		_play_combat_windup(owner_id)
-		_debug_log("Combat wind-up peer=%d" % owner_id)
+		_combat_log("Wind-up peer=%d" % owner_id)
 		return true
 	if not _combat_press_times.has(owner_id):
 		return _combat_reject(owner_id, "release without press")
@@ -762,7 +768,7 @@ func _receive_combat_input(owner_id: int, pressed: bool) -> bool:
 	if peer != null:
 		_combat_jab.rpc(owner_id, direction)
 	_play_combat_jab(owner_id, direction)
-	_debug_log("Jab accepted peer=%d" % owner_id)
+	_combat_log("Jab accepted peer=%d" % owner_id)
 	return true
 
 func _combat_actor_can_attack(actor: Node3D, owner_id: int) -> bool:
@@ -812,7 +818,7 @@ func _apply_jab_hit(result: Dictionary, direction: Vector3) -> void:
 		if peer != null:
 			_combat_recoil.rpc(target_id, direction)
 		_receive_combat_recoil(target_id, direction)
-	_debug_log("Jab hit peer=%d limp=%s" % [int(target.get("input_peer_id")), bool(target.get("is_limp"))])
+	_combat_log("Jab hit peer=%d limp=%s" % [int(target.get("input_peer_id")), bool(target.get("is_limp"))])
 
 func _receive_combat_recoil(target_id: int, direction: Vector3) -> void:
 	var target: Node = movement_players.get(target_id)
@@ -842,6 +848,11 @@ func _combat_recoil(target_id: int, direction: Vector3) -> void:
 	if not validate_rpc(TUNING.PEER_ID_HOST) or not direction.is_finite() or direction.length_squared() < 0.0001:
 		return
 	_receive_combat_recoil(target_id, direction.normalized())
+
+func _combat_log(message: String) -> void:
+	var debug_hub: Node = get_node_or_null("/root/DebugHub")
+	if debug_hub != null:
+		debug_hub.call("log", &"combat", message)
 
 func _debug_log(message: String) -> void:
 	var debug_hub: Node = get_node_or_null("/root/DebugHub")
