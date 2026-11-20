@@ -98,6 +98,7 @@ func _ready() -> void:
 		gameplay_cursor.call("set_cursor_enabled", is_local_player)
 	if not network.is_connected("identity_roster_changed", _on_identity_roster_changed):
 		network.connect("identity_roster_changed", _on_identity_roster_changed)
+	_attach_nameplate_to_ragdoll_head()
 	_refresh_identity_presentation()
 	if carrier != null:
 		carrier.carry_started.connect(_on_carry_started)
@@ -174,6 +175,20 @@ func _exit_tree() -> void:
 	debug_hub.call("unwatch", _debug_carrying_watch_name)
 	if not _debug_limp_target_watch_name.is_empty():
 		debug_hub.call("unwatch", _debug_limp_target_watch_name)
+
+func _attach_nameplate_to_ragdoll_head() -> void:
+	if not is_instance_valid(nameplate) or not is_instance_valid(rig):
+		return
+	var head_attachment: BoneAttachment3D = rig.get_node_or_null("Skeleton3D/HeadAttachment") as BoneAttachment3D
+	if head_attachment == null:
+		push_warning("Player NamePlate could not find Rig/Skeleton3D/HeadAttachment; it will remain attached to Player.")
+		return
+	# The rig becomes independent of Player during ragdoll. Parenting the plate
+	# to the Head bone keeps it aligned through host simulation, remote playback,
+	# and the recovery blend without changing any ragdoll physics.
+	nameplate.reparent(head_attachment, false)
+	nameplate.position = Vector3(0.0, 0.38, 0.0)
+	nameplate.rotation = Vector3.ZERO
 
 func _on_identity_roster_changed() -> void:
 	_refresh_identity_presentation()

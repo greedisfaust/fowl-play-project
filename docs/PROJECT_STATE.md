@@ -398,3 +398,13 @@ Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep a
 - Player identity remains host-authoritative and keyed by peer ID internally. The visible nameplate displays the nickname only; no peer ID is rendered. The local player's own plate remains hidden.
 - Player scene integration expects a child Node3D named NamePlate (instance of res://player/player_nameplate.tscn) with Panel, Display/SubViewport, and Display/UI children Background, Accent, Nickname, Divider, and Status. The scene is editor-authored by the user; no .tscn was changed by this code slice.
 - The identity-presentation contract test now constructs the expected node hierarchy and checks nickname-only text, identity accent, local-player hiding, transparent high-resolution viewport, and 3D quad material. Godot execution and in-game visual/multiplayer verification remain pending.
+
+
+## 2026-11-20 — player nameplate readability and ragdoll follow-up
+
+- Reduced the world-space nameplate to 78% of its former size (22% smaller) while preserving the authored 512 × 128 SubViewport resolution.
+- Corrected the QuadMesh billboard orientation so its +Z display face points toward the active camera; this prevents the back-face/mirrored text presentation.
+- Nickname text is horizontally centered across the panel.
+- Added smooth opacity targeting: 12% at rest, 100% while the local view ray intersects the nameplate quad, with the existing 18–28 m distance fade still applied. With mouse capture, the test uses the center-screen gameplay cursor; with a visible cursor, it uses the actual pointer position.
+- Player.gd reparents the nameplate to the existing Rig/Skeleton3D/HeadAttachment at runtime. This attachment follows the head bone during host ragdoll simulation, remote interpolated pose playback, and recovery blending. No ragdoll physics, network authority, or editor-authored scene files are changed.
+- Updated the identity-presentation contract to cover scale, centered nickname alignment, and opacity defaults. Godot execution and rendered multiplayer verification remain user-run.

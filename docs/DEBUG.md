@@ -418,3 +418,11 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 - The reusable NamePlate scene uses a transparent 512 × 128 SubViewport displayed on a QuadMesh. Its root faces the active local camera and fades between the exported `fade_start_distance` and `fade_end_distance` values (defaults 18 m and 28 m).
 - The NamePlate scene must contain `Panel` (MeshInstance3D), `Display` (SubViewport), and `Display/UI` with `Background`, `Accent`, `Nickname`, `Divider`, and `Status`. The Player's `NamePlate` child must be a Node3D instance of that scene.
 - Focused contract: `identity-presentation` stage in `tests/run_checks.ps1`; rendered readability, occlusion, and host/client appearance require in-game verification.
+
+
+## Player nameplate polish
+- The plate is 78% scale (22% smaller) and its nickname is horizontally centered.
+- It faces the camera with the QuadMesh display side toward the viewer; mirrored text should no longer occur.
+- Rest opacity is 12%; aiming the center-screen cursor at the plate (or moving a visible pointer over it) smoothly raises opacity to 100%. Distance fade still applies beyond 18–28 m.
+- Player.gd attaches the plate to `Rig/Skeleton3D/HeadAttachment`, so the plate follows the actual head bone during ragdoll, remote pose playback, and recovery. If it does not follow, inspect that the Player's `NamePlate` is a direct child before runtime; the controller reparents it during Player._ready().
+- Focused contract: `identity-presentation` stage. Run `tests/run_checks.ps1`; in-game visual and multiplayer checks remain required.
