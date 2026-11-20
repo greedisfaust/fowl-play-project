@@ -31,3 +31,6 @@ M8 now checks forward, backward, strafing, left/right separation, and rotated ri
 ## Verification status
 
 Code and regression assertions are committed. Godot tests and in-game verification have NOT been run by the assistant. The user should test forward/backward walking, strafing both directions, diagonals, circles, and quick start/stop transitions. If the legs reach too far or the feet overstep, tune the predicted travel and lateral placement independently.
+
+
+- Follow-up refinement: hip-relative predicted targets are used only for a foot that is actively in swing. Stance feet continue probing their current sole, so standing initialization and stop-settling cannot pull a planted foot toward a forward target. Both targets are calculated from the midpoint between the hips to avoid doubling the lateral separation.
