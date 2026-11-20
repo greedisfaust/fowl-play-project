@@ -480,3 +480,12 @@ Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep a
 - Changed knee flexion to bend early, hold through most of forward swing, and extend during the final approach to landing. The two-bone IK then follows the elevated foot target, producing the intended knee-up-then-place motion.
 - Reduced ground-hit foot clearance from 0.04 m to 0.015 m to reduce visible hovering. The value remains a small ankle/sole offset, not a guarantee of exact mesh contact because the foot bone origin is not necessarily the bottom of the shoe.
 - Added/updated M8 assertions for visible knee bend and the larger swing arc. Godot tests and in-game verification remain pending.
+
+
+## Gait cadence and anatomical spacing refinement — 2026-11-20
+
+- Added `LEG_GAIT_RATE_MULTIPLIER = 0.78` to slow the procedural step cycle independently of player movement speed. The player still moves at the same gameplay speed; only gait phase advances more deliberately.
+- Increased the rig's hip-relative landing-zone lateral offset from 0.18 m to 0.24 m to keep the feet in clearer left/right lanes.
+- Increased the per-leg outward knee-pole bias from 0.30 m to 0.48 m so IK solutions favor separate knee bend planes.
+- Updated the gait phase regression expectation to include the cadence multiplier.
+- This is a soft anatomical separation constraint, not physical leg collision. Godot tests and visual verification remain pending.
