@@ -567,3 +567,10 @@ The authored rig's `Thigh_L` bone is on local +X and `Thigh_R` is on local -X. F
 - Gait stride intensity now scales against the 8 m/s sprint speed instead of reaching full intensity at the 3.8 m/s walk speed. Walking therefore uses a softer leg swing/knee bend; sprinting builds toward the full stride.
 - Jump launch speed is now 6.9 m/s (from 6.5 m/s), increasing full-height jump airtime and height modestly without changing gravity, coyote time, buffering, or short-hop release behavior.
 - Playtest: compare 90-degree turns and full reversals while walking/sprinting; check walking no longer looks like repeated bunny hops; compare tap and held jump heights.
+
+
+## Procedural walk/sprint gait calibration
+
+- Walking and sprinting use separate gait profiles instead of simply scaling one oversized stride. Walking uses a longer cycle distance (2.4 m), a 0.38 stance fraction, 24-degree thigh swing, 30-degree knee flex, and a 0.09 m normal swing arc. Sprint blends toward the existing 1.4 m cycle, 0.58 stance fraction, 46-degree thigh swing, 68-degree knee flex, and a 0.20 m swing arc.
+- The 0.30 m emergency replant arc remains separate so a stretched foot can still recover safely. Normal walking no longer uses that exaggerated recovery height.
+- M8 checks now cover distinct walk/sprint cadence, articulation, and lift tuning. Godot execution and in-game visual verification remain user-run.
