@@ -450,3 +450,10 @@ Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep a
 - Fixed the gait phase freezing in mid-swing when horizontal movement stopped. The controller now gently advances the remaining cycle to the shared double-stance phase while the motion blend fades, then holds a neutral standing phase.
 - Added an M8 regression check that stops the controller during swing and verifies both feet settle into stance.
 - This addresses the suspended-foot case visible in the user's playtest. Foot sole alignment and surface-normal orientation remain separate visual-contact refinements; Godot test execution and in-game verification are still pending.
+
+
+### Movement-based procedural footstep planner — 2026-11-20
+- Replaced the trailing-foot-origin predictive landing calculation with a hip-relative planner driven by smoothed movement intent.
+- The planner keeps left/right targets separated perpendicular to travel, supports forward/backward/strafe/diagonal movement, and predicts root travel over the swing interval before vertical ground probing.
+- Existing foot anchors, swing interpolation, two-bone IK, and ground-normal alignment remain in place.
+- Added M8 planner assertions. Godot tests and in-game verification have not been run by the assistant; user visual verification is pending.
