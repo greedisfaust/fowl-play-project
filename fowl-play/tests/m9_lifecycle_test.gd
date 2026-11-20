@@ -107,6 +107,8 @@ func _run() -> void:
 	network.get("connected_peers").append(6)
 	network.get("roster").append(6)
 	network.call("shutdown")
+	await process_frame
+	check(players.get_child_count() == 0, "session shutdown queues all arena Players for removal")
 	for state_name: String in shutdown_state_names:
 		check(network.get(state_name).is_empty(), "session shutdown clears %s" % state_name)
 	check(network.get("movement_players").is_empty(), "session shutdown clears Player registrations")
