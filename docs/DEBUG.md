@@ -532,3 +532,11 @@ The authored rig's `Thigh_L` bone is on local +X and `Thigh_R` is on local -X. F
 - Footstep planning now keeps the two foot lanes perpendicular to the current movement direction instead of forcing them to remain on fixed anatomical left/right offsets. Forward/backward movement still uses the rig-right axis; pure strafing uses the character-forward axis, giving the feet stable front/back lanes.
 - The same movement-relative axis is used by landing-target separation constraints, so a leading foot is not pushed back across the hip centerline while strafing. Lane orientation remains stable for left and right strafes.
 - M8 coverage now checks rightward and leftward strafing, front/back separation, and movement-relative replant constraints.
+
+
+## Moving-support foot planting
+
+- `leg_ground_<player>` reports the current world-space planted targets and anchor state. A planted foot now also stores its contact point in the supporting `Node3D`'s local space.
+- When the support translates or rotates, the planted target is transformed back into world space so the foot follows the elevator/platform instead of remaining behind.
+- The ground probe passes its hit collider into the foot-plant tracker. Static floors continue to work as before; if a support is freed, the anchor safely remains at its last world position.
+- M8 regression coverage checks both translation and rotation of a moving support. Run the Godot M8 test and verify in-game on a moving elevator/platform; these checks have not been run by the assistant.
