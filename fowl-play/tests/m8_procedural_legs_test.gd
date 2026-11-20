@@ -13,7 +13,7 @@ func _initialize() -> void:
 func _run() -> void:
 	_check_controller_gait()
 	_check_foot_plant_targets()
-	_check_rig_ownership()
+	await _check_rig_ownership()
 	if _failed:
 		quit(1)
 		return
@@ -137,9 +137,20 @@ func _check_foot_plant_targets() -> void:
 		_fail("Foot planting should yield to the current foot position while airborne")
 
 func _check_rig_ownership() -> void:
+	var floor_body: StaticBody3D = StaticBody3D.new()
+	floor_body.name = "M8GroundProbeFloor"
+	floor_body.collision_layer = 1
+	var floor_shape: CollisionShape3D = CollisionShape3D.new()
+	var floor_box: BoxShape3D = BoxShape3D.new()
+	floor_box.size = Vector3(20.0, 0.2, 20.0)
+	floor_shape.shape = floor_box
+	floor_shape.position = Vector3(0.0, -0.1, 0.0)
+	floor_body.add_child(floor_shape)
+	root.add_child(floor_body)
 	var rig: Node3D = RIG_SCENE.instantiate() as Node3D
 	rig.name = "M8TestRig"
 	root.add_child(rig)
+	await physics_frame
 	var skeleton: Skeleton3D = rig.get_node("Skeleton3D") as Skeleton3D
 	var left_thigh_index: int = skeleton.find_bone("Thigh_L")
 	if left_thigh_index < 0:
@@ -149,6 +160,9 @@ func _check_rig_ownership() -> void:
 	var applied: bool = bool(rig.call("update_procedural_legs", Vector3(0.0, 0.0, -5.0), true, 0.125))
 	if not applied:
 		_fail("Standing rig should accept procedural leg targets")
+	var ground_status: String = str(rig.call("_debug_leg_ground_status", []))
+	if not ground_status.contains("left_hit=true") or not ground_status.contains("right_hit=true"):
+		_fail("Both feet should detect the static floor through their physics-space probes")
 	skeleton.force_update_all_bone_transforms()
 	var standing_rotation: Quaternion = skeleton.get_bone_pose_rotation(left_thigh_index)
 	if standing_rotation.angle_to(Quaternion.IDENTITY) < 0.1:
@@ -164,6 +178,7 @@ func _check_rig_ownership() -> void:
 		_fail("Procedural leg updates must not alter a ragdoll-owned skeleton")
 	rig.call("stop_host_simulation")
 	rig.free()
+	floor_body.free()
 
 func _fail(message: String) -> void:
 	_failed = true
