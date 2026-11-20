@@ -598,3 +598,9 @@ Foot planting now records both a world-space target and, when the ground hit bel
 
 - Corrected a mismatch between the gait controller's separate walking profile and the rig's footstep landing predictor. Landing travel now uses the active blended cycle distance and stance fraction, so the foot planner and alternating leg phases share one timing model.
 - Added M8 checks for mutually exclusive left/right swing and a real double-support window during ordinary walking. Sprint and jump/turn tuning remain unchanged. Godot tests and in-game verification have not been run by the assistant.
+
+
+### 2026-11-20 — walking cadence and stance reach tuning
+
+- Increased the dedicated walking cycle distance to 2.0 m to slow the forward gait rhythm. Set the walking stance fraction to 0.46 to keep planted-foot travel within comfortable leg reach and avoid excessive emergency replanting.
+- Sprint gait values remain unchanged. M8 regression coverage guards the walking stance fraction and planted-foot reach. Godot tests and in-game verification have not been run by the assistant.
