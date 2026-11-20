@@ -503,3 +503,11 @@ The authored rig's `Thigh_L` bone is on local +X and `Thigh_R` is on local -X. F
 - Leg IK now allows a smoothed, cosmetic reach extension up to `LEG_IK_MAX_STRETCH_RATIO` (1.14). Both thigh and shin bone scales are adjusted along their authored bone axes, so attached limb meshes stretch with the IK chain rather than leaving the visible geometry behind. Scales return to identity when IK is no longer active or when ragdoll/other pose ownership takes over.
 - Swing and emergency recovery foot arcs use `LEG_REPLANT_LIFT_M` (0.30 m). Thigh swing is tuned to 46 degrees, knee flex to 68 degrees, and the IK pole adds a stronger forward bias while the knee is flexed.
 - M8 checks cover the configured stretch/lift range and a farther two-bone IK target.
+
+
+## Procedural gait sync and knee direction
+
+- Gait phase now advances from the measured horizontal player velocity rather than the smoothed direction-filter velocity. Direction still blends for smooth turning, while cadence no longer waits for the velocity filter to catch up.
+- Stride cycle distance is 1.4 m with a 1.0 cadence multiplier. At the current 0.58 stance fraction, nominal stance travel is 0.812 m, below the 0.94 m natural-reach-plus-replant margin (0.84 m two-bone rest reach + 0.10 m).
+- Leg IK pole guidance now favors anatomical outward knee placement (0.95 m) with a reduced forward component (0.55 m base plus 0.35 m swing bias). Arm IK retains its independent pole tuning.
+- M8 checks assert stance travel remains below the leg reach margin and that mirrored left/right IK poles place each knee outward from the centerline.
