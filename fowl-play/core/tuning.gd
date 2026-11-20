@@ -13,13 +13,13 @@ const MOVE_INTERP_DELAY_S: float = 0.1
 const MOVE_SANITY_MAX_SPEED_MPS: float = 15.0
 const MOVE_SEND_HZ: float = 20.0
 
-const LEG_STEP_CYCLE_DISTANCE_M: float = 1.8
-const LEG_GAIT_RATE_MULTIPLIER: float = 0.78
+const LEG_STEP_CYCLE_DISTANCE_M: float = 1.4
+const LEG_GAIT_RATE_MULTIPLIER: float = 1.0
 const LEG_REPLANT_EXTRA_STRETCH_M: float = 0.10
 const LEG_REPLANT_RECOVERY_SECONDS: float = 0.18
 const LEG_REPLANT_LIFT_M: float = 0.30
 const LEG_MIN_LANDING_LATERAL_M: float = 0.20
-const LEG_IK_SWING_KNEE_FORWARD_BIAS_M: float = 0.55
+const LEG_IK_SWING_KNEE_FORWARD_BIAS_M: float = 0.35
 const LEG_IK_MAX_STRETCH_RATIO: float = 1.14
 const LEG_EMERGENCY_FORWARD_PLACEMENT_M: float = 0.12
 const LEG_MIN_WALK_SPEED_MPS: float = 0.15
@@ -30,7 +30,7 @@ const LEG_STANCE_FRACTION: float = 0.58
 const LEG_SWING_FOOT_LIFT_RAD: float = deg_to_rad(16.0)
 const LEG_STANCE_TOE_ROLL_RAD: float = deg_to_rad(7.0)
 const LEG_BLEND_RESPONSE: float = 10.0
-const LEG_VELOCITY_RESPONSE: float = 12.0
+const LEG_VELOCITY_RESPONSE: float = 20.0
 const MAX_PUNCH_POS_ERROR_M: float = 6.0
 
 const TAP_MAX_SECONDS: float = 0.25
