@@ -101,7 +101,9 @@ func cancel() -> void:
 	if hand != null:
 		hand.set_punching(false)
 		hand.punch_position_offset = _base_punch_position_offset
-	var rig: Node3D = _player.get("rig") as Node3D if is_instance_valid(_player) else null
+	var rig: Node3D = null
+	if is_instance_valid(_player):
+		rig = _player.get("rig") as Node3D
 	if is_instance_valid(rig):
 		rig.call("set_combat_body_pose", Vector3.ZERO)
 
@@ -125,9 +127,10 @@ static func get_recoil_body_pose(elapsed: float, local_direction: Vector3) -> Ve
 	return Vector3(RECOIL_LEAN_RAD * weight, -side * 0.10 * weight, side * 0.12 * weight)
 
 func _local_direction(world_direction: Vector3) -> Vector3:
-	if not is_instance_valid(_player):
+	var player_3d: Node3D = _player as Node3D
+	if not is_instance_valid(player_3d):
 		return Vector3.FORWARD
-	return (_player.global_basis.inverse() * world_direction).normalized()
+	return (player_3d.global_basis.inverse() * world_direction).normalized()
 
 func _can_present() -> bool:
 	return is_instance_valid(_player) and not bool(_player.get("is_limp")) and not bool(_player.get("is_recovering")) and not bool(_player.call("is_carrying"))

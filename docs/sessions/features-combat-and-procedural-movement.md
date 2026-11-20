@@ -295,7 +295,7 @@ Implemented on `features/combat-and-procedural-movement`:
 ### M7.2 — procedural jab animation and weak reaction
 
 Implemented:
-- `CombatPresentation` now owns a short anticipation → extension/follow-through → return pose curve for the Chest bone, plus a brief weak target recoil pose.
+- `CombatPresentation` now owns a short fist pullback and anticipation → extension/follow-through → return pose curve for the Chest bone, plus a brief weak target recoil pose.
 - The right hand stays curled through the extension/return, then releases to its ordinary pose. Its existing action lifecycle still drives the wrist target.
 - `Player._process` advances combat presentation before procedural leg and arm IK. `PlayerRig.set_combat_body_pose()` applies the Chest pose; the following arm IK pass then solves from the rotated shoulder.
 - The existing host-approved wind-up/jab events are used for remote presentation. The pose is evaluated locally; no per-joint network stream is introduced.
