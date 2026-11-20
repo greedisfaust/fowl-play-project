@@ -121,6 +121,9 @@ func _check_stance_swing_articulation() -> void:
 		_fail("The left foot should enter swing after the stance fraction")
 	if stance_foot.angle_to(swing_foot) < 0.08:
 		_fail("Foot articulation should differ between stance and swing")
+	var swing_knee: Quaternion = controller.get("left_shin_rotation")
+	if swing_knee.angle_to(Quaternion.IDENTITY) < deg_to_rad(20.0):
+		_fail("The knee should visibly bend during the lifted portion of swing")
 	if float(controller.get("left_swing_progress")) <= 0.0:
 		_fail("Swing phase should expose a normalized progress value")
 
@@ -181,32 +184,32 @@ func _check_foot_plant_targets() -> void:
 	var tracker: RefCounted = FOOT_PLANT_SCRIPT.new()
 	var current: Vector3 = Vector3(0.0, 0.1, 0.0)
 	var first_landing: Vector3 = Vector3(0.0, 0.05, 0.0)
-	var planted: Vector3 = tracker.call("update_target", current, first_landing, true, false, 0.0, 0.12)
+	var planted: Vector3 = tracker.call("update_target", current, first_landing, true, false, 0.0, 0.28)
 	if planted.distance_to(first_landing) > 0.001:
 		_fail("A new stance should capture the grounded landing target")
 
 	var moved_root_foot: Vector3 = current + Vector3(0.0, 0.0, -0.4)
-	var locked: Vector3 = tracker.call("update_target", moved_root_foot, first_landing, true, false, 0.0, 0.12)
+	var locked: Vector3 = tracker.call("update_target", moved_root_foot, first_landing, true, false, 0.0, 0.28)
 	if locked.distance_to(first_landing) > 0.001:
 		_fail("A planted foot should remain locked in world space while the player moves")
 
 	var next_landing: Vector3 = Vector3(0.0, 0.05, -0.8)
-	var swing_start: Vector3 = tracker.call("update_target", moved_root_foot, next_landing, true, true, 0.0, 0.12)
+	var swing_start: Vector3 = tracker.call("update_target", moved_root_foot, next_landing, true, true, 0.0, 0.28)
 	if swing_start.distance_to(first_landing) > 0.001:
 		_fail("A swing should begin at the previous planted anchor")
 	var drifting_probe: Vector3 = next_landing + Vector3(0.0, 0.0, -0.25)
-	var swing_middle: Vector3 = tracker.call("update_target", moved_root_foot, drifting_probe, true, true, 0.5, 0.12)
+	var swing_middle: Vector3 = tracker.call("update_target", moved_root_foot, drifting_probe, true, true, 0.5, 0.28)
 	if swing_middle.z >= first_landing.z or swing_middle.z <= next_landing.z:
 		_fail("The swing target should interpolate between the old and next foot positions")
-	if swing_middle.distance_to((first_landing + next_landing) * 0.5 + Vector3.UP * 0.12) > 0.001:
+	if swing_middle.distance_to((first_landing + next_landing) * 0.5 + Vector3.UP * 0.28) > 0.001:
 		_fail("A swing should retain its captured landing target instead of chasing a moving ground probe")
 	if swing_middle.y <= first_landing.y:
 		_fail("The swing target should lift above the ground during mid-swing")
-	var landed: Vector3 = tracker.call("update_target", next_landing, drifting_probe, true, false, 0.0, 0.12)
+	var landed: Vector3 = tracker.call("update_target", next_landing, drifting_probe, true, false, 0.0, 0.28)
 	if landed.distance_to(next_landing) > 0.001:
 		_fail("The foot should lock to its new landing point when stance begins")
 
-	var airborne: Vector3 = tracker.call("update_target", next_landing + Vector3.UP, next_landing, false, false, 0.0, 0.12)
+	var airborne: Vector3 = tracker.call("update_target", next_landing + Vector3.UP, next_landing, false, false, 0.0, 0.28)
 	if airborne.distance_to(next_landing + Vector3.UP) > 0.001:
 		_fail("Foot planting should yield to the current foot position while airborne")
 
