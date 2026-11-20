@@ -268,9 +268,10 @@ func _physics_process(delta: float) -> void:
 		if not bool(jab.get("hit", false)):
 			var attacker: Node3D = movement_players.get(owner_id) as Node3D
 			if is_instance_valid(attacker) and not attacker.is_queued_for_deletion():
-				var result: Dictionary = COMBAT_HIT_DETECTOR.trace_jab(attacker, jab.get("origin", Vector3.ZERO), jab.get("direction", Vector3.ZERO), TUNING.QUICK_PUNCH_RANGE_M)
-				if result.has("target"):
-					_apply_jab_hit(result, jab.get("direction", Vector3.ZERO))
+				var jab_origin: Vector3 = jab.get("origin", Vector3.ZERO)
+				var jab_direction: Vector3 = jab.get("direction", Vector3.ZERO)
+				var result: Dictionary = COMBAT_HIT_DETECTOR.trace_jab(attacker, jab_origin, jab_direction, TUNING.QUICK_PUNCH_RANGE_M)
+				if result.has("target") and _apply_jab_hit(result, jab_direction):
 					jab["hit"] = true
 					combat_hits += 1
 		if float(jab.get("elapsed", 0.0)) >= TUNING.QUICK_PUNCH_DURATION_S:
@@ -829,20 +830,24 @@ func _play_combat_jab(owner_id: int, direction: Vector3) -> void:
 	if is_instance_valid(player):
 		player.call("play_combat_jab", direction)
 
-func _apply_jab_hit(result: Dictionary, direction: Vector3) -> void:
+func _apply_jab_hit(result: Dictionary, direction: Vector3) -> bool:
 	var target: Node3D = result.get("target") as Node3D
-	if not is_instance_valid(target) or target.is_queued_for_deletion():
-		return
+	if not is_instance_valid(target) or target.is_queued_for_deletion() or bool(target.get("is_recovering")):
+		return false
 	if bool(target.get("is_limp")):
 		var target_rig: Node3D = target.get("rig") as Node3D
-		if target_rig != null:
-			target_rig.call("apply_combat_impulse", direction, result.get("position", target.global_position), TUNING.JAB_LIMP_IMPULSE_MPS)
+		if target_rig == null:
+			return false
+		var applied: bool = bool(target_rig.call("apply_combat_impulse", direction, result.get("position", target.global_position), TUNING.JAB_LIMP_IMPULSE_MPS))
+		if not applied:
+			return false
 	else:
 		var target_id: int = int(target.get("input_peer_id"))
 		if peer != null:
 			_combat_recoil.rpc(target_id, direction)
 		_receive_combat_recoil(target_id, direction)
 	_combat_log("Jab hit peer=%d limp=%s" % [int(target.get("input_peer_id")), bool(target.get("is_limp"))])
+	return true
 
 func _receive_combat_recoil(target_id: int, direction: Vector3) -> void:
 	var target: Node = movement_players.get(target_id)
