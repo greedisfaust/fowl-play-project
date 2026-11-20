@@ -909,7 +909,7 @@ func _advance_combat_lunges(delta: float) -> void:
 			)
 			var hit_any_player: bool = false
 			for hit_result: Dictionary in hit_results:
-				if _apply_charged_lunge_hit(hit_result, owner_id):
+				if _apply_charged_lunge_hit(hit_result, owner_id, direction):
 					hit_any_player = true
 			if hit_any_player:
 				_finish_combat_lunge(owner_id, "hit")
@@ -919,7 +919,7 @@ func _advance_combat_lunges(delta: float) -> void:
 		else:
 			_active_lunges[owner_id] = lunge
 
-func _apply_charged_lunge_hit(result: Dictionary, attacker_id: int) -> bool:
+func _apply_charged_lunge_hit(result: Dictionary, attacker_id: int, attack_direction: Vector3) -> bool:
 	var target: Node3D = result.get("target") as Node3D
 	var attacker: Node3D = movement_players.get(attacker_id) as Node3D
 	if not is_instance_valid(target) or target.is_queued_for_deletion() or bool(target.get("is_limp")) or bool(target.get("is_recovering")):
@@ -933,7 +933,6 @@ func _apply_charged_lunge_hit(result: Dictionary, attacker_id: int) -> bool:
 	if not is_instance_valid(target_rig) or not start_ragdoll_spike(target_id):
 		return false
 	var impact_position: Vector3 = result.get("position", target.global_position + Vector3.UP * 0.9)
-	var attack_direction: Vector3 = (impact_position - attacker.global_position).normalized()
 	var launch_direction: Vector3 = get_charged_launch_direction(attacker.global_position, impact_position, attack_direction)
 	var impulse_applied: bool = bool(target_rig.call("apply_combat_impulse", launch_direction, impact_position, TUNING.CHARGED_PUNCH_LAUNCH_SPEED_MPS))
 	combat_lunge_hits += 1
