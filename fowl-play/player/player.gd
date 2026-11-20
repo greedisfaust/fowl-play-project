@@ -493,12 +493,15 @@ func _physics_process(delta: float) -> void:
 	)
 	var local_direction: Vector3 = Vector3(input_vector.x, 0.0, input_vector.y)
 	var move_direction: Vector3 = (transform.basis * local_direction).normalized()
-	if move_direction != Vector3.ZERO:
-		velocity.x = move_direction.x * TUNING.PLAYER_SPEED_MPS
-		velocity.z = move_direction.z * TUNING.PLAYER_SPEED_MPS
-	else:
-		velocity.x = move_toward(velocity.x, 0.0, TUNING.PLAYER_SPEED_MPS * 8.0 * delta)
-		velocity.z = move_toward(velocity.z, 0.0, TUNING.PLAYER_SPEED_MPS * 8.0 * delta)
+	var target_speed: float = TUNING.PLAYER_SPEED_MPS
+	if move_direction != Vector3.ZERO and Input.is_action_pressed("sprint"):
+		target_speed = TUNING.PLAYER_RUN_SPEED_MPS
+	var target_horizontal_velocity: Vector3 = move_direction * target_speed
+	var horizontal_velocity: Vector3 = Vector3(velocity.x, 0.0, velocity.z)
+	var movement_rate: float = TUNING.PLAYER_ACCELERATION_MPS2 if move_direction != Vector3.ZERO else TUNING.PLAYER_DECELERATION_MPS2
+	horizontal_velocity = horizontal_velocity.move_toward(target_horizontal_velocity, movement_rate * delta)
+	velocity.x = horizontal_velocity.x
+	velocity.z = horizontal_velocity.z
 
 	move_and_slide()
 

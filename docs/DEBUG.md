@@ -540,3 +540,11 @@ The authored rig's `Thigh_L` bone is on local +X and `Thigh_R` is on local -X. F
 - When the support translates or rotates, the planted target is transformed back into world space so the foot follows the elevator/platform instead of remaining behind.
 - The ground probe passes its hit collider into the foot-plant tracker. Static floors continue to work as before; if a support is freed, the anchor safely remains at its last world position.
 - M8 regression coverage checks both translation and rotation of a moving support. Run the Godot M8 test and verify in-game on a moving elevator/platform; these checks have not been run by the assistant.
+
+
+## Movement tuning — 2026-11-20
+
+- Normal movement uses `PLAYER_SPEED_MPS` (3.8 m/s); holding the `sprint` input action uses `PLAYER_RUN_SPEED_MPS` (7.0 m/s).
+- Horizontal velocity accelerates at `PLAYER_ACCELERATION_MPS2` and decelerates at `PLAYER_DECELERATION_MPS2`, including smooth directional changes. Sprint only changes the target speed while movement input is held.
+- The procedural gait blends its stride amplitude and cadence toward a more energetic run as measured speed rises. This remains cosmetic and does not change movement authority or replication.
+- Input Map handoff: create the `sprint` action and bind Left Shift. The player script intentionally does not edit project settings or scenes.

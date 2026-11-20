@@ -35,9 +35,20 @@ func _check_controller_gait() -> void:
 	var right_thigh: Quaternion = controller.get("right_thigh_rotation")
 	if phase_after_walk <= 0.0:
 		_fail("Grounded movement should advance the gait phase")
-	var expected_phase: float = (5.0 / TUNING.LEG_STEP_CYCLE_DISTANCE_M) * TAU * TUNING.LEG_GAIT_RATE_MULTIPLIER * 0.125
+	var expected_run_weight: float = smoothstep(TUNING.PLAYER_SPEED_MPS, TUNING.PLAYER_RUN_SPEED_MPS, 5.0)
+	var expected_phase: float = (5.0 / TUNING.LEG_STEP_CYCLE_DISTANCE_M) * TAU * TUNING.LEG_GAIT_RATE_MULTIPLIER * lerpf(1.0, 1.12, expected_run_weight) * 0.125
 	if not is_equal_approx(phase_after_walk, expected_phase):
 		_fail("Gait phase should advance at the configured stride cadence")
+	if TUNING.PLAYER_SPEED_MPS >= TUNING.PLAYER_RUN_SPEED_MPS:
+		_fail("Walking speed must remain lower than sprint speed")
+	if TUNING.PLAYER_SPEED_MPS > 4.2 or TUNING.PLAYER_SPEED_MPS < 3.0:
+		_fail("Normal walking speed should stay in a deliberate, slower range")
+	if TUNING.PLAYER_RUN_SPEED_MPS < TUNING.PLAYER_SPEED_MPS * 1.5:
+		_fail("Sprint should be noticeably faster than walking")
+	if TUNING.PLAYER_ACCELERATION_MPS2 <= 0.0 or TUNING.PLAYER_DECELERATION_MPS2 <= 0.0:
+		_fail("Movement acceleration and deceleration must be positive")
+	if float(controller.get("run_weight")) <= 0.0:
+		_fail("Higher movement speeds should blend the procedural gait toward its running style")
 	if TUNING.LEG_STEP_CYCLE_DISTANCE_M >= 1.6:
 		_fail("Stride cycle distance should keep planted feet from exceeding natural reach before swing begins")
 	var stance_travel_m: float = TUNING.LEG_STEP_CYCLE_DISTANCE_M * TUNING.LEG_STANCE_FRACTION

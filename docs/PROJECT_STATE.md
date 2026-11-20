@@ -551,3 +551,11 @@ Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep a
 ## Moving-platform foot anchors
 
 Foot planting now records both a world-space target and, when the ground hit belongs to a `Node3D`, the target's local position relative to that support. Stance anchors follow support translation and rotation. Normal swing targets and emergency-replant targets also retain their support-local landing positions, so a moving elevator does not move out from underneath a planted foot. Static ground remains world-anchored as before. M8 includes moving-support translation and rotation assertions. No scene files were changed; Godot tests and in-game verification remain pending.
+
+
+## 2026-11-20 — walk/run movement pass
+
+- Reduced normal horizontal movement speed to 3.8 m/s and added a 7.0 m/s run target while the `sprint` action is held with directional input.
+- Added acceleration (14 m/s²) and deceleration (18 m/s²) so starts, stops, speed changes, and direction reversals blend instead of snapping. Existing vertical jump/gravity behavior is unchanged.
+- Procedural gait now smoothly blends toward a faster, slightly larger-stride running presentation as actual horizontal speed increases; no separate animation rig or scene hierarchy was introduced.
+- The project Input Map remains editor-authored. Add the `sprint` action and bind Left Shift before playtesting. Godot tests and in-game verification have not been run by the assistant.
