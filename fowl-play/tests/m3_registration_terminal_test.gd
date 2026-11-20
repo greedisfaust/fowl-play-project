@@ -57,6 +57,7 @@ func _run() -> void:
 	cancel_key.keycode = KEY_ESCAPE
 	terminal.call("_handle_nickname_key", cancel_key)
 	_check(not bool(actor.get("terminal_movement_locked")), "Cancelling nickname editing should restore player movement")
+	menu.select_index(1)
 	_check(bool(terminal.handle_menu_action(ScreenMenu.ACTION_CONFIRM)), "Color option should open")
 	_check(screen.get_screen_text().get_parsed_text().contains("SELECT PLAYER COLOR"), "Color choices should render")
 	terminal.close_registration_session()

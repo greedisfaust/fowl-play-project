@@ -32,6 +32,7 @@ func _ready() -> void:
 		_network.connect("identity_roster_changed", _on_identity_roster_changed)
 	set_process_input(true)
 
+func _exit_tree() -> void:
 	_set_actor_movement_locked(false)
 	_restore_mouse_mode()
 	if is_instance_valid(_network) and _network.is_connected("identity_roster_changed", _on_identity_roster_changed):
@@ -50,6 +51,7 @@ func close_registration_session() -> void:
 	if has_active_session():
 		end_session(END_CLOSED)
 
+func _on_terminal_session_started(actor: Node) -> void:
 	_local_actor = actor
 	_set_actor_movement_locked(false)
 	_session_active = true
@@ -69,6 +71,7 @@ func close_registration_session() -> void:
 		_requested_color_index = 0
 	_show_main_menu()
 
+func _on_terminal_session_ended(actor: Node, reason: StringName) -> void:
 	if actor != _local_actor:
 		return
 	_set_actor_movement_locked(false)
@@ -238,6 +241,7 @@ func _show_color_menu() -> void:
 	)
 	_menu.select_index(_requested_color_index)
 
+func _begin_nickname_edit() -> void:
 	_menu.close()
 	_editing_nickname = true
 	_set_actor_movement_locked(true)

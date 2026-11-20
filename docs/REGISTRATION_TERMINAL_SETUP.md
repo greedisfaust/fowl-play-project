@@ -11,7 +11,7 @@ The Registration Terminal uses the reusable `InteractiveTerminal` lifecycle and 
 5. Arrow Up/Down and Enter navigate and confirm. Escape closes the session.
 6. Player movement is locked only while the nickname editor is open. Enter confirms the nickname and restores movement; Escape cancels editing and also restores movement.
 7. The session ends when the player moves beyond the interaction distance or leaves the sensor; ending the session always releases any nickname-edit movement lock.
-7. Registration requests are still validated and assigned by the host through the existing Network identity API.
+8. Registration requests are still validated and assigned by the host through the existing Network identity API.
 
 ## Required scene structure
 
