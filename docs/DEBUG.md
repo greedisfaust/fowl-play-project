@@ -39,7 +39,7 @@ security secret.
 | `props/<name>/pickup_allowed` | props/prop.gd | Whether the prop's assigned profile allows pickup. |
 | `hands/<name>/state` | hands/hand.gd | World mode, hover, guard, carry, limp, and speed state. |
 | `rig/<name>/legs_active` | ragdoll/player_rig.gd | Whether the local procedural gait is currently blended in. |
-| Carry pose | hands/hand.gd | While carrying, the palm's local +Y normal smoothly turns toward the carried prop; finger curl is still the shared carry pose. |
+| Carry pose | hands/hand.gd | While carrying a prop, the palm turns toward the prop. While carrying a limp player, left/right grips account for the face-to-face chest orientation and both thumbs roll toward the top of the chest. |
 | `ragdoll_test.simulating` | ragdoll/player_ragdoll_test.gd | Whether the isolated PhysicalBoneSimulator3D is simulating. |
 | `player/<name>/wall_clearance` | player/player.gd | Whether recovery placement had to move away from a wall/prop during limp recovery. |
 | `player/<name>/carrying` | player/player.gd | Whether this player currently holds a carried item (prop or limp body). |

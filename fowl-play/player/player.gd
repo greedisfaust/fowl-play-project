@@ -375,10 +375,12 @@ func _on_carry_ended() -> void:
 	_set_carry_hand_pose(false)
 
 func _set_carry_hand_pose(active: bool, item: Node3D = null) -> void:
+	# The carried player's chest faces the carrier, so its local left/right axis
+	# is mirrored from the carrier's view. Swap grip sides to avoid crossed arms.
 	if is_instance_valid(viewmodel_left_hand):
-		viewmodel_left_hand.set_carrying(active, item, -1.0)
+		viewmodel_left_hand.set_carrying(active, item, 1.0)
 	if is_instance_valid(viewmodel_right_hand):
-		viewmodel_right_hand.set_carrying(active, item, 1.0)
+		viewmodel_right_hand.set_carrying(active, item, -1.0)
 
 ## Applies replicated pointing to this player's camera-attached Viewmodel right hand.
 ## The local owner already drives that hand directly through Focus.

@@ -1,6 +1,6 @@
 # Active session files
 
-- **Active feature:** Combat, Procedural Movement & Multiplayer Lifecycle → [session](features-combat-and-procedural-movement.md). M7 combat and M8 coordinated movement are implemented; M9 late-join recovery synchronization and disconnect cleanup are committed. Godot/headless and rendered host/client verification remain pending.
+- **Active feature:** Combat, Procedural Movement & Multiplayer Lifecycle → [session](features-combat-and-procedural-movement.md). M7 combat and M8 coordinated movement are implemented; M9 late-join recovery synchronization and disconnect cleanup are committed and user-confirmed working. Carry-hand orientation and pointing reach are being polished before M10.
 - **Archived feature:** Player Identity & World Kit → [session](features-player-identity-and-world-kit.md) (implementation complete; user confirmed multiplayer hand synchronization, Interactive Terminal fixes, animated golden Interactable highlighting, and player identity coloring).
 - Prior feature: Highlight and Accessibility (gameplay cursor + interactable focus animation) → [session](features-highlight-and-accessibility.md).
 - Prior reference: Procedural Character Animation / reactive hands → [session](features-procedural-character-animation.md) (hand pose-priority foundation; host/client hover and poke synchronization subsequently fixed and user-verified; use as implementation reference for the new movement/combat work).

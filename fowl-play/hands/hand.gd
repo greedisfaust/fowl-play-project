@@ -52,12 +52,12 @@ const AUTHORED_GUARD_THUMB_BASES: Array[Basis] = [
 @export var relaxed_thumb_curl_degrees: Vector2 = Vector2(-10.0, -15.0)
 @export var point_thumb_root_degrees: Vector3 = Vector3(-15.0, -40.0, 0.0)
 @export var point_thumb_curl_degrees: Vector2 = Vector2(-18.0, -25.0)
-@export_range(0.0, 1.0) var reach_distance: float = 0.28
+@export_range(0.0, 1.0) var reach_distance: float = 0.42
 ## Action timing is a small lifecycle, not a per-click animation clip.
 @export_range(0.02, 0.5) var action_extend_seconds: float = 0.11
 @export_range(0.0, 0.3) var action_contact_seconds: float = 0.05
 @export_range(0.02, 0.8) var action_return_seconds: float = 0.18
-@export_range(0.0, 0.15) var point_hand_offset: float = 0.035
+@export_range(0.0, 0.4) var point_hand_offset: float = 0.28
 @export_range(1.0, 80.0) var target_rotation_limit_degrees: float = 42.0
 ## Small world-space clearance added beyond the detected prop collision bounds.
 @export_range(0.0, 0.2) var carry_side_offset_m: float = 0.04
@@ -701,6 +701,22 @@ func _get_carry_pose_rotation(grip_position: Vector3) -> Quaternion:
 	var rest_palm_normal: Vector3 = (_pose_rest_rotation * Vector3.DOWN).normalized()
 	var facing_delta: Quaternion = Quaternion(rest_palm_normal, toward_item_local)
 	var facing_rotation: Quaternion = facing_delta * _pose_rest_rotation
+	if _is_dynamic_ragdoll_carry_target():
+		# Chest-to-chest grips should keep the thumbs aimed toward the top
+		# of the carried player's chest, regardless of the mirrored hand side.
+		var chest_up_local: Vector3 = hand_basis.inverse() * _get_carry_target_basis().y.normalized()
+		var rest_thumb_axis: Vector3 = (_pose_rest_rotation * Vector3.LEFT).normalized()
+		var facing_thumb_axis: Vector3 = (facing_rotation * rest_thumb_axis).normalized()
+		var desired_thumb_flat: Vector3 = chest_up_local - toward_item_local * chest_up_local.dot(toward_item_local)
+		var facing_thumb_flat: Vector3 = facing_thumb_axis - toward_item_local * facing_thumb_axis.dot(toward_item_local)
+		if desired_thumb_flat.length_squared() < 0.0001 or facing_thumb_flat.length_squared() < 0.0001:
+			return facing_rotation
+		desired_thumb_flat = desired_thumb_flat.normalized()
+		facing_thumb_flat = facing_thumb_flat.normalized()
+		var thumb_up_roll: float = facing_thumb_flat.signed_angle_to(desired_thumb_flat, toward_item_local)
+		return Quaternion(toward_item_local, thumb_up_roll) * facing_rotation
+
+	# Prop grips keep the original forearm-axis roll constraint.
 	var rest_forearm_axis: Vector3 = (_pose_rest_rotation * Vector3.BACK).normalized()
 	var facing_forearm_axis: Vector3 = (facing_rotation * Vector3.BACK).normalized()
 	var desired_forearm_flat: Vector3 = rest_forearm_axis - toward_item_local * rest_forearm_axis.dot(toward_item_local)

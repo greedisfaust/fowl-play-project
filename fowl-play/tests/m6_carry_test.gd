@@ -39,6 +39,9 @@ func _run() -> void:
 	carried_player.set("_limp_elapsed_s", 2.5)
 	check(interactable.can_interact(carrier_player, &"grab"), "free limp player is a valid grab target")
 	check(bool(network.call("host_begin_carry", carrier_player, carried_player)), "host accepts limp-player pickup")
+	var carrier_left_hand: Hand = carrier_player.get_node("Head/Camera3D/ViewmodelHands/LeftHand") as Hand
+	var carrier_right_hand: Hand = carrier_player.get_node("Head/Camera3D/ViewmodelHands/RightHand") as Hand
+	check(carrier_left_hand.carry_side > 0.0 and carrier_right_hand.carry_side < 0.0, "Face-to-face carry should swap chest-side assignments to prevent crossed arms")
 	check(bool(carried_player.call("is_carried")), "pickup marks target as carried")
 	check(not interactable.can_interact(carrier_player, &"grab"), "carried target cannot be picked up twice")
 	check(hips.collision_layer == 0 and hips.collision_mask == 0, "host disables ragdoll collisions while carried")
