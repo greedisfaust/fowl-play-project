@@ -8,6 +8,9 @@ var phase: float = 0.0
 var motion_weight: float = 0.0
 var run_weight: float = 0.0
 var stride_weight: float = 0.0
+var stance_fraction: float = TUNING.LEG_STANCE_FRACTION
+var thigh_swing_limit: float = TUNING.LEG_MAX_THIGH_SWING_RAD
+var knee_bend_limit: float = TUNING.LEG_MAX_KNEE_BEND_RAD
 var smoothed_velocity: Vector3 = Vector3.ZERO
 
 var left_thigh_rotation: Quaternion = Quaternion.IDENTITY
@@ -53,8 +56,9 @@ func update(delta: float, local_velocity: Vector3, grounded: bool) -> void:
 	var target_run_weight: float = smoothstep(TUNING.PLAYER_SPEED_MPS, TUNING.PLAYER_RUN_SPEED_MPS, speed) if moving else 0.0
 	run_weight = lerpf(run_weight, target_run_weight, blend_weight)
 	if moving:
+		var cycle_distance: float = lerpf(TUNING.LEG_WALK_STEP_CYCLE_DISTANCE_M, TUNING.LEG_STEP_CYCLE_DISTANCE_M, run_weight)
 		phase = fposmod(
-			phase + (speed / TUNING.LEG_STEP_CYCLE_DISTANCE_M) * TAU * TUNING.LEG_GAIT_RATE_MULTIPLIER * lerpf(1.0, 1.12, run_weight) * safe_delta,
+			phase + (speed / cycle_distance) * TAU * TUNING.LEG_GAIT_RATE_MULTIPLIER * lerpf(1.0, 1.12, run_weight) * safe_delta,
 			TAU
 		)
 	elif motion_weight > 0.01:
@@ -68,7 +72,10 @@ func update(delta: float, local_velocity: Vector3, grounded: bool) -> void:
 			phase = PI
 	else:
 		phase = PI
-	stride_weight = clampf(speed / TUNING.PLAYER_RUN_SPEED_MPS, 0.35, 1.0)
+	stride_weight = lerpf(0.75, 1.0, run_weight)
+	stance_fraction = lerpf(TUNING.LEG_WALK_STANCE_FRACTION, TUNING.LEG_STANCE_FRACTION, run_weight)
+	thigh_swing_limit = lerpf(TUNING.LEG_WALK_MAX_THIGH_SWING_RAD, TUNING.LEG_MAX_THIGH_SWING_RAD, run_weight)
+	knee_bend_limit = lerpf(TUNING.LEG_WALK_MAX_KNEE_BEND_RAD, TUNING.LEG_MAX_KNEE_BEND_RAD, run_weight)
 	var run_stride_multiplier: float = lerpf(1.0, 1.15, run_weight)
 	var direction: Vector3 = smoothed_velocity.normalized() if smoothed_velocity.length_squared() > 0.001 else Vector3(0.0, 0.0, -1.0)
 	var swing_axis: Vector3 = direction.cross(Vector3.UP)
@@ -77,13 +84,13 @@ func update(delta: float, local_velocity: Vector3, grounded: bool) -> void:
 	else:
 		swing_axis = swing_axis.normalized()
 
-	var left_swing: float = sin(phase) * TUNING.LEG_MAX_THIGH_SWING_RAD * stride_weight * run_stride_multiplier * motion_weight
+	var left_swing: float = sin(phase) * thigh_swing_limit * stride_weight * run_stride_multiplier * motion_weight
 	var right_phase: float = phase + PI
 	var right_swing: float = sin(right_phase) * TUNING.LEG_MAX_THIGH_SWING_RAD * stride_weight * run_stride_multiplier * motion_weight
 	var left_cycle: float = fposmod(phase / TAU, 1.0)
 	var right_cycle: float = fposmod(left_cycle + 0.5, 1.0)
-	left_in_swing = left_cycle >= TUNING.LEG_STANCE_FRACTION
-	right_in_swing = right_cycle >= TUNING.LEG_STANCE_FRACTION
+	left_in_swing = left_cycle >= stance_fraction
+	right_in_swing = right_cycle >= stance_fraction
 	left_swing_progress = _get_swing_progress(left_cycle)
 	right_swing_progress = _get_swing_progress(right_cycle)
 
@@ -94,8 +101,8 @@ func update(delta: float, local_velocity: Vector3, grounded: bool) -> void:
 	var right_knee_shape: float = _get_knee_shape(right_cycle, right_swing_progress, right_in_swing)
 	left_knee_bend_weight = clampf(left_knee_shape * stride_weight * run_stride_multiplier * motion_weight, 0.0, 1.0)
 	right_knee_bend_weight = clampf(right_knee_shape * stride_weight * run_stride_multiplier * motion_weight, 0.0, 1.0)
-	var left_knee: float = left_knee_bend_weight * TUNING.LEG_MAX_KNEE_BEND_RAD
-	var right_knee: float = right_knee_bend_weight * TUNING.LEG_MAX_KNEE_BEND_RAD
+	var left_knee: float = left_knee_bend_weight * knee_bend_limit
+	var right_knee: float = right_knee_bend_weight * knee_bend_limit
 	var left_foot_pitch: float = _get_foot_pitch(left_cycle, left_swing_progress, left_in_swing)
 	var right_foot_pitch: float = _get_foot_pitch(right_cycle, right_swing_progress, right_in_swing)
 
@@ -112,10 +119,10 @@ func update(delta: float, local_velocity: Vector3, grounded: bool) -> void:
 	right_foot_rotation = Quaternion(right_foot_axis, -(right_swing + right_knee) * TUNING.LEG_FOOT_COUNTER_ROTATION + right_foot_pitch * stride_weight * motion_weight)
 
 func _get_swing_progress(cycle: float) -> float:
-	if cycle < TUNING.LEG_STANCE_FRACTION:
+	if cycle < stance_fraction
 		return 0.0
 	return clampf(
-		(cycle - TUNING.LEG_STANCE_FRACTION) / (1.0 - TUNING.LEG_STANCE_FRACTION),
+		(cycle - stance_fraction) / (1.0 - stance_fraction),
 		0.0,
 		1.0
 	)
@@ -136,7 +143,7 @@ func _get_foot_pitch(cycle: float, swing_progress: float, in_swing: bool) -> flo
 		var lift: float = sin(clampf(swing_progress / 0.72, 0.0, 1.0) * PI * 0.5)
 		var contact: float = smoothstep(0.72, 1.0, swing_progress)
 		return lerpf(0.0, TUNING.LEG_SWING_FOOT_LIFT_RAD, lift) - contact * TUNING.LEG_STANCE_TOE_ROLL_RAD
-	var stance_progress: float = cycle / TUNING.LEG_STANCE_FRACTION
+	var stance_progress: float = cycle / stance_fraction
 	return sin(stance_progress * PI) * TUNING.LEG_STANCE_TOE_ROLL_RAD
 
 func is_active() -> bool:
@@ -147,6 +154,9 @@ func reset() -> void:
 	motion_weight = 0.0
 	run_weight = 0.0
 	stride_weight = 0.0
+	stance_fraction = TUNING.LEG_STANCE_FRACTION
+	thigh_swing_limit = TUNING.LEG_MAX_THIGH_SWING_RAD
+	knee_bend_limit = TUNING.LEG_MAX_KNEE_BEND_RAD
 	smoothed_velocity = Vector3.ZERO
 	left_thigh_rotation = Quaternion.IDENTITY
 	left_shin_rotation = Quaternion.IDENTITY
