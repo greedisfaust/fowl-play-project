@@ -637,7 +637,8 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 			right_replant_requested = true
 			right_landing_world = _footstep_planner.call(
 				"get_landing_target", hip_center_world, global_basis, planner_velocity, -1.0,
-				TUNING.LEG_EMERGENCY_FORWARD_PLACEMENT_M, TUNING.LEG_MIN_LANDING_LATERAL_M, 0.0
+				TUNING.LEG_EMERGENCY_FORWARD_PLACEMENT_M, TUNING.LEG_MIN_LANDING_LATERAL_M,
+				actual_horizontal_speed * TUNING.LEG_REPLANT_RECOVERY_SECONDS
 			)
 	left_landing_world = _footstep_planner.call("constrain_anatomical_side", left_landing_world, hip_center_world, global_basis, 1.0, TUNING.LEG_MIN_LANDING_LATERAL_M)
 	right_landing_world = _footstep_planner.call("constrain_anatomical_side", right_landing_world, hip_center_world, global_basis, -1.0, TUNING.LEG_MIN_LANDING_LATERAL_M)
