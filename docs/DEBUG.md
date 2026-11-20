@@ -571,9 +571,9 @@ The authored rig's `Thigh_L` bone is on local +X and `Thigh_R` is on local -X. F
 
 ## Procedural walk/sprint gait calibration
 
-- Walking and sprinting use separate gait profiles instead of simply scaling one oversized stride. Walking uses a longer cycle distance (1.6 m), a 0.56 stance fraction, 24-degree thigh swing, 30-degree knee flex, and a 0.09 m normal swing arc. Sprint blends toward the existing 1.4 m cycle, 0.58 stance fraction, 46-degree thigh swing, 68-degree knee flex, and a 0.20 m swing arc.
+- Walking and sprinting use separate gait profiles instead of simply scaling one oversized stride. Walking uses a longer cycle distance (2.0 m), a 0.46 stance fraction, 24-degree thigh swing, 30-degree knee flex, and a 0.09 m normal swing arc. Sprint blends toward the existing 1.4 m cycle, 0.58 stance fraction, 46-degree thigh swing, 68-degree knee flex, and a 0.20 m swing arc.
 - The 0.30 m emergency replant arc remains separate so a stretched foot can still recover safely. Normal walking no longer uses that exaggerated recovery height.
-- M8 checks now cover distinct walk/sprint cadence, articulation, and lift tuning. Godot execution and in-game visual verification remain user-run.
+- M8 checks now cover distinct walk/sprint cadence, articulation, lift tuning, and ensure the longer walking cycle does not keep a foot planted beyond comfortable leg reach. Godot execution and in-game visual verification remain user-run.
 
 
 ### Walking rhythm regression — 2026-11-20
@@ -581,3 +581,9 @@ The authored rig's `Thigh_L` bone is on local +X and `Thigh_R` is on local -X. F
 - Footstep landing prediction now uses the same blended walk/run cycle distance and stance fraction as the gait controller. Previously the controller could be in the longer walking cycle while the rig predicted landing travel with sprint timing, making the planted/swing phases disagree.
 - M8 now checks that ordinary walking never places both legs in swing together and that the walk cycle includes a double-support interval where both feet remain planted.
 - Sprint cadence and movement tuning are unchanged. Godot execution and in-game verification remain user-run.
+
+
+### Walking cadence reach adjustment — 2026-11-20
+
+- Increased the walking cycle distance to 2.0 m to slow the forward walking rhythm. Reduced the walking stance fraction to 0.46 so the longer cycle does not make the planted foot exceed comfortable leg reach and trigger emergency replants.
+- Sprint timing remains unchanged. In-game confirmation is still pending from the user.
