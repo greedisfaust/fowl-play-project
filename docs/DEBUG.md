@@ -9,7 +9,7 @@ security secret.
 | Category | Owner script | What it logs |
 |---|---|---|
 | net | core/network.gd | network startup, shutdown, rejected RPCs |
-| combat | combat/combat_controller.gd, combat/combat_hit_detector.gd and core/network.gd | Jab input, host validation, hit detection, recoil and limp-body impulse |
+| combat | combat/combat_controller.gd, combat/combat_hit_detector.gd, combat/combat_presentation.gd and core/network.gd | Jab input, host validation, hit detection, recoil and limp-body impulse |
 | limp | core/limp.gd | limp start/end, recovery, phase changes |
 | carry | core/carry.gd | pickup, carry, throw, drop, state |
 | hands | core/hands.gd | reach, hover, guard, shake, color changes |
@@ -608,6 +608,11 @@ The authored rig's `Thigh_L` bone is on local +X and `Thigh_R` is on local -X. F
 | M7.1 | 4 | Jab an already-limp player: the ragdoll physically reacts, but `player/<name>/limp_elapsed_s` continues without resetting. |
 | M7.1 | 5 | Hold Q longer than 0.25 s: no jab fires; the fist pose returns. Charged punch is not part of this slice. |
 | M7.1 | 6 | While carrying, tap/hold Q: existing drop/throw behavior remains unchanged. |
+| M7.2 | 1 | Tap Q: the curled fist visibly pulls back, then extends and returns to its authored hand position. |
+| M7.2 | 2 | Watch from a second peer: the attacker’s torso leans into the jab and returns without per-bone animation traffic. |
+| M7.2 | 3 | Get jabbed while standing: the target receives a brief upper-body recoil lean alongside the existing movement impulse. |
+| M7.2 | 4 | Walk and sprint while jabbing: movement gait continues and the torso/arm pose does not fight the procedural IK. |
+| M7.2 | 5 | Start carrying or enter limp/recovery: combat pose clears and the higher-priority carry/limp/recovery presentation wins. |
 
 Run only the jab regression stage from the `fowl-play/` directory with `.\tests\run_checks.ps1 -OnlyStage m7-jab`. Run the full suite with `.\tests\run_checks.ps1`.
 
