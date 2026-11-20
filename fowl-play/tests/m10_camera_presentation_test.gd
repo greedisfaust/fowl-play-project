@@ -9,6 +9,7 @@ func _initialize() -> void:
 
 func _run() -> void:
 	_check_idle_and_locomotion_blend()
+	_check_authored_camera_transform_is_preserved()
 	_check_air_and_landing_response()
 	_check_directional_impact_and_decay()
 	if _failed:
@@ -30,6 +31,17 @@ func _check_idle_and_locomotion_blend() -> void:
 	var disabled: Dictionary = controller.call("advance", 0.2, Vector3.ZERO, 0.0, true, false)
 	if Vector3(disabled.offset).length() > Vector3(moving.offset).length() + 0.1:
 		_fail("Disabled presentation should remain bounded")
+
+func _check_authored_camera_transform_is_preserved() -> void:
+	var authored: Transform3D = Transform3D(Basis.IDENTITY, Vector3(0.0, -0.2, -1.2))
+	var idle_transform: Transform3D = CAMERA_PRESENTATION.compose_camera_transform(authored, Vector3.ZERO, Vector3.ZERO)
+	if idle_transform.origin.distance_to(authored.origin) > 0.0001:
+		_fail("Idle camera presentation must preserve the authored camera position")
+	var moving_transform: Transform3D = CAMERA_PRESENTATION.compose_camera_transform(authored, Vector3(0.0, 0.03, 0.0), Vector3(0.02, 0.0, 0.0))
+	if moving_transform.origin.distance_to(authored.origin) < 0.02:
+		_fail("Camera bob must offset the authored camera position instead of replacing it")
+	if moving_transform.basis.get_euler().distance_to(authored.basis.get_euler()) < 0.01:
+		_fail("Camera motion must layer rotation on top of the authored camera rotation")
 
 func _check_air_and_landing_response() -> void:
 	var controller: RefCounted = CAMERA_PRESENTATION.new()

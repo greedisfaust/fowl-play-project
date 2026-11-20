@@ -18,6 +18,7 @@ var _combat_presentation: RefCounted = COMBAT_PRESENTATION_SCRIPT.new()
 var _parry_barrier: RefCounted = PARRY_BARRIER_SCRIPT.new()
 var _movement_presentation: RefCounted = MOVEMENT_PRESENTATION_SCRIPT.new()
 var _camera_presentation: RefCounted = CAMERA_PRESENTATION_SCRIPT.new()
+var _camera_rest_transform: Transform3D = Transform3D.IDENTITY
 @export_range(0.0, 1.5, 0.05) var camera_motion_intensity: float = 1.0
 var _movement_presentation_last_yaw: float = 0.0
 var _movement_presentation_yaw_initialized: bool = false
@@ -113,6 +114,7 @@ func _ready() -> void:
 	_combat_presentation.call("configure", self)
 	_parry_barrier.call("configure", self)
 	_configure_boxer_guard_hands()
+	_camera_rest_transform = camera.transform
 	camera.current = is_local_player
 	if rig != null:
 		# Hide the owner's world model until the first-person body visibility pass.
@@ -339,8 +341,9 @@ func _update_first_person_camera_presentation(delta: float) -> void:
 	_camera_presentation.set("intensity", clampf(camera_motion_intensity, 0.0, 1.5))
 	var local_velocity: Vector3 = global_basis.inverse() * velocity
 	var presentation: Dictionary = _camera_presentation.call("advance", delta, local_velocity, velocity.y, is_on_floor(), not is_carrying())
-	camera.position = Vector3(presentation.get("offset", Vector3.ZERO))
-	camera.rotation = Vector3(presentation.get("rotation", Vector3.ZERO))
+	var camera_offset: Vector3 = Vector3(presentation.get("offset", Vector3.ZERO))
+	var camera_rotation: Vector3 = Vector3(presentation.get("rotation", Vector3.ZERO))
+	camera.transform = CAMERA_PRESENTATION_SCRIPT.compose_camera_transform(_camera_rest_transform, camera_offset, camera_rotation)
 
 func _has_host_authority() -> bool:
 	return network.get("peer") == null or bool(network.get("is_host"))
@@ -864,7 +867,7 @@ func _begin_recovery_camera() -> void:
 	_pitch_radians = _limp_look_pitch
 	head.rotation.x = _pitch_radians
 	_recovery_camera_start = camera.global_transform
-	_recovery_camera_target = Transform3D(head.global_basis, head.global_position)
+	_recovery_camera_target = head.global_transform * _camera_rest_transform
 	if rig != null:
 		rig.visible = true
 		rig.call("set_owner_head_visible", false)
@@ -889,7 +892,7 @@ func _finish_recovery() -> void:
 	_set_viewmodel_hands_visible(true)
 	if is_local_player:
 		camera.top_level = false
-		camera.transform = Transform3D.IDENTITY
+		camera.transform = _camera_rest_transform
 		_camera_presentation.call("reset", true)
 		if rig != null:
 			rig.call("set_owner_head_visible", true)

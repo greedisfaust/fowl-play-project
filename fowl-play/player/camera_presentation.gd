@@ -16,6 +16,10 @@ var _peak_air_vertical_speed: float = 0.0
 var _impact_offset: Vector3 = Vector3.ZERO
 var _impact_rotation: Vector3 = Vector3.ZERO
 
+static func compose_camera_transform(base_transform: Transform3D, offset: Vector3, rotation: Vector3) -> Transform3D:
+	var presentation_transform: Transform3D = Transform3D(Basis.from_euler(rotation), offset)
+	return base_transform * presentation_transform
+
 func reset(grounded: bool = true) -> void:
 	_phase = 0.0
 	_weight = 0.0
