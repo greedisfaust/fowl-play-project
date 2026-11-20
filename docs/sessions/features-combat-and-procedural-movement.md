@@ -1,7 +1,7 @@
 # Session plan: Combat & Procedural Legs (Movement)
 
 Branch: `features/combat-and-procedural-movement`
-Status: ACTIVE — rig audit and first gait slice completed; hybrid locomotion refinement underway; Godot execution and visual verification pending.
+Status: ACTIVE — read-only combat integration audit completed; M7.1 jab foundation implemented; procedural gait refinement continues; Godot execution and visual verification pending.
 Created: 2026-11-20
 Previous baseline: `features/player-identity-and-world-kit`
 
@@ -64,7 +64,7 @@ Branch baseline: `features/combat-and-procedural-movement` initially matched `ma
 - `Tuning` already contains preliminary punch, charge, lunge, parry, and cooldown constants, but no combat implementation exists.
 - No `core/combat.gd`, `core/legs.gd`, M7 combat test, or M8 procedural-leg test exists in this branch. The existing debug category names are reservations, not evidence of implemented systems.
 - `Player._unhandled_input` currently leaves non-carrying Q available for the future combat handler; while carrying, Q is reserved for the existing Carrier drop/throw behavior.
-- Combat rules and open decisions remain governed by `docs/PROJECT_OVERVIEW.md` §9. In particular, do not implement punches against already-limp bodies or impact/wall-slam feedback without resolving the open decisions with the user.
+- Combat rules and open decisions remain governed by `docs/PROJECT_OVERVIEW.md` §9. The user's 2026-11-20 decisions approve limp-player physical reactions without recovery reset, hybrid slapstick presentation, two physical reaction levels (Weak/Strong), restrained impact effects and camera response, and deferred audio. Dedicated wall-slam feedback remains open.
 
 ### Initial implementation constraints
 
@@ -278,3 +278,20 @@ Verification:
 - Reworked the gait controller so walking is not merely a smaller sprint. It now has a longer cycle distance (1.6 m), shorter stance fraction (0.56), smaller 24-degree thigh swing, gentler 30-degree knee flex, and 0.09 m normal foot arc.
 - Sprint blends continuously toward the established 1.4 m cycle, 0.58 stance fraction, 46-degree thigh swing, 68-degree knee flex, and 0.20 m normal foot arc. Emergency replant remains a distinct 0.30 m recovery step.
 - Foot planting, moving-platform anchors, IK, strafing, and rapid-direction response remain in place. M8 now asserts separate walk/run profiles and reach-safe stance travel. No scene files changed. Godot tests and in-game verification remain pending.
+
+## M7.1 — Jab foundation
+
+Implemented on `features/combat-and-procedural-movement`:
+
+- Added `fowl-play/combat/combat_controller.gd` for local Q press/release routing and `combat/combat_hit_detector.gd` for host-side obstruction-aware ray detection. `combat/combat_presentation.gd` coordinates the first-person/remote Viewmodel fist pose.
+- Q is routed to combat only when the player is not carrying. Carrier drop/throw remains unchanged.
+- The host owns the press timestamp, 0.25 s tap window, 0.35 s jab cooldown, camera direction, 2.5 m ray and 0.1 s active window.
+- Standing targets receive a weak movement recoil. Limp targets receive a host-only physical-bone velocity impulse; the limp lifecycle and recovery timer are not touched.
+- Added a curled-fist pose to `Hand` with the existing hand pose-priority system. Carry, guard and limp continue to override it.
+- Added `m7_jab_test.gd` and the `m7-jab` stage to `tests/run_checks.ps1`; added combat counters and M7.1 diagnostics to `docs/DEBUG.md`.
+- No `.tscn` or user-authored scene hierarchy changes.
+- Tests have not been run in Godot in this environment. Host/client and rendered pose behavior remain for user playtest.
+
+### Known presentation scope for this first slice
+
+The first jab has a curled-fist anticipation and short hand extension. Full torso lean, remote full-body pose layering, balance-loss stumble/collapse escalation, camera response, feathers and stylized impact VFX are intentionally not claimed complete; these will be layered in subsequent M7 presentation slices after the first hit path is verified.

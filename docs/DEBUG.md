@@ -9,7 +9,7 @@ security secret.
 | Category | Owner script | What it logs |
 |---|---|---|
 | net | core/network.gd | network startup, shutdown, rejected RPCs |
-| combat | Planned; no combat owner script exists yet | Reserved for punch, parry, lunge, hit, and limb events once implemented |
+| combat | combat/combat_controller.gd, combat/combat_hit_detector.gd and core/network.gd | Jab input, host validation, hit detection, recoil and limp-body impulse |
 | limp | core/limp.gd | limp start/end, recovery, phase changes |
 | carry | core/carry.gd | pickup, carry, throw, drop, state |
 | hands | core/hands.gd | reach, hover, guard, shake, color changes |
@@ -44,6 +44,9 @@ security secret.
 | `player/<name>/wall_clearance` | player/player.gd | Whether recovery placement had to move away from a wall/prop during limp recovery. |
 | `player/<name>/carrying` | player/player.gd | Whether this player currently holds a carried item (prop or limp body). |
 | `player/<name>/limp_interactable_enabled` | player/player.gd | Whether this limp player's grab-target Interactable is enabled. |
+| `net/combat_rejected` | core/network.gd | Rejected combat input requests. |
+| `net/combat_jabs` | core/network.gd | Host-accepted jab count, including misses. |
+| `net/combat_hits` | core/network.gd | Host-confirmed jab hits. |
 
 ## Commands
 
@@ -587,3 +590,20 @@ The authored rig's `Thigh_L` bone is on local +X and `Thigh_R` is on local -X. F
 
 - Increased the walking cycle distance to 2.0 m to slow the forward walking rhythm. Reduced the walking stance fraction to 0.46 so the longer cycle does not make the planted foot exceed comfortable leg reach and trigger emergency replants.
 - Sprint timing remains unchanged. In-game confirmation is still pending from the user.
+
+## M7.1 — Jab
+
+- Q tap (release within `TAP_MAX_SECONDS`) starts a jab. Holding longer cancels the jab in this first slice; charged punches are a later M7 slice.
+- `net/combat_jabs` counts host-accepted jabs; `net/combat_hits` counts host-confirmed player hits; `net/combat_rejected` counts rejected requests.
+- Enable the `combat` category to see host wind-up, accepted jab and confirmed hit logs.
+- The host owns press timing, cooldown, camera direction, raycast, obstruction and target selection. Clients submit only press/release intent.
+- The jab ray includes static world, elevator, props and player layers. World geometry and props block hits; the jab cannot hit through an obstruction.
+- Standing targets receive a small movement recoil. Already-limp targets receive a host-only physical-bone velocity impulse; their limp state and recovery timer are not restarted.
+- The right Viewmodel hand uses a dedicated curled-fist pose and short extension/return. Carry and limp pose priorities override combat.
+
+| M7.1 | 1 | Tap Q: a short fist wind-up and jab extension play; `net/combat_jabs` increases once. |
+| M7.1 | 2 | Aim at another standing player within 2.5 m and tap Q: `net/combat_hits` increases and the target receives a small recoil. |
+| M7.1 | 3 | Aim through a wall or prop: the jab is blocked and does not hit through it. |
+| M7.1 | 4 | Jab an already-limp player: the ragdoll physically reacts, but `player/<name>/limp_elapsed_s` continues without resetting. |
+| M7.1 | 5 | Hold Q longer than 0.25 s: no jab fires; the fist pose returns. Charged punch is not part of this slice. |
+| M7.1 | 6 | While carrying, tap/hold Q: existing drop/throw behavior remains unchanged. |

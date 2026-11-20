@@ -125,7 +125,7 @@ Inputs are InputMap actions only (never raw keycodes). The full action table is 
 
 | Action | Input | Behavior |
 |---|---|---|
-| Quick punch (jab) | tap `punch` (Q): released within `TAP_MAX_SECONDS` (0.25 s) | Fires on release. Range ~2.5 m, hitbox lives ~0.1 s, spam guard 0.35 s. **No limp.** The target recoils (visual only). |
+| Quick punch (jab) | tap `punch` (Q): released within `TAP_MAX_SECONDS` (0.25 s) | Fires on release. Range ~2.5 m, active hit window ~0.1 s, spam guard 0.35 s. Never causes limp. Standing targets receive a weak physical recoil; already-limp targets receive a physical-bone impulse without restarting or extending recovery. |
 | Charged punch | hold `punch` while holding nothing | **Wind-up animation plays to indicate the charge** (DECIDED). Auto-fires the moment the hold reaches 1.0 s, even while still held. **One fire per press:** `punch` must be released to re-arm, and `CHARGED_PUNCH_COOLDOWN_SECONDS` (2.0) must pass; the host enforces both. **No early-release fizzle:** releasing before 1.0 s simply cancels with no punch and no penalty (DECIDED). No charge meter UI: feedback is the wind-up pose and a rising sound. |
 | Lunge | on auto-fire | 12 m/s for 0.5 s, direction steered toward the camera look at ≤ 3 rad/s. The hitbox is parented to the puncher and moves with them. |
 | Lunge hit | hitbox overlaps a player | Target goes **limp**; the lunge stops immediately on the host and the puncher's client; hits all players inside the hitbox. |
@@ -436,12 +436,19 @@ res://
 - Beak and eyes are a rigid attachment on the head (cosmetic only; does not change the skeleton).
 - A player node is never reparented (it breaks every RPC path).
 
-**Open (ask before building):**
-1. Whether punches affect already-limp bodies.
-2. Whether to include impact/wall-slam feedback.
-3. Final lobby, nickname and color flow.
-4. Per-bone ragdoll masses (spike).
-5. Rebuilding the casino/economy layer, and when.
+**Combat decisions (user-approved, 2026-11-20):**
+- Style: hybrid — believable physical movement with exaggerated cartoon impacts.
+- Physical reactions have two levels only: **Weak** (recoil and balance correction) and **Strong** (stumble, loss of balance, collapse/full limp when the attack rules call for it). No Medium tier.
+- Jab on an already-limp player applies a physical impulse; it never resets or extends that player's recovery timer.
+- Strong impacts may produce a small burst of feathers tinted by the involved players' identity colors, restrained stylized bursts/rings/directional flashes, and subtle camera kick/FOV/shake. Avoid oversized explosions and nauseating camera motion.
+- Big wind-ups, torso/body lean, arm extension, follow-through and recoil are approved presentation goals. Stumbles and convincing collapses are desired where the existing rig/physics can support them.
+- Audio is deferred until suitable assets are available; leave integration points but do not block implementation on audio.
+
+**Still open:**
+1. Whether to add dedicated wall-slam feedback beyond the approved general impact presentation.
+2. Final lobby, nickname and color flow.
+3. Per-bone ragdoll masses (spike).
+4. Rebuilding the casino/economy layer, and when.
 
 
 ### Player identity presentation
@@ -451,3 +458,7 @@ res://
 - The editor-authored `NamePlate` is a Node3D scene instance (`res://player/player_nameplate.tscn`) with a transparent SubViewport UI. It follows `Rig/Skeleton3D/HeadAttachment` during standing, ragdoll, remote pose playback, and recovery. The local player's own nameplate is hidden.
 - The assigned palette color tints the world rig, attached world hands, first-person Viewmodel hands, cursor accent, and nameplate accent. Rig materials are duplicated per player before tinting; the temporary `FacePhoto` placeholder is intentionally excluded.
 - USER VERIFIED: the player-color presentation works in-game. Nickname text remains white for readability while the nameplate accent carries the identity color.
+
+### M7.1 implementation note — jab foundation
+
+The first jab slice uses a host-timed press/release request, a host-side obstruction-aware ray query, and a 0.1 s active hit window. The host alone selects the target. Standing recoil is applied through the target owner's movement simulation; an already-limp target receives a host-only physical-bone velocity impulse, with no limp lifecycle or recovery-timer mutation. The first-person/remote Viewmodel right hand has a dedicated curled-fist pose and short extension. Full torso lean, stumble/collapse escalation, camera feedback, feathers and impact VFX remain later presentation work.

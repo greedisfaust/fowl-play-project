@@ -1,6 +1,6 @@
 # Fowl Play — Project State
 
-**Status:** Combat & Procedural Legs (Movement) is active on `features/combat-and-procedural-movement`. The branch starts from the merged Player Identity & World Kit baseline. The read-only rig audit is complete and the first procedural gait slice is committed; Godot execution and in-game verification remain pending. Previous identity/world-kit work remains archived as implemented, with verification caveats retained below.
+**Status:** Combat & Procedural Legs (Movement) is active on `features/combat-and-procedural-movement`. The read-only combat integration audit is complete and the first M7.1 jab foundation is committed alongside ongoing procedural gait work. Godot execution and in-game verification of the jab remain pending. Previous identity/world-kit work remains archived as implemented, with verification caveats retained below.
 
 ## Last updated (2026-11-20; two-bone procedural leg IK)
 
@@ -28,7 +28,7 @@
 | M5 Limp lifecycle | Knockdown → ground → recovery (G1–G3, G8) | PARTIAL: host timer recovers after 3.5 s plus slow bones or at 6 s hard cap. Host plants capsule under final hips and reliably sends both standing position, final ragdoll pose, and the selected face-up/face-down recovery variant to clients. Wall-clearance search (floor + capsule overlap + spiral outward to 1.5 m) is implemented; forced-exit G8 cleanup broadcasts a reliable `_ragdoll_end` when a limp peer disconnects so remaining clients complete a get-up blend. PUNCH_HITBOX ↔ LIMP_BODIES collision is now bidirectional. |
 | World kit — WorldScreen | Reusable size-adaptive 3D screen, CMD-style text renderer, and FAT/SLIM housings | Reusable content APIs, menus, FAT/SLIM controllers and glass treatments are implemented and documented. Automated housing checks and final rendered sizing/material verification remain unconfirmed in this archive. |
 | M6 Carry and throw | Props and limp bodies, auto-fire throw, dangling limbs | IMPLEMENTED; USER VISUAL-PLAYTESTED: host-authoritative carry/drop/throw; Chest spring/torque stabilisation at the carrier anchor; selective opposite-side limb self-collision; carried-only head/arm damping and narrower neck joint limits; smoothed head-mounted first-person camera while preserving mouse-look and dynamic FOV. Player root stays fixed, remote peers render host poses without local ragdoll collision, recovery pauses while carried, and each release resets a fresh 3.5 s countdown. Automated M6 test and full two-instance host/client verification remain pending. |
-| M7 Combat | Jab/recoil, charged punch, lunge, parry outcomes | Not started |
+| M7 Combat | Jab/recoil, charged punch, lunge, parry outcomes | PARTIAL: M7.1 jab input, host-timed validation, 2.5 m obstruction-aware ray hit window, standing recoil, limp-body impulse without recovery reset, and curled-fist hand presentation are implemented. Godot/headless and in-game verification remain pending. |
 | M8 Procedural legs | Hybrid locomotion, zero network traffic | IN PROGRESS: local velocity-driven gait and grounded-state replication are implemented; filtered velocity now smooths starts, stops, and directional changes. Stance/swing foot articulation with swing-phase knee flex and toe-lift pitch is implemented locally. A world-space foot target tracker captures stance anchors and interpolates lifted swing targets. PlayerRig performs downward physics-space ground probes beneath both feet, excludes the owning Player body, filters steep surfaces, and exposes hit/target/normal diagnostics. The shared two-bone solver now drives each thigh/shin chain toward its planted stance anchor or interpolated swing target, with per-leg blend weights and IK diagnostics. Swing landing points are captured at lift-off instead of chasing a moving ground probe; landing locks to that captured point. Ground probes now predict the distance the player travels during the upcoming swing and place the next foot contact ahead of the body, correcting the trailing-foot behavior. Foot orientation blends toward the detected surface normal, and diagnostics expose each stance anchor. Turn-in-place, owner-view leg visibility, combat balance reactions, terrain adaptation, visual tuning, and Godot verification remain. |
 | M9 Camera + owner view | Camera follow target, owner legs visibility | Limp camera follows the simulated head position and orientation; the owner's head geometry is hidden and body visible. Head rotational stability is user-verified after physical head tuning; visual comfort, wall avoidance and final camera transitions remain. |
 | M10 Hardening | Cleanup matrix, weak-laptop budget, 4-player soak | Not started |
@@ -36,11 +36,10 @@
 ## Open decisions (from PROJECT_OVERVIEW.md §24)
 
 1. Skeleton authoring resolved: manual Godot editor authoring, with humanoid legs.
-2. Whether punches affect already-limp bodies.
-3. Whether to include impact/wall-slam feedback.
-4. Final lobby/connection presentation beyond the implemented Registration Terminal identity flow.
-5. Per-bone ragdoll masses (M4 spike).
-6. Rebuilding the casino/economy layer, and when.
+2. Dedicated wall-slam feedback beyond the approved general combat impact presentation.
+3. Final lobby/connection presentation beyond the implemented Registration Terminal identity flow.
+4. Per-bone ragdoll masses (M4 spike).
+5. Rebuilding the casino/economy layer, and when.
 
 Late join is decided: allowed during the rest of a day, not during casino/elevator gameplay. Throw power is decided: fixed full power with auto-fire at one second.
 
@@ -604,3 +603,13 @@ Foot planting now records both a world-space target and, when the ground hit bel
 
 - Increased the dedicated walking cycle distance to 2.0 m to slow the forward gait rhythm. Set the walking stance fraction to 0.46 to keep planted-foot travel within comfortable leg reach and avoid excessive emergency replanting.
 - Sprint gait values remain unchanged. M8 regression coverage guards the walking stance fraction and planted-foot reach. Godot tests and in-game verification have not been run by the assistant.
+
+## 2026-11-20 — M7.1 jab foundation
+
+- Added the dedicated `fowl-play/combat/` feature folder with separate input, hit-detection, and presentation responsibilities.
+- Q press/release intent is routed through the combat controller only while not carrying; the existing Carrier remains the sole owner of Q while holding an item.
+- The host owns tap timing, jab cooldown, attack direction, obstruction-aware ray query, target selection, and confirmed hit outcomes.
+- Standing targets receive a small movement recoil. Already-limp targets receive a physical-bone impulse without modifying limp state or recovery elapsed time.
+- The Viewmodel hand has a dedicated curled-fist pose and extension/return lifecycle.
+- Added M7.1 headless regression coverage and registered it in `tests/run_checks.ps1`.
+- No scenes were edited. Godot tests and in-game host/client playtests have not yet been run for this slice.
