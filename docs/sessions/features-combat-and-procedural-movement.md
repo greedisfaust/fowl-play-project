@@ -236,3 +236,28 @@ Verification:
 - The swing foot now probes where the character will be when that foot lands, rather than probing almost directly beneath its current trailing position. The captured landing target remains stable throughout swing and stance.
 - This directly addresses the user's playtest report that planted feet appeared to trail/drag behind the moving player.
 - Godot execution and in-game verification remain pending; user should check forward/backward movement, strafing, and changes of direction after pulling.
+
+
+## Implementation slice — responsive jump movement
+
+Commits:
+- `5d69021` — add responsive jump movement tuning
+- `88c8814` — add buffered variable-height jump controller
+- `7b20973` — integrate responsive jump movement into Player
+- `79a49ed` — cover coyote time, jump buffering, jump height, and air steering
+- `447dae2` — document jump diagnostics and playtest
+- `edadaf7` — record project state
+
+Implemented:
+- Added a dedicated pure `JumpController` that tracks a 0.10 s coyote window and a 0.12 s jump-input buffer.
+- Jump input pressed shortly before landing is retained and consumed on the first grounded physics update. Input pressed just after walking off a ledge is accepted while the coyote timer remains.
+- Releasing jump during upward travel scales the remaining vertical velocity by 0.45, producing a shorter hop; holding jump preserves the full 6.5 m/s launch.
+- Horizontal acceleration and deceleration are reduced to 55% while airborne. This preserves more horizontal momentum without removing midair steering.
+- Player physics remains the owner of gravity, collision, and movement. Console/terminal locks continue blocking new jump input.
+- Added local watches for remaining coyote and buffered-input time. No new RPCs, movement fields, scene edits, or Input Map changes were introduced.
+- Extended the existing M3 movement test with timing, landing-buffer, jump-release, held-jump, and air-control assertions.
+
+Verification:
+- The assistant has not run Godot import or automated tests. The new M3 assertions are authored but unexecuted.
+- User playtest should cover short/full hops, coyote timing, pre-landing buffered jumps, air steering, and two-instance jump replication.
+- Sprint Input Map setup remains an editor task: add the `sprint` action and bind Left Shift before testing the previous walk/run slice.
