@@ -150,13 +150,13 @@ func _check_footstep_planner() -> void:
 	var strafe: Vector3 = planner.call(
 		"get_landing_target", hip, Basis.IDENTITY, Vector3(5.0, 0.0, 0.0), 1.0
 	)
-	if strafe.x <= hip.x or absf(strafe.z - hip.z) < 0.1:
-		_fail("Strafing targets should follow movement intent while preserving foot separation")
+	if strafe.x <= hip.x or not is_equal_approx(strafe.z, hip.z):
+		_fail("Strafing targets should follow movement intent along the character's right axis")
 	var strafe_left: Vector3 = planner.call(
 		"get_landing_target", hip, Basis.IDENTITY, Vector3(5.0, 0.0, 0.0), -1.0
 	)
-	if strafe_left.z >= strafe.z:
-		_fail("Left and right foot targets must remain on their anatomical sides during strafing")
+	if strafe_left.x >= strafe.x or strafe_left.distance_to(strafe) < 0.35:
+		_fail("Left and right foot targets must remain separated during strafing")
 	var diagonal_left: Vector3 = planner.call(
 		"get_landing_target", hip, Basis.IDENTITY, Vector3(5.0, 0.0, -5.0), -1.0
 	)
