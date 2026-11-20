@@ -42,3 +42,7 @@ The controller creates a unique round ID for each round opened on that table.
 - Day-end force-refund scope for already-started rounds remains open.
 - Network RPC wrappers and client replication are not added yet. Future RPCs must validate sender identity, table proximity, and game state on the host before calling this API.
 - Physical Area3D wiring, nameplate visuals, and game-specific presentation remain editor/game implementation work.
+
+## Verification
+
+Run both headless test scripts after importing the project. For users who do not use PowerShell, double-click `fowl-play/tests/run_casino_checks.bat`. It uses the default Steam Godot installation path used by the existing PowerShell runner; edit the `GODOT` variable near the top if Steam is installed elsewhere.

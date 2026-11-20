@@ -34,7 +34,7 @@ Base docs: `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `
 
 ## Exact next step
 
-Pull the latest branch commit, then run the `casino-wallet` and `base-table` test stages. Report both results. If they pass, proceed to the Chicken Cross reference-game contract after reviewing any test failures or engine warnings.
+Pull the latest branch commit, then run both casino checks. Use `tests/run_casino_checks.bat` if PowerShell is unavailable. Report both results. If they pass, proceed to the Chicken Cross reference-game contract after reviewing any test failures or engine warnings.
 
 ## Waiting on the user
 
