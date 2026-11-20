@@ -274,6 +274,7 @@ func _process(delta: float) -> void:
 		if rig != null and not bool(rig.call("is_pose_blending")):
 			_finish_recovery()
 		return
+	_combat_presentation.call("advance", delta)
 	var grounded_for_legs: bool = is_on_floor() if is_local_player else _remote_grounded
 	if rig != null:
 		rig.call("update_procedural_legs", velocity, grounded_for_legs, delta)
@@ -853,6 +854,7 @@ func apply_combat_recoil(direction: Vector3) -> void:
 	if horizontal.length_squared() < 0.0001:
 		return
 	velocity += horizontal.normalized() * TUNING.JAB_RECOIL_SPEED_MPS
+	_combat_presentation.call("play_recoil", direction)
 
 func _rotate_view(mouse_delta: Vector2) -> void:
 	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:

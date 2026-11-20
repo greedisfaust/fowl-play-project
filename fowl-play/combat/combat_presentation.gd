@@ -1,29 +1,123 @@
-## Coordinates the curled-fist wind-up and short extension on the existing hand.
+## Procedural jab, anticipation and weak-recoil presentation.
+## Gameplay outcomes are host-authoritative; this script only animates the approved intent.
 extends RefCounted
+
+const JAB_POSE_DURATION_S: float = 0.38
+const RECOIL_POSE_DURATION_S: float = 0.28
+const WINDUP_LEAN_RAD: float = -0.12
+const JAB_FOLLOW_THROUGH_RAD: float = 0.20
+const RECOIL_LEAN_RAD: float = -0.13
+
+enum Phase { IDLE, WINDUP, JAB }
+
 var _player: Node
+var _phase: Phase = Phase.IDLE
+var _phase_elapsed: float = 0.0
+var _recoil_elapsed: float = -1.0
+var _jab_direction: Vector3 = Vector3.FORWARD
+var _recoil_direction: Vector3 = Vector3.FORWARD
+
 func configure(player: Node) -> void:
 	_player = player
+
 func begin_windup() -> void:
+	if not _can_present():
+		return
+	_phase = Phase.WINDUP
+	_phase_elapsed = 0.0
 	var hand: Hand = _get_right_hand()
 	if hand != null:
 		hand.set_punching(true)
+
 func play_jab(direction: Vector3) -> void:
 	var hand: Hand = _get_right_hand()
-	if hand == null or not direction.is_finite() or direction.length_squared() < 0.0001:
+	if hand == null or not direction.is_finite() or direction.length_squared() < 0.0001 or not _can_present():
 		cancel()
 		return
 	var camera: Camera3D = _player.get("camera") as Camera3D
 	if camera == null:
 		cancel()
 		return
+	_phase = Phase.JAB
+	_phase_elapsed = 0.0
+	_jab_direction = direction.normalized()
 	hand.set_punching(true)
-	var target: Vector3 = camera.global_position + direction.normalized() * 1.0
+	var target: Vector3 = camera.global_position + _jab_direction
 	if not hand.begin_action(target):
 		hand.set_punching(false)
+		_phase = Phase.IDLE
+
+## A weak hit reaction is visual only; movement recoil remains owned by Player.
+func play_recoil(direction: Vector3) -> void:
+	if not _can_present() or not direction.is_finite() or direction.length_squared() < 0.0001:
+		return
+	_recoil_direction = direction.normalized()
+	_recoil_elapsed = 0.0
+
+func advance(delta: float) -> void:
+	if not _can_present():
+		cancel()
+		return
+	_phase_elapsed += maxf(delta, 0.0)
+	var body_pose: Vector3 = Vector3.ZERO
+	match _phase:
+		Phase.WINDUP:
+			var windup_weight: float = 1.0 - exp(-14.0 * _phase_elapsed)
+			body_pose.x = WINDUP_LEAN_RAD * windup_weight
+		Phase.JAB:
+			body_pose += get_jab_body_pose(_phase_elapsed, _local_direction(_jab_direction))
+			if _phase_elapsed >= JAB_POSE_DURATION_S:
+				_phase = Phase.IDLE
+				var hand: Hand = _get_right_hand()
+				if hand != null:
+					hand.set_punching(false)
+	if _recoil_elapsed >= 0.0:
+		body_pose += get_recoil_body_pose(_recoil_elapsed, _local_direction(_recoil_direction))
+		_recoil_elapsed += maxf(delta, 0.0)
+		if _recoil_elapsed >= RECOIL_POSE_DURATION_S:
+			_recoil_elapsed = -1.0
+	var rig: Node3D = _player.get("rig") as Node3D
+	if is_instance_valid(rig):
+		rig.call("set_combat_body_pose", body_pose)
+
 func cancel() -> void:
+	_phase = Phase.IDLE
+	_phase_elapsed = 0.0
+	_recoil_elapsed = -1.0
 	var hand: Hand = _get_right_hand()
 	if hand != null:
 		hand.set_punching(false)
+	var rig: Node3D = _player.get("rig") as Node3D if is_instance_valid(_player) else null
+	if is_instance_valid(rig):
+		rig.call("set_combat_body_pose", Vector3.ZERO)
+
+static func get_jab_body_pose(elapsed: float, local_direction: Vector3) -> Vector3:
+	var t: float = clampf(elapsed / JAB_POSE_DURATION_S, 0.0, 1.0)
+	var pitch: float = 0.0
+	if t < 0.18:
+		pitch = lerpf(WINDUP_LEAN_RAD, JAB_FOLLOW_THROUGH_RAD, smoothstep(0.0, 0.18, t))
+	elif t < 0.42:
+		pitch = JAB_FOLLOW_THROUGH_RAD
+	else:
+		pitch = lerpf(JAB_FOLLOW_THROUGH_RAD, 0.0, smoothstep(0.42, 1.0, t))
+	var direction_yaw: float = clampf(atan2(-local_direction.x, -local_direction.z), -0.6, 0.6)
+	var yaw: float = direction_yaw * 0.28 * sin(PI * t)
+	return Vector3(pitch, yaw, -yaw * 0.18)
+
+static func get_recoil_body_pose(elapsed: float, local_direction: Vector3) -> Vector3:
+	var t: float = clampf(elapsed / RECOIL_POSE_DURATION_S, 0.0, 1.0)
+	var weight: float = sin(PI * t)
+	var side: float = clampf(local_direction.x, -1.0, 1.0)
+	return Vector3(RECOIL_LEAN_RAD * weight, -side * 0.10 * weight, side * 0.12 * weight)
+
+func _local_direction(world_direction: Vector3) -> Vector3:
+	if not is_instance_valid(_player):
+		return Vector3.FORWARD
+	return (_player.global_basis.inverse() * world_direction).normalized()
+
+func _can_present() -> bool:
+	return is_instance_valid(_player) and not bool(_player.get("is_limp")) and not bool(_player.get("is_recovering")) and not bool(_player.call("is_carrying"))
+
 func _get_right_hand() -> Hand:
 	if not is_instance_valid(_player):
 		return null

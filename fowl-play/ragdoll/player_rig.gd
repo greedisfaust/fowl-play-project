@@ -748,6 +748,18 @@ func _debug_leg_ground_status(_args: Array[Variant]) -> String:
 		_right_foot_plant.get("emergency_replant_active"), _right_foot_plant.call("get_stretch_ratio", skeleton.to_global(skeleton.get_bone_global_pose(_right_thigh_bone_index).origin), _right_leg_replant_distance_m)
 	]
 
+## Apply a small additive upper-body pose before the procedural arm IK pass.
+## Pose values are local radians and are reset when standing animation ownership ends.
+func set_combat_body_pose(pose: Vector3) -> bool:
+	if _chest_bone_index < 0 or simulator.is_simulating_physics() or _remote_active or _pose_blend_active or _recovery_animation_active:
+		return false
+	if not pose.is_finite():
+		return false
+	var chest_rotation: Quaternion = Quaternion(Vector3.RIGHT, pose.x) * Quaternion(Vector3.UP, pose.y) * Quaternion(Vector3.BACK, pose.z)
+	skeleton.set_bone_pose_rotation(_chest_bone_index, chest_rotation)
+	skeleton.force_update_all_bone_transforms()
+	return true
+
 func update_procedural_right_arm(wrist_target_world: Vector3, delta: float) -> bool:
 	var applied: bool = _update_procedural_arm_chain(
 		_right_viewmodel_upper_arm_bone_index,
@@ -819,6 +831,8 @@ func begin_host_simulation() -> bool:
 		_standing_pose = _capture_skeleton_pose()
 	_leg_controller.call("reset")
 	_leg_pose_active = false
+	if _chest_bone_index >= 0:
+		skeleton.set_bone_pose_rotation(_chest_bone_index, Quaternion.IDENTITY)
 	_reset_leg_pose_scale(_left_thigh_bone_index, _left_shin_bone_index)
 	_reset_leg_pose_scale(_right_thigh_bone_index, _right_shin_bone_index)
 	_set_right_arm_ik_active(false)
