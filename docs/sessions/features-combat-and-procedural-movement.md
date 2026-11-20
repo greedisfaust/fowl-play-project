@@ -482,3 +482,11 @@ This is still the first M10 slice, not the complete milestone. Owner lower-body 
 - Extended the M6 carry regression test: remove a carrier while it is holding a limp player and assert carried state clears, carry support stops, ragdoll collision returns, and inherited carrier velocity is applied.
 - Focused check: `.\\tests\\run_checks.ps1 -OnlyStage m6` from `fowl-play/`. Godot execution and host/client runtime verification remain user-run.
 - M11.1 remains in progress pending the focused tests and the remaining interruption/transition audit.
+
+
+### M11.1 — parry and recovery unregister coverage
+
+- Extended disconnect cleanup regression coverage to seed an active parry and cooldown, then verify both host state and the departing Player's parry presentation are cleared.
+- Changed the ordinary unregister fixture to remove a real Player node while its recovery flag is active. The test now exercises the actual `_exit_tree()` → `unregister_movement_player()` path and verifies peer-owned timing, ragdoll epoch, and combat cooldown/action state are cleared.
+- Focused check: `.\\tests\\run_checks.ps1 -OnlyStage m9-lifecycle` from `fowl-play/`. Godot execution has not been performed by the assistant.
+- This is regression coverage only; no combat timing, recovery behavior, network authority, or scene files changed. M11.1 remains in progress pending user-run checks and the remaining interruption audit.

@@ -51,15 +51,22 @@ func _run() -> void:
 	var active_jabs: Dictionary = network.get("_active_jabs")
 	var active_lunges: Dictionary = network.get("_active_lunges")
 	var action_locks: Dictionary = network.get("_combat_action_lock_until")
+	var active_parries: Dictionary = network.get("_active_parries")
+	var parry_ready_times: Dictionary = network.get("_parry_ready_times")
 	press_times[3] = 1.0
 	charged_presses[3] = true
 	active_jabs[3] = {"elapsed": 0.05, "hit": false}
 	active_lunges[3] = {"elapsed": 0.1, "direction": Vector3.FORWARD}
 	action_locks[3] = 10.0
+	active_parries[3] = {"expires_at": 10.0}
+	parry_ready_times[3] = 10.0
+	pending_player.call("begin_parry_presentation")
 	network.call("_on_peer_disconnected", 3)
 	check(not press_times.has(3) and not charged_presses.has(3), "disconnect clears held combat input")
 	check(not active_jabs.has(3) and not active_lunges.has(3), "disconnect clears active jab and lunge state")
 	check(not action_locks.has(3), "disconnect clears combat action lock")
+	check(not active_parries.has(3) and not parry_ready_times.has(3), "disconnect clears active parry and cooldown state")
+	check(not bool(pending_player.get("_parry_active")), "disconnect ends the departing player's parry presentation")
 	check(not pending_states.has(3), "disconnect cleanup does not retain an already-applied state baseline")
 	pending_states[4] = {"sequence": 0, "position": Vector3.ZERO, "velocity": Vector3.ZERO, "yaw": 0.0, "pitch": 0.0, "grounded": true}
 	network.call("_on_peer_disconnected", 4)
@@ -67,8 +74,12 @@ func _run() -> void:
 
 	# Removing a Player node without a transport disconnect must also release
 	# every peer-owned timer/epoch, not just the combat dictionaries.
-	var tracked_player: Node = Node.new()
-	network.call("register_movement_player", 5, tracked_player)
+	var tracked_player: CharacterBody3D = PLAYER_SCENE.instantiate() as CharacterBody3D
+	tracked_player.name = "5"
+	tracked_player.set("input_peer_id", 5)
+	players.add_child(tracked_player)
+	await physics_frame
+	tracked_player.set("is_recovering", true)
 	var interaction_times: Dictionary = network.get("_interaction_times")
 	var carry_times: Dictionary = network.get("_carry_times")
 	var ragdoll_epochs: Dictionary = network.get("_ragdoll_epochs")
@@ -82,13 +93,13 @@ func _run() -> void:
 	charged_ready_times[5] = 10.0
 	parry_ready_times[5] = 10.0
 	active_jabs[5] = {"elapsed": 0.01, "hit": false}
-	network.call("unregister_movement_player", 5, tracked_player)
-	check(not network.get("movement_players").has(5), "unregister removes the matching Player registration")
+	tracked_player.queue_free()
+	await process_frame
+	check(not network.get("movement_players").has(5), "removing a recovering Player unregisters its movement registration")
 	check(not interaction_times.has(5) and not carry_times.has(5), "unregister clears interaction and carry timing state")
 	check(not ragdoll_epochs.has(5), "unregister clears the departed Player ragdoll epoch")
 	check(not jab_ready_times.has(5) and not charged_ready_times.has(5) and not parry_ready_times.has(5), "unregister clears combat cooldown state")
 	check(not active_jabs.has(5), "unregister clears active combat actions")
-	tracked_player.free()
 
 	# Session shutdown must clear every peer-owned cache, even when no
 	# transport disconnect event runs for the current local session.
