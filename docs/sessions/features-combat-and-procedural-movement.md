@@ -195,3 +195,23 @@ Not included:
 
 Verification:
 - The code and test assertions are committed but have **not** been executed in Godot by the assistant. Steam Godot editor import and runtime checks remain required.
+
+
+## Implementation slice — settle both feet after stopping
+
+Commits:
+- `f6f5e63` — settle procedural legs into stance when stopping
+- `b273e68` — cover double-stance gait settling
+
+Implemented:
+- The previous gait phase froze as soon as filtered movement fell below the walk threshold. If that happened during swing, the foot tracker could retain a halfway-through-swing target even after the character became idle.
+- The controller now advances the remaining phase at a restrained settling rate toward the shared double-stance phase (`PI`). At that phase, both feet are in stance; the motion blend continues easing to neutral.
+- Added a regression check that begins from mid-swing, stops the controller, and verifies both feet reach stance and the phase settles at `PI`.
+- No scene, node hierarchy, collision shape, or network changes.
+
+Verification:
+- Source and regression assertions are committed. Godot execution and rendered visual verification have not been run by the assistant and remain required.
+
+Remaining ground-contact refinements:
+- Calibrate the target against the actual shoe sole/foot attachment geometry rather than assuming the foot bone origin is the ground-contact point.
+- Align the foot orientation to the detected surface normal and tune the stance/swing transitions in-game.
