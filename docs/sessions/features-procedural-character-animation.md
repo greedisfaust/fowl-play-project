@@ -1,7 +1,7 @@
 # Session memory: Procedural Character Animation
 
 Branch: `features/new-reactive-hands-and-viewport`
-Status: IN PROGRESS — first procedural hand pose-priority refactor committed; runtime verification pending
+Status: REFERENCE / PARTIALLY COMPLETE — hand pose-priority and target-driven hand foundations are retained; multiplayer hover/poke synchronization was subsequently fixed and user-verified. Remaining hand polish is not a blocker for the next feature.
 Last updated: 2026-11-19
 
 ## Feature scope
@@ -34,14 +34,9 @@ Test commits: `test: cover procedural hand pose priority`, `test: assert remote 
 
 ## Current diagnosis and next steps
 
-The user observed that hover RPC counters and remote `hover=true` state update continuously, while the remote world hand still does not visibly point reliably in either host/client direction. Both world hands are visible in idle. This points to a pose/render/attachment problem rather than missing hover messages.
+The earlier host/client hover-pointing and poke visibility issue described above has since been fixed. The user explicitly confirmed that both multiplayer hand synchronization and the in-game behavior now work. Keep the existing diagnostics and tests as regression tools; do not reopen the old networking issue unless it regresses.
 
-The pose-priority refactor is a foundation, not yet a confirmed fix. Next:
-1. User pulls and runs the Godot test suite plus two-instance visual check.
-2. If remote pose state is correct but rendering still fails, inspect actual hand node transforms, attachment transforms, and world/viewmodel orientation; add focused diagnostics rather than changing networking blindly.
-3. Confirm spam-click reach returns smoothly to point/idle.
-4. Add explicit procedural pose targets/transitions only after the current geometry and transforms are measured.
-5. Later integrate carry grip, combat hand/arm intents, body coordination, and procedural legs without letting these overwrite ragdoll ownership.
+Remaining hand work is visual/pose polish rather than the old RPC delivery blocker. The next feature continues the broader procedural-character direction with combat presentation and procedural leg movement, while preserving the hand foundation and ragdoll ownership rules.
 
 ## Ownership and constraints
 

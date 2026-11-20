@@ -135,10 +135,14 @@ func _try_interact(input_action: StringName) -> bool:
 	var action_started: bool = false
 	if is_instance_valid(right_hand) and focus_ray.is_colliding():
 		action_started = right_hand.begin_action(focus_ray.get_collision_point())
+	var target: Interactable = _focused
 	var submitted: bool = bool(
-		get_node("/root/Network").call("request_interaction", _focused.get_path(), action)
+		get_node("/root/Network").call("request_interaction", target.get_path(), action)
 	)
-	if not submitted and action_started:
+	if submitted:
+		# Local presentation may react immediately; Network still validates the request.
+		target.interaction_requested.emit(_actor, action)
+	elif action_started:
 		right_hand.finish_action(false)
 	return submitted
 

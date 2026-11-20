@@ -15,10 +15,12 @@ const OUTLINE_COLOR: Color = Color(0.015, 0.015, 0.02, 1.0)
 
 var is_hovering: bool = false
 var _cursor_enabled: bool = false
+var _default_identity_color: Color = Color(0.30, 0.70, 1.0, 1.0)
 var _hover_amount: float = 0.0
 var _pulse_elapsed: float = 0.0
 
 func _ready() -> void:
+	_default_identity_color = identity_color
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_process(true)
 
@@ -36,6 +38,10 @@ func set_cursor_enabled(enabled: bool) -> void:
 
 func set_identity_color(color: Color) -> void:
 	identity_color = color
+	queue_redraw()
+
+func reset_identity_color() -> void:
+	identity_color = _default_identity_color
 	queue_redraw()
 
 func _on_focus_target_changed(target: Interactable) -> void:

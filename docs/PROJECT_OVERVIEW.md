@@ -442,3 +442,12 @@ res://
 3. Final lobby, nickname and color flow.
 4. Per-bone ragdoll masses (spike).
 5. Rebuilding the casino/economy layer, and when.
+
+
+### Player identity presentation
+
+- The local player's `Player/GameplayCursor/CursorDisplay` uses the host-assigned identity color and restores its configured fallback accent when identity data is unavailable.
+- Identity is host-authoritative and replicated through the shared `PlayerIdentity` roster. Peer IDs remain internal network keys; remote nameplates display the nickname only, without a peer ID.
+- The editor-authored `NamePlate` is a Node3D scene instance (`res://player/player_nameplate.tscn`) with a transparent SubViewport UI. It follows `Rig/Skeleton3D/HeadAttachment` during standing, ragdoll, remote pose playback, and recovery. The local player's own nameplate is hidden.
+- The assigned palette color tints the world rig, attached world hands, first-person Viewmodel hands, cursor accent, and nameplate accent. Rig materials are duplicated per player before tinting; the temporary `FacePhoto` placeholder is intentionally excluded.
+- USER VERIFIED: the player-color presentation works in-game. Nickname text remains white for readability while the nameplate accent carries the identity color.

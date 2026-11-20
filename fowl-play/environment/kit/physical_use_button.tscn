@@ -1,0 +1,117 @@
+[gd_scene format=3 uid="uid://dhetiy0bpntqj"]
+
+[ext_resource type="Script" uid="uid://bedltyj80xm7e" path="res://interaction/physical_use_button.gd" id="1_gurba"]
+[ext_resource type="Script" uid="uid://dd5c04repreo1" path="res://interaction/interactable.gd" id="1_m5oyd"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_m5oyd"]
+size = Vector3(0.36, 0.18, 0.36)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_imect"]
+albedo_color = Color(0.14509805, 0.16470589, 0.1882353, 1)
+metallic = 0.72
+roughness = 0.34
+
+[sub_resource type="BoxMesh" id="BoxMesh_m5oyd"]
+material = SubResource("StandardMaterial3D_imect")
+size = Vector3(0.36, 0.1, 0.36)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gurba"]
+albedo_color = Color(0.72156864, 0.19607843, 0.16862746, 1)
+metallic = 0.32
+roughness = 0.24
+
+[sub_resource type="BoxMesh" id="BoxMesh_gurba"]
+material = SubResource("StandardMaterial3D_gurba")
+size = Vector3(0.28, 0.08, 0.28)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_k3cjj"]
+albedo_color = Color(0.75686276, 0.5411765, 0.2627451, 1)
+metallic = 0.82
+roughness = 0.28
+
+[sub_resource type="BoxMesh" id="BoxMesh_g4v7s"]
+material = SubResource("StandardMaterial3D_k3cjj")
+size = Vector3(0.295, 0.018, 0.295)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_57qmd"]
+albedo_color = Color(0.9411765, 0.8666667, 0.72156864, 1)
+metallic = 0.12
+roughness = 0.42
+
+[sub_resource type="BoxMesh" id="BoxMesh_yf5fn"]
+material = SubResource("StandardMaterial3D_57qmd")
+size = Vector3(0.235, 0.008, 0.235)
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_a670p"]
+viewport_path = NodePath("Cap/LabelSurface/SubViewport")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jfp2y"]
+resource_local_to_scene = true
+transparency = 1
+shading_mode = 0
+albedo_texture = SubResource("ViewportTexture_a670p")
+
+[sub_resource type="QuadMesh" id="QuadMesh_gurba"]
+resource_local_to_scene = true
+material = SubResource("StandardMaterial3D_jfp2y")
+size = Vector2(0.235, 0.235)
+
+[node name="PhysicalUseButton" type="StaticBody3D" unique_id=1018963796]
+collision_layer = 2
+script = ExtResource("1_gurba")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=182230664]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.012459278, -0.02800411, 0)
+shape = SubResource("BoxShape3D_m5oyd")
+
+[node name="Base" type="MeshInstance3D" parent="." unique_id=2067942944]
+mesh = SubResource("BoxMesh_m5oyd")
+
+[node name="Cap" type="Node3D" parent="." unique_id=2107220548]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.09, 0)
+
+[node name="CapMesh" type="MeshInstance3D" parent="Cap" unique_id=1546977180]
+mesh = SubResource("BoxMesh_gurba")
+
+[node name="CapTrim" type="MeshInstance3D" parent="Cap" unique_id=360628747]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.03, 0)
+mesh = SubResource("BoxMesh_g4v7s")
+
+[node name="PressFace" type="MeshInstance3D" parent="Cap" unique_id=407396424]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.041, 0)
+mesh = SubResource("BoxMesh_yf5fn")
+
+[node name="LabelSurface" type="MeshInstance3D" parent="Cap" unique_id=581134905]
+transform = Transform3D(-1, 8.742278e-08, 3.821371e-15, 0, -4.371139e-08, 1, 8.742278e-08, 1, 4.371139e-08, 0, 0.047, 0)
+mesh = SubResource("QuadMesh_gurba")
+
+[node name="SubViewport" type="SubViewport" parent="Cap/LabelSurface" unique_id=457063243]
+transparent_bg = true
+size = Vector2i(256, 256)
+render_target_update_mode = 4
+
+[node name="Label" type="Control" parent="Cap/LabelSurface/SubViewport" unique_id=2142642803]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Text" type="Label" parent="Cap/LabelSurface/SubViewport/Label" unique_id=1250873722]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.16078432, 0.13725491, 0.11372549, 1)
+theme_override_font_sizes/font_size = 48
+text = "BUTTON"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Interactable" type="Node" parent="." unique_id=2093616942]
+script = ExtResource("1_m5oyd")
+prompt_text = "[M1 . E] Press Button"
+metadata/_custom_type_script = "uid://dd5c04repreo1"

@@ -28,6 +28,8 @@ const TRANSITION_SECONDS: float = 0.18
 var availability_check: Callable
 
 signal focused_changed(focused: bool)
+## Local presentation/input hook; this does not grant interaction authority.
+signal interaction_requested(actor: Node, action: StringName)
 signal interacted(actor: Node, action: StringName)
 
 var is_focused: bool = false

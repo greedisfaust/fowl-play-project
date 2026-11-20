@@ -66,6 +66,59 @@ var _carry_saved_chest_swing_span: float = 0.0
 var _carry_saved_chest_twist_span: float = 0.0
 var _carry_saved_head_swing_span: float = 0.0
 var _carry_saved_head_twist_span: float = 0.0
+var _player_tinted_geometry: Array[GeometryInstance3D] = []
+var _player_original_materials: Array[Material] = []
+
+## Apply the network-assigned identity color to the visible rig and its attached hands.
+## FacePhoto is intentionally excluded; it is a temporary placeholder.
+func set_player_color(new_color: Color) -> void:
+	_restore_player_color()
+	for candidate: Node in find_children("*", "GeometryInstance3D", true, false):
+		var geometry: GeometryInstance3D = candidate as GeometryInstance3D
+		if geometry == null or geometry.name == &"FacePhoto" or _is_attached_hand_visual(geometry):
+			continue
+		var original: Material = geometry.material_override
+		if original == null and geometry is CSGShape3D:
+			original = (geometry as CSGShape3D).material
+		if original == null and geometry is MeshInstance3D:
+			var mesh_instance: MeshInstance3D = geometry as MeshInstance3D
+			if mesh_instance.mesh != null and mesh_instance.mesh.get_surface_count() > 0:
+				original = mesh_instance.mesh.surface_get_material(0)
+		var tinted: BaseMaterial3D
+		if original is BaseMaterial3D:
+			tinted = (original as BaseMaterial3D).duplicate() as BaseMaterial3D
+		else:
+			tinted = StandardMaterial3D.new()
+		var shade: float = 1.0
+		if original is BaseMaterial3D:
+			shade = (original as BaseMaterial3D).albedo_color.v
+		tinted.albedo_color = Color(new_color.r * shade, new_color.g * shade, new_color.b * shade, 1.0)
+		_player_tinted_geometry.append(geometry)
+		_player_original_materials.append(geometry.material_override)
+		geometry.material_override = tinted
+
+	var right_hand: Hand = get_node_or_null("Skeleton3D/HandAttachment_R/HandMount_R/Hand") as Hand
+	var left_hand: Hand = get_node_or_null("Skeleton3D/HandAttachment_L/HandMount_L/Hand") as Hand
+	if right_hand != null:
+		right_hand.set_color(new_color)
+	if left_hand != null:
+		left_hand.set_color(new_color)
+
+func _is_attached_hand_visual(geometry: GeometryInstance3D) -> bool:
+	var ancestor: Node = geometry.get_parent()
+	while ancestor != null and ancestor != self:
+		if ancestor is Hand:
+			return true
+		ancestor = ancestor.get_parent()
+	return false
+
+func _restore_player_color() -> void:
+	for index: int in _player_tinted_geometry.size():
+		var geometry: GeometryInstance3D = _player_tinted_geometry[index]
+		if is_instance_valid(geometry):
+			geometry.material_override = _player_original_materials[index]
+	_player_tinted_geometry.clear()
+	_player_original_materials.clear()
 
 # Strong, damped 6-DOF carry anchor. The Chest follows the carrier's
 # CarryAnchor position and upright facing; spring damping gives slight lag

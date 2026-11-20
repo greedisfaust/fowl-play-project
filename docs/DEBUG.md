@@ -17,6 +17,7 @@ security secret.
 | props | core/props.gd | spawn, grab, throw, interact, state |
 | ragdoll | ragdoll/player_ragdoll_test.gd | isolated physical-bone test start/stop |
 | interact | player/focus.gd and interaction/interactable.gd | focus changes, accepted/rejected interaction requests |
+| screen | ui/screen_text.gd | world-screen terminal initialization and text-content diagnostics |
 | player | player/player.gd | movement state and local camera input |
 
 ## Watches
@@ -31,6 +32,7 @@ security secret.
 | `net/hand_poke_sent` | core/network.gd | Host count of accepted cosmetic hand-poke broadcasts sent. |
 | `net/hand_poke_received` | core/network.gd | Count of remote world-hand pokes played on this instance. |
 | `interact/focused/<name>` | player/focus.gd | Prompt text for the local player's focused target, or blank. |
+| `screen/<node-path>/lines` | ui/screen_text.gd | Current rendered line count in a world-screen terminal. |
 | `interact/device/<name>/active` | interaction/debug_use_device.gd | Toggle state of the M1 test USE device. |
 | `props/<name>/pickup_allowed` | props/prop.gd | Whether the prop's assigned profile allows pickup. |
 | `hands/<name>/state` | hands/hand.gd | World mode, hover, guard, carry, limp, and speed state. |
@@ -60,6 +62,8 @@ Automated checks cover Enter/Run signal wiring, category toggles, feedback with 
 | `net_status` | none | no | no | Reports connection status, port, and known peers. |
 | `net_host` | none | no | no | Starts hosting from offline/disconnected state. Removes the offline player before spawning the host. |
 | `net_join` | optional IP | no | no | Joins an IP; defaults to 127.0.0.1. Example: `net_join 192.168.1.20`. |
+| `identity_status` | none | no | no | Lists the current authoritative/replicated player identity records. |
+| `identity_set` | nickname, optional palette index 0-9 | no | no | Requests a nickname and color for the local peer; the host sanitizes the nickname, suffixes duplicates, and falls forward to the next free color. |
 | `net_disconnect` | none | no | no | Disconnects this instance and clears its players. On the host, ends the session for clients. Use net_host/net_join afterward. |
 | `interact_use_<name>` | none | no | no | Submits the local player's focused interaction to the host. Remote-player commands reject locally. Submission is not acceptance; see interact logs. |
 | `hand_status_<name>` | none | no | no | Reports this hand's cosmetic state. |
@@ -104,7 +108,7 @@ Alternatively, start two ordinary game instances and enter `net_host` in the fir
 - Command buttons live under `Window/Layout/Tabs/Commands/CommandList`, inside an editor-authored ScrollContainer (vertical auto scrolling, horizontal disabled, follow focus enabled). Old buttons detach before replacement so repeated registry refreshes do not temporarily inflate layout height. USER VERIFIED: overflow fix works after the resize/scroll playtest handoff.
 - Players unregister their two watches and status command on scene-tree exit, using their original registration names even if renamed. Other systems can remove commands with `DebugHub.unregister_command(name)` and watches with `DebugHub.unwatch(name)`. Registry changes refresh the console automatically.
 - D0 checks verify queued player deletion with the console present, another player's continued watch/command access, and registration of a replacement using the departed player's name. Network disconnect testing remains part of M0.
-- With the console open, player movement and jump input are blocked while gravity and collision movement continue. USER VERIFIED: movement/jump blocked and speed increases while falling off the arena with the console open. Landing with the console open remains untested.
+- With the console open or the registration nickname editor active, player movement and jump input are blocked while gravity and collision movement continue. The terminal lock is released by Enter, Escape, session close, range disconnect, or terminal teardown. USER VERIFIED: movement/jump blocked and speed increases while falling off the arena with the console open. Landing with the console open remains untested.
 - Keep the unlock phrase and Escape controls; the user declined an F3 toggle.
 - The console is local only and never networked.
 - The unlock phrase overlaps gameplay letters; the console input layer must consume those keystrokes while recognizing the phrase.
@@ -150,8 +154,9 @@ M2 hand names: the first instance retains its node-name command/watch suffix. Co
 - The local first-person right hand points at the focused interactable. The host relays the hover state and world target to remote world hands; the left hand remains relaxed.
 - `net/hand_hover_sent` counts host relays and `net/hand_hover_received` counts hover states applied to remote world hands on clients. These are cosmetic pose updates, not gameplay authority.
 - On an accepted interaction, `net/hand_poke_sent` counts host poke broadcasts and `net/hand_poke_received` counts world-hand poke animations accepted on clients. Rejected interactions do not produce a remote poke.
-- Two-instance check: aim at an interactable without clicking. The other instance should see that player's right hand point at it. Move aim away and the remote hand should return to idle. Then click; the other instance should see the poke and smooth return.
-- If the counters remain at zero, inspect `net/roster` and `interact` logs first. If sent rises but received stays zero, inspect the client RPC/owner lookup. If received rises but the pose is invisible, inspect the remote Player Rig visibility and the world-hand attachment.
+- USER VERIFIED: host/client hover pointing and accepted-interaction poke synchronization were fixed and confirmed working in-game. The counters and checks below remain useful regression diagnostics.
+- Regression check: aim at an Interactable without clicking; the other instance should see that player's right hand point at it. Move aim away and confirm it returns to idle, then click and confirm the remote poke and smooth return.
+- If a regression occurs, inspect `net/roster` and `interact` logs first. If sent rises but received stays zero, inspect the client RPC/owner lookup. If received rises but the pose is invisible, inspect remote Player Rig visibility and the world-hand attachment.
 
 ### M4 live rig preparation
 
@@ -272,7 +277,7 @@ Every `Interactable` component automatically adds an inverted-hull silhouette ov
 - The `interact` log reports focus-driven highlight state changes.
 - `tests/m1_interaction_test.gd` checks automatic idle outlines, no outline on a sibling mesh without an Interactable, gold/glow focus state, return to idle, and restoration of the original overlay.
 
-The test arena now has an editor-authored `WorldEnvironment` with restrained Glow enabled. The interactable outline emits HDR gold while focused so Godot's Glow post-process can create a real soft halo. Glow is scene-wide as a rendering pass, but only bright pixels (including focused outline emission) should contribute significantly. The environment is currently attached to `test_arena.tscn`; when a shared production world/environment is introduced, move or reuse these settings there rather than duplicating per-level environments. The outline remains an inverted-hull shader and does not depend on custom post-process code.
+The test arena has an editor-authored `WorldEnvironment` with restrained Glow enabled. USER VERIFIED: the animated golden outline/highlight treatment is implemented and working. Glow is scene-wide as a rendering pass, but only bright pixels (including focused outline emission) should contribute significantly. The environment is currently attached to `test_arena.tscn`; when a shared production world/environment is introduced, move or reuse these settings there rather than duplicating per-level environments. The outline remains an inverted-hull shader and does not depend on custom post-process code.
 
 
 
@@ -281,6 +286,159 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 - The center-screen cursor is a CanvasLayer under Player, and only the local player's instance is enabled while the mouse is captured.
 - Idle: a small translucent white circle with a thin dark outline.
 - Focused: it smoothly grows, blends toward its configurable identity accent, and gains three soft translucent glow rings. A gentle 1.8-second breathing pulse scales the cursor while focused.
-- The color is deliberately a temporary fallback, not a network/player-color lookup. Future lobby identity code should call GameplayCursor.set_identity_color(color) with the assigned player's color.
+- `GameplayCursor.set_identity_color(color)` receives the host-assigned identity color. Its configured accent is used as a fallback when identity data is unavailable (offline/startup/shutdown).
 - The focused Interactable outline has a separate, slower 2-second breathing glow. Only emission intensity pulses; outline width and silhouette stay stable. The existing test-arena WorldEnvironment Glow creates the soft bloom.
-- Run tests/run_checks.ps1 for the cursor contract check and tests/m1_interaction_test.gd for the interactable outline checks. Godot runtime and visual verification remain user-run.
+- Focused regression checks: `tests/run_checks.ps1` for the cursor contract and `tests/m1_interaction_test.gd` for the Interactable outline. User has confirmed the in-game golden highlight works; the assistant has not independently rerun Godot here.
+
+
+### Player identity core
+
+- `net/identities` lists identity records sorted by peer ID. Each record contains `peer_id`, `nickname`, and `color_index`; `PlayerIdentity` resolves the stable palette name and `Color`.
+- `identity_status` prints the current identity roster.
+- `identity_set <nickname> [color_index]` requests a local identity. Palette indexes are Red 0, Orange 1, Yellow 2, Green 3, Cyan 4, Blue 5, Purple 6, Pink 7, Black 8, White 9.
+- The host derives the requesting peer from the RPC sender, strips control characters/outer whitespace, limits nicknames to 16 characters, defaults blank names to Chicken, and suffixes case-insensitive duplicates (`Chicken 2`, `Chicken 3`, ...).
+- If a requested color is occupied, the host checks subsequent palette entries in wraparound order and assigns the first free color. A peer's existing color is excluded when that peer changes its own selection.
+- A reliable host-published identity roster carries the authoritative records. Disconnect and shutdown remove identity records.
+- `tests/m3_identity_test.gd` checks peer IDs, display labels, nickname suffixing, blank-name fallback, palette size, color uniqueness, next-color fallback, and invalid requests. It is registered as the `identity` stage in `tests/run_checks.ps1`.
+- USER VERIFIED: the identity registration/color flow and host/client presentation work in-game. The focused identity test remains available for regression checks; the assistant did not independently rerun Godot for this archive.
+
+
+### Physical USE button
+
+- `interact/button/<node-path>/press_count` counts accepted USE events presented by a reusable physical button component.
+- The component listens to the existing `Interactable.interacted` signal. Only the authoritative host/offline instance starts the animation and sends a reliable presentation RPC to clients; clients validate the host sender before playing it.
+- `interact_use_<player>` remains the debug command for exercising the real focus and host-validation path. Aim at the button and press E to see the cap press.
+- Expected: `interact: <button> physical button pressed (<count>)` when the interact category is enabled. Repeated presses restart from the cap's current position and settle at its saved rest position.
+- `tests/m3_physical_use_button_test.gd` checks USE-only activation, retrigger continuity, and return to rest. It is registered as `physical-button` in `tests/run_checks.ps1`. Godot execution and rendered multiplayer verification remain pending.
+
+
+### WorldScreen — reusable size-adaptive display and isolated text glow
+
+- Scene: `res://environment/kit/world_screen.tscn`; root controller: `world_screen.gd`; text control: `SubViewport/ScreenText`.
+- Required direct children of WorldScreen: `Display` (opaque physical panel), `TextDisplay` (transparent text overlay), and `SubViewport`. Keep ScreenText inside SubViewport.
+- `Display` uses a dark, non-emissive material with no ViewportTexture. `TextDisplay` matches the Display PlaneMesh size/orientation and sits slightly in front of it; its material is configured by WorldScreen at runtime.
+- SubViewport must use Transparent Bg and HDR 2D. It contains only ScreenText; do not add a full-screen Background ColorRect. ScreenText's normal StyleBox remains transparent.
+- WorldScreen routes the SubViewport texture to TextDisplay's albedo and emission. Because the viewport background is transparent, only rendered glyphs contribute to the overlay; the physical panel is not part of the emission texture.
+- The CanvasItem shader is assigned to ScreenText by WorldScreen. It boosts glyph RGB into HDR and applies a circular dot mask to glyph alpha. It does not modify Display.
+- Text Glow exports: `text_glow_enabled`, `text_glow_boost` (default 2.2). LED Matrix exports: `led_matrix_enabled`, `led_dot_size`, `led_gap`, and `led_softness`. Dot size is measured in SubViewport pixels; smaller values create a finer matrix. A starting range of 3–5 px is recommended for the 2048 × 1152 default viewport.
+- The TextDisplay overlay uses alpha transparency, unshaded rendering, and an emission texture. The existing WorldEnvironment must have Glow enabled for HDR glyphs to bloom.
+- Resize through root `display_size`, not root Transform Scale. The controller updates both PlaneMeshes, SubViewport resolution, and responsive font size.
+- Run `tests/run_checks.ps1` to include the WorldScreen stage. Isolated: `godot --headless --path fowl-play --script res://tests/m3_world_screen_test.gd`. The test checks sizing, transparent HDR viewport, text shader settings, overlay material when the editor-authored TextDisplay exists, per-instance isolation, and independent content. Godot execution and rendered visual verification remain user-run.
+
+
+## SLIM WorldScreen kit
+
+- The editor-authored `slim_world_screen.tscn` hierarchy is `SlimWorldScreen/WorldScreen`, `Housing`, `Bezel/{Top,Bottom,Left,Right}`, and `Glass`.
+- Attach `res://environment/kit/slim_world_screen.gd` to the `SlimWorldScreen` root. Its exported `display_size`, `bezel_thickness`, and `housing_depth` properties resize the WorldScreen, backing plate, four bezel pieces, and glass together.
+- The controller aligns the backing plate, bezel, and glass to the existing WorldScreen's XZ-facing display plane. Keep the authored child names stable.
+- Glass uses `slim_world_screen_glass.gdshader`: a faint cool tint, physically lit clearcoat/specular response, angle-based Fresnel sheen, and a restrained near-camera fade. This is a stylized sheen, not a captured real-world reflection; visible environment reflections depend on scene lighting/reflection probes.
+- `glass_base_opacity`, `glass_sheen_strength`, `glass_sheen_near_distance`, and `glass_sheen_far_distance` tune the effect. The default keeps the screen readable and the glass understated.
+- Run `tests/run_checks.ps1` stage `slim-world-screen` for the headless geometry/resizing contract. Godot execution and rendered visual tuning remain user-run.
+
+- Glass uses a default-orientation PlaneMesh (XZ plane); do not rotate it 90 degrees. The backing BoxMesh and bezel boxes are rotated 90 degrees around X because their broad faces are authored in XY.
+
+
+### FAT WorldScreen kit
+
+- Editor-authored scene: `res://environment/kit/fat_world_screen.tscn`. Attach `res://environment/kit/fat_world_screen.gd` to the `FatWorldScreen` root. The controller does not create or replace scene nodes.
+- Required root children: `WorldScreen`, `Chassis`, and `Glass`. Chassis groups: `OuterShell`, `InnerArmor/{TopArmor,BottomArmor,LeftArmor,RightArmor}`, `CornerArmor/{TopLeft,TopRight,BottomLeft,BottomRight}`, `SideDetails/{LeftVent,RightVent}`, `ControlPanel/{PanelBody,IndicatorGroup,IdentificationPlate}`, and `Fasteners/{TopLeft,TopRight,BottomLeft,BottomRight}`.
+- The controller repositions/regenerates the named CSG silhouettes, vent bars, control strip, plate, fasteners, and glass from `display_size`. It preserves authored materials and the TextMesh resource; keep the node names stable.
+- `display_size` resizes WorldScreen, the clipped eight-point chassis, inner armor, corner plates, vent spacing, lower control strip, identification plate, fasteners, and glass. Chassis depth, armor thickness, corner cut, and glass finish remain adjustable in the Inspector.
+- Godot's CSGPolygon3D Depth mode extrudes toward negative Z, so the outer shell's front face is positioned just behind the display at Z = -0.005 and its body extends backward. The inner armor, control panel, TextMesh lettering, fasteners, and glass are layered toward the front (+Z). Glass reuses the same shader and defaults as SLIM.
+- Prefer `MeshInstance3D` with a `TextMesh` resource for crisp physical in-world lettering rather than small `Label3D` textures.
+- Run `tests/run_checks.ps1` stage `fat-world-screen`, or `godot --headless --path fowl-play --script res://tests/m3_fat_world_screen_test.gd`. Godot execution and rendered visual verification remain user-run; this implementation has not been run in Godot.
+
+
+### FAT WorldScreen
+
+- The FAT housing controller reads its chassis at `WorldScreen/Chassis`, matching the authored scene hierarchy. The four authored fasteners use the `TopLeftFastener` / `TopRightFastener` / `BottomLeftFastener` / `BottomRightFastener` names and are repositioned by the controller.
+- In the editor, changing `FatWorldScreen.display_size` should resize the WorldScreen content, CSG chassis plates, vents, control strip, identification plate/text, fasteners, and glass together. Run the `fat-world-screen` headless contract stage after pulling controller updates; visual alignment still needs editor verification.
+
+
+### SLIM WorldScreen — Precision Cyber Industrial pass
+
+- SlimWorldScreen now supports optional FrontTrim, LightingSystem, SideDetails, Identification, and MechanicalDetails groups. The controller creates generated child containers beneath each group and rebuilds only those generated children when dimensions or finish settings change; authored nodes outside the generated containers are preserved.
+- New exported finish controls: trim width, light width, cyan/amber light colors, and emissive energy. The controller lays out machined trim rails, perimeter/corner light channels, status indicators, side vent inserts, a model plate, and micro-fasteners relative to display_size.
+- Verify in the editor by adjusting display_size and confirming the new details follow the housing. For a headless contract check, run godot --headless --path fowl-play --script res://tests/m3_slim_world_screen_test.gd. Godot tests and rendered visual verification have not been executed by the assistant.
+
+
+### Reusable WorldScreen presentation presets
+- `WorldScreen.show_layout(layout, header, body, prompt = "")` replaces the selected screen's content using a named color treatment. Supported names: `standard`, `welcome`, `information`, `warning`, `success`, and `confirmation`.
+- `WorldScreen.set_content(header, body, prompt = "")` is the standard-color replacement shortcut. Existing append and clear methods remain available. Presets affect only text colors; they do not alter screen geometry, font, LED/glow settings, or alignment.
+
+
+## WorldScreen / ScreenText
+
+- Category: `screen` — registered by `ui/screen_text.gd`; logs terminal initialization when enabled.
+- Watch: `screen/<node-path>/lines` — current RichTextLabel line count for that ScreenText instance.
+- Screen content APIs are documented in [WORLD_SCREENS_AND_SCREEN_TEXT.md](WORLD_SCREENS_AND_SCREEN_TEXT.md): append methods, replacement via `set_content`, and named presets via `show_layout`, and inner safe margins via `WorldScreen.content_padding_ratio` (default 0.70).
+- The screen's visual pipeline is split: opaque `Display` backing, transparent emissive `TextDisplay`, and `SubViewport/ScreenText`. If the whole panel blooms, inspect that split before adjusting WorldEnvironment Glow.
+- No dedicated screen commands currently exist. Screen changes are driven through the WorldScreen / ScreenText script APIs.
+
+
+## Interactive screen menus
+
+- `ScreenMenu` (`ui/screen_menu.gd`) is an input-independent menu model rendered through WorldScreen/ScreenText.
+- Semantic actions: `menu_up`, `menu_down`, `menu_confirm`, and `menu_cancel`, forwarded through `ScreenMenu.handle_action()`. It does not capture global input or add InputMap actions.
+- Signals: `opened`, `selection_changed`, `option_confirmed`, `cancelled`, and `closed`.
+- Focused test: `screen-menu` stage / `tests/m3_screen_menu_test.gd`.
+- Keyboard/gamepad and physical USE routing are deferred to Registration Terminal integration to prevent inactive screens stealing player controls.
+
+
+## Registration Terminal
+
+- USER VERIFIED: the terminal interaction/registration flow and the fixes to its wake/session/proximity behavior are working. Keep the checks below as regression guidance.
+- Attach `ui/registration_terminal.gd` to the existing terminal root; it inherits InteractiveTerminal.
+- Assign inherited `screen`, `screen_interactable` (on the physical screen target), and `proximity_area` references in the Inspector. The sensor CollisionShape3D should match the 5 m wake distance.
+- Arrow Up/Down navigate, Enter confirms, Escape closes; E/M1 on the screen Interactable begins the session or confirms the selected menu item. Players can move freely; the base ends the session outside interaction_distance (default 3 m, horizontal distance). Nickname entry supports printable keys, Backspace, Enter, and Escape.
+- The local interaction-request signal is only a local presentation/input hook. Host-side range, actor, and Interactable validation remain in Network.
+- Focused check: godot --headless --path fowl-play --script res://tests/m3_registration_terminal_test.gd.
+- Multiplayer verification: open the terminal from a client and host, submit duplicate nicknames and occupied colors, and confirm the displayed identity matches the host's net/identities roster.
+
+
+- Registration menu: while active, mouse cursor is visible. Left-click an option row on the WorldScreen to select and confirm; click elsewhere to do nothing. Keyboard arrows/Enter and E/M1 on the screen Interactable remain active. Closing/completing/rejecting registration restores the prior mouse mode.
+
+
+- Player movement no longer has a `registration_terminal_active` override. Registration terminals must not freeze player movement; use session proximity/range handling instead.
+
+
+- InteractiveTerminal state can be inspected with `is_awake()`, `has_active_session()`, and `get_active_actor()`. The proximity Area3D must overlap the local player body; its CollisionShape3D should match `wake_distance`.
+
+
+## Interactive terminals
+- Inspect `InteractiveTerminal.is_awake()`, `has_active_session()`, and `get_active_actor()` while debugging a terminal.
+- The editor-authored proximity Area3D should match `wake_distance` (default 5 m); code enforces `interaction_distance` (default 3 m, horizontal by default).
+- Only local player bodies with `is_local_player == true` wake the display. Proximity alone does not begin a session.
+- E/M1 on the screen Interactable begins a session; repeated E/M1 confirms the active menu. The physical USE button is optional.
+- Focused tests: `interactive-terminal` and `registration-terminal` stages. Setup: `docs/REGISTRATION_TERMINAL_SETUP.md`.
+
+- Registration Terminal wording is configured on the `RegistrationTerminal` root under the **Registration Copy** Inspector group. Idle/wake wording uses inherited `idle_header`, `idle_description`, and `idle_prompt` exports. See `docs/REGISTRATION_TERMINAL_SETUP.md` for formatting placeholders.
+
+
+## Player nameplates
+- Each remote player displays the assigned nickname only; networking peer IDs remain internal and are not rendered.
+- The reusable NamePlate scene uses a transparent 512 × 128 SubViewport displayed on a QuadMesh. Its root faces the active local camera and fades between the exported `fade_start_distance` and `fade_end_distance` values (defaults 18 m and 28 m).
+- The NamePlate scene must contain `Panel` (MeshInstance3D), `Display` (SubViewport), and `Display/UI` with `Background`, `Accent`, `Nickname`, `Divider`, and `Status`. The Player's `NamePlate` child must be a Node3D instance of that scene.
+- Focused contract: `identity-presentation` stage in `tests/run_checks.ps1`; rendered readability, occlusion, and host/client appearance require in-game verification.
+
+
+## Player nameplate polish
+- The plate is 78% scale (22% smaller) and its nickname is horizontally centered.
+- It faces the camera with the QuadMesh display side toward the viewer; mirrored text should no longer occur.
+- Rest opacity is 12%; aiming the center-screen cursor at the plate (or moving a visible pointer over it) smoothly raises opacity to 100%. Distance fade still applies beyond 18–28 m.
+- Player.gd attaches the plate to `Rig/Skeleton3D/HeadAttachment`, so the plate follows the actual head bone during ragdoll, remote pose playback, and recovery. If it does not follow, inspect that the Player's `NamePlate` is a direct child before runtime; the controller reparents it during Player._ready().
+- Focused contract: `identity-presentation` stage. Run `tests/run_checks.ps1`; in-game visual and multiplayer checks remain required.
+
+
+### Nameplate text and plate opacity
+- Nickname and status labels remain fully opaque (alpha 1.0) whether or not the player is being aimed at.
+- Only the decorative backing, identity accent rail, and divider use the hover opacity transition (default 12% idle, 100% aimed-at). The distance fade affects those decorative elements only.
+- The runtime HeadAttachment local Y offset is 0.62 m, raised from 0.38 m to improve clearance above the head.
+- The scene design is not final; the current hierarchy is a stable base for further visual polish. Add or restyle decorative elements in the user-authored scene without changing the required node names.
+
+
+## Player identity body colors
+- Each spawned Player resolves its host-assigned PlayerIdentity color and passes it to the world Rig, both attached Rig hands, and both camera-attached Viewmodel hands.
+- The Rig duplicates its visible geometry materials before tinting, preserving source resources and per-instance independence. The temporary `FacePhoto` placeholder is excluded.
+- The nameplate accent continues to use the same `PlayerIdentity.get_color()` value.
+- USER VERIFIED: player identity coloring works in-game, including the character presentation, world and first-person hands, and ragdoll. The nameplate's identity accent uses the same palette color; nickname text stays white for readability. Regression check: compare different host/client colors, then knock down, carry, throw, and recover each player to confirm colors persist.

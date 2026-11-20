@@ -5,6 +5,7 @@ extends CharacterBody3D
 
 const TUNING = preload("res://core/tuning.gd")
 const LAYERS = preload("res://core/layers.gd")
+const PlayerIdentity = preload("res://core/player_identity.gd")
 const LIMP_LOOK_YAW_LIMIT: float = deg_to_rad(75.0)
 const LIMP_LOOK_PITCH_LIMIT: float = deg_to_rad(75.0)
 
@@ -13,6 +14,7 @@ var input_peer_id: int = 0
 var is_local_player: bool = true
 var is_limp: bool = false
 var is_recovering: bool = false
+var terminal_movement_locked: bool = false
 var limp_epoch: int = 0
 
 @onready var head: Node3D = $Head
@@ -30,6 +32,7 @@ var limp_epoch: int = 0
 @onready var limp_interaction_proxy: StaticBody3D = get_node_or_null("LimpInteractionProxy") as StaticBody3D
 @onready var focus: Node = get_node_or_null("Head/Camera3D/Focus")
 @onready var gameplay_cursor: Control = get_node_or_null("GameplayCursor/CursorDisplay") as Control
+@onready var nameplate: Node3D = get_node_or_null("NamePlate") as Node3D
 @onready var debug_hub: Node = get_node("/root/DebugHub")
 @onready var network: Node = get_node("/root/Network")
 
@@ -93,6 +96,10 @@ func _ready() -> void:
 	if gameplay_cursor != null:
 		gameplay_cursor.call("bind_focus_source", focus)
 		gameplay_cursor.call("set_cursor_enabled", is_local_player)
+	if not network.is_connected("identity_roster_changed", _on_identity_roster_changed):
+		network.connect("identity_roster_changed", _on_identity_roster_changed)
+	_attach_nameplate_to_ragdoll_head()
+	_refresh_identity_presentation()
 	if carrier != null:
 		carrier.carry_started.connect(_on_carry_started)
 		carrier.carry_ended.connect(_on_carry_ended)
@@ -151,6 +158,8 @@ func _exit_tree() -> void:
 		rig.call("stop_host_simulation")
 	if is_instance_valid(network):
 		network.call("unregister_movement_player", input_peer_id, self)
+		if network.is_connected("identity_roster_changed", _on_identity_roster_changed):
+			network.disconnect("identity_roster_changed", _on_identity_roster_changed)
 	if not is_instance_valid(debug_hub):
 		return
 	# Use the original registration names even if the node was renamed.
@@ -166,6 +175,43 @@ func _exit_tree() -> void:
 	debug_hub.call("unwatch", _debug_carrying_watch_name)
 	if not _debug_limp_target_watch_name.is_empty():
 		debug_hub.call("unwatch", _debug_limp_target_watch_name)
+
+func _attach_nameplate_to_ragdoll_head() -> void:
+	if not is_instance_valid(nameplate) or not is_instance_valid(rig):
+		return
+	var head_attachment: BoneAttachment3D = rig.get_node_or_null("Skeleton3D/HeadAttachment") as BoneAttachment3D
+	if head_attachment == null:
+		push_warning("Player NamePlate could not find Rig/Skeleton3D/HeadAttachment; it will remain attached to Player.")
+		return
+	# The rig becomes independent of Player during ragdoll. Parenting the plate
+	# to the Head bone keeps it aligned through host simulation, remote playback,
+	# and the recovery blend without changing any ragdoll physics.
+	nameplate.reparent(head_attachment, false)
+	nameplate.position = Vector3(0.0, 0.62, 0.0)
+	nameplate.rotation = Vector3.ZERO
+
+func _on_identity_roster_changed() -> void:
+	_refresh_identity_presentation()
+
+func _refresh_identity_presentation() -> void:
+	var owner_peer_id: int = input_peer_id
+	if owner_peer_id <= 0:
+		owner_peer_id = multiplayer.get_unique_id()
+	var identity: PlayerIdentity = network.call("get_player_identity", owner_peer_id) as PlayerIdentity
+	var identity_color: Color = identity.get_color() if identity != null else Color.WHITE
+	if is_instance_valid(rig) and rig.has_method("set_player_color"):
+		rig.call("set_player_color", identity_color)
+	if is_instance_valid(viewmodel_left_hand):
+		viewmodel_left_hand.set_color(identity_color)
+	if is_instance_valid(viewmodel_right_hand):
+		viewmodel_right_hand.set_color(identity_color)
+	if is_instance_valid(gameplay_cursor) and is_local_player:
+		if identity != null:
+			gameplay_cursor.call("set_identity_color", identity.get_color())
+		else:
+			gameplay_cursor.call("reset_identity_color")
+	if is_instance_valid(nameplate) and nameplate.has_method("apply_player_identity"):
+		nameplate.call("apply_player_identity", identity, is_local_player)
 
 func _process(delta: float) -> void:
 	if is_limp:
@@ -382,6 +428,14 @@ func receive_movement(sequence: int, at: Vector3, speed: Vector3, yaw: float, pi
 	if not is_local_player:
 		_movement.push(sequence, at, speed, yaw, pitch, Time.get_ticks_msec() / 1000.0)
 
+## Locks standing movement while a local terminal text field is being edited.
+## Mouse look, gravity, collision, and other presentation remain active.
+func set_terminal_movement_locked(locked: bool) -> void:
+	terminal_movement_locked = locked
+	if locked:
+		velocity.x = 0.0
+		velocity.z = 0.0
+
 func correct_movement(at: Vector3) -> void:
 	if is_limp or is_recovering:
 		return
@@ -418,7 +472,7 @@ func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= TUNING.GRAVITY_MPS2 * delta
 
-	if bool(debug_hub.call("is_console_open")):
+	if bool(debug_hub.call("is_console_open")) or terminal_movement_locked:
 		velocity.x = 0.0
 		velocity.z = 0.0
 		move_and_slide()

@@ -26,6 +26,10 @@ func _run() -> void:
 	display.call("set_identity_color", accent)
 	if not Color(display.get("identity_color")).is_equal_approx(accent):
 		_fail("Cursor identity color setter did not update the accent")
+	display.call("reset_identity_color")
+	if not Color(display.get("identity_color")).is_equal_approx(Color(0.30, 0.70, 1.0, 1.0)):
+		_fail("Cursor did not restore its configured fallback color")
+	display.call("set_identity_color", accent)
 	var target: Interactable = Interactable.new()
 	display.call("_on_focus_target_changed", target)
 	if not bool(display.get("is_hovering")):
