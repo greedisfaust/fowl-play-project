@@ -99,9 +99,13 @@ func _get_swing_progress(cycle: float) -> float:
 
 func _get_knee_shape(cycle: float, swing_progress: float, in_swing: bool) -> float:
 	if in_swing:
-		return sin(swing_progress * PI)
+		# Bend early to lift the heel, hold flex through the forward swing,
+		# then extend during the final approach to the floor.
+		var bend_in: float = sin(clampf(swing_progress / 0.42, 0.0, 1.0) * PI * 0.5)
+		var extend_out: float = smoothstep(0.72, 1.0, swing_progress)
+		return bend_in * (1.0 - extend_out)
 	var stance_progress: float = cycle / TUNING.LEG_STANCE_FRACTION
-	return 0.12 * sin(stance_progress * PI)
+	return 0.08 * sin(stance_progress * PI)
 
 func _get_foot_pitch(cycle: float, swing_progress: float, in_swing: bool) -> float:
 	if in_swing:
