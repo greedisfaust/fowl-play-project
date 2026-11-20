@@ -19,7 +19,7 @@ func apply_player_identity(identity: PlayerIdentity, is_local_player: bool) -> v
 		text = ""
 		visible = false
 		return
-	text = identity.get_display_label()
+	text = identity.nickname
 	modulate = identity.get_color()
 	visible = not (hide_for_local_player and is_local_player)
 
