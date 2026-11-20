@@ -546,3 +546,8 @@ Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep a
 - Identified a planner conflict: landing targets advanced along the strafe direction while the anatomical-side clamp continued enforcing fixed left/right lanes. For the leading leg, the forward offset could push the target across the centerline, then the clamp pulled it back, leaving one leg unable to complete its step.
 - Foot lanes are now perpendicular to movement. Forward/backward locomotion retains the rig-right lane axis; strafing switches to a stable character-forward axis, so the two feet occupy front/back lanes and both can alternate steps without being clamped against their travel direction.
 - Applied the same movement-relative axis to the landing/replant constraint and added symmetric left/right strafe regression checks. No scene files changed. Godot tests and in-game verification have not been executed by the assistant.
+
+
+## Moving-platform foot anchors
+
+Foot planting now records both a world-space target and, when the ground hit belongs to a `Node3D`, the target's local position relative to that support. Stance anchors follow support translation and rotation. Normal swing targets and emergency-replant targets also retain their support-local landing positions, so a moving elevator does not move out from underneath a planted foot. Static ground remains world-anchored as before. M8 includes moving-support translation and rotation assertions. No scene files were changed; Godot tests and in-game verification remain pending.
