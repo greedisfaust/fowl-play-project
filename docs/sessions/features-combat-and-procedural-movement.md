@@ -1,7 +1,7 @@
 # Session plan: Combat & Procedural Legs (Movement)
 
 Branch: `features/combat-and-procedural-movement`
-Status: PLANNED — next feature approved by the user; implementation has not started.
+Status: ACTIVE — branch created from merged main; read-only rig audit completed; implementation has not started.
 Created: 2026-11-20
 Previous baseline: `features/player-identity-and-world-kit`
 
@@ -20,6 +20,60 @@ Before changing code or asking the user to modify scenes, inspect the current br
 - Current combat-related scripts, InputMap actions, tuning values, tests, and debug watches.
 
 Do not edit user-authored scenes or construct nodes in code. Confirm scene-open status before any scene handoff. The first audit should be read-only and should identify integration seams and risks before implementation begins.
+
+
+
+## Read-only rig audit — 2026-11-20
+
+Branch baseline: `features/combat-and-procedural-movement` initially matched `main` at merge commit `1506c03746e158c74ffcd2da5df042b20435db25`.
+
+### Confirmed scene and skeleton contracts
+
+- Player root: `CharacterBody3D`; camera path: `Head/Camera3D`; rig path: `Rig`; skeleton path: `Rig/Skeleton3D`.
+- Player scene contains two camera-attached Viewmodel hands at `Head/Camera3D/ViewmodelHands/LeftHand` and `RightHand`. World hands are attached beneath `Rig/Skeleton3D/HandAttachment_L/HandMount_L/Hand` and the corresponding right-side path.
+- Skeleton has 17 bones: Hips, Spine, Chest, Neck, Head, paired UpperArm/Forearm/Hand chains, and paired Thigh/Shin/Foot chains.
+- Leg attachments already exist: `ThighAttachment_L/R`, `ShinAttachment_L/R`, and `FootAttachment_L/R`, with corresponding mesh/CSG visuals. No new leg skeleton or mesh construction is needed for the first procedural pass.
+- Leg rest-chain offsets in the saved rig are approximately 0.42 m from thigh to shin and 0.42 m from shin to foot. Hips is the parent of both thigh chains.
+- The rig has 11 PhysicalBone3D bodies: Hips, Chest, Head, paired UpperArm, Forearm, Thigh, and Shin. Feet and hands are non-physical skeleton bones. The PhysicalBoneSimulator is stopped and all physical-bone collision is disabled in the standing state.
+
+### Movement and presentation integration
+
+- Owner movement runs in `Player._physics_process`; horizontal movement is driven by `velocity`, `is_on_floor()`, and the existing Player transform basis. Current nominal speed is 5 m/s; jump speed 6.5 m/s; gravity 20 m/s².
+- Mouse yaw rotates the Player root. Pitch is stored in `_pitch_radians` and applied to `Head.rotation.x`, clamped to ±85 degrees.
+- Existing movement snapshots are sent at 20 Hz and contain position, velocity, yaw, and pitch. Remote Players apply interpolated position/velocity/yaw/pitch in `_process`. Grounded state is not currently included in the snapshot; if remote leg animation needs an exact grounded flag, add it to this existing movement message rather than creating a separate animation stream.
+- The local owner's entire world Rig is hidden in normal first-person play (`rig.visible = false`); it becomes visible for limp/ragdoll. Therefore owner-view legs require selective visibility of existing lower-body visuals. Showing the whole Rig would reveal the upper body and hands and risk camera clipping.
+- The rig's existing `_process` is responsible for remote ragdoll interpolation and recovery animation. Standing leg pose evaluation must not run during either mode.
+
+### Ragdoll and recovery ownership
+
+- `Player.begin_host_limp()` calls `Rig.begin_host_simulation()` before setting `is_limp`. The rig captures the standing skeleton pose, disables procedural arm IK, exposes world hands, becomes top-level, enables host collisions, and starts PhysicalBoneSimulator3D.
+- During limp, Player movement physics is suspended. A carried limp body remains under the existing carry-support controller.
+- Recovery moves the Player capsule to a host-selected clear position, calls `stop_host_simulation_with_blend()`, then sets `is_limp = false` and `is_recovering = true`.
+- Rig recovery stops physical simulation, restores skeleton ownership, and blends from the final ragdoll pose into the captured standing pose or the selected authored recovery clip. `Player._process` waits until `Rig.is_pose_blending()` is false before `_finish_recovery()` clears `is_recovering`.
+- Procedural standing legs may resume only after that Player-level recovery handoff has completed, not merely when physical simulation stops.
+
+### Existing hand and animation contracts
+
+- `Hand.set_guard(active)`, `set_limp(on)`, `set_carrying(...)`, and action APIs already exist.
+- Hand pose priority is implemented as: Limp > Carry > Guard > Reach > Point > Idle. Combat must use the existing Guard API and must not bypass higher-priority limp/carry states.
+- First-person Viewmodel hands and world-rig hands are separate instances with different coordinate spaces. Preserve the existing adapters and arm IK target mapping.
+
+### Combat readiness and gaps
+
+- InputMap already defines `punch` on Q. `parry` on F is not yet defined.
+- `Tuning` already contains preliminary punch, charge, lunge, parry, and cooldown constants, but no combat implementation exists.
+- No `core/combat.gd`, `core/legs.gd`, M7 combat test, or M8 procedural-leg test exists in this branch. The existing debug category names are reservations, not evidence of implemented systems.
+- `Player._unhandled_input` currently leaves non-carrying Q available for the future combat handler; while carrying, Q is reserved for the existing Carrier drop/throw behavior.
+- Combat rules and open decisions remain governed by `docs/PROJECT_OVERVIEW.md` §9. In particular, do not implement punches against already-limp bodies or impact/wall-slam feedback without resolving the open decisions with the user.
+
+### Initial implementation constraints
+
+1. Keep the Player root and all network paths stable; do not reparent Player nodes.
+2. Evaluate cosmetic leg poses locally from existing movement data. If grounded state must be replicated, extend the existing 20 Hz movement snapshot.
+3. Keep the procedural leg controller out of the ragdoll pose-stream/recovery ownership path; use a dedicated, testable controller and an explicit standing-state gate.
+4. Preserve the current 11-body ragdoll setup and all existing collision policies.
+5. Owner-view legs must be shown selectively without exposing the hidden upper body.
+6. Add tests, DebugHub watches/commands, and documentation alongside each implementation slice. No tests or in-game visuals are claimed verified by this audit.
 
 ## Combat scope
 

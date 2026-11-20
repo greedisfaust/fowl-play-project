@@ -9,11 +9,11 @@ security secret.
 | Category | Owner script | What it logs |
 |---|---|---|
 | net | core/network.gd | network startup, shutdown, rejected RPCs |
-| combat | core/combat.gd | punch, parry, lunge, hit, limb events |
+| combat | Planned; no combat owner script exists yet | Reserved for punch, parry, lunge, hit, and limb events once implemented |
 | limp | core/limp.gd | limp start/end, recovery, phase changes |
 | carry | core/carry.gd | pickup, carry, throw, drop, state |
 | hands | core/hands.gd | reach, hover, guard, shake, color changes |
-| legs | core/legs.gd | step, land, settle, air movement |
+| legs | Planned; no procedural-leg owner script exists yet | Reserved for step, land, settle, and air movement once implemented |
 | props | core/props.gd | spawn, grab, throw, interact, state |
 | ragdoll | ragdoll/player_ragdoll_test.gd | isolated physical-bone test start/stop |
 | interact | player/focus.gd and interaction/interactable.gd | focus changes, accepted/rejected interaction requests |

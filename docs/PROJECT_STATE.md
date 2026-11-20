@@ -1,6 +1,6 @@
 # Fowl Play — Project State
 
-**Status:** Player Identity & World Kit is archived as implemented on `features/player-identity-and-world-kit`. The user has confirmed the multiplayer hand-sync fixes, Interactive Terminal fixes, golden Interactable highlighting, and player identity coloring in-game. Remaining automated/rendered checks are recorded as unverified where applicable; see the archived session and [DEBUG.md](DEBUG.md).
+**Status:** Combat & Procedural Legs (Movement) is the active feature on `features/combat-and-procedural-movement`. The branch starts from the merged Player Identity & World Kit baseline. The read-only rig audit is complete; implementation has not started. Previous identity/world-kit work remains archived as implemented, with verification caveats retained below.
 
 ## Last updated (2026-11-20; Player Identity & World Kit branch closeout)
 
@@ -64,7 +64,7 @@ Late join is decided: allowed during the rest of a day, not during casino/elevat
 
 The user also confirmed the latest player-color implementation works in-game. This is user verification, not a claim that the assistant ran Godot tests. Existing automated test stages and any unconfirmed WorldScreen visual checks remain recorded as pending rather than being silently marked passed.
 
-**Next feature:** Combat & Procedural Legs (Movement), planned branch `features/combat-and-procedural-movement`. Begin with a read-only rig audit, then implement combat and procedural locomotion in isolated, testable slices. See [the next feature session](sessions/features-combat-and-procedural-movement.md).
+**Active feature:** Combat & Procedural Legs (Movement), branch `features/combat-and-procedural-movement`. Read-only rig audit completed; next step is to define and implement the procedural leg controller, preserving the existing rig, movement stream, and ragdoll/recovery ownership. See [the active feature session](sessions/features-combat-and-procedural-movement.md).
 
 ## Historical verification notes
 
