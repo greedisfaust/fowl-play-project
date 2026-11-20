@@ -50,7 +50,7 @@ const LEG_DIRECTION_CHANGE_DOT: float = 0.55
 const LEG_TURN_RESPONSE: float = 42.0
 const MAX_PUNCH_POS_ERROR_M: float = 6.0
 
-const TAP_MAX_SECONDS: float = 0.25
+const TAP_MAX_SECONDS: float = 0.25 # Carrier tap/drop versus throw-charge classification only.
 const CHARGED_PUNCH_HOLD_SECONDS: float = 1.0
 const CHARGED_PUNCH_COOLDOWN_SECONDS: float = 2.0
 const JAB_COOLDOWN_SECONDS: float = 0.35
@@ -60,6 +60,7 @@ const JAB_RECOIL_SPEED_MPS: float = 1.6
 const JAB_RECOIL_DECAY_RATE: float = 4.5
 const JAB_LIMP_IMPULSE_MPS: float = 2.0
 const CHARGED_PUNCH_RANGE_M: float = 3.5
+const LUNGE_HIT_RADIUS_M: float = 0.55
 const LUNGE_SPEED_MPS: float = 12.0
 const LUNGE_DURATION_S: float = 0.5
 const LUNGE_STEER_MAX_RAD_S: float = 3.0

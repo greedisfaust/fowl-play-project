@@ -32,10 +32,16 @@ var carry_rejected: int = 0
 var combat_rejected: int = 0
 var combat_jabs: int = 0
 var combat_hits: int = 0
+var combat_charged_punches: int = 0
+var combat_lunge_hits: int = 0
 var _carry_times: Dictionary = {}
 var _combat_press_times: Dictionary = {}
+var _combat_charged_presses: Dictionary = {}
 var _combat_jab_ready_times: Dictionary = {}
+var _charged_punch_ready_times: Dictionary = {}
+var _combat_action_lock_until: Dictionary = {}
 var _active_jabs: Dictionary = {}
+var _active_lunges: Dictionary = {}
 var interaction_accepted: int = 0
 var hand_poke_sent: int = 0
 var hand_poke_received: int = 0
@@ -89,6 +95,9 @@ func _bootstrap() -> void:
 	hub.call("watch", &"net/combat_rejected", func() -> int: return combat_rejected)
 	hub.call("watch", &"net/combat_jabs", func() -> int: return combat_jabs)
 	hub.call("watch", &"net/combat_hits", func() -> int: return combat_hits)
+	hub.call("watch", &"net/combat_charged_punches", func() -> int: return combat_charged_punches)
+	hub.call("watch", &"net/combat_lunge_hits", func() -> int: return combat_lunge_hits)
+	hub.call("watch", &"net/combat_lunges_active", func() -> int: return _active_lunges.size())
 	parse_args(OS.get_cmdline_args() + OS.get_cmdline_user_args())
 
 func parse_args(arguments: PackedStringArray) -> void:
@@ -159,6 +168,10 @@ func join_server(address: String) -> Error:
 	return OK
 
 func shutdown() -> void:
+	for owner_key: Variant in _combat_press_times.keys():
+		_play_combat_cancel(int(owner_key))
+	for owner_key: Variant in _active_lunges.keys():
+		_play_combat_lunge_stop(int(owner_key))
 	if peer != null:
 		peer.close()
 	multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
@@ -192,9 +205,15 @@ func shutdown() -> void:
 	combat_rejected = 0
 	combat_jabs = 0
 	combat_hits = 0
+	combat_charged_punches = 0
+	combat_lunge_hits = 0
 	_combat_press_times.clear()
+	_combat_charged_presses.clear()
 	_combat_jab_ready_times.clear()
+	_charged_punch_ready_times.clear()
+	_combat_action_lock_until.clear()
 	_active_jabs.clear()
+	_active_lunges.clear()
 	status = "disconnected"
 	session_ended.emit()
 	_debug_log("Network shut down")
@@ -257,8 +276,9 @@ func _switch_session(host_requested: bool, address: String) -> void:
 	_switching_session = false
 
 func _physics_process(delta: float) -> void:
-	if _active_jabs.is_empty():
+	if peer != null and not is_host:
 		return
+	_advance_combat_holds()
 	for owner_key: Variant in _active_jabs.keys():
 		var owner_id: int = int(owner_key)
 		if not _active_jabs.has(owner_id):
@@ -278,6 +298,7 @@ func _physics_process(delta: float) -> void:
 			_active_jabs.erase(owner_id)
 		else:
 			_active_jabs[owner_id] = jab
+	_advance_combat_lunges(delta)
 
 func validate_rpc(expected_sender: int = -1) -> bool:
 	var sender: int = multiplayer.get_remote_sender_id()
@@ -306,11 +327,17 @@ func apply_pending_ragdoll_start(owner_id: int, player: Node) -> void:
 
 func unregister_movement_player(owner_id: int, player: Node) -> void:
 	if movement_players.get(owner_id) == player:
+		if _active_lunges.has(owner_id):
+			_finish_combat_lunge(owner_id, "player unregistered")
 		movement_players.erase(owner_id)
 		_pending_ragdoll_starts.erase(owner_id)
 		_combat_press_times.erase(owner_id)
+		_combat_charged_presses.erase(owner_id)
 		_combat_jab_ready_times.erase(owner_id)
+		_charged_punch_ready_times.erase(owner_id)
+		_combat_action_lock_until.erase(owner_id)
 		_active_jabs.erase(owner_id)
+		_active_lunges.erase(owner_id)
 
 func send_movement(owner_id: int, sequence: int, at: Vector3, speed: Vector3, yaw: float, pitch: float, grounded: bool = true) -> void:
 	if peer == null or peer.get_connection_status() != MultiplayerPeer.CONNECTION_CONNECTED:
@@ -361,6 +388,7 @@ func start_ragdoll_spike(owner_id: int) -> bool:
 	if peer != null and not is_host:
 		return false
 	var player: Node = movement_players.get(owner_id)
+	cancel_combat_state(owner_id)
 	force_drop_carry(owner_id, "limp")
 	if not is_instance_valid(player) or player.is_queued_for_deletion() or not bool(player.call("begin_host_limp")):
 		return false
@@ -714,6 +742,12 @@ func submit_combat_input(owner_id: int, pressed: bool) -> bool:
 		return _receive_combat_input(owner_id, pressed)
 	if peer.get_connection_status() != MultiplayerPeer.CONNECTION_CONNECTED:
 		return false
+	# Mirror only the local held-input state for immediate local action gating.
+	# The host still owns the authoritative timestamp and attack decision.
+	if pressed:
+		_combat_press_times[owner_id] = Time.get_ticks_msec() / 1000.0
+	else:
+		_combat_press_times.erase(owner_id)
 	_submit_combat_input.rpc_id(TUNING.PEER_ID_HOST, pressed)
 	return true
 
@@ -728,6 +762,7 @@ func cancel_combat_input(owner_id: int) -> bool:
 		return _receive_combat_cancel(owner_id)
 	if peer.get_connection_status() != MultiplayerPeer.CONNECTION_CONNECTED:
 		return false
+	_combat_press_times.erase(owner_id)
 	_submit_combat_cancel.rpc_id(TUNING.PEER_ID_HOST)
 	return true
 
@@ -743,6 +778,11 @@ func _receive_combat_cancel(owner_id: int) -> bool:
 	if not _combat_press_times.has(owner_id):
 		return false
 	_combat_press_times.erase(owner_id)
+	# A charged punch has already fired. Cancelling the held input only re-arms Q.
+	if _combat_charged_presses.has(owner_id):
+		_combat_charged_presses.erase(owner_id)
+		_combat_log("Charged punch input re-armed peer=%d" % owner_id)
+		return true
 	_cancel_combat_windup(owner_id)
 	_combat_log("Wind-up cancelled peer=%d" % owner_id)
 	return true
@@ -763,15 +803,22 @@ func _receive_combat_input(owner_id: int, pressed: bool) -> bool:
 		if peer != null:
 			_combat_windup.rpc(owner_id)
 		_play_combat_windup(owner_id)
-		_combat_log("Wind-up peer=%d" % owner_id)
+		_combat_log("Punch hold started peer=%d" % owner_id)
 		return true
 	if not _combat_press_times.has(owner_id):
 		return _combat_reject(owner_id, "release without press")
 	var held_seconds: float = now - float(_combat_press_times[owner_id])
-	_combat_press_times.erase(owner_id)
-	if not COMBAT_CONTROLLER_SCRIPT.is_jab_tap(held_seconds):
-		_cancel_combat_windup(owner_id)
+	if _combat_charged_presses.has(owner_id):
+		_combat_press_times.erase(owner_id)
+		_combat_charged_presses.erase(owner_id)
+		_combat_log("Charged punch input released/re-armed peer=%d" % owner_id)
 		return true
+	if held_seconds >= TUNING.CHARGED_PUNCH_HOLD_SECONDS:
+		var charged_started: bool = _begin_charged_punch(owner_id, now)
+		_combat_press_times.erase(owner_id)
+		_combat_charged_presses.erase(owner_id)
+		return charged_started
+	_combat_press_times.erase(owner_id)
 	if not _combat_actor_can_attack(actor, owner_id):
 		_cancel_combat_windup(owner_id)
 		return _combat_reject(owner_id, "actor state changed before jab")
@@ -793,11 +840,129 @@ func _receive_combat_input(owner_id: int, pressed: bool) -> bool:
 	if peer != null:
 		_combat_jab.rpc(owner_id, direction)
 	_play_combat_jab(owner_id, direction)
-	_combat_log("Jab accepted peer=%d" % owner_id)
+	_combat_log("Jab accepted peer=%d held=%.3f s" % [owner_id, held_seconds])
 	return true
+
+func _advance_combat_holds() -> void:
+	var now: float = Time.get_ticks_msec() / 1000.0
+	for owner_key: Variant in _combat_press_times.keys():
+		var owner_id: int = int(owner_key)
+		if _combat_charged_presses.has(owner_id):
+			continue
+		if now - float(_combat_press_times.get(owner_id, now)) < TUNING.CHARGED_PUNCH_HOLD_SECONDS:
+			continue
+		_begin_charged_punch(owner_id, now)
+
+func _begin_charged_punch(owner_id: int, now: float) -> bool:
+	if _combat_charged_presses.has(owner_id):
+		return true
+	# Consume this press before validation so it cannot fall back into a jab.
+	_combat_charged_presses[owner_id] = true
+	var actor: Node3D = movement_players.get(owner_id) as Node3D
+	if not _combat_actor_can_attack(actor, owner_id):
+		_cancel_combat_windup(owner_id)
+		return _combat_reject(owner_id, "actor state blocks charged punch")
+	if now < float(_charged_punch_ready_times.get(owner_id, 0.0)):
+		_cancel_combat_windup(owner_id)
+		return _combat_reject(owner_id, "charged punch cooldown")
+	var camera: Camera3D = actor.get_node_or_null("Head/Camera3D") as Camera3D
+	if camera == null:
+		_cancel_combat_windup(owner_id)
+		return _combat_reject(owner_id, "attacker camera missing")
+	var direction: Vector3 = -camera.global_basis.z
+	if not direction.is_finite() or direction.length_squared() < 0.0001:
+		_cancel_combat_windup(owner_id)
+		return _combat_reject(owner_id, "invalid charged-punch direction")
+	direction = direction.normalized()
+	_charged_punch_ready_times[owner_id] = now + TUNING.CHARGED_PUNCH_COOLDOWN_SECONDS
+	_combat_action_lock_until[owner_id] = now + TUNING.CHARGED_PUNCH_COOLDOWN_SECONDS
+	_active_lunges[owner_id] = {"elapsed": 0.0, "direction": direction}
+	combat_charged_punches += 1
+	if peer != null:
+		_combat_lunge_start.rpc(owner_id, direction)
+	_play_combat_lunge_start(owner_id, direction)
+	_combat_log("Charged punch fired peer=%d direction=%s" % [owner_id, str(direction)])
+	return true
+
+func _advance_combat_lunges(delta: float) -> void:
+	for owner_key: Variant in _active_lunges.keys():
+		var owner_id: int = int(owner_key)
+		if not _active_lunges.has(owner_id):
+			continue
+		var lunge: Dictionary = _active_lunges[owner_id]
+		var actor: CharacterBody3D = movement_players.get(owner_id) as CharacterBody3D
+		if not is_instance_valid(actor) or actor.is_queued_for_deletion() or bool(actor.get("is_limp")):
+			_finish_combat_lunge(owner_id, "attacker unavailable")
+			continue
+		lunge["elapsed"] = float(lunge.get("elapsed", 0.0)) + delta
+		var camera: Camera3D = actor.get_node_or_null("Head/Camera3D") as Camera3D
+		if camera != null:
+			var desired: Vector3 = -camera.global_basis.z
+			var current: Vector3 = lunge.get("direction", desired)
+			var direction: Vector3 = COMBAT_CONTROLLER_SCRIPT.steer_lunge_direction(current, desired, delta)
+			lunge["direction"] = direction
+			var hit_results: Array[Dictionary] = COMBAT_HIT_DETECTOR.trace_lunge_targets(
+				actor,
+				camera.global_position,
+				direction,
+				TUNING.CHARGED_PUNCH_RANGE_M
+			)
+			var hit_any_player: bool = false
+			for hit_result: Dictionary in hit_results:
+				if _apply_charged_lunge_hit(hit_result, owner_id):
+					hit_any_player = true
+			if hit_any_player:
+				_finish_combat_lunge(owner_id, "hit")
+				continue
+		if float(lunge.get("elapsed", 0.0)) >= TUNING.LUNGE_DURATION_S:
+			_finish_combat_lunge(owner_id, "miss")
+		else:
+			_active_lunges[owner_id] = lunge
+
+func _apply_charged_lunge_hit(result: Dictionary, attacker_id: int) -> bool:
+	var target: Node3D = result.get("target") as Node3D
+	if not is_instance_valid(target) or target.is_queued_for_deletion() or bool(target.get("is_limp")) or bool(target.get("is_recovering")):
+		return false
+	var target_id: int = int(target.get("input_peer_id"))
+	if target_id == attacker_id or not start_ragdoll_spike(target_id):
+		return false
+	combat_lunge_hits += 1
+	_combat_log("Charged lunge hit attacker=%d target=%d" % [attacker_id, target_id])
+	return true
+
+func _finish_combat_lunge(owner_id: int, reason: String) -> void:
+	if not _active_lunges.has(owner_id):
+		return
+	_active_lunges.erase(owner_id)
+	_play_combat_lunge_stop(owner_id)
+	if peer != null:
+		_combat_lunge_stop.rpc(owner_id)
+	_combat_log("Charged lunge ended peer=%d reason=%s" % [owner_id, reason])
+
+func cancel_combat_state(owner_id: int) -> void:
+	if peer != null and not is_host:
+		return
+	_combat_press_times.erase(owner_id)
+	_combat_charged_presses.erase(owner_id)
+	_combat_action_lock_until.erase(owner_id)
+	_cancel_combat_windup(owner_id)
+	if _active_lunges.has(owner_id):
+		_finish_combat_lunge(owner_id, "forced state change")
+
+## Includes a held Q charge as well as the post-launch recovery lock.
+func is_combat_action_locked(owner_id: int) -> bool:
+	if _combat_press_times.has(owner_id):
+		return true
+	return Time.get_ticks_msec() / 1000.0 < float(_combat_action_lock_until.get(owner_id, 0.0))
+
+## Future parry input must use this gate; parry itself is not part of this slice.
+func can_start_parry(owner_id: int) -> bool:
+	return not is_combat_action_locked(owner_id)
 
 func _combat_actor_can_attack(actor: Node3D, owner_id: int) -> bool:
 	if not is_instance_valid(actor) or actor.is_queued_for_deletion() or int(actor.get("input_peer_id")) != owner_id:
+		return false
+	if Time.get_ticks_msec() / 1000.0 < float(_combat_action_lock_until.get(owner_id, 0.0)):
 		return false
 	if bool(actor.get("is_limp")) or bool(actor.get("is_recovering")) or bool(actor.get("terminal_movement_locked")):
 		return false
@@ -829,6 +994,16 @@ func _play_combat_jab(owner_id: int, direction: Vector3) -> void:
 	var player: Node = movement_players.get(owner_id)
 	if is_instance_valid(player):
 		player.call("play_combat_jab", direction)
+
+func _play_combat_lunge_start(owner_id: int, direction: Vector3) -> void:
+	var player: Node = movement_players.get(owner_id)
+	if is_instance_valid(player):
+		player.call("begin_combat_lunge", direction)
+
+func _play_combat_lunge_stop(owner_id: int) -> void:
+	var player: Node = movement_players.get(owner_id)
+	if is_instance_valid(player):
+		player.call("stop_combat_lunge")
 
 func _apply_jab_hit(result: Dictionary, direction: Vector3, attacker_velocity: Vector3) -> bool:
 	var target: Node3D = result.get("target") as Node3D
@@ -871,6 +1046,9 @@ func _combat_windup(owner_id: int) -> void:
 func _combat_cancel(owner_id: int) -> void:
 	if not validate_rpc(TUNING.PEER_ID_HOST):
 		return
+	_combat_press_times.erase(owner_id)
+	_combat_charged_presses.erase(owner_id)
+	_combat_action_lock_until.erase(owner_id)
 	_play_combat_cancel(owner_id)
 
 @rpc("authority", "call_remote", "reliable", 0)
@@ -878,6 +1056,19 @@ func _combat_jab(owner_id: int, direction: Vector3) -> void:
 	if not validate_rpc(TUNING.PEER_ID_HOST) or not direction.is_finite() or direction.length_squared() < 0.0001:
 		return
 	_play_combat_jab(owner_id, direction.normalized())
+
+@rpc("authority", "call_remote", "reliable", 0)
+func _combat_lunge_start(owner_id: int, direction: Vector3) -> void:
+	if not validate_rpc(TUNING.PEER_ID_HOST) or not direction.is_finite() or direction.length_squared() < 0.0001:
+		return
+	_combat_action_lock_until[owner_id] = Time.get_ticks_msec() / 1000.0 + TUNING.CHARGED_PUNCH_COOLDOWN_SECONDS
+	_play_combat_lunge_start(owner_id, direction.normalized())
+
+@rpc("authority", "call_remote", "reliable", 0)
+func _combat_lunge_stop(owner_id: int) -> void:
+	if not validate_rpc(TUNING.PEER_ID_HOST):
+		return
+	_play_combat_lunge_stop(owner_id)
 
 @rpc("authority", "call_remote", "reliable", 0)
 func _combat_recoil(target_id: int, direction: Vector3, strength: float = 1.0) -> void:
@@ -988,6 +1179,9 @@ func _hand_hover(owner_id: int, active: bool, world_point: Vector3) -> void:
 func _interaction_rejection(actor: Node3D, target: Interactable, action: StringName) -> String:
 	if not is_instance_valid(actor) or actor.is_queued_for_deletion():
 		return "no active actor for sender"
+	var owner_id: int = int(actor.get("input_peer_id"))
+	if is_combat_action_locked(owner_id):
+		return "charged punch blocks interaction"
 	if bool(actor.get("is_limp")):
 		return "actor is limp"
 	var carrier: Node = actor.get_node_or_null("Carrier")

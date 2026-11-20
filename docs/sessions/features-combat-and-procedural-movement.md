@@ -1,7 +1,7 @@
 # Session plan: Combat & Procedural Legs (Movement)
 
 Branch: `features/combat-and-procedural-movement`
-Status: ACTIVE — read-only combat integration audit completed; M7.1 jab foundation implemented; procedural gait refinement continues; Godot execution and visual verification pending.
+Status: ACTIVE — M7.1 jab and M7.2 presentation are user-playtested; initial M7.3 charged-punch/lunge implementation is in source and awaiting Godot verification; procedural gait refinement continues.
 Created: 2026-11-20
 Previous baseline: `features/player-identity-and-world-kit`
 
@@ -327,3 +327,19 @@ Implemented:
 Verification:
 - Added assertions for the faster jab timing, clear recoil, bounded impact scaling, and directional velocity projection.
 - Godot tests and rendered host/client playtest have not been run by the assistant. Run ` .\tests\run_checks.ps1 -OnlyStage m7-jab` from `fowl-play/`, then test stationary, forward-moving, sideways-moving, and retreating jabs in two instances.
+
+
+## M7.3 — charged punch and lunge (initial implementation)
+
+Implemented in source on `features/combat-and-procedural-movement`:
+- Replaced the old 0.25 s jab cutoff: Q release strictly before 1.0 s produces a jab; at 1.0 s while still held the host auto-fires the charged punch. The charged press is consumed; Q release re-arms the next press.
+- The host owns the hold timer, charged cooldown, action lock, hit query and knockdown result. The owning player drives the lunge at 12 m/s for 0.5 s and steers toward camera look at no more than 3 rad/s.
+- The host re-queries a 0.55 m radius capsule along the attacker's current aim each physics tick, with world/prop obstruction filtering. Every distinct standing player inside the unobstructed capsule volume enters the existing host-owned limp lifecycle; a miss expires harmlessly.
+- Use/grab are rejected while Q is held and during the 2.0 s charged-punch recovery lock. `can_start_parry()` exposes the same gate for the future parry implementation; parry itself is not part of this slice.
+- Added a separate charged-lunge hand/torso presentation and regression assertions for charge timing, auto-fire while held, re-arm behavior, lunge steering and action locks.
+- Existing Q carry/drop/throw routing is preserved; no scenes or user-authored hierarchy were changed.
+
+Verification:
+- The assistant has not run Godot import, headless checks or in-game tests in this environment. Run `.\tests\run_checks.ps1 -OnlyStage m7-jab` from `fowl-play/`.
+- Playtest idle releases at 0.99 s and exactly 1.00 s, charge while moving, lunge hit/miss/obstruction, steering, recovery lock, carry Q drop/throw, and two-instance host/client replication.
+- Important first-playtest question: the initial lunge hit volume uses a 3.5 m capsule length and 0.55 m radius. Tune its reach/shape only after seeing the actual feel; do not add more input mechanics yet.

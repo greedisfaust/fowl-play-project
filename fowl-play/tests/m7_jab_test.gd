@@ -1,4 +1,4 @@
-## Headless checks for M7.1 jab gameplay and M7.2 presentation/recoil behavior.
+## Headless checks for M7.1 jab, M7.2 presentation and M7.3 charged-punch timing.
 extends SceneTree
 const PLAYER_SCENE: PackedScene = preload("res://player/player.tscn")
 const TUNING = preload("res://core/tuning.gd")
@@ -18,17 +18,29 @@ func _run() -> void:
 	if _failed:
 		quit(1)
 		return
-	print("M7.2 jab presentation and M7.1 jab checks passed")
+	print("M7 combat timing, presentation and hit checks passed")
 	quit(0)
 func _check_tap_window() -> void:
+	if not is_equal_approx(TUNING.TAP_MAX_SECONDS, 0.25):
+		_fail("Carrier drop/throw tap classification must retain its existing 0.25 s threshold")
 	if not COMBAT_CONTROLLER.is_jab_tap(0.10):
 		_fail("A short press/release should qualify as a jab")
-	if not COMBAT_CONTROLLER.is_jab_tap(TUNING.TAP_MAX_SECONDS):
-		_fail("The exact tap threshold should still qualify as a jab")
-	if COMBAT_CONTROLLER.is_jab_tap(TUNING.TAP_MAX_SECONDS + 0.001):
-		_fail("A hold beyond the tap threshold must not fire a jab")
+	if not COMBAT_CONTROLLER.is_jab_tap(TUNING.CHARGED_PUNCH_HOLD_SECONDS - 0.001):
+		_fail("A release just before one second should still qualify as a jab")
+	if COMBAT_CONTROLLER.is_jab_tap(TUNING.CHARGED_PUNCH_HOLD_SECONDS):
+		_fail("The exact one-second threshold must trigger a charged punch, not a jab")
+	if COMBAT_CONTROLLER.is_jab_tap(TUNING.CHARGED_PUNCH_HOLD_SECONDS + 0.001):
+		_fail("A hold at or beyond the charge threshold must not fire a jab")
 	if COMBAT_CONTROLLER.is_jab_tap(-0.01) or COMBAT_CONTROLLER.is_jab_tap(INF):
 		_fail("Invalid hold durations must not qualify as a jab")
+	var steered: Vector3 = COMBAT_CONTROLLER.steer_lunge_direction(Vector3.FORWARD, Vector3.RIGHT, 0.1)
+	if steered.angle_to(Vector3.FORWARD) > TUNING.LUNGE_STEER_MAX_RAD_S * 0.1 + 0.001:
+		_fail("Lunge steering must not exceed the configured radians-per-second limit")
+	var opposite_steered: Vector3 = COMBAT_CONTROLLER.steer_lunge_direction(Vector3.FORWARD, -Vector3.FORWARD, 0.1)
+	if opposite_steered.angle_to(Vector3.FORWARD) > TUNING.LUNGE_STEER_MAX_RAD_S * 0.1 + 0.001 or opposite_steered.length_squared() < 0.99:
+		_fail("A 180-degree aim reversal must still steer safely within the angular-speed limit")
+	if not is_equal_approx(TUNING.LUNGE_SPEED_MPS, 12.0) or not is_equal_approx(TUNING.LUNGE_DURATION_S, 0.5) or not is_equal_approx(TUNING.LUNGE_HIT_RADIUS_M, 0.55):
+		_fail("Charged lunge must preserve its 12 m/s, 0.5 s movement profile")
 func _check_jab_endpoint() -> void:
 	var origin: Vector3 = Vector3(1.0, 2.0, 3.0)
 	var endpoint: Vector3 = HIT_DETECTOR.get_jab_endpoint(origin, Vector3(0.0, 0.0, -4.0), TUNING.QUICK_PUNCH_RANGE_M)
@@ -56,6 +68,11 @@ func _check_presentation_curves() -> void:
 		_fail("Jab body pose should return smoothly to neutral")
 	if not is_equal_approx(COMBAT_PRESENTATION.JAB_POSE_DURATION_S, 0.21) or not is_equal_approx(COMBAT_PRESENTATION.JAB_EXTENSION_END_S, 0.058) or COMBAT_PRESENTATION.JAB_EXTENSION_END_S >= COMBAT_PRESENTATION.JAB_POSE_DURATION_S:
 		_fail("Jab should use a compact 0.21 s pose with a fast, readable extension")
+	var lunge_pose_start: Vector3 = COMBAT_PRESENTATION.get_charged_lunge_body_pose(0.0, Vector3.FORWARD)
+	var lunge_pose_end: Vector3 = COMBAT_PRESENTATION.get_charged_lunge_body_pose(COMBAT_PRESENTATION.LUNGE_POSE_DURATION_S, Vector3.FORWARD)
+	var lunge_hand: Vector3 = COMBAT_PRESENTATION.get_charged_lunge_hand_offset(base_hand_offset, 0.12)
+	if lunge_pose_start.x >= 0.0 or lunge_pose_end.x <= 0.0 or lunge_hand.z >= base_hand_offset.z:
+		_fail("Charged lunge presentation should move from anticipation into a committed fist-first extension")
 	var recoil_peak: Vector3 = COMBAT_PRESENTATION.get_recoil_body_pose(0.0, Vector3.FORWARD, 1.0)
 	var recoil_overshoot: Vector3 = COMBAT_PRESENTATION.get_recoil_body_pose(0.20, Vector3.FORWARD)
 	var recoil_end: Vector3 = COMBAT_PRESENTATION.get_recoil_body_pose(COMBAT_PRESENTATION.RECOIL_POSE_DURATION_S, Vector3.FORWARD)
@@ -86,12 +103,61 @@ func _check_world_hit_and_recoil() -> void:
 	target.set("input_peer_id", 2)
 	players.add_child(target)
 	target.global_position = Vector3(0.0, 0.0, -1.5)
+	var second_lunge_target: CharacterBody3D = PLAYER_SCENE.instantiate() as CharacterBody3D
+	second_lunge_target.name = "3"
+	second_lunge_target.set("input_peer_id", 3)
+	players.add_child(second_lunge_target)
+	second_lunge_target.global_position = Vector3(0.0, 0.0, -2.7)
 	for frame_index: int in range(4):
 		await physics_frame
+	var camera: Camera3D = attacker.get_node("Head/Camera3D") as Camera3D
+	var lunge_targets: Array[Dictionary] = HIT_DETECTOR.trace_lunge_targets(
+		attacker,
+		camera.global_position,
+		Vector3.FORWARD,
+		TUNING.CHARGED_PUNCH_RANGE_M
+	)
+	if lunge_targets.size() != 2:
+		_fail("Charged lunge hit query should return every distinct player inside the unobstructed capsule volume")
 	var mask: int = HIT_DETECTOR.get_jab_collision_mask()
 	if (mask & (1 << (LAYERS.WORLD_STATIC - 1))) == 0 or (mask & (1 << (LAYERS.DEVICES - 1))) == 0 or (mask & (1 << (LAYERS.CARRIED - 1))) == 0 or (mask & (1 << (LAYERS.ELEVATOR - 1))) == 0:
 		_fail("Jab ray should include world, device, carried-prop and elevator layers so obstacles block hits")
 	var network: Node = root.get_node("Network")
+	# Exercise the host timer directly: the charged punch must fire while Q is
+	# still held, and releasing that same press must not also create a jab.
+	target.global_position = Vector3(0.0, 0.0, -10.0)
+	var charged_before: int = int(network.get("combat_charged_punches"))
+	var jabs_before_charge: int = int(network.get("combat_jabs"))
+	if not bool(network.call("_receive_combat_input", 1, true)):
+		_fail("Host should accept a charged-punch hold")
+	var held_times: Dictionary = network.get("_combat_press_times")
+	held_times[1] = Time.get_ticks_msec() / 1000.0 - TUNING.CHARGED_PUNCH_HOLD_SECONDS - 0.02
+	network.set("_combat_press_times", held_times)
+	network.call("_advance_combat_holds")
+	network.call("_advance_combat_holds")
+	if int(network.get("combat_charged_punches")) != charged_before + 1:
+		_fail("Host should auto-fire exactly one charged punch at the hold threshold")
+	var active_lunges: Dictionary = network.get("_active_lunges")
+	if not active_lunges.has(1):
+		_fail("Charged punch should immediately begin the lunge")
+	if not bool(network.call("is_combat_action_locked", 1)) or bool(network.call("can_start_parry", 1)):
+		_fail("Use/grab/parry action gate should lock during a held charge and charged recovery")
+	var interaction_reason: String = str(network.call("_interaction_rejection", attacker, null, &"use"))
+	if interaction_reason != "charged punch blocks interaction":
+		_fail("Host should reject use/grab interaction requests during the charged-punch lock")
+	if not bool(network.call("_receive_combat_input", 1, false)):
+		_fail("Releasing Q after auto-fire should re-arm the next press")
+	if int(network.get("combat_jabs")) != jabs_before_charge:
+		_fail("Releasing after the charged punch fired must not also create a jab")
+	if not bool(network.call("is_combat_action_locked", 1)):
+		_fail("Charged-punch recovery lock should remain after Q is released")
+	interaction_reason = str(network.call("_interaction_rejection", attacker, null, &"grab"))
+	if interaction_reason != "charged punch blocks interaction":
+		_fail("Host should continue rejecting grab during charged-punch recovery")
+	network.call("cancel_combat_state", 1)
+	if bool(network.call("is_combat_action_locked", 1)):
+		_fail("Forced combat cleanup should clear the action lock")
+	target.global_position = Vector3(0.0, 0.0, -1.5)
 	var target_position_before_recoil: Vector3 = target.global_position
 	var jab_count_before_cancel: int = int(network.get("combat_jabs"))
 	if not bool(network.call("_receive_combat_input", 1, true)):

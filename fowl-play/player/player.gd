@@ -62,6 +62,9 @@ var auto_recovery_enabled: bool = true
 var accepted_position: Vector3
 # True when another player's Carrier is holding this player (limp carry).
 var _is_carried: bool = false
+var _combat_lunge_active: bool = false
+var _combat_lunge_elapsed: float = 0.0
+var _combat_lunge_direction: Vector3 = Vector3.FORWARD
 
 var _pitch_radians: float = 0.0
 var _remote_grounded: bool = true
@@ -500,6 +503,9 @@ func _physics_process(delta: float) -> void:
 		return
 	if is_recovering:
 		return
+	if _combat_lunge_active:
+		_advance_combat_lunge(delta)
+		return
 	var grounded_before_move: bool = is_on_floor()
 	if not grounded_before_move:
 		velocity.y -= TUNING.GRAVITY_MPS2 * delta
@@ -841,6 +847,37 @@ func play_combat_jab(direction: Vector3) -> void:
 		_combat_presentation.call("cancel")
 		return
 	_combat_presentation.call("play_jab", direction)
+
+## Host-approved charged punch. Only the owning player drives the lunge movement.
+func begin_combat_lunge(direction: Vector3) -> void:
+	if is_limp or is_recovering or is_carrying() or not direction.is_finite() or direction.length_squared() < 0.0001:
+		return
+	_combat_lunge_active = true
+	_combat_lunge_elapsed = 0.0
+	_combat_lunge_direction = direction.normalized()
+	_combat_presentation.call("play_charged_lunge", _combat_lunge_direction)
+
+func stop_combat_lunge() -> void:
+	if not _combat_lunge_active:
+		return
+	_combat_lunge_active = false
+	_combat_lunge_elapsed = 0.0
+	if is_local_player:
+		velocity = Vector3.ZERO
+	_combat_presentation.call("end_charged_lunge")
+
+func _advance_combat_lunge(delta: float) -> void:
+	_combat_lunge_elapsed += maxf(delta, 0.0)
+	var desired_direction: Vector3 = -camera.global_basis.z
+	_combat_lunge_direction = COMBAT_CONTROLLER_SCRIPT.steer_lunge_direction(
+		_combat_lunge_direction,
+		desired_direction,
+		delta
+	)
+	velocity = _combat_lunge_direction * TUNING.LUNGE_SPEED_MPS
+	move_and_slide()
+	if _combat_lunge_elapsed >= TUNING.LUNGE_DURATION_S:
+		stop_combat_lunge()
 
 func cancel_combat_presentation() -> void:
 	_combat_presentation.call("cancel")

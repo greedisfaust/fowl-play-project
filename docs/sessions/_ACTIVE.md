@@ -1,6 +1,6 @@
 # Active session files
 
-- **Active feature:** Combat & Procedural Legs (Movement) → [session](features-combat-and-procedural-movement.md). M7.1 jab gameplay is user-verified; M7.2 now includes a faster jab and velocity-scaled standing recoil, awaiting Godot/headless plus rendered host/client verification.
+- **Active feature:** Combat & Procedural Legs (Movement) → [session](features-combat-and-procedural-movement.md). M7.1 jab gameplay and M7.2 jab feel are user-verified; initial M7.3 charged-punch/lunge source is implemented and awaiting Godot/headless plus rendered host/client verification.
 - **Archived feature:** Player Identity & World Kit → [session](features-player-identity-and-world-kit.md) (implementation complete; user confirmed multiplayer hand synchronization, Interactive Terminal fixes, animated golden Interactable highlighting, and player identity coloring).
 - Prior feature: Highlight and Accessibility (gameplay cursor + interactable focus animation) → [session](features-highlight-and-accessibility.md).
 - Prior reference: Procedural Character Animation / reactive hands → [session](features-procedural-character-animation.md) (hand pose-priority foundation; host/client hover and poke synchronization subsequently fixed and user-verified; use as implementation reference for the new movement/combat work).

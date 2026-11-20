@@ -47,6 +47,9 @@ security secret.
 | `net/combat_rejected` | core/network.gd | Rejected combat input requests. |
 | `net/combat_jabs` | core/network.gd | Host-accepted jab count, including misses. |
 | `net/combat_hits` | core/network.gd | Host-confirmed jab hits. |
+| `net/combat_charged_punches` | core/network.gd | Host-fired charged punches. |
+| `net/combat_lunge_hits` | core/network.gd | Host-confirmed charged-lunge knockdowns. |
+| `net/combat_lunges_active` | core/network.gd | Number of active host-tracked lunges. |
 
 ## Commands
 
@@ -593,26 +596,32 @@ The authored rig's `Thigh_L` bone is on local +X and `Thigh_R` is on local -X. F
 
 ## M7.1 — Jab
 
-- Q tap (release within `TAP_MAX_SECONDS`) starts a jab. Holding longer cancels the jab in this first slice; charged punches are a later M7 slice.
+- Releasing Q strictly before `CHARGED_PUNCH_HOLD_SECONDS` (1.0 s) starts a jab. Releasing at or after the threshold cannot create a jab.
 - `net/combat_jabs` counts host-accepted jabs; `net/combat_hits` counts host-confirmed player hits; `net/combat_rejected` counts rejected requests.
 - Enable the `combat` category to see host wind-up, accepted jab and confirmed hit logs.
-- The host owns press timing, cooldown, camera direction, raycast, obstruction and target selection. Clients submit only press/release intent.
+- The host owns jab press timing, jab cooldown, camera direction, raycast, obstruction and target selection. Clients submit only press/release intent.
 - The jab ray includes static world, elevator, props and player layers. World geometry and props block hits; the jab cannot hit through an obstruction.
-- Standing targets receive a small movement recoil. Already-limp targets receive a host-only physical-bone velocity impulse; their limp state and recovery timer are not restarted.
+- Standing targets receive a visual-only upper-torso spring recoil; no player-root movement is added. Already-limp targets receive a host-only physical-bone velocity impulse; their limp state and recovery timer are not restarted.
 - The right Viewmodel hand uses a dedicated curled-fist pose and short extension/return. Carry and limp pose priorities override combat.
-- M7.2 adds a procedural Chest-bone anticipation lean, forward punch follow-through, smooth neutral return, and a brief weak-recoil lean on standing targets. The body pose is applied before arm IK; the existing viewmodel wrist target continues to drive the visible arm on remote rigs.
+- M7.2 adds a procedural Chest-bone anticipation lean, forward punch follow-through, smooth neutral return, and a brief visual-only upper-torso spring recoil on standing targets. The body pose is applied before arm IK; the existing viewmodel wrist target continues to drive the visible arm on remote rigs.
 
 | M7.1 | 1 | Tap Q: a short fist wind-up and jab extension play; `net/combat_jabs` increases once. |
 | M7.1 | 2 | Aim at another standing player within 2.5 m and tap Q: `net/combat_hits` increases and the target receives a small recoil. |
 | M7.1 | 3 | Aim through a wall or prop: the jab is blocked and does not hit through it. |
 | M7.1 | 4 | Jab an already-limp player: the ragdoll physically reacts, but `player/<name>/limp_elapsed_s` continues without resetting. |
-| M7.1 | 5 | Hold Q longer than 0.25 s: no jab fires; the fist pose returns. Charged punch is not part of this slice. |
+| M7.1 | 5 | Release Q before 1.0 s: a jab fires on release. Reaching 1.0 s while held auto-fires the charged punch. |
 | M7.1 | 6 | While carrying, tap/hold Q: existing drop/throw behavior remains unchanged. |
 | M7.2 | 1 | Tap Q: the curled fist visibly pulls back, then extends and returns to its authored hand position. |
 | M7.2 | 2 | Watch from a second peer: the attacker’s torso leans into the jab and returns without per-bone animation traffic. |
-| M7.2 | 3 | Get jabbed while standing: the target receives a brief upper-body recoil lean alongside the existing movement impulse. |
+| M7.2 | 3 | Get jabbed while standing: the target receives a brief upper-body spring recoil without player-root knockback. |
 | M7.2 | 4 | Walk and sprint while jabbing: movement gait continues and the torso/arm pose does not fight the procedural IK. |
 | M7.2 | 5 | Start carrying or enter limp/recovery: combat pose clears and the higher-priority carry/limp/recovery presentation wins. |
+| M7.3 | 1 | Hold Q to 1.0 s without releasing: `net/combat_charged_punches` increases once and the lunge begins. |
+| M7.3 | 2 | Release Q before 1.0 s: `net/combat_jabs` increases once; no charged lunge starts. |
+| M7.3 | 3 | Aim through two standing players inside the capsule with a clear line: each distinct player inside the unobstructed volume goes limp, `net/combat_lunge_hits` counts both, and the lunge stops. |
+| M7.3 | 4 | Miss: lunge ends after 0.5 s without affecting a target; normal movement resumes. |
+| M7.3 | 5 | During a held charge and the 2.0 s charged recovery lock, use/grab requests are rejected; parry start is denied by `can_start_parry()`. |
+| M7.3 | 6 | While carrying, Q tap/hold still uses the existing drop/throw path; while limp, combat remains blocked. |
 
 Run only the jab regression stage from the `fowl-play/` directory with `.\tests\run_checks.ps1 -OnlyStage m7-jab`. Run the full suite with `.\tests\run_checks.ps1`.
 
