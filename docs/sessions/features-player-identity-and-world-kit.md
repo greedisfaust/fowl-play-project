@@ -223,3 +223,10 @@ Pull the Registration Terminal implementation. In the editor, create the termina
 - Removed the required physical USE button reference. The screen Interactable is now the explicit E/M1 activation target; repeated E/M1 during an active session confirms the selected menu option.
 - Added the Registration Terminal setup guide with the editor-authored proximity sensor and screen Interactable wiring. Updated the registration test to cover proximity wake, explicit activation, inherited session state, range termination, and sleep.
 - No scenes, node trees, collision shapes, or meshes were changed. Godot tests and rendered host/client verification remain pending.
+
+
+### Session 16 — 2026-11-20 — GPT-6
+- Added identity-color presentation across the player: the host-assigned palette color now tints visible world-rig geometry, both attached world hands, both first-person Viewmodel hands, and the existing nameplate accent.
+- Rig materials are duplicated per instance before tinting so shared scene resources are not mutated. The temporary FacePhoto placeholder is excluded.
+- No scenes, meshes, or authored node trees were changed.
+- Not done: Godot tests/import and in-game host/client verification have not been run. Verify standing colors, first-person hands, ragdoll, carried ragdoll, and recovery.

@@ -1,6 +1,6 @@
 # Fowl Play — Project State
 
-**Status:** Player Identity Core, reusable Physical USE Button, WorldScreen/ScreenText content APIs and presentation presets, and FAT/SLIM housing controllers are implemented on `features/player-identity-and-world-kit`. The screen system is documented in [WORLD_SCREENS_AND_SCREEN_TEXT.md](WORLD_SCREENS_AND_SCREEN_TEXT.md). Godot checks and full rendered verification remain pending.
+**Status:** Player Identity Core with player body/hand color presentation, reusable Physical USE Button, WorldScreen/ScreenText content APIs and presentation presets, and FAT/SLIM housing controllers are implemented on `features/player-identity-and-world-kit`. The screen system is documented in [WORLD_SCREENS_AND_SCREEN_TEXT.md](WORLD_SCREENS_AND_SCREEN_TEXT.md). Godot checks and full rendered verification remain pending.
 
 ## Last updated (2026-11-19; identity and Physical USE Button implementation pending verification)
 
@@ -417,3 +417,10 @@ Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep a
 - The existing distance fade continues to apply to the decorative panel only; text remains readable independently of hover and panel opacity.
 - The current visual design is a functional first pass, not a locked final design. Keep the existing scene hierarchy; future styling can replace or add authored decorative UI elements without changing identity networking or ragdoll attachment.
 - Added contract coverage for separate panel/text opacity behavior. Godot execution and in-game visual verification remain user-run.
+
+
+## Player color presentation
+- The authoritative `PlayerIdentity.color_index` now drives the world Rig body geometry, both world-rig hands, both first-person Viewmodel hands, and the existing nameplate accent.
+- Rig geometry materials are duplicated per player before tinting; the temporary `FacePhoto` placeholder is excluded.
+- No scene files or authored node hierarchies were changed. The user's existing rig and nameplate scenes remain intact.
+- Pending: run the focused Godot test suite and verify host/client color consistency, including ragdoll, carried ragdoll, and recovery.

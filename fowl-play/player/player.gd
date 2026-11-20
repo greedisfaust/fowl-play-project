@@ -198,6 +198,13 @@ func _refresh_identity_presentation() -> void:
 	if owner_peer_id <= 0:
 		owner_peer_id = multiplayer.get_unique_id()
 	var identity: PlayerIdentity = network.call("get_player_identity", owner_peer_id) as PlayerIdentity
+	var identity_color: Color = identity.get_color() if identity != null else Color.WHITE
+	if is_instance_valid(rig) and rig.has_method("set_player_color"):
+		rig.call("set_player_color", identity_color)
+	if is_instance_valid(viewmodel_left_hand):
+		viewmodel_left_hand.set_color(identity_color)
+	if is_instance_valid(viewmodel_right_hand):
+		viewmodel_right_hand.set_color(identity_color)
 	if is_instance_valid(gameplay_cursor) and is_local_player:
 		if identity != null:
 			gameplay_cursor.call("set_identity_color", identity.get_color())

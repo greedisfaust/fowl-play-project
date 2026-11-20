@@ -433,3 +433,10 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 - Only the decorative backing, identity accent rail, and divider use the hover opacity transition (default 12% idle, 100% aimed-at). The distance fade affects those decorative elements only.
 - The runtime HeadAttachment local Y offset is 0.62 m, raised from 0.38 m to improve clearance above the head.
 - The scene design is not final; the current hierarchy is a stable base for further visual polish. Add or restyle decorative elements in the user-authored scene without changing the required node names.
+
+
+## Player identity body colors
+- Each spawned Player resolves its host-assigned PlayerIdentity color and passes it to the world Rig, both attached Rig hands, and both camera-attached Viewmodel hands.
+- The Rig duplicates its visible geometry materials before tinting, preserving source resources and per-instance independence. The temporary `FacePhoto` placeholder is excluded.
+- The nameplate accent continues to use the same `PlayerIdentity.get_color()` value.
+- Multiplayer check: choose different palette colors on host and client; verify each peer sees matching body, arms, legs, hands, and nickname accent. Knock down, carry, throw, and recover each player to confirm the color persists through ragdoll and recovery. Also verify the local first-person hands use the local identity color.
