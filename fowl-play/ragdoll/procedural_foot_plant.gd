@@ -11,6 +11,7 @@ var emergency_replant_active: bool = false
 var emergency_replant_elapsed: float = 0.0
 var emergency_replant_start_world: Vector3 = Vector3.ZERO
 var emergency_replant_target_world: Vector3 = Vector3.ZERO
+var emergency_replant_suppress_gait_swing: bool = false
 
 func needs_replant(hip_world: Vector3, max_reach_m: float) -> bool:
 	if not has_anchor or was_in_swing or emergency_replant_active:
@@ -47,6 +48,9 @@ func update_target(
 		emergency_replant_elapsed = 0.0
 		return current_foot_world
 
+	if not emergency_replant_active and emergency_replant_suppress_gait_swing and not in_swing:
+		emergency_replant_suppress_gait_swing = false
+
 	# A stretched stance leg can request a recovery step before the gait phase
 	# naturally enters swing. The target is captured once, just like a normal step.
 	if force_replant and not emergency_replant_active and not in_swing and has_anchor:
@@ -54,6 +58,7 @@ func update_target(
 		emergency_replant_elapsed = 0.0
 		emergency_replant_start_world = anchor_world
 		emergency_replant_target_world = landing_target_world
+		emergency_replant_suppress_gait_swing = true
 		was_in_swing = false
 
 	if emergency_replant_active:
@@ -71,6 +76,10 @@ func update_target(
 			was_in_swing = false
 			return anchor_world
 		return recovery_target
+
+	if emergency_replant_suppress_gait_swing:
+		was_in_swing = false
+		return anchor_world
 
 	if in_swing:
 		if not was_in_swing:
@@ -100,3 +109,4 @@ func reset() -> void:
 	emergency_replant_elapsed = 0.0
 	emergency_replant_start_world = Vector3.ZERO
 	emergency_replant_target_world = Vector3.ZERO
+	emergency_replant_suppress_gait_swing = false
