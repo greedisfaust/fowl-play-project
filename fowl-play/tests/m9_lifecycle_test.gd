@@ -85,7 +85,6 @@ func _run() -> void:
 	var ragdoll_epochs: Dictionary = network.get("_ragdoll_epochs")
 	var jab_ready_times: Dictionary = network.get("_combat_jab_ready_times")
 	var charged_ready_times: Dictionary = network.get("_charged_punch_ready_times")
-	var parry_ready_times: Dictionary = network.get("_parry_ready_times")
 	interaction_times[5] = 1.0
 	carry_times[5] = 1.0
 	ragdoll_epochs[5] = 7
