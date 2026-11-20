@@ -489,3 +489,14 @@ Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep a
 - Increased the per-leg outward knee-pole bias from 0.30 m to 0.48 m so IK solutions favor separate knee bend planes.
 - Updated the gait phase regression expectation to include the cadence multiplier.
 - This is a soft anatomical separation constraint, not physical leg collision. Godot tests and visual verification remain pending.
+
+
+## 2026-11-20 — distance-triggered foot recovery and anatomical landing lanes
+
+- Added per-leg comfortable-reach thresholds based on the authored thigh/shin chain lengths. A planted stance foot requests an emergency replant when its hip-to-anchor distance reaches 82% of the available two-bone chain length.
+- Emergency recovery captures a fresh hip-relative ground target and performs a short 0.18 s lifted step rather than teleporting the foot or waiting for the normal gait phase.
+- If both legs exceed their thresholds in the same update, only the more-stretched leg is allowed to recover first.
+- Added a target-space anatomical side clamp so left landing targets remain at least 0.20 m left of the hip midpoint and right targets at least 0.20 m right, including emergency targets.
+- Extended M8 checks for overreach detection, lifted recovery interpolation, completed anchor capture, and left/right centerline protection.
+- Debug ground status now reports emergency-replant state and normalized hip-to-anchor stretch ratios.
+- Godot execution and in-game verification have not been run by the assistant. This remains a procedural target constraint, not physical collision between the leg meshes.
