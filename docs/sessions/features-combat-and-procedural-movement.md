@@ -1,7 +1,7 @@
 # Session plan: Combat & Procedural Legs (Movement)
 
 Branch: `features/combat-and-procedural-movement`
-Status: ACTIVE — read-only rig audit completed; first procedural gait slice committed; Godot execution and visual verification pending.
+Status: ACTIVE — rig audit and first gait slice completed; hybrid locomotion refinement underway; Godot execution and visual verification pending.
 Created: 2026-11-20
 Previous baseline: `features/player-identity-and-world-kit`
 
@@ -173,3 +173,25 @@ The exact order between leg movement and combat implementation can be adjusted a
 - [Procedural Character Animation session](features-procedural-character-animation.md)
 - [Carry / drop / throw session](features-carry-drop-throw.md)
 - [Ragdoll and physics session](features-player-rig-and-physics-implementation.md)
+
+
+## Implementation slice 2 — smoothed locomotion transitions
+
+Commits:
+- `3a63c99` — smooth procedural leg movement transitions
+- `012f757` — centralize leg velocity response tuning
+- `b0a491c` / `1aa9976` — cover smooth start/stop and turning transitions
+
+Implemented:
+- Added a filtered horizontal velocity to the local gait controller. Sudden direction changes now blend through the previous movement direction instead of instantly rotating the swing plane.
+- The gait phase and stride amplitude use the filtered speed, so starting and stopping ease into and out of movement rather than reacting to raw velocity in one frame.
+- Added `LEG_VELOCITY_RESPONSE` to centralized tuning.
+- Extended M8 checks for blended directional changes and gradual stopping.
+- Kept all evaluation local; no additional network messages, scene changes, or new rig nodes.
+
+Not included:
+- This is still not final locomotion. It does not yet solve foot planting, ground contact, turn-in-place, owner-view lower-body visibility, or combat-driven balance reactions.
+- Hybrid physics reactions during active combat will be integrated with the combat/knockback state later. Existing full ragdoll ownership remains unchanged.
+
+Verification:
+- The code and test assertions are committed but have **not** been executed in Godot by the assistant. Steam Godot editor import and runtime checks remain required.
