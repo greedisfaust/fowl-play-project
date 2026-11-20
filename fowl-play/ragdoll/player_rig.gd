@@ -666,7 +666,7 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 		float(_leg_controller.get("left_swing_progress")), lerpf(TUNING.LEG_WALK_SWING_LIFT_M, TUNING.LEG_RUN_SWING_LIFT_M, float(_leg_controller.get("run_weight"))),
 		delta, left_hip_world, _left_leg_replant_distance_m,
 		TUNING.LEG_REPLANT_RECOVERY_SECONDS, left_replant_requested,
-		_left_ground_probe.get("collider") as Node3D
+		_left_ground_probe.get("collider") as Node3D, TUNING.LEG_REPLANT_LIFT_M
 	)
 	var right_target: Vector3 = _right_foot_plant.call(
 		"update_target", right_foot_world, _right_foot_ground_target_world,
@@ -674,7 +674,7 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 		float(_leg_controller.get("right_swing_progress")), lerpf(TUNING.LEG_WALK_SWING_LIFT_M, TUNING.LEG_RUN_SWING_LIFT_M, float(_leg_controller.get("run_weight"))),
 		delta, right_hip_world, _right_leg_replant_distance_m,
 		TUNING.LEG_REPLANT_RECOVERY_SECONDS, right_replant_requested,
-		_right_ground_probe.get("collider") as Node3D
+		_right_ground_probe.get("collider") as Node3D, TUNING.LEG_REPLANT_LIFT_M
 	)
 	_left_foot_ground_target_world = left_target
 	_right_foot_ground_target_world = right_target
