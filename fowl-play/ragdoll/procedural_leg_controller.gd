@@ -86,7 +86,7 @@ func update(delta: float, local_velocity: Vector3, grounded: bool) -> void:
 
 	var left_swing: float = sin(phase) * thigh_swing_limit * stride_weight * run_stride_multiplier * motion_weight
 	var right_phase: float = phase + PI
-	var right_swing: float = sin(right_phase) * TUNING.LEG_MAX_THIGH_SWING_RAD * stride_weight * run_stride_multiplier * motion_weight
+	var right_swing: float = sin(right_phase) * thigh_swing_limit * stride_weight * run_stride_multiplier * motion_weight
 	var left_cycle: float = fposmod(phase / TAU, 1.0)
 	var right_cycle: float = fposmod(left_cycle + 0.5, 1.0)
 	left_in_swing = left_cycle >= stance_fraction
