@@ -81,12 +81,16 @@ func _check_controller_gait() -> void:
 func _check_stance_swing_articulation() -> void:
 	var controller: RefCounted = LEG_CONTROLLER_SCRIPT.new()
 	controller.set("phase", TAU * 0.30)
+	controller.set("motion_weight", 1.0)
+	controller.set("smoothed_velocity", Vector3(0.0, 0.0, -5.0))
 	controller.call("update", 0.0, Vector3(0.0, 0.0, -5.0), true)
 	var stance_foot: Quaternion = controller.get("left_foot_rotation")
 	if bool(controller.get("left_in_swing")):
 		_fail("The left foot should be in stance during the first part of its cycle")
 
 	controller.set("phase", TAU * 0.80)
+	controller.set("motion_weight", 1.0)
+	controller.set("smoothed_velocity", Vector3(0.0, 0.0, -5.0))
 	controller.call("update", 0.0, Vector3(0.0, 0.0, -5.0), true)
 	var swing_foot: Quaternion = controller.get("left_foot_rotation")
 	if not bool(controller.get("left_in_swing")):
