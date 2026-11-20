@@ -559,3 +559,11 @@ The authored rig's `Thigh_L` bone is on local +X and `Thigh_R` is on local -X. F
 - Jump buffer: while descending, press jump just before touching down; the next grounded physics tick should launch the next jump.
 - Air control: steer left/right in the air and compare with grounded steering; air corrections should be weaker and preserve more momentum.
 - Debug watches `player/<name>/jump_coyote_s` and `player/<name>/jump_buffer_s` show the active grace/buffer windows. These are local movement values; no new network stream is added.
+
+
+### Movement feel calibration — 2026-11-20
+
+- Ground direction changes use a dedicated 24 m/s² turn response when the requested direction differs sharply from current horizontal momentum. Ordinary acceleration remains 14 m/s² and deceleration remains 18 m/s², so starts/stops retain their original feel while turns become less car-like. Air steering applies the existing 55% multiplier to this response.
+- Gait stride intensity now scales against the 8 m/s sprint speed instead of reaching full intensity at the 3.8 m/s walk speed. Walking therefore uses a softer leg swing/knee bend; sprinting builds toward the full stride.
+- Jump launch speed is now 6.9 m/s (from 6.5 m/s), increasing full-height jump airtime and height modestly without changing gravity, coyote time, buffering, or short-hop release behavior.
+- Playtest: compare 90-degree turns and full reversals while walking/sprinting; check walking no longer looks like repeated bunny hops; compare tap and held jump heights.
