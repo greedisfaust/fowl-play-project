@@ -159,8 +159,8 @@ func _check_footstep_planner() -> void:
 	var strafe_left: Vector3 = planner.call(
 		"get_landing_target", hip, Basis.IDENTITY, Vector3(5.0, 0.0, 0.0), -1.0
 	)
-	if strafe_left.x >= strafe.x or strafe_left.distance_to(strafe) < 0.35:
-		_fail("Left and right foot targets must remain separated during strafing")
+	if strafe_left.x <= strafe.x or strafe_left.distance_to(strafe) < 0.35:
+		_fail("The authored left foot must remain on positive X and separated during rightward strafing")
 	var diagonal_left: Vector3 = planner.call(
 		"get_landing_target", hip, Basis.IDENTITY, Vector3(5.0, 0.0, -5.0), -1.0
 	)
