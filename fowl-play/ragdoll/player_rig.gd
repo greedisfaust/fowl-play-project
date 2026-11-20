@@ -534,10 +534,15 @@ func _apply_procedural_leg_ik(
 	upper_length *= stretch_ratio
 	lower_length *= stretch_ratio
 	var parent_world_basis: Basis = skeleton.global_basis * skeleton.get_bone_global_pose(parent_index).basis
-	var pole_world: Vector3 = hip_world + global_basis * Vector3.FORWARD * (LEG_IK_POLE_FORWARD_WEIGHT + knee_bend_weight * TUNING.LEG_IK_SWING_KNEE_FORWARD_BIAS_M)
-	pole_world += global_basis * Vector3.RIGHT * signf(foot_side) * LEG_KNEE_OUTWARD_BIAS_M
+	# ProceduralArmIK expects a pole DIRECTION relative to the hip,
+	# not a world-space pole position. Keep it in character-facing space so
+	# the knee bends forward at every heading, with only a mild outward bias.
+	var pole_direction_world: Vector3 = global_basis * (
+		Vector3.FORWARD * (LEG_IK_POLE_FORWARD_WEIGHT + knee_bend_weight * TUNING.LEG_IK_SWING_KNEE_FORWARD_BIAS_M)
+		+ Vector3.RIGHT * signf(foot_side) * LEG_KNEE_OUTWARD_BIAS_M
+	)
 	var solution: Dictionary = LEG_IK.solve_two_bone(
-		hip_world, foot_target_world, pole_world, upper_length, lower_length
+		hip_world, foot_target_world, pole_direction_world, upper_length, lower_length
 	)
 	if solution.is_empty():
 		return false
