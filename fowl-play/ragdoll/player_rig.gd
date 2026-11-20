@@ -579,8 +579,6 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 		_right_foot_grounded = false
 		_left_foot_plant.call("reset")
 		_right_foot_plant.call("reset")
-		_reset_leg_pose_scale(_left_thigh_bone_index, _left_shin_bone_index)
-		_reset_leg_pose_scale(_right_thigh_bone_index, _right_shin_bone_index)
 		_left_leg_ik_weight = 0.0
 		_right_leg_ik_weight = 0.0
 		_left_leg_ik_active = false
@@ -783,6 +781,8 @@ func begin_host_simulation() -> bool:
 		_standing_pose = _capture_skeleton_pose()
 	_leg_controller.call("reset")
 	_leg_pose_active = false
+	_reset_leg_pose_scale(_left_thigh_bone_index, _left_shin_bone_index)
+	_reset_leg_pose_scale(_right_thigh_bone_index, _right_shin_bone_index)
 	_set_right_arm_ik_active(false)
 	_set_left_arm_ik_active(false)
 	_set_right_rig_hand_visual_visible(true)
