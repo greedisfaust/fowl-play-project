@@ -590,7 +590,8 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 	if _left_leg_ik_weight > 0.01:
 		var left_ik_applied: bool = _apply_procedural_leg_ik(
 			_left_thigh_bone_index, _left_shin_bone_index, _left_foot_bone_index,
-			_left_foot_ground_target_world, _left_foot_ground_normal,
+			_left_foot_ground_target_world,
+			_left_foot_ground_normal if not bool(_leg_controller.get("left_in_swing")) else Vector3.ZERO,
 			left_thigh_rotation, left_shin_rotation, left_foot_rotation, _left_leg_ik_weight
 		)
 		_left_leg_ik_active = left_ik_applied
@@ -599,7 +600,8 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 	if _right_leg_ik_weight > 0.01:
 		var right_ik_applied: bool = _apply_procedural_leg_ik(
 			_right_thigh_bone_index, _right_shin_bone_index, _right_foot_bone_index,
-			_right_foot_ground_target_world, _right_foot_ground_normal,
+			_right_foot_ground_target_world,
+			_right_foot_ground_normal if not bool(_leg_controller.get("right_in_swing")) else Vector3.ZERO,
 			right_thigh_rotation, right_shin_rotation, right_foot_rotation, _right_leg_ik_weight
 		)
 		_right_leg_ik_active = right_ik_applied
