@@ -261,3 +261,13 @@ Verification:
 - The assistant has not run Godot import or automated tests. The new M3 assertions are authored but unexecuted.
 - User playtest should cover short/full hops, coyote timing, pre-landing buffered jumps, air steering, and two-instance jump replication.
 - Sprint Input Map setup remains an editor task: add the `sprint` action and bind Left Shift before testing the previous walk/run slice.
+
+
+## 2026-11-20 — movement feel calibration follow-up
+
+- Added a separate turn acceleration response of 24 m/s² for sharp direction changes. The existing 14 m/s² normal acceleration and 18 m/s² deceleration remain unchanged; turn response is only selected when current velocity and input direction differ by more than the configured 0.75 dot threshold. This keeps acceleration and momentum while reducing the car-like delay when steering around or reversing.
+- The same turn response is scaled by the existing air-control multiplier while airborne.
+- Recalibrated procedural leg swing intensity against sprint speed (8 m/s), not walk speed (3.8 m/s). At ordinary walking speed the stride and knee bend are now less exaggerated; the full stride builds as actual speed approaches sprint. Gait cadence, foot planting, and the existing planner/replant system are retained.
+- Increased jump launch speed from 6.5 to 6.9 m/s. Gravity, coyote time, jump buffer, and variable-height release remain unchanged, giving a modestly higher/full jump without altering short-hop behavior.
+- Added regression assertions for faster-but-blended reversals, lower walking stride intensity, stronger sprint stride, and the revised jump tuning.
+- Godot tests and in-game visual behavior have not been run by the assistant; user playtesting is still required.
