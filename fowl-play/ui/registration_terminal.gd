@@ -6,7 +6,7 @@ const PlayerIdentity = preload("res://core/player_identity.gd")
 
 @export_group("Registration Copy")
 @export var registration_header: String = "PLAYER REGISTRATION"
-@export_multiline var main_menu_description_format: String = "NICKNAME: %s\\nCOLOR: %s\\n\\nChoose your identity settings."
+@export_multiline var main_menu_description_format: String = "NICKNAME: %s\nCOLOR: %s\n\nChoose your identity settings."
 @export var main_menu_prompt: String = "CLICK OPTION  •  ARROWS MOVE  •  M1 / E / ENTER SELECT"
 @export var edit_nickname_option_label: String = "EDIT NICKNAME"
 @export var choose_color_option_label: String = "SELECT COLOR"
@@ -30,7 +30,7 @@ const PlayerIdentity = preload("res://core/player_identity.gd")
 @export_multiline var registration_sent_description: String = "Waiting for the host to assign your identity..."
 @export var please_wait_prompt: String = "PLEASE WAIT"
 @export var registration_success_header: String = "REGISTRATION COMPLETE"
-@export var registration_success_body_format: String = "%s\\nCOLOR: %s"
+@export var registration_success_body_format: String = "%s\nCOLOR: %s"
 @export var registration_success_prompt: String = "IDENTITY ASSIGNED BY HOST"
 
 var _menu: ScreenMenu = ScreenMenu.new()
@@ -285,7 +285,7 @@ func _render_nickname_editor() -> void:
 	screen.show_layout(
 		"information",
 		nickname_editor_header,
-		"%s_\\n\\n%s" % [
+		"%s_\n\n%s" % [
 			_nickname_buffer,
 			nickname_editor_instruction_format % [PlayerIdentity.MAX_NICKNAME_LENGTH]
 		],
