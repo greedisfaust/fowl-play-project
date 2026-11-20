@@ -2,15 +2,15 @@
 ## Gameplay outcomes are host-authoritative; this script only animates the approved intent.
 extends RefCounted
 
-const JAB_POSE_DURATION_S: float = 0.30
-const JAB_EXTENSION_END_S: float = 0.085
-const JAB_CONTACT_HOLD_S: float = 0.025
-const RECOIL_POSE_DURATION_S: float = 0.34
+const JAB_POSE_DURATION_S: float = 0.21
+const JAB_EXTENSION_END_S: float = 0.058
+const JAB_CONTACT_HOLD_S: float = 0.018
+const RECOIL_POSE_DURATION_S: float = 0.48
 const WINDUP_LEAN_RAD: float = -0.07
 const JAB_FOLLOW_THROUGH_RAD: float = 0.16
-const RECOIL_LEAN_RAD: float = -0.24
-const RECOIL_TWIST_RAD: float = 0.18
-const RECOIL_ROLL_RAD: float = 0.14
+const RECOIL_LEAN_RAD: float = -0.36
+const RECOIL_TWIST_RAD: float = 0.27
+const RECOIL_ROLL_RAD: float = 0.21
 
 enum Phase { IDLE, WINDUP, JAB }
 
@@ -118,7 +118,8 @@ static func get_windup_hand_offset(base_offset: Vector3, elapsed: float) -> Vect
 
 static func get_jab_hand_offset(base_offset: Vector3, elapsed: float) -> Vector3:
 	var t: float = maxf(elapsed, 0.0)
-	var pullback_to_extension: float = smoothstep(0.0, JAB_EXTENSION_END_S, t)
+	var extension_progress: float = clampf(t / JAB_EXTENSION_END_S, 0.0, 1.0)
+	var pullback_to_extension: float = 1.0 - pow(1.0 - extension_progress, 3.0)
 	var extension_depth: float = lerpf(0.14, -0.045, pullback_to_extension)
 	var return_start: float = JAB_EXTENSION_END_S + JAB_CONTACT_HOLD_S
 	var return_weight: float = smoothstep(return_start, JAB_POSE_DURATION_S, t)
@@ -131,7 +132,7 @@ static func get_jab_body_pose(elapsed: float, local_direction: Vector3) -> Vecto
 	var return_start: float = JAB_EXTENSION_END_S + JAB_CONTACT_HOLD_S
 	var pitch: float
 	if t < JAB_EXTENSION_END_S:
-		pitch = lerpf(WINDUP_LEAN_RAD, JAB_FOLLOW_THROUGH_RAD, smoothstep(0.0, JAB_EXTENSION_END_S, t))
+		pitch = lerpf(WINDUP_LEAN_RAD, JAB_FOLLOW_THROUGH_RAD, (1.0 - pow(1.0 - clampf(t / JAB_EXTENSION_END_S, 0.0, 1.0), 3.0)))
 	elif t < return_start:
 		pitch = JAB_FOLLOW_THROUGH_RAD
 	else:
@@ -141,16 +142,18 @@ static func get_jab_body_pose(elapsed: float, local_direction: Vector3) -> Vecto
 	return Vector3(pitch, yaw, -yaw * 0.18)
 
 static func get_recoil_body_pose(elapsed: float, local_direction: Vector3, strength: float = 1.0) -> Vector3:
-	var t: float = clampf(elapsed / RECOIL_POSE_DURATION_S, 0.0, 1.0)
-	# A fast initial snap followed by a damped settle: one clean hit, never vibration.
-	var snap: float = (1.0 - exp(-18.0 * t)) * (1.0 - smoothstep(0.42, 1.0, t))
-	var settle: float = smoothstep(0.42, 1.0, t)
+	var t: float = maxf(elapsed, 0.0)
+	if t >= RECOIL_POSE_DURATION_S:
+		return Vector3.ZERO
+	# Impulse-driven damped spring: an immediate chest snap, a small overshoot,
+	# then progressively smaller bounces before settling.
+	var spring: float = exp(-7.5 * t) * cos(17.0 * t)
 	var side: float = clampf(local_direction.x, -1.0, 1.0)
 	var impact_scale: float = clampf(strength, 1.0, 1.35)
-	var pitch: float = RECOIL_LEAN_RAD * snap * impact_scale
-	var yaw: float = -side * RECOIL_TWIST_RAD * snap * impact_scale
-	var roll: float = side * RECOIL_ROLL_RAD * snap * impact_scale
-	return Vector3(lerpf(pitch, 0.0, settle), lerpf(yaw, 0.0, settle), lerpf(roll, 0.0, settle))
+	var pitch: float = RECOIL_LEAN_RAD * spring * impact_scale
+	var yaw: float = -side * RECOIL_TWIST_RAD * spring * impact_scale
+	var roll: float = side * RECOIL_ROLL_RAD * spring * impact_scale
+	return Vector3(pitch, yaw, roll)
 
 func _local_direction(world_direction: Vector3) -> Vector3:
 	var player_3d: Node3D = _player as Node3D

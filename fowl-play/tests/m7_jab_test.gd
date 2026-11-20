@@ -54,13 +54,14 @@ func _check_presentation_curves() -> void:
 		_fail("Jab should hold a readable forward follow-through")
 	if absf(returned.x) > 0.001 or absf(returned.y) > 0.001 or absf(returned.z) > 0.001:
 		_fail("Jab body pose should return smoothly to neutral")
-	if not is_equal_approx(COMBAT_PRESENTATION.JAB_POSE_DURATION_S, 0.30) or not is_equal_approx(COMBAT_PRESENTATION.JAB_EXTENSION_END_S, 0.085) or COMBAT_PRESENTATION.JAB_EXTENSION_END_S >= COMBAT_PRESENTATION.JAB_POSE_DURATION_S:
+	if not is_equal_approx(COMBAT_PRESENTATION.JAB_POSE_DURATION_S, 0.21) or not is_equal_approx(COMBAT_PRESENTATION.JAB_EXTENSION_END_S, 0.058) or COMBAT_PRESENTATION.JAB_EXTENSION_END_S >= COMBAT_PRESENTATION.JAB_POSE_DURATION_S:
 		_fail("Jab should use a compact 0.30 s pose with a fast, readable extension")
-	var recoil_peak: Vector3 = COMBAT_PRESENTATION.get_recoil_body_pose(COMBAT_PRESENTATION.RECOIL_POSE_DURATION_S * 0.25, Vector3.FORWARD, 1.0)
+	var recoil_peak: Vector3 = COMBAT_PRESENTATION.get_recoil_body_pose(0.0, Vector3.FORWARD, 1.0)
+	var recoil_overshoot: Vector3 = COMBAT_PRESENTATION.get_recoil_body_pose(0.20, Vector3.FORWARD)
 	var recoil_end: Vector3 = COMBAT_PRESENTATION.get_recoil_body_pose(COMBAT_PRESENTATION.RECOIL_POSE_DURATION_S, Vector3.FORWARD)
-	if recoil_peak.x >= -0.05 or recoil_end.length() > 0.001:
-		_fail("Weak recoil should have a clear backward chest snap and return to neutral")
-	var stronger_recoil: Vector3 = COMBAT_PRESENTATION.get_recoil_body_pose(COMBAT_PRESENTATION.RECOIL_POSE_DURATION_S * 0.25, Vector3.FORWARD, 1.35)
+	if recoil_peak.x >= -0.05 or recoil_overshoot.x <= 0.0 or recoil_end.length() > 0.001:
+		_fail("Torso recoil should snap, spring past neutral, and settle cleanly")
+	var stronger_recoil: Vector3 = COMBAT_PRESENTATION.get_recoil_body_pose(0.0, Vector3.FORWARD, 1.35)
 	if stronger_recoil.x >= recoil_peak.x:
 		_fail("Higher impact strength should visibly increase the recoil pose")
 	if not is_equal_approx(NETWORK.get_jab_impact_strength(Vector3.ZERO, Vector3.FORWARD), 1.0):
@@ -110,10 +111,10 @@ func _check_world_hit_and_recoil() -> void:
 		await physics_frame
 	if int(network.get("combat_jabs")) != 1 or int(network.get("combat_hits")) != 1:
 		_fail("A clear in-range jab should be accepted and confirm exactly one hit")
-	if target.velocity.z >= -0.5:
-		_fail("A standing target should retain a readable recoil velocity after the hit")
-	if target.global_position.z >= target_position_before_recoil.z - 0.08:
-		_fail("A standing target should be displaced by the independent recoil impulse")
+	if absf(target.velocity.x) > 0.05 or absf(target.velocity.z) > 0.05:
+		_fail("A weak jab torso reaction must not add player-root movement velocity")
+	if target.global_position.distance_to(target_position_before_recoil) > 0.08:
+		_fail("A weak jab torso reaction must not push the player root backward")
 	target.set("auto_recovery_enabled", false)
 	if not bool(network.call("start_ragdoll_spike", 2)):
 		_fail("The test target should enter host-simulated limp")

@@ -315,14 +315,14 @@ Verification: source and assertions are committed but have not been run in Godot
 - Added a regression assertion for the compact jab timing. Run `./tests/run_checks.ps1 -OnlyStage m7-jab` (PowerShell: `.\tests\run_checks.ps1 -OnlyStage m7-jab`). Godot execution and visual playtest are pending.
 
 
-### M7.2 follow-up — snappier jab and velocity-scaled recoil
+### M7.2 follow-up — boxer jab timing and torso spring recoil
 
 Implemented:
-- Reduced jab pose duration to 0.30 s, extension to 0.085 s, and contact hold to 0.025 s.
-- Reworked standing weak-hit presentation into a single strong backward chest snap with directional yaw/roll and damped recovery over 0.34 s. It does not oscillate or change the Weak reaction tier.
-- Host samples the attacker's actual velocity projected toward the target at impact. Impact scaling ranges from 1.0× at rest to 1.35× at 8 m/s toward the target; sideways or retreating movement stays at baseline. The host relays this bounded multiplier with the recoil event; target movement impulse and torso pose use the same multiplier.
-- Standing recoil now has a separate exponentially decaying velocity component, so normal player acceleration/deceleration does not erase the hit impulse on the next physics tick. Wall collisions remove only the component pushing into the surface; limp/recovery transitions clear the standing impulse.
-- Limp impulse and recovery lifecycle remain unchanged. No scene hierarchy changes.
+- Shortened the jab pose from 0.30 s to 0.21 s (about 43% faster), with a 0.058 s extension and 0.018 s contact hold.
+- The fist and torso use a decisive ease-out extension into contact, followed by a smooth recovery to the authored resting pose.
+- Replaced standing-player knockback with a visual-only upper-torso spring response: an immediate chest snap, controlled overshoot, and progressively damped bounces over 0.48 s. A Weak jab no longer changes player-root movement or locomotion velocity.
+- Kept the host-authoritative impact multiplier (1.0×–1.35×) to scale the torso response. Limp targets still receive the existing physical-bone impulse; their recovery lifecycle is unchanged.
+- Updated M7 jab regression checks to verify the spring overshoot, faster timing, and absence of player-root displacement. No scene hierarchy changes.
 
 Verification:
 - Added assertions for the faster jab timing, clear recoil, bounded impact scaling, and directional velocity projection.
