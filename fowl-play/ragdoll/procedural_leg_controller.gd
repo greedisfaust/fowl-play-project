@@ -27,8 +27,20 @@ func update(delta: float, local_velocity: Vector3, grounded: bool) -> void:
 		return
 	var safe_delta: float = maxf(delta, 0.0)
 	var target_velocity: Vector3 = Vector3(local_velocity.x, 0.0, local_velocity.z)
-	var velocity_blend: float = 1.0 - exp(-TUNING.LEG_VELOCITY_RESPONSE * safe_delta)
+	# Keep normal movement smooth, but react quickly when the player changes
+	# direction sharply (e.g. rapidly alternating W/A/S/D).
+	var direction_response: float = TUNING.LEG_VELOCITY_RESPONSE
+	if smoothed_velocity.length_squared() > 0.04 and target_velocity.length_squared() > 0.04:
+		var direction_dot: float = smoothed_velocity.normalized().dot(target_velocity.normalized())
+		if direction_dot < TUNING.LEG_DIRECTION_CHANGE_DOT:
+			direction_response = TUNING.LEG_TURN_RESPONSE
+	var velocity_blend: float = 1.0 - exp(-direction_response * safe_delta)
 	smoothed_velocity = smoothed_velocity.lerp(target_velocity, velocity_blend)
+	if smoothed_velocity.length_squared() > 0.0001 and target_velocity.length_squared() > 0.0001:
+		var speed_blend: float = 1.0 - exp(-TUNING.LEG_TURN_RESPONSE * safe_delta)
+		smoothed_velocity = smoothed_velocity.normalized() * lerpf(
+			smoothed_velocity.length(), target_velocity.length(), speed_blend
+		)
 	# Drive cadence from actual measured root velocity, not the lagged
 	# direction filter. Otherwise the feet trail during acceleration and turns.
 	var speed: float = target_velocity.length()
