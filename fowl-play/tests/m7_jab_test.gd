@@ -50,7 +50,6 @@ func _check_world_hit_and_recoil() -> void:
 	target.global_position = Vector3(0.0, 0.0, -1.5)
 	for frame_index: int in range(4):
 		await physics_frame
-	var camera: Camera3D = attacker.get_node("Head/Camera3D") as Camera3D
 	var mask: int = HIT_DETECTOR.get_jab_collision_mask()
 	if (mask & (1 << (LAYERS.WORLD_STATIC - 1))) == 0 or (mask & (1 << (LAYERS.DEVICES - 1))) == 0 or (mask & (1 << (LAYERS.CARRIED - 1))) == 0 or (mask & (1 << (LAYERS.ELEVATOR - 1))) == 0:
 		_fail("Jab ray should include world, device, carried-prop and elevator layers so obstacles block hits")
