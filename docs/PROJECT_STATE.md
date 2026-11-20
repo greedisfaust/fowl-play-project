@@ -381,3 +381,11 @@ Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep a
 ### Registration Terminal copy customization
 
 - RegistrationTerminal exposes visible menu labels, descriptions, prompts, and status messages in the Inspector under **Registration Copy**. Idle/wake wording remains on inherited InteractiveTerminal exports. Formatting placeholders are documented in `docs/REGISTRATION_TERMINAL_SETUP.md`.
+
+
+## 2026-11-20 — player identity presentation integration
+
+- Connected each Player instance to the existing `Network.identity_roster_changed` signal. The local cursor now follows the host-assigned identity palette color and restores its configured fallback when the identity is absent. Remote player nameplates update from the same replicated identity records.
+- Added `player_nameplate.gd` for an editor-authored Label3D. It displays `Nickname (#PeerID)`, uses the identity tint, billboards toward the camera, and hides for the local player or when no identity is assigned.
+- Added the `identity-presentation` contract test and extended `m1-cursor` to verify fallback restoration. Updated setup documentation.
+- The existing Player scene did not contain a `NamePlate` node, so no scene file was modified. The user must add a direct-child Label3D named `NamePlate` and attach `res://player/player_nameplate.gd`; suggested initial local position is `(0, 2.2, 0)`. Godot tests and actual host/client verification have not been run.

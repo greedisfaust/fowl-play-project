@@ -5,6 +5,7 @@ extends CharacterBody3D
 
 const TUNING = preload("res://core/tuning.gd")
 const LAYERS = preload("res://core/layers.gd")
+const PlayerIdentity = preload("res://core/player_identity.gd")
 const LIMP_LOOK_YAW_LIMIT: float = deg_to_rad(75.0)
 const LIMP_LOOK_PITCH_LIMIT: float = deg_to_rad(75.0)
 
@@ -31,6 +32,7 @@ var limp_epoch: int = 0
 @onready var limp_interaction_proxy: StaticBody3D = get_node_or_null("LimpInteractionProxy") as StaticBody3D
 @onready var focus: Node = get_node_or_null("Head/Camera3D/Focus")
 @onready var gameplay_cursor: Control = get_node_or_null("GameplayCursor/CursorDisplay") as Control
+@onready var nameplate: Label3D = get_node_or_null("NamePlate") as Label3D
 @onready var debug_hub: Node = get_node("/root/DebugHub")
 @onready var network: Node = get_node("/root/Network")
 
@@ -94,6 +96,9 @@ func _ready() -> void:
 	if gameplay_cursor != null:
 		gameplay_cursor.call("bind_focus_source", focus)
 		gameplay_cursor.call("set_cursor_enabled", is_local_player)
+	if not network.is_connected("identity_roster_changed", _on_identity_roster_changed):
+		network.connect("identity_roster_changed", _on_identity_roster_changed)
+	_refresh_identity_presentation()
 	if carrier != null:
 		carrier.carry_started.connect(_on_carry_started)
 		carrier.carry_ended.connect(_on_carry_ended)
@@ -152,6 +157,8 @@ func _exit_tree() -> void:
 		rig.call("stop_host_simulation")
 	if is_instance_valid(network):
 		network.call("unregister_movement_player", input_peer_id, self)
+		if network.is_connected("identity_roster_changed", _on_identity_roster_changed):
+			network.disconnect("identity_roster_changed", _on_identity_roster_changed)
 	if not is_instance_valid(debug_hub):
 		return
 	# Use the original registration names even if the node was renamed.
@@ -167,6 +174,22 @@ func _exit_tree() -> void:
 	debug_hub.call("unwatch", _debug_carrying_watch_name)
 	if not _debug_limp_target_watch_name.is_empty():
 		debug_hub.call("unwatch", _debug_limp_target_watch_name)
+
+func _on_identity_roster_changed() -> void:
+	_refresh_identity_presentation()
+
+func _refresh_identity_presentation() -> void:
+	var owner_peer_id: int = input_peer_id
+	if owner_peer_id <= 0:
+		owner_peer_id = multiplayer.get_unique_id()
+	var identity: PlayerIdentity = network.call("get_player_identity", owner_peer_id) as PlayerIdentity
+	if is_instance_valid(gameplay_cursor) and is_local_player:
+		if identity != null:
+			gameplay_cursor.call("set_identity_color", identity.get_color())
+		else:
+			gameplay_cursor.call("reset_identity_color")
+	if is_instance_valid(nameplate) and nameplate.has_method("set_identity"):
+		nameplate.call("set_identity", identity, is_local_player)
 
 func _process(delta: float) -> void:
 	if is_limp:
