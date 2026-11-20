@@ -26,6 +26,8 @@ security secret.
 |---|---|---|
 | `player/<name>/speed_mps` | player/player.gd | Current capsule velocity magnitude. |
 | `player/<name>/on_floor` | player/player.gd | Whether the capsule is grounded. |
+| `player/<name>/jump_coyote_s` | player/player.gd | Remaining ledge-grace time before a jump is no longer accepted. |
+| `player/<name>/jump_buffer_s` | player/player.gd | Remaining buffered jump-input time before it expires. |
 | `net/status` | core/network.gd | offline, hosting, connecting, connected, disconnected, or failed. |
 | `net/peers` | core/network.gd | Locally known connected peer IDs, including local ID once connected. |
 | `net/player_count` | arena/test_arena.gd | Spawned players in this arena instance. |
@@ -548,3 +550,12 @@ The authored rig's `Thigh_L` bone is on local +X and `Thigh_R` is on local -X. F
 - Horizontal velocity accelerates at `PLAYER_ACCELERATION_MPS2` and decelerates at `PLAYER_DECELERATION_MPS2`, including smooth directional changes. Sprint only changes the target speed while movement input is held.
 - The procedural gait blends its stride amplitude and cadence toward a more energetic run as measured speed rises. This remains cosmetic and does not change movement authority or replication.
 - Input Map handoff: create the `sprint` action and bind Left Shift. The player script intentionally does not edit project settings or scenes.
+
+
+### Jump movement playtest
+
+- Ground jump: tap and hold Space separately; a tap should produce a shorter hop, while holding should reach the full jump height.
+- Coyote time: run off a ledge and press jump immediately afterward; the short grace window should still allow takeoff.
+- Jump buffer: while descending, press jump just before touching down; the next grounded physics tick should launch the next jump.
+- Air control: steer left/right in the air and compare with grounded steering; air corrections should be weaker and preserve more momentum.
+- Debug watches `player/<name>/jump_coyote_s` and `player/<name>/jump_buffer_s` show the active grace/buffer windows. These are local movement values; no new network stream is added.
