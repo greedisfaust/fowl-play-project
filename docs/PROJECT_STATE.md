@@ -526,3 +526,10 @@ Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep a
 - Reduced stride cycle distance from 1.8 m to 1.4 m and restored the cadence multiplier from 0.78 to 1.0. Normal foot targets now land 0.40 m ahead of the hip at touchdown after predicted swing travel; at the 0.58 stance fraction this leaves the foot about 0.412 m behind the hip by stance end. Combined with the 0.84 m vertical rest reach, that is about 0.936 m, within the 0.94 m replant margin. Emergency replant targets additionally predict player travel during the 0.18 s recovery arc.
 - M8 tests now cover stance travel versus leg reach and mirrored outward knee placement.
 - No scene files changed. Godot tests and in-game behavior have not been executed by the assistant.
+
+
+## 2026-11-20 — correct knee pole direction space
+
+- Corrected a deeper IK issue: the shared two-bone solver expects a pole direction relative to the upper joint, but the leg code supplied an absolute world-space pole position. The solver was projecting that absolute position, making knee direction vary with world position and appear sideways across headings.
+- Leg IK now passes a hip-relative direction transformed by character facing. Forward bias is 1.0 plus up to 0.45 during swing; outward bias is reduced to 0.18 for a subtle anatomical angle.
+- M8 assertions now require forward and mild outward knee bend on both mirrored legs. No scene files changed. Godot tests and in-game verification have not been executed by the assistant.
