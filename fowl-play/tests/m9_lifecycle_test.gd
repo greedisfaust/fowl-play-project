@@ -60,7 +60,10 @@ func _run() -> void:
 	check(not press_times.has(3) and not charged_presses.has(3), "disconnect clears held combat input")
 	check(not active_jabs.has(3) and not active_lunges.has(3), "disconnect clears active jab and lunge state")
 	check(not action_locks.has(3), "disconnect clears combat action lock")
-	check(not pending_states.has(3), "disconnect cleanup does not retain a pending state baseline")
+	check(not pending_states.has(3), "disconnect cleanup does not retain an already-applied state baseline")
+	pending_states[4] = {"sequence": 0, "position": Vector3.ZERO, "velocity": Vector3.ZERO, "yaw": 0.0, "pitch": 0.0, "grounded": true}
+	network.call("_on_peer_disconnected", 4)
+	check(not pending_states.has(4), "disconnect clears a deferred player-state baseline")
 
 	if not failed:
 		print("M9 lifecycle checks passed")

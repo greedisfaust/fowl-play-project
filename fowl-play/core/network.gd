@@ -574,7 +574,7 @@ func _sync_active_player_states(peer_id: int) -> void:
 		if not bool(player.get("is_recovering")):
 			grounded = bool(player.call("is_on_floor")) if bool(player.get("is_local_player")) else bool(player.get("_remote_grounded"))
 		var sequence: int = int(player.get("_movement_sequence"))
-		var player_rotation: Vector3 = player.get("rotation") as Vector3
+		var player_rotation: Vector3 = Vector3(player.get("rotation"))
 		_player_state_sync.rpc_id(
 			peer_id,
 			owner_id,
@@ -659,6 +659,7 @@ func _clear_combat_peer_state(owner_id: int) -> void:
 		if is_instance_valid(player) and bool(player.get("is_limp")):
 			stop_ragdoll_spike(peer_id, "disconnect")
 	_pending_ragdoll_starts.erase(peer_id)
+	_pending_player_states.erase(peer_id)
 	_ragdoll_epochs.erase(peer_id)
 	player_identities.erase(peer_id)
 	connected_peers.erase(peer_id)
