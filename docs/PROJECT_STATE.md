@@ -500,3 +500,12 @@ Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep a
 - Extended M8 checks for overreach detection, lifted recovery interpolation, completed anchor capture, and left/right centerline protection.
 - Debug ground status now reports emergency-replant state and normalized hip-to-anchor stretch ratios.
 - Godot execution and in-game verification have not been run by the assistant. This remains a procedural target constraint, not physical collision between the leg meshes.
+
+
+## 2026-11-20 — correct authored leg sides and preserve swing knee bend
+
+- Corrected the left/right sign mapping throughout normal footstep planning, emergency replanting, anatomical target constraints, and IK knee-pole placement. The rig's authored `Thigh_L` is at local +X; `Thigh_R` is at local -X. Previous code had these signs reversed, causing the visible leg crossing.
+- Kept the side axis fixed to the rig's anatomical right axis while strafing.
+- Exposed smoothed per-leg knee-bend weights from the gait controller and fed them into the IK pole. During swing, the knee receives additional forward bend while the outward side bias remains active; the weight eases in and out with the gait's existing smooth swing curve.
+- Updated planner and gait regression assertions for the authored side mapping and IK knee bend handoff.
+- No scene files changed. Godot tests and in-game behavior have not been executed by the assistant.
