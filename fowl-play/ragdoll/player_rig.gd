@@ -168,7 +168,6 @@ const ARM_IK_POLE_FORWARD_WEIGHT: float = 0.22
 const ARM_IK_MAX_STRETCH_RATIO: float = 1.12
 const LEG_GROUND_PROBE_UP_M: float = 0.35
 const LEG_GROUND_PROBE_DOWN_M: float = 0.85
-const LEG_GROUND_PROBE_LEAD_M: float = 0.12
 const LEG_GROUND_FOOT_CLEARANCE_M: float = 0.04
 const LEG_GROUND_MIN_NORMAL_Y: float = 0.45
 const LEG_IK_BLEND_RESPONSE: float = 14.0
@@ -444,7 +443,8 @@ func _probe_ground_beneath_foot(foot_world: Vector3, step_direction_world: Vecto
 	var horizontal_lead: Vector3 = step_direction_world
 	horizontal_lead.y = 0.0
 	if horizontal_lead.length_squared() > 0.0001:
-		horizontal_lead = horizontal_lead.normalized() * LEG_GROUND_PROBE_LEAD_M
+		var predicted_swing_travel: float = TUNING.LEG_STEP_CYCLE_DISTANCE_M * (1.0 - TUNING.LEG_STANCE_FRACTION)
+		horizontal_lead = horizontal_lead.normalized() * predicted_swing_travel
 	var probe_origin: Vector3 = foot_world + horizontal_lead + Vector3.UP * LEG_GROUND_PROBE_UP_M
 	var probe_end: Vector3 = foot_world + horizontal_lead - Vector3.UP * LEG_GROUND_PROBE_DOWN_M
 	var ground_mask: int = (1 << (LAYERS.WORLD_STATIC - 1)) | (1 << (LAYERS.PROPS - 1)) | (1 << (LAYERS.ELEVATOR - 1))
