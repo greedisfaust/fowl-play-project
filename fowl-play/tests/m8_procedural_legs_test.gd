@@ -137,12 +137,15 @@ func _check_foot_plant_targets() -> void:
 	var swing_start: Vector3 = tracker.call("update_target", moved_root_foot, next_landing, true, true, 0.0, 0.12)
 	if swing_start.distance_to(first_landing) > 0.001:
 		_fail("A swing should begin at the previous planted anchor")
-	var swing_middle: Vector3 = tracker.call("update_target", moved_root_foot, next_landing, true, true, 0.5, 0.12)
+	var drifting_probe: Vector3 = next_landing + Vector3(0.0, 0.0, -0.25)
+	var swing_middle: Vector3 = tracker.call("update_target", moved_root_foot, drifting_probe, true, true, 0.5, 0.12)
 	if swing_middle.z >= first_landing.z or swing_middle.z <= next_landing.z:
 		_fail("The swing target should interpolate between the old and next foot positions")
+	if swing_middle.distance_to((first_landing + next_landing) * 0.5 + Vector3.UP * 0.12) > 0.001:
+		_fail("A swing should retain its captured landing target instead of chasing a moving ground probe")
 	if swing_middle.y <= first_landing.y:
 		_fail("The swing target should lift above the ground during mid-swing")
-	var landed: Vector3 = tracker.call("update_target", next_landing, next_landing, true, false, 0.0, 0.12)
+	var landed: Vector3 = tracker.call("update_target", next_landing, drifting_probe, true, false, 0.0, 0.12)
 	if landed.distance_to(next_landing) > 0.001:
 		_fail("The foot should lock to its new landing point when stance begins")
 
