@@ -12,6 +12,7 @@ const PARRY_BARRIER_SCRIPT = preload("res://combat/parry_barrier_presentation.gd
 const MOVEMENT_PRESENTATION_SCRIPT = preload("res://ragdoll/procedural_movement_presentation.gd")
 const CAMERA_PRESENTATION_SCRIPT = preload("res://player/camera_presentation.gd")
 const OWNER_VIEW_PRESENTATION_SCRIPT = preload("res://player/owner_view_presentation.gd")
+const CAMERA_COLLISION_SCRIPT = preload("res://player/camera_collision_presentation.gd")
 var _movement_controller: RefCounted = MOVEMENT_CONTROLLER_SCRIPT.new()
 var _jump_controller: RefCounted = JUMP_CONTROLLER_SCRIPT.new()
 var _combat_controller: RefCounted = COMBAT_CONTROLLER_SCRIPT.new()
@@ -19,6 +20,7 @@ var _combat_presentation: RefCounted = COMBAT_PRESENTATION_SCRIPT.new()
 var _parry_barrier: RefCounted = PARRY_BARRIER_SCRIPT.new()
 var _movement_presentation: RefCounted = MOVEMENT_PRESENTATION_SCRIPT.new()
 var _camera_presentation: RefCounted = CAMERA_PRESENTATION_SCRIPT.new()
+var _camera_collision: RefCounted = CAMERA_COLLISION_SCRIPT.new()
 var _camera_rest_transform: Transform3D = Transform3D.IDENTITY
 @export_range(0.0, 1.5, 0.05) var camera_motion_intensity: float = 1.0
 var _movement_presentation_last_yaw: float = 0.0
@@ -353,7 +355,16 @@ func _update_first_person_camera_presentation(delta: float) -> void:
 	var presentation: Dictionary = _camera_presentation.call("advance", delta, local_velocity, velocity.y, is_on_floor(), not is_carrying())
 	var camera_offset: Vector3 = Vector3(presentation.get("offset", Vector3.ZERO))
 	var camera_rotation: Vector3 = Vector3(presentation.get("rotation", Vector3.ZERO))
-	camera.transform = CAMERA_PRESENTATION_SCRIPT.compose_camera_transform(_camera_rest_transform, camera_offset, camera_rotation)
+	var desired_local: Transform3D = CAMERA_PRESENTATION_SCRIPT.compose_camera_transform(_camera_rest_transform, camera_offset, camera_rotation)
+	var desired_world: Transform3D = head.global_transform * desired_local
+	var ray_mask: int = (1 << (LAYERS.WORLD_STATIC - 1)) | (1 << (LAYERS.DEVICES - 1)) | (1 << (LAYERS.PROPS - 1)) | (1 << (LAYERS.ELEVATOR - 1))
+	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(head.global_position, desired_world.origin, ray_mask)
+	query.exclude = [get_rid()]
+	query.collide_with_areas = false
+	var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(query)
+	var resolved_origin: Vector3 = _camera_collision.call("advance", head.global_position, desired_world.origin, not hit.is_empty(), Vector3(hit.get("position", Vector3.ZERO)), delta)
+	desired_world.origin = resolved_origin
+	camera.global_transform = desired_world
 
 func _has_host_authority() -> bool:
 	return network.get("peer") == null or bool(network.get("is_host"))
@@ -906,6 +917,7 @@ func _finish_recovery() -> void:
 		camera.top_level = false
 		camera.transform = _camera_rest_transform
 		_camera_presentation.call("reset", true)
+		_camera_collision.call("reset")
 		if rig != null:
 			rig.visible = true
 			rig.call("set_owner_view_visibility", true, float(OWNER_VIEW_PRESENTATION_SCRIPT.call("leg_visibility_weight", _pitch_radians)))

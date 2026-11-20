@@ -17,7 +17,7 @@ if (-not (Test-Path -LiteralPath $godot)) {
 	throw "Godot executable not found. Set FOWL_PLAY_GODOT or add godot to PATH."
 }
 $project = Join-Path $PSScriptRoot ".."
-$stages = @("import", "d0", "m1", "m1-cursor", "m2", "m2-arm-ik", "m7-jab", "m3", "m3-interaction", "m4-handoff", "m6", "procedural-legs", "movement-presentation", "m10-camera", "m10-owner-view", "m9-lifecycle", "identity", "identity-presentation", "physical-button", "screen-text", "world-screen", "slim-world-screen", "fat-world-screen", "screen-menu", "registration-terminal", "interactive-terminal")
+$stages = @("import", "d0", "m1", "m1-cursor", "m2", "m2-arm-ik", "m7-jab", "m3", "m3-interaction", "m4-handoff", "m6", "procedural-legs", "movement-presentation", "m10-camera", "m10-owner-view", "m10-camera-collision", "m9-lifecycle", "identity", "identity-presentation", "physical-button", "screen-text", "world-screen", "slim-world-screen", "fat-world-screen", "screen-menu", "registration-terminal", "interactive-terminal")
 if ($OnlyStage -ne "all") {
 	if ($stages -notcontains $OnlyStage) {
 		throw "Unknown test stage '$OnlyStage'. Available stages: $($stages -join ', ')"
@@ -42,6 +42,7 @@ foreach ($stage in $stages) {
 	elseif ($stage -eq "movement-presentation") { $arguments += @("--script", "res://tests/m8_movement_presentation_test.gd") }
 	elseif ($stage -eq "m10-camera") { $arguments += @("--script", "res://tests/m10_camera_presentation_test.gd") }
 	elseif ($stage -eq "m10-owner-view") { $arguments += @("--script", "res://tests/m10_owner_view_test.gd") }
+	elseif ($stage -eq "m10-camera-collision") { $arguments += @("--script", "res://tests/m10_camera_collision_test.gd") }
 	elseif ($stage -eq "m9-lifecycle") { $arguments += @("--script", "res://tests/m9_lifecycle_test.gd") }
 	elseif ($stage -eq "identity") { $arguments += @("--script", "res://tests/m3_identity_test.gd") }
 	elseif ($stage -eq "identity-presentation") { $arguments += @("--script", "res://tests/m3_player_identity_presentation_test.gd") }

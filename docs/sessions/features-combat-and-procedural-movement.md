@@ -437,3 +437,14 @@ This is still the first M10 slice, not the complete milestone. Owner lower-body 
 - Added the `m10-owner-view` focused regression stage for horizon, partial downward fade, full downward visibility, and upward-look behavior. No `.tscn` files changed.
 - Godot execution and in-game visual verification have not been run by the assistant; owner and remote multiplayer presentation still require user playtesting.
 
+
+
+## M10.3 — first-person camera collision and wall avoidance
+
+- The local standing camera traces from the head pivot toward its composed desired camera position, including the authored rest offset and M10.1 bob/sway.
+- The trace checks world-static geometry, devices, props, and elevators while excluding the owning Player RID and ignoring areas. It does not collide with other player bodies.
+- On obstruction, the camera moves inward immediately and maintains 0.14 m clearance from the hit point. Once clear, it eases back toward the authored camera position rather than snapping outward.
+- Collision is limited to the normal owner first-person presentation path; the existing limp simulated-head camera and recovery blend remain untouched. Recovery resets the obstruction controller. No scene hierarchy or scene files changed.
+- Added the m10-camera-collision focused test for clear path, immediate obstruction response, smooth release, and reset.
+- Godot execution and in-game visual/multiplayer verification have not been run by the assistant; test wall corners, pillars, props, elevators, and recovery camera handoff in-game.
+
