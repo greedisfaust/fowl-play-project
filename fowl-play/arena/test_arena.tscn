@@ -47,11 +47,6 @@ metadata/_custom_type_script = "uid://bw1bicstmeec7"
 [sub_resource type="BoxShape3D" id="BoxShape3D_d0u6y"]
 size = Vector3(2.4233398, 1.5705566, 0.3540039)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ivh0u"]
-albedo_color = Color(0.1254902, 0.14901961, 0.1882353, 1)
-metallic = 0.8
-roughness = 0.32
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0nxpi"]
 albedo_color = Color(0.1254902, 0.14901961, 0.1882353, 1)
 metallic = 0.8
@@ -68,104 +63,109 @@ metallic = 0.8
 roughness = 0.32
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7f4p6"]
+albedo_color = Color(0.1254902, 0.14901961, 0.1882353, 1)
+metallic = 0.8
+roughness = 0.32
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_m2aum"]
 albedo_color = Color(0.10280716, 0.12345097, 0.15785909, 1)
 metallic = 0.25
 roughness = 0.8
 
-[sub_resource type="BoxMesh" id="BoxMesh_m2aum"]
-material = SubResource("StandardMaterial3D_7f4p6")
+[sub_resource type="BoxMesh" id="BoxMesh_y008k"]
+material = SubResource("StandardMaterial3D_m2aum")
 size = Vector3(0.025, 0.065, 0.012)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_y008k"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_q6ds7"]
 albedo_color = Color(0.10280716, 0.12345097, 0.15785909, 1)
 metallic = 0.25
 roughness = 0.8
 
-[sub_resource type="BoxMesh" id="BoxMesh_q6ds7"]
-material = SubResource("StandardMaterial3D_y008k")
+[sub_resource type="BoxMesh" id="BoxMesh_exute"]
+material = SubResource("StandardMaterial3D_q6ds7")
 size = Vector3(0.025, 0.065, 0.012)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_exute"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ufint"]
 albedo_color = Color(0.10280716, 0.12345097, 0.15785909, 1)
 metallic = 0.25
 roughness = 0.8
 
-[sub_resource type="BoxMesh" id="BoxMesh_ufint"]
-material = SubResource("StandardMaterial3D_exute")
+[sub_resource type="BoxMesh" id="BoxMesh_aau5m"]
+material = SubResource("StandardMaterial3D_ufint")
 size = Vector3(0.025, 0.065, 0.012)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_aau5m"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_y4sl8"]
 albedo_color = Color(0.10280716, 0.12345097, 0.15785909, 1)
 metallic = 0.25
 roughness = 0.8
 
-[sub_resource type="BoxMesh" id="BoxMesh_y4sl8"]
-material = SubResource("StandardMaterial3D_aau5m")
+[sub_resource type="BoxMesh" id="BoxMesh_h74v4"]
+material = SubResource("StandardMaterial3D_y4sl8")
 size = Vector3(0.025, 0.065, 0.012)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_h74v4"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dbkw3"]
 albedo_color = Color(0.10280716, 0.12345097, 0.15785909, 1)
 metallic = 0.25
 roughness = 0.8
 
-[sub_resource type="BoxMesh" id="BoxMesh_dbkw3"]
-material = SubResource("StandardMaterial3D_h74v4")
+[sub_resource type="BoxMesh" id="BoxMesh_iw6ag"]
+material = SubResource("StandardMaterial3D_dbkw3")
 size = Vector3(0.025, 0.065, 0.012)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_iw6ag"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3bb3l"]
 albedo_color = Color(0.10280716, 0.12345097, 0.15785909, 1)
 metallic = 0.25
 roughness = 0.8
 
-[sub_resource type="BoxMesh" id="BoxMesh_3bb3l"]
-material = SubResource("StandardMaterial3D_iw6ag")
+[sub_resource type="BoxMesh" id="BoxMesh_vgwir"]
+material = SubResource("StandardMaterial3D_3bb3l")
 size = Vector3(0.025, 0.065, 0.012)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vgwir"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rdih5"]
 albedo_color = Color(0.10280716, 0.12345097, 0.15785909, 1)
 metallic = 0.25
 roughness = 0.8
 
-[sub_resource type="BoxMesh" id="BoxMesh_rdih5"]
-material = SubResource("StandardMaterial3D_vgwir")
+[sub_resource type="BoxMesh" id="BoxMesh_86uqm"]
+material = SubResource("StandardMaterial3D_rdih5")
 size = Vector3(0.025, 0.065, 0.012)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_86uqm"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fqlra"]
 albedo_color = Color(0.10280716, 0.12345097, 0.15785909, 1)
 metallic = 0.25
 roughness = 0.8
 
-[sub_resource type="BoxMesh" id="BoxMesh_fqlra"]
-material = SubResource("StandardMaterial3D_86uqm")
+[sub_resource type="BoxMesh" id="BoxMesh_sjwgo"]
+material = SubResource("StandardMaterial3D_fqlra")
 size = Vector3(0.025, 0.065, 0.012)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sjwgo"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qotfc"]
 albedo_color = Color(0.10280716, 0.12345097, 0.15785909, 1)
 metallic = 0.25
 roughness = 0.8
 
-[sub_resource type="BoxMesh" id="BoxMesh_qotfc"]
-material = SubResource("StandardMaterial3D_sjwgo")
+[sub_resource type="BoxMesh" id="BoxMesh_cvhrv"]
+material = SubResource("StandardMaterial3D_qotfc")
 size = Vector3(0.025, 0.065, 0.012)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cvhrv"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_j64lj"]
 albedo_color = Color(0.10280716, 0.12345097, 0.15785909, 1)
 metallic = 0.25
 roughness = 0.8
 
-[sub_resource type="BoxMesh" id="BoxMesh_j64lj"]
-material = SubResource("StandardMaterial3D_cvhrv")
+[sub_resource type="BoxMesh" id="BoxMesh_8xm4q"]
+material = SubResource("StandardMaterial3D_j64lj")
 size = Vector3(0.025, 0.065, 0.012)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8xm4q"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_y6cfu"]
 albedo_color = Color(0.09019608, 0.11372549, 0.14509805, 1)
 metallic = 0.75
 roughness = 0.38
 
-[sub_resource type="BoxMesh" id="BoxMesh_y6cfu"]
+[sub_resource type="BoxMesh" id="BoxMesh_fgcef"]
 size = Vector3(1.35, 0.16, 0.055)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fgcef"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ya3e7"]
 albedo_color = Color(1, 0.70980394, 0.18039216, 1)
 metallic = 0.2
 roughness = 0.25
@@ -173,47 +173,47 @@ emission_enabled = true
 emission = Color(1, 0.6039216, 0.09411765, 1)
 emission_energy_multiplier = 3.2
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_ya3e7"]
+[sub_resource type="CylinderMesh" id="CylinderMesh_jy2xc"]
 top_radius = 0.025
 bottom_radius = 0.025
 height = 0.012
 radial_segments = 16
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jy2xc"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_c4hin"]
 metallic = 0.2
 roughness = 0.25
 emission_enabled = true
 emission = Color(1, 1, 1, 1)
 emission_energy_multiplier = 2.6
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_c4hin"]
+[sub_resource type="CylinderMesh" id="CylinderMesh_lydei"]
 top_radius = 0.025
 bottom_radius = 0.025
 height = 0.012
 radial_segments = 16
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_lydei"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qigqg"]
 metallic = 0.2
 roughness = 0.25
 emission_enabled = true
 emission = Color(1, 1, 1, 1)
 emission_energy_multiplier = 2.6
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_qigqg"]
+[sub_resource type="CylinderMesh" id="CylinderMesh_5i6vn"]
 top_radius = 0.025
 bottom_radius = 0.025
 height = 0.012
 radial_segments = 16
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5i6vn"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tsb0g"]
 albedo_color = Color(0.1882353, 0.22352941, 0.26666668, 1)
 metallic = 0.8
 roughness = 0.3
 
-[sub_resource type="BoxMesh" id="BoxMesh_tsb0g"]
+[sub_resource type="BoxMesh" id="BoxMesh_mtqp3"]
 size = Vector3(0.48, 0.075, 0.012)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mtqp3"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_adm2o"]
 albedo_color = Color(0.4509804, 0.4862745, 0.5176471, 1)
 metallic = 0.65
 metallic_specular = 0.8
@@ -221,8 +221,8 @@ emission_enabled = true
 emission = Color(1, 1, 1, 1)
 emission_energy_multiplier = 1.77
 
-[sub_resource type="TextMesh" id="TextMesh_adm2o"]
-material = SubResource("StandardMaterial3D_mtqp3")
+[sub_resource type="TextMesh" id="TextMesh_wygwv"]
+material = SubResource("StandardMaterial3D_adm2o")
 text = "T-HOUSE / TERMINAL"
 font = ExtResource("10_ivh0u")
 font_size = 32
@@ -230,51 +230,51 @@ pixel_size = 0.0012
 curve_step = 0.3
 depth = 0.0
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wygwv"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_h43t1"]
 albedo_color = Color(0.5372549, 0.5686275, 0.6039216, 1)
 metallic = 0.9
 roughness = 0.3
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_h43t1"]
+[sub_resource type="CylinderMesh" id="CylinderMesh_lfp30"]
 top_radius = 0.022
 bottom_radius = 0.022
 height = 0.012
 radial_segments = 12
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_lfp30"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fwe8e"]
 albedo_color = Color(0.5372549, 0.5686275, 0.6039216, 1)
 metallic = 0.9
 roughness = 0.3
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_fwe8e"]
+[sub_resource type="CylinderMesh" id="CylinderMesh_ka8ef"]
 top_radius = 0.022
 bottom_radius = 0.022
 height = 0.012
 radial_segments = 12
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ka8ef"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_n81pr"]
 albedo_color = Color(0.5372549, 0.5686275, 0.6039216, 1)
 metallic = 0.9
 roughness = 0.3
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_n81pr"]
+[sub_resource type="CylinderMesh" id="CylinderMesh_e4pnd"]
 top_radius = 0.022
 bottom_radius = 0.022
 height = 0.012
 radial_segments = 12
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_e4pnd"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ougvd"]
 albedo_color = Color(0.5372549, 0.5686275, 0.6039216, 1)
 metallic = 0.9
 roughness = 0.3
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_ougvd"]
+[sub_resource type="CylinderMesh" id="CylinderMesh_74cll"]
 top_radius = 0.022
 bottom_radius = 0.022
 height = 0.012
 radial_segments = 12
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_74cll"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ahpyo"]
 render_priority = 0
 shader = ExtResource("11_0nxpi")
 shader_parameter/reflection_color = Color(0.72, 0.86, 1, 1)
@@ -282,7 +282,7 @@ shader_parameter/reflection_strength = 0.55
 shader_parameter/edge_highlight_strength = 0.1
 shader_parameter/highlight_opacity = 0.035
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_ahpyo"]
+[sub_resource type="PlaneMesh" id="PlaneMesh_x76wg"]
 size = Vector2(2, 1.125)
 
 [node name="TestArena" type="Node3D" unique_id=2059650083]
@@ -366,7 +366,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0151434, 0.80192447, -2.41
 
 [node name="SlimWorldScreen" parent="." unique_id=1216012003 instance=ExtResource("9_v7nqo")]
 transform = Transform3D(0.95991975, 0, 0.28027493, 0, 1, 0, -0.28027493, 0, 0.95991975, -5.1730146, 2.5688996, -7.3893814)
-display_size = Vector2(2, 3.735)
+display_size = Vector2(3.49, 3.735)
 
 [node name="Terminal" type="RigidBody3D" parent="." unique_id=1328477340]
 transform = Transform3D(0.3799799, 0, 0.9249947, 0, 1, 0, -0.9249947, 0, 0.3799799, -7.455715, 1.2825, -4.9450154)
@@ -387,91 +387,91 @@ metadata/_custom_type_script = "uid://dd5c04repreo1"
 transform = Transform3D(1.0000001, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0, 0, 0)
 
 [node name="TopArmor" parent="Terminal/FatWorldScreen/Chassis/InnerArmor" parent_id_path=PackedInt32Array(1276401181, 1934588388) index="0" unique_id=1642629032]
-material_override = SubResource("StandardMaterial3D_ivh0u")
-
-[node name="BottomArmor" parent="Terminal/FatWorldScreen/Chassis/InnerArmor" parent_id_path=PackedInt32Array(1276401181, 1934588388) index="1" unique_id=1692322410]
 material_override = SubResource("StandardMaterial3D_0nxpi")
 
-[node name="LeftArmor" parent="Terminal/FatWorldScreen/Chassis/InnerArmor" parent_id_path=PackedInt32Array(1276401181, 1934588388) index="2" unique_id=1781666988]
+[node name="BottomArmor" parent="Terminal/FatWorldScreen/Chassis/InnerArmor" parent_id_path=PackedInt32Array(1276401181, 1934588388) index="1" unique_id=1692322410]
 material_override = SubResource("StandardMaterial3D_x7piu")
 
-[node name="RightArmor" parent="Terminal/FatWorldScreen/Chassis/InnerArmor" parent_id_path=PackedInt32Array(1276401181, 1934588388) index="3" unique_id=978561599]
+[node name="LeftArmor" parent="Terminal/FatWorldScreen/Chassis/InnerArmor" parent_id_path=PackedInt32Array(1276401181, 1934588388) index="2" unique_id=1781666988]
 material_override = SubResource("StandardMaterial3D_xeoei")
 
+[node name="RightArmor" parent="Terminal/FatWorldScreen/Chassis/InnerArmor" parent_id_path=PackedInt32Array(1276401181, 1934588388) index="3" unique_id=978561599]
+material_override = SubResource("StandardMaterial3D_7f4p6")
+
 [node name="Vent1" parent="Terminal/FatWorldScreen/Chassis/SideDetails/LeftVent" parent_id_path=PackedInt32Array(1276401181, 622792050) index="0" unique_id=750534057]
-mesh = SubResource("BoxMesh_m2aum")
+mesh = SubResource("BoxMesh_y008k")
 
 [node name="Vent2" parent="Terminal/FatWorldScreen/Chassis/SideDetails/LeftVent" parent_id_path=PackedInt32Array(1276401181, 622792050) index="1" unique_id=621629105]
-mesh = SubResource("BoxMesh_q6ds7")
+mesh = SubResource("BoxMesh_exute")
 
 [node name="Vent3" parent="Terminal/FatWorldScreen/Chassis/SideDetails/LeftVent" parent_id_path=PackedInt32Array(1276401181, 622792050) index="2" unique_id=906315242]
-mesh = SubResource("BoxMesh_ufint")
+mesh = SubResource("BoxMesh_aau5m")
 
 [node name="Vent4" parent="Terminal/FatWorldScreen/Chassis/SideDetails/LeftVent" parent_id_path=PackedInt32Array(1276401181, 622792050) index="3" unique_id=932069470]
-mesh = SubResource("BoxMesh_y4sl8")
+mesh = SubResource("BoxMesh_h74v4")
 
 [node name="Vent5" parent="Terminal/FatWorldScreen/Chassis/SideDetails/LeftVent" parent_id_path=PackedInt32Array(1276401181, 622792050) index="4" unique_id=1688231557]
-mesh = SubResource("BoxMesh_dbkw3")
+mesh = SubResource("BoxMesh_iw6ag")
 
 [node name="Vent6" parent="Terminal/FatWorldScreen/Chassis/SideDetails/RightVent" parent_id_path=PackedInt32Array(1276401181, 88088852) index="0" unique_id=588788927]
-mesh = SubResource("BoxMesh_3bb3l")
+mesh = SubResource("BoxMesh_vgwir")
 
 [node name="Vent7" parent="Terminal/FatWorldScreen/Chassis/SideDetails/RightVent" parent_id_path=PackedInt32Array(1276401181, 88088852) index="1" unique_id=2034216986]
-mesh = SubResource("BoxMesh_rdih5")
+mesh = SubResource("BoxMesh_86uqm")
 
 [node name="Vent8" parent="Terminal/FatWorldScreen/Chassis/SideDetails/RightVent" parent_id_path=PackedInt32Array(1276401181, 88088852) index="2" unique_id=1469080913]
-mesh = SubResource("BoxMesh_fqlra")
+mesh = SubResource("BoxMesh_sjwgo")
 
 [node name="Vent9" parent="Terminal/FatWorldScreen/Chassis/SideDetails/RightVent" parent_id_path=PackedInt32Array(1276401181, 88088852) index="3" unique_id=1029671947]
-mesh = SubResource("BoxMesh_qotfc")
+mesh = SubResource("BoxMesh_cvhrv")
 
 [node name="Vent10" parent="Terminal/FatWorldScreen/Chassis/SideDetails/RightVent" parent_id_path=PackedInt32Array(1276401181, 88088852) index="4" unique_id=1561835074]
-mesh = SubResource("BoxMesh_j64lj")
+mesh = SubResource("BoxMesh_8xm4q")
 
 [node name="PanelBody" parent="Terminal/FatWorldScreen/Chassis/ControlPanel" parent_id_path=PackedInt32Array(1276401181, 580430552) index="0" unique_id=2013980107]
-material_override = SubResource("StandardMaterial3D_8xm4q")
-mesh = SubResource("BoxMesh_y6cfu")
+material_override = SubResource("StandardMaterial3D_y6cfu")
+mesh = SubResource("BoxMesh_fgcef")
 
 [node name="Button1" parent="Terminal/FatWorldScreen/Chassis/ControlPanel/IndicatorGroup" parent_id_path=PackedInt32Array(1276401181, 1750623697) index="0" unique_id=854842712]
-material_override = SubResource("StandardMaterial3D_fgcef")
-mesh = SubResource("CylinderMesh_ya3e7")
+material_override = SubResource("StandardMaterial3D_ya3e7")
+mesh = SubResource("CylinderMesh_jy2xc")
 
 [node name="Button2" parent="Terminal/FatWorldScreen/Chassis/ControlPanel/IndicatorGroup" parent_id_path=PackedInt32Array(1276401181, 1750623697) index="1" unique_id=1703512645]
-material_override = SubResource("StandardMaterial3D_jy2xc")
-mesh = SubResource("CylinderMesh_c4hin")
+material_override = SubResource("StandardMaterial3D_c4hin")
+mesh = SubResource("CylinderMesh_lydei")
 
 [node name="Button3" parent="Terminal/FatWorldScreen/Chassis/ControlPanel/IndicatorGroup" parent_id_path=PackedInt32Array(1276401181, 1750623697) index="2" unique_id=88442090]
-material_override = SubResource("StandardMaterial3D_lydei")
-mesh = SubResource("CylinderMesh_qigqg")
+material_override = SubResource("StandardMaterial3D_qigqg")
+mesh = SubResource("CylinderMesh_5i6vn")
 
 [node name="PlateMesh" parent="Terminal/FatWorldScreen/Chassis/ControlPanel/IdentificationPlate" parent_id_path=PackedInt32Array(1276401181, 1224424019) index="0" unique_id=596034988]
-material_override = SubResource("StandardMaterial3D_5i6vn")
-mesh = SubResource("BoxMesh_tsb0g")
+material_override = SubResource("StandardMaterial3D_tsb0g")
+mesh = SubResource("BoxMesh_mtqp3")
 
 [node name="EngravedText" parent="Terminal/FatWorldScreen/Chassis/ControlPanel/IdentificationPlate" parent_id_path=PackedInt32Array(1276401181, 1224424019) index="1" unique_id=129356557]
-mesh = SubResource("TextMesh_adm2o")
+mesh = SubResource("TextMesh_wygwv")
 
 [node name="TopLeftFastener" parent="Terminal/FatWorldScreen/Chassis/Fasteners" parent_id_path=PackedInt32Array(1276401181, 892892411) index="0" unique_id=357282570]
-material_override = SubResource("StandardMaterial3D_wygwv")
-mesh = SubResource("CylinderMesh_h43t1")
+material_override = SubResource("StandardMaterial3D_h43t1")
+mesh = SubResource("CylinderMesh_lfp30")
 
 [node name="TopRightFastener" parent="Terminal/FatWorldScreen/Chassis/Fasteners" parent_id_path=PackedInt32Array(1276401181, 892892411) index="1" unique_id=870569978]
-material_override = SubResource("StandardMaterial3D_lfp30")
-mesh = SubResource("CylinderMesh_fwe8e")
+material_override = SubResource("StandardMaterial3D_fwe8e")
+mesh = SubResource("CylinderMesh_ka8ef")
 
 [node name="BottomLeftFastener" parent="Terminal/FatWorldScreen/Chassis/Fasteners" parent_id_path=PackedInt32Array(1276401181, 892892411) index="2" unique_id=1480906850]
-material_override = SubResource("StandardMaterial3D_ka8ef")
-mesh = SubResource("CylinderMesh_n81pr")
+material_override = SubResource("StandardMaterial3D_n81pr")
+mesh = SubResource("CylinderMesh_e4pnd")
 
 [node name="BottomRightFastener" parent="Terminal/FatWorldScreen/Chassis/Fasteners" parent_id_path=PackedInt32Array(1276401181, 892892411) index="3" unique_id=1078629511]
-material_override = SubResource("StandardMaterial3D_e4pnd")
-mesh = SubResource("CylinderMesh_ougvd")
+material_override = SubResource("StandardMaterial3D_ougvd")
+mesh = SubResource("CylinderMesh_74cll")
 
 [node name="Glass" parent="Terminal/FatWorldScreen" index="2" unique_id=2127681974]
-material_override = SubResource("ShaderMaterial_74cll")
-mesh = SubResource("PlaneMesh_ahpyo")
+material_override = SubResource("ShaderMaterial_ahpyo")
+mesh = SubResource("PlaneMesh_x76wg")
 
-[node name="RegistrationTerminal" parent="." unique_id=1982748587 instance=ExtResource("12_0nxpi")]
-transform = Transform3D(0.92659825, 0, -0.37605274, 0, 1, 0, 0.37605274, 0, 0.92659825, 0.524091, 1.2825, -5.5674324)
+[node name="RegistrationTerminal" parent="." unique_id=70243720 instance=ExtResource("12_0nxpi")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5427605, 1.7200003, -4.2877007)
 
 [editable path="Terminal/FatWorldScreen"]

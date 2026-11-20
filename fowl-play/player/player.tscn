@@ -7,6 +7,7 @@
 [ext_resource type="Script" uid="uid://mes0wg5fca0j" path="res://player/carrier.gd" id="4_yw30f"]
 [ext_resource type="Script" uid="uid://dd5c04repreo1" path="res://interaction/interactable.gd" id="5_qjkh3"]
 [ext_resource type="PackedScene" path="res://ui/gameplay_cursor.tscn" id="6_cursor"]
+[ext_resource type="PackedScene" uid="uid://klvjq86v6uar" path="res://player/player_nameplate.tscn" id="8_rgyib"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_yf5fn"]
 radius = 0.35
@@ -117,6 +118,9 @@ collision_mask = 0
 shape = SubResource("CapsuleShape3D_limp_proxy")
 
 [node name="GameplayCursor" parent="." unique_id=284158454 instance=ExtResource("6_cursor")]
+
+[node name="NamePlate" parent="." unique_id=922107948 instance=ExtResource("8_rgyib")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
 
 [editable path="Head/Camera3D/ViewmodelHands/LeftHand"]
 [editable path="Head/Camera3D/ViewmodelHands/RightHand"]
