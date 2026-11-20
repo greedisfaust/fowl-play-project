@@ -89,8 +89,9 @@ func advance(delta: float) -> void:
 	var hand: Hand = _get_right_hand()
 	match _phase:
 		Phase.WINDUP:
-			var weight: float = 1.0 - exp(-18.0 * _phase_elapsed)
-			body_pose.x = WINDUP_LEAN_RAD * weight
+			var aim_direction: Vector3 = _get_aim_direction()
+			var local_aim: Vector3 = _local_direction(aim_direction)
+			body_pose = get_charged_windup_body_pose(_phase_elapsed, local_aim)
 			if hand != null:
 				hand.punch_position_offset = get_windup_hand_offset(_base_punch_position_offset, _phase_elapsed)
 		Phase.JAB:
@@ -140,8 +141,10 @@ func cancel() -> void:
 	if is_instance_valid(rig):
 		rig.call("set_combat_body_pose", Vector3.ZERO)
 static func get_windup_hand_offset(base_offset: Vector3, elapsed: float) -> Vector3:
-	var weight: float = 1.0 - exp(-18.0 * maxf(elapsed, 0.0))
-	return base_offset + Vector3(0.0, 0.018 * weight, 0.14 * weight)
+	var progress: float = clampf(maxf(elapsed, 0.0) / TUNING.CHARGED_PUNCH_HOLD_SECONDS, 0.0, 1.0)
+	var weight: float = smoothstep(0.0, 1.0, progress)
+	var tension: float = sin(progress * PI) * 0.012
+	return base_offset + Vector3(-0.035 * weight, (0.055 * weight) + tension, 0.23 * weight)
 static func get_jab_hand_offset(base_offset: Vector3, elapsed: float) -> Vector3:
 	var t: float = maxf(elapsed, 0.0)
 	var progress: float = clampf(t / JAB_EXTENSION_END_S, 0.0, 1.0)
@@ -165,15 +168,27 @@ static func get_jab_body_pose(elapsed: float, local_direction: Vector3) -> Vecto
 	var direction_yaw: float = clampf(atan2(-local_direction.x, -local_direction.z), -0.6, 0.6)
 	var yaw: float = direction_yaw * 0.22 * sin(PI * clampf(t / JAB_POSE_DURATION_S, 0.0, 1.0))
 	return Vector3(pitch, yaw, -yaw * 0.18)
+static func get_charged_windup_body_pose(elapsed: float, local_direction: Vector3) -> Vector3:
+	var progress: float = clampf(maxf(elapsed, 0.0) / TUNING.CHARGED_PUNCH_HOLD_SECONDS, 0.0, 1.0)
+	var load: float = smoothstep(0.0, 1.0, progress)
+	var direction_yaw: float = clampf(atan2(-local_direction.x, -local_direction.z), -0.6, 0.6)
+	var twist: float = 0.19 * load
+	var aim_follow: float = direction_yaw * 0.28 * load
+	var settle: float = sin(progress * PI) * 0.012
+	return Vector3(lerpf(WINDUP_LEAN_RAD, -0.22, load) - settle, twist + aim_follow, -0.055 * load - direction_yaw * 0.10 * load)
 static func get_charged_lunge_body_pose(elapsed: float, local_direction: Vector3) -> Vector3:
 	var t: float = clampf(maxf(elapsed, 0.0) / LUNGE_POSE_DURATION_S, 0.0, 1.0)
 	var drive: float = 1.0 - pow(1.0 - t, 3.0)
+	var loaded_pose: Vector3 = get_charged_windup_body_pose(TUNING.CHARGED_PUNCH_HOLD_SECONDS, local_direction)
 	var direction_yaw: float = clampf(atan2(-local_direction.x, -local_direction.z), -0.6, 0.6)
-	return Vector3(lerpf(WINDUP_LEAN_RAD, LUNGE_FOLLOW_THROUGH_RAD, drive), direction_yaw * 0.18 * drive, -direction_yaw * 0.12 * drive)
+	var follow_through: Vector3 = Vector3(LUNGE_FOLLOW_THROUGH_RAD, direction_yaw * 0.18, -direction_yaw * 0.12)
+	return loaded_pose.lerp(follow_through, drive)
 static func get_charged_lunge_hand_offset(base_offset: Vector3, elapsed: float) -> Vector3:
 	var t: float = clampf(maxf(elapsed, 0.0) / 0.12, 0.0, 1.0)
 	var extension: float = 1.0 - pow(1.0 - t, 3.0)
-	return base_offset + Vector3(0.0, -0.025 * extension, -0.20 * extension)
+	var loaded_hand: Vector3 = get_windup_hand_offset(base_offset, TUNING.CHARGED_PUNCH_HOLD_SECONDS)
+	var strike_hand: Vector3 = base_offset + Vector3(0.0, -0.025, -0.20)
+	return loaded_hand.lerp(strike_hand, extension)
 static func get_recoil_body_pose(elapsed: float, local_direction: Vector3, strength: float = 1.0) -> Vector3:
 	var t: float = maxf(elapsed, 0.0)
 	if t >= RECOIL_POSE_DURATION_S:
@@ -182,6 +197,14 @@ static func get_recoil_body_pose(elapsed: float, local_direction: Vector3, stren
 	var side: float = clampf(local_direction.x, -1.0, 1.0)
 	var scale: float = clampf(strength, 1.0, 1.35)
 	return Vector3(RECOIL_LEAN_RAD * spring * scale, -side * RECOIL_TWIST_RAD * spring * scale, side * RECOIL_ROLL_RAD * spring * scale)
+func _get_aim_direction() -> Vector3:
+	if not is_instance_valid(_player):
+		return Vector3.FORWARD
+	var camera: Camera3D = _player.get("camera") as Camera3D
+	if camera == null:
+		return Vector3.FORWARD
+	return -camera.global_basis.z
+
 func _local_direction(world_direction: Vector3) -> Vector3:
 	var player_3d: Node3D = _player as Node3D
 	if not is_instance_valid(player_3d):

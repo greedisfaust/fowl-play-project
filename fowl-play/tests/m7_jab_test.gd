@@ -55,9 +55,22 @@ func _check_presentation_curves() -> void:
 	var returned: Vector3 = COMBAT_PRESENTATION.get_jab_body_pose(COMBAT_PRESENTATION.JAB_POSE_DURATION_S, Vector3.FORWARD)
 	var base_hand_offset: Vector3 = Vector3(-0.025, -0.025, 0.075)
 	var windup_hand: Vector3 = COMBAT_PRESENTATION.get_windup_hand_offset(base_hand_offset, 0.20)
+	var charged_windup_start: Vector3 = COMBAT_PRESENTATION.get_charged_windup_body_pose(0.0, Vector3.FORWARD)
+	var charged_windup_mid: Vector3 = COMBAT_PRESENTATION.get_charged_windup_body_pose(0.5, Vector3.FORWARD)
+	var charged_windup_full: Vector3 = COMBAT_PRESENTATION.get_charged_windup_body_pose(TUNING.CHARGED_PUNCH_HOLD_SECONDS, Vector3.FORWARD)
+	var charged_hand_start: Vector3 = COMBAT_PRESENTATION.get_windup_hand_offset(base_hand_offset, 0.0)
+	var charged_hand_full: Vector3 = COMBAT_PRESENTATION.get_windup_hand_offset(base_hand_offset, TUNING.CHARGED_PUNCH_HOLD_SECONDS)
+	var charged_lunge_start: Vector3 = COMBAT_PRESENTATION.get_charged_lunge_body_pose(0.0, Vector3.FORWARD)
+	var charged_lunge_hand_start: Vector3 = COMBAT_PRESENTATION.get_charged_lunge_hand_offset(base_hand_offset, 0.0)
 	var jab_start_hand: Vector3 = COMBAT_PRESENTATION.get_jab_hand_offset(base_hand_offset, 0.0)
 	var jab_extension_hand: Vector3 = COMBAT_PRESENTATION.get_jab_hand_offset(base_hand_offset, COMBAT_PRESENTATION.JAB_EXTENSION_END_S)
 	var jab_return_hand: Vector3 = COMBAT_PRESENTATION.get_jab_hand_offset(base_hand_offset, COMBAT_PRESENTATION.JAB_POSE_DURATION_S)
+	if charged_windup_start.x >= 0.0 or charged_windup_mid.x >= charged_windup_full.x or charged_windup_full.x > -0.18:
+		_fail("Charged wind-up should progressively build a strong backward lean across the full one-second hold")
+	if charged_hand_start.z <= base_hand_offset.z or charged_hand_full.z <= charged_hand_start.z + 0.10 or charged_hand_full.y <= base_hand_offset.y:
+		_fail("Charged wind-up should progressively lift, draw back and load the fist")
+	if not charged_lunge_start.is_equal_approx(charged_windup_full) or charged_lunge_hand_start.z <= base_hand_offset.z:
+		_fail("Charged lunge should release from the fully loaded body and fist pose without snapping to neutral")
 	if windup.x >= 0.0 or extension.x <= 0.0:
 		_fail("Jab presentation should move from anticipation lean into a forward extension")
 	if windup_hand.z <= base_hand_offset.z or jab_start_hand.z <= base_hand_offset.z or jab_extension_hand.z >= base_hand_offset.z or not jab_return_hand.is_equal_approx(base_hand_offset):

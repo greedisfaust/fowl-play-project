@@ -343,3 +343,18 @@ Verification:
 - The assistant has not run Godot import, headless checks or in-game tests in this environment. Run `.\tests\run_checks.ps1 -OnlyStage m7-jab` from `fowl-play/`.
 - Playtest idle releases at 0.99 s and exactly 1.00 s, charge while moving, lunge hit/miss/obstruction, steering, recovery lock, carry Q drop/throw, and two-instance host/client replication.
 - Important first-playtest question: the initial lunge hit volume uses a 3.5 m capsule length and 0.55 m radius. Tune its reach/shape only after seeing the actual feel; do not add more input mechanics yet.
+
+
+## 2026-11-20 — charged punch anticipation and release presentation refinement
+
+Implemented:
+- Reworked the existing host-approved Q wind-up into a progressive one-second charge pose instead of a short exponential lean that plateaued early.
+- The torso now gradually leans farther back, twists into the loaded shoulder, and adds a restrained directional roll as the hold approaches the charged-punch threshold.
+- The fist progressively draws inward and back while lifting, with a small tension accent through the middle of the charge.
+- The charged lunge now begins from the fully loaded torso and fist pose, then drives forward into its existing follow-through. This avoids snapping back toward a neutral pose at release.
+- The existing early-release jab still transitions into its established jab animation. Gameplay timing, lunge movement, hit detection, cooldowns, action locks, and networking are unchanged.
+- Added deterministic pose-curve assertions for progressive torso loading, fist retraction, and continuous loaded-pose-to-lunge transition.
+- No scene files, rig hierarchy, meshes, or collision shapes changed.
+
+Verification:
+- Source and regression assertions are committed, but Godot import/headless checks and rendered first-person/remote visual playtesting have not been run by the assistant. Run ` .\\tests\\run_checks.ps1 -OnlyStage m7-jab` from `fowl-play/`, then inspect the full one-second wind-up, early-release jab, charge-to-lunge transition, and remote player presentation in two instances.
