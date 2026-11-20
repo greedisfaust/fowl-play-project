@@ -457,3 +457,11 @@ This is still the first M10 slice, not the complete milestone. Owner lower-body 
 - Recovery captures the currently smoothed ragdoll camera pose and blends to the authored standing camera target with quintic smootherstep easing, reducing abrupt motion at the beginning and end of the get-up transition.
 - Added m10-ragdoll-camera regression coverage for continuous head-follow filtering, convergence, reset, and recovery easing. No .tscn files or scene hierarchy changed.
 - Focused check: .\tests\run_checks.ps1 -OnlyStage m10-ragdoll-camera from fowl-play/. Godot execution and in-game visual verification have not been run by the assistant.
+
+
+### M10.4 recovery camera follow refinement
+
+- Replaced the fixed start-to-standing-target recovery camera lerp. The local FPS camera now keeps sampling the rig's live HeadAttachment eye transform throughout both the procedural pose blend and authored get-up animation, with the same gentle position/rotation filter used during limp.
+- Owner look yaw/pitch remains layered over the live head orientation. Once the rig completes its get-up animation, the camera performs a short 0.16 s smootherstep alignment to the authored FPS camera mount before re-parenting, avoiding a sudden final snap.
+- Recovery now waits for that brief local camera alignment to complete before finishing. Remote recovery timing and ragdoll simulation/network authority are unchanged.
+- Extended the focused regression test to cover continued tracking when the head target moves during recovery. Run the m10-ragdoll-camera stage from fowl-play; tests and visual behavior remain user-run.

@@ -659,3 +659,11 @@ Foot planting now records both a world-space target and, when the ground hit bel
 - Recovery now uses quintic smootherstep easing between the last filtered ragdoll camera pose and the authored standing camera target.
 - Added the m10-ragdoll-camera focused regression stage. No scene hierarchy or .tscn files changed.
 - Godot execution and in-game visual verification have not been run by the assistant. User playtesting remains required for falling, carried/released ragdolls, and get-up camera handoff.
+
+
+## 2026-11-21 — M10.4 recovery camera follows the get-up animation
+
+- Replaced the fixed recovery camera interpolation toward the final Player camera position with continuous local camera follow of the rig's live HeadAttachment eye transform during the procedural pose blend and authored get-up animation.
+- The same low-pass head filter remains active, with owner look yaw/pitch layered over the live head orientation. After the rig finishes the get-up animation, a 0.16-second smootherstep alignment returns the camera to the authored FPS mount before camera re-parenting.
+- Added regression coverage for a moving head target during recovery. No scene hierarchy, ragdoll physics, or multiplayer authority changes.
+- Godot execution and in-game verification have not been run by the assistant.

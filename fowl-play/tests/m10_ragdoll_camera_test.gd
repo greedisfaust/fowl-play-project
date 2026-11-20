@@ -28,6 +28,14 @@ func _run() -> void:
 	_expect(settled.origin.distance_to(target.origin) < 0.01, "Ragdoll camera should converge to the live head position.")
 	_expect(settled.basis.z.distance_to(target.basis.z) < 0.01, "Ragdoll camera should converge to the live head orientation.")
 
+	var moving_target: Transform3D = Transform3D(target.basis, target.origin + Vector3(0.0, 1.0, 0.0))
+	var moving_step: Transform3D = controller.call("advance", moving_target, 0.016)
+	_expect(moving_step.origin.y > settled.origin.y, "Camera should continue following a head that moves during recovery.")
+	_expect(moving_step.origin.y < moving_target.origin.y, "Recovery head-follow should ease live motion rather than snap.")
+	for frame: int in range(180):
+		moving_step = controller.call("advance", moving_target, 0.016)
+	_expect_near(moving_step.origin.distance_to(moving_target.origin), 0.0, "Camera should converge as the head reaches its standing pose.")
+
 	_expect_near(RAGDOLL_CAMERA.recovery_weight(0.0, 1.0), 0.0, "Recovery easing should begin at zero.")
 	_expect_near(RAGDOLL_CAMERA.recovery_weight(0.5, 1.0), 0.5, "Recovery easing should remain centered at the midpoint.")
 	_expect_near(RAGDOLL_CAMERA.recovery_weight(1.0, 1.0), 1.0, "Recovery easing should finish at one.")

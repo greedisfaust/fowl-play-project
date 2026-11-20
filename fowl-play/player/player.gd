@@ -89,6 +89,9 @@ var _limp_look_pitch: float = 0.0
 var _recovery_elapsed_s: float = 0.0
 var _recovery_camera_start: Transform3D
 var _recovery_camera_target: Transform3D
+var _recovery_camera_alignment_start: Transform3D
+var _recovery_camera_alignment_elapsed: float = -1.0
+const RECOVERY_CAMERA_ALIGNMENT_SECONDS: float = 0.16
 var _debug_command_name: StringName
 var _debug_speed_watch_name: StringName
 var _debug_floor_watch_name: StringName
@@ -303,8 +306,16 @@ func _process(delta: float) -> void:
 		return
 	if is_recovering:
 		_update_recovery_camera(delta)
-		if rig != null and not bool(rig.call("is_pose_blending")):
-			_finish_recovery()
+		if rig == null or not bool(rig.call("is_pose_blending")):
+			if not is_local_player:
+				_finish_recovery()
+			elif _recovery_camera_alignment_elapsed < 0.0:
+				# The rig has reached its authored standing pose. Give the view a
+				# short final alignment before re-parenting it to the FPS head.
+				_recovery_camera_alignment_start = camera.global_transform
+				_recovery_camera_alignment_elapsed = 0.0
+			elif _recovery_camera_alignment_elapsed >= RECOVERY_CAMERA_ALIGNMENT_SECONDS:
+				_finish_recovery()
 		return
 	if is_local_player:
 		_update_owner_view_visibility()
@@ -883,7 +894,9 @@ func _begin_recovery_camera() -> void:
 	_pitch_radians = _limp_look_pitch
 	head.rotation.x = _pitch_radians
 	_recovery_camera_start = camera.global_transform
-	_ragdoll_camera_presentation.call("reset")
+	# Continue the same filtered head-follow stream through the get-up pose.
+	_ragdoll_camera_presentation.call("begin", camera.global_transform)
+	_recovery_camera_alignment_elapsed = -1.0
 	_recovery_camera_target = head.global_transform * _camera_rest_transform
 	if rig != null:
 		rig.visible = true
@@ -892,20 +905,35 @@ func _begin_recovery_camera() -> void:
 
 func _update_recovery_camera(delta: float) -> void:
 	_recovery_elapsed_s += delta
-	if not is_local_player:
+	if not is_local_player or not is_instance_valid(rig):
 		return
-	var eased_weight: float = RAGDOLL_CAMERA_PRESENTATION_SCRIPT.recovery_weight(
-		_recovery_elapsed_s,
-		TUNING.GET_UP_BLEND_SECONDS
-	)
-	var rotation: Quaternion = _recovery_camera_start.basis.get_rotation_quaternion().slerp(
-		_recovery_camera_target.basis.get_rotation_quaternion(),
-		eased_weight
-	)
-	camera.global_transform = Transform3D(
-		Basis(rotation),
-		_recovery_camera_start.origin.lerp(_recovery_camera_target.origin, eased_weight)
-	)
+	# Follow the live HeadAttachment through the procedural blend and authored
+	# get-up animation instead of lerping toward the Player root destination.
+	var eye_transform: Transform3D = rig.call("get_head_eye_transform")
+	if not eye_transform.is_finite():
+		return
+	var smoothed_head: Transform3D = _ragdoll_camera_presentation.call("advance", eye_transform, delta)
+	var head_rotation: Quaternion = smoothed_head.basis.get_rotation_quaternion().normalized()
+	var look_yaw: Basis = Basis(Vector3.UP, _limp_look_yaw)
+	var look_pitch: Basis = Basis(Vector3.RIGHT, _limp_look_pitch)
+	camera.global_transform = Transform3D(head_rotation * look_yaw * look_pitch, smoothed_head.origin)
+
+	# After the rig finishes its animation, softly align with the authored FPS mount.
+	if _recovery_camera_alignment_elapsed >= 0.0:
+		_recovery_camera_alignment_elapsed += delta
+		var alignment_weight: float = RAGDOLL_CAMERA_PRESENTATION_SCRIPT.recovery_weight(
+			_recovery_camera_alignment_elapsed,
+			RECOVERY_CAMERA_ALIGNMENT_SECONDS
+		)
+		var target: Transform3D = head.global_transform * _camera_rest_transform
+		var aligned_rotation: Quaternion = camera.global_transform.basis.get_rotation_quaternion().slerp(
+			target.basis.get_rotation_quaternion(),
+			alignment_weight
+		)
+		camera.global_transform = Transform3D(
+			Basis(aligned_rotation),
+			camera.global_transform.origin.lerp(target.origin, alignment_weight)
+		)
 
 func _finish_recovery() -> void:
 	is_recovering = false

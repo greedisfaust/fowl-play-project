@@ -691,3 +691,11 @@ The local first-person camera adds a restrained velocity-driven bob while walkin
 - Test a normal knockdown, a charged/parry launch, being carried, and being released. Confirm the camera catches up to the moving head without sharp snaps or excessive float.
 - During get-up, the camera should transition from the filtered ragdoll view to the authored standing camera pose without a sudden rotation or position jump. Normal camera bob/sway and wall avoidance should resume after recovery.
 - Run .\tests\run_checks.ps1 -OnlyStage m10-ragdoll-camera from fowl-play/. These checks and the in-game visual behavior have not been run by the assistant.
+
+
+### M10.4 recovery camera follow refinement
+
+- During get-up, the owner's FPS camera should follow the live HeadAttachment eye transform while the rig blends into and plays its authored recovery animation. The view should rise, tilt, and level with the character rather than travel directly toward the final standing camera position.
+- Mouse-look offsets should remain usable during recovery. Once the rig completes its get-up animation, expect only a short 0.16-second alignment into the authored FPS camera mount.
+- Test face-up and face-down recovery, including charged/parry launches, and verify there is no visible snap when normal camera parenting resumes. FOV should remain the normal gameplay FOV throughout.
+- Run the focused m10-ragdoll-camera test stage from fowl-play. These checks and in-game behavior have not been run by the assistant.
