@@ -19,7 +19,12 @@ func get_landing_target(
 	var horizontal_velocity: Vector3 = Vector3(local_velocity.x, 0.0, local_velocity.z)
 	if horizontal_velocity.length_squared() <= 0.0001:
 		horizontal_velocity = Vector3(0.0, 0.0, -1.0)
-	var move_direction_world: Vector3 = (rig_basis * horizontal_velocity.normalized()).normalized()
+	var move_direction_world: Vector3 = rig_basis * horizontal_velocity.normalized()
+	move_direction_world.y = 0.0
+	if move_direction_world.length_squared() <= 0.0001:
+		move_direction_world = Vector3(0.0, 0.0, -1.0)
+	else:
+		move_direction_world = move_direction_world.normalized()
 	var body_right_world: Vector3 = (rig_basis * Vector3.RIGHT).normalized()
 	var lateral_axis_world: Vector3 = move_direction_world.cross(Vector3.UP).normalized()
 	if lateral_axis_world.length_squared() <= 0.0001:
