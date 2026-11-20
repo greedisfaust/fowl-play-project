@@ -73,7 +73,7 @@ A world-space stance anchor correctly prevents foot sliding, but it can remain l
 
 ### Implementation
 
-- Each leg derives its comfortable reach from the authored thigh-to-shin and shin-to-foot rest-bone lengths, multiplied by `LEG_REPLANT_MAX_REACH_RATIO` (0.92).
+- Each leg derives its replant threshold from its authored neutral hip-to-foot standing distance plus a 0.10 m travel margin. This avoids treating a naturally straight-legged idle pose as an overreach.
 - While a foot is in stance, PlayerRig checks hip-to-anchor distance every procedural update. Reaching the threshold requests a recovery step immediately, without waiting for the gait phase.
 - The emergency step captures a new hip-relative landing point, probes it against the same world-ground mask, and follows a short 0.18 s lifted trajectory. It then locks the new world-space anchor.
 - When both feet are overstretched, the controller recovers only the leg with the larger normalized stretch ratio. This prevents simultaneous emergency steps.
