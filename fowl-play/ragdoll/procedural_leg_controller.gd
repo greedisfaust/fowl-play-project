@@ -2,6 +2,7 @@
 extends RefCounted
 
 const TUNING = preload("res://core/tuning.gd")
+const STOP_SETTLE_PHASE_SPEED_RAD_S: float = 7.0
 
 var phase: float = 0.0
 var motion_weight: float = 0.0
@@ -36,6 +37,17 @@ func update(delta: float, local_velocity: Vector3, grounded: bool) -> void:
 			phase + (speed / TUNING.LEG_STEP_CYCLE_DISTANCE_M) * TAU * safe_delta,
 			TAU
 		)
+	elif motion_weight > 0.01:
+		# A stopped character must finish the current swing instead of freezing
+		# one foot in mid-air. PI is the overlap where both feet are in stance.
+		var cycle_phase: float = fposmod(phase, TAU)
+		var settle_distance: float = fposmod(PI - cycle_phase, TAU)
+		var settle_step: float = minf(settle_distance, STOP_SETTLE_PHASE_SPEED_RAD_S * safe_delta)
+		phase = fposmod(phase + settle_step, TAU)
+		if settle_distance <= settle_step + 0.0001:
+			phase = PI
+	else:
+		phase = PI
 	var stride_weight: float = clampf(speed / TUNING.PLAYER_SPEED_MPS, 0.0, 1.0)
 	var direction: Vector3 = smoothed_velocity.normalized() if speed > 0.001 else Vector3(0.0, 0.0, -1.0)
 	var swing_axis: Vector3 = direction.cross(Vector3.UP)
