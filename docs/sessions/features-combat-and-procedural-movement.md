@@ -357,4 +357,4 @@ Implemented:
 - No scene files, rig hierarchy, meshes, or collision shapes changed.
 
 Verification:
-- Source and regression assertions are committed, but Godot import/headless checks and rendered first-person/remote visual playtesting have not been run by the assistant. Run ` .\\tests\\run_checks.ps1 -OnlyStage m7-jab` from `fowl-play/`, then inspect the full one-second wind-up, early-release jab, charge-to-lunge transition, and remote player presentation in two instances.
+- Source and regression assertions are committed, but Godot import/headless checks and rendered first-person/remote visual playtesting have not been run by the assistant. Run ` .\tests\run_checks.ps1 -OnlyStage m7-jab` from `fowl-play/`, then inspect the full one-second wind-up, early-release jab, charge-to-lunge transition, and remote player presentation in two instances.

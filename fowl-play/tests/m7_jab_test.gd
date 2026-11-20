@@ -67,7 +67,7 @@ func _check_presentation_curves() -> void:
 	var jab_return_hand: Vector3 = COMBAT_PRESENTATION.get_jab_hand_offset(base_hand_offset, COMBAT_PRESENTATION.JAB_POSE_DURATION_S)
 	if charged_windup_start.x >= 0.0 or charged_windup_mid.x >= charged_windup_start.x or charged_windup_mid.x <= charged_windup_full.x or charged_windup_full.x > -0.18:
 		_fail("Charged wind-up should progressively build a strong backward lean across the full one-second hold")
-	if charged_hand_start.z <= base_hand_offset.z or charged_hand_full.z <= charged_hand_start.z + 0.10 or charged_hand_full.y <= base_hand_offset.y:
+	if not charged_hand_start.is_equal_approx(base_hand_offset) or charged_hand_full.z <= charged_hand_start.z + 0.10 or charged_hand_full.y <= base_hand_offset.y:
 		_fail("Charged wind-up should progressively lift, draw back and load the fist")
 	if not charged_lunge_start.is_equal_approx(charged_windup_full) or charged_lunge_hand_start.z <= base_hand_offset.z:
 		_fail("Charged lunge should release from the fully loaded body and fist pose without snapping to neutral")
