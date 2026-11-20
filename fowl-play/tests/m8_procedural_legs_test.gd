@@ -15,6 +15,7 @@ func _initialize() -> void:
 
 func _run() -> void:
 	_check_controller_gait()
+	_check_leg_reach_tuning()
 	_check_footstep_planner()
 	_check_foot_plant_targets()
 	_check_emergency_replant()
@@ -246,6 +247,14 @@ func _check_emergency_replant() -> void:
 	if recovered.distance_to(new_landing) > 0.001 or bool(tracker.get("emergency_replant_active")):
 		_fail("Emergency recovery should capture its new ground anchor when complete")
 
+func _check_leg_reach_tuning() -> void:
+	if TUNING.LEG_IK_MAX_STRETCH_RATIO < 1.10 or TUNING.LEG_IK_MAX_STRETCH_RATIO > 1.20:
+		_fail("Leg IK stretch should stay within a modest visual compensation range")
+	if TUNING.LEG_REPLANT_LIFT_M < 0.25:
+		_fail("Swing and emergency replant arcs should visibly clear the floor")
+	if TUNING.LEG_MAX_KNEE_BEND_RAD < deg_to_rad(60.0):
+		_fail("Walking knee flex should be pronounced enough to read as a step")
+
 func _check_two_bone_solver() -> void:
 	var hip: Vector3 = Vector3(0.0, 1.0, 0.0)
 	var foot: Vector3 = Vector3(0.0, 0.2, 0.0)
@@ -259,6 +268,11 @@ func _check_two_bone_solver() -> void:
 		_fail("Two-bone IK should preserve both authored leg segment lengths")
 	if knee.z >= 0.0:
 		_fail("The leg pole should bend the knee toward the character's forward side")
+	var stretched_solution: Dictionary = LEG_IK.solve_two_bone(
+		hip, Vector3(0.0, 0.1, 0.0), pole, 0.42 * 1.14, 0.42 * 1.14
+	)
+	if stretched_solution.is_empty() or bool(stretched_solution.get("clamped", true)):
+		_fail("Modestly stretched leg segments should reach a farther planted-foot target")
 
 func _check_rig_ownership() -> void:
 	var floor_body: StaticBody3D = StaticBody3D.new()
