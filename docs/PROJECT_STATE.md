@@ -537,6 +537,12 @@ Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep a
 
 ## 2026-11-20 — fix one-leg dragging during strafing
 
+## 2026-11-20 — stabilize rapid WASD direction changes
+
+- Added adaptive heading response to the procedural gait controller. Ordinary direction changes retain the existing smooth filter; sharp changes (heading dot below 0.55) use a faster 42 response rate so footstep planning does not continue following stale directions during rapid W/A/S/D alternation.
+- Smoothed velocity magnitude also catches up at the faster turn response, preventing the filtered movement vector from collapsing while direction changes repeatedly. Added an M8 zig-zag regression sequence. No scenes changed. Godot tests and in-game verification have not been executed by the assistant.
+
+
 - Identified a planner conflict: landing targets advanced along the strafe direction while the anatomical-side clamp continued enforcing fixed left/right lanes. For the leading leg, the forward offset could push the target across the centerline, then the clamp pulled it back, leaving one leg unable to complete its step.
 - Foot lanes are now perpendicular to movement. Forward/backward locomotion retains the rig-right lane axis; strafing switches to a stable character-forward axis, so the two feet occupy front/back lanes and both can alternate steps without being clamped against their travel direction.
 - Applied the same movement-relative axis to the landing/replant constraint and added symmetric left/right strafe regression checks. No scene files changed. Godot tests and in-game verification have not been executed by the assistant.
