@@ -144,6 +144,13 @@ The leg controller now passes only the character-facing pole direction (forward 
 
 ## Sideways gait lane correction — 2026-11-20
 
+## Rapid input direction transition — 2026-11-20
+
+Rapidly alternating movement inputs can change the desired travel direction faster than the normal velocity smoothing filter can follow. The planner then receives an averaged/stale heading, making its next foot targets inconsistent with the player's current movement.
+
+The gait controller now detects sharp heading changes using the dot product between its filtered heading and incoming horizontal velocity. Below 0.55 it temporarily uses a faster 42 response rate; ordinary turns keep the original response. Filtered speed magnitude also catches up at the faster rate so repeated direction changes do not collapse the planner vector. M8 now checks repeated forward/right/back/left changes at 20 Hz. Godot parsing and in-game verification remain pending.
+
+
 The fixed anatomical left/right lane constraint conflicted with a landing target that advances along the movement vector. During a strafe, one foot's forward offset could cross the hip centerline; the anatomical clamp then pushed that foot back, preventing it from reaching its landing target and causing it to drag.
 
 The planner now derives the foot-lane axis perpendicular to movement. For forward/backward motion it remains the rig-right axis. For pure sideways motion, where rig-right is parallel to travel, it falls back to the character-forward axis, producing stable front/back lanes. The landing/replant constraint uses the same movement-relative axis. This allows both feet to alternate during left and right strafes without the leading target being forced across the centerline.
