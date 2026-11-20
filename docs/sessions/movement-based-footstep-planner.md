@@ -83,3 +83,21 @@ A world-space stance anchor correctly prevents foot sliding, but it can remain l
 ### Regression coverage and verification
 
 M8 assertions now cover stretch-trigger detection, the lifted emergency trajectory, completion/anchor capture, and left/right centerline constraints. Godot tests and rendered in-game behavior have not been run by the assistant; user verification is still required. The side clamp constrains IK targets and is not a physical collision solver for overlapping leg meshes.
+
+
+## Corrected anatomical side mapping and IK knee bend handoff — 2026-11-20
+
+### Root cause
+
+The authored skeleton places `Thigh_L` at local positive X and `Thigh_R` at local negative X. The previous procedural calls supplied -1 for the left leg and +1 for the right leg. As a result, the landing planner, anatomical side clamp, emergency targets, and IK knee pole consistently enforced the opposite arrangement.
+
+### Fix
+
+- Standardized `foot_side` to +1 for left / local +X and -1 for right / local -X.
+- Applied that mapping to normal steps, emergency replants, target-side clamping, and knee-pole offsets.
+- Kept the anatomical side axis fixed to rig-right so strafing does not swap the legs' lanes.
+- The gait controller now exposes normalized knee-bend weights. PlayerRig feeds them to the two-bone IK pole, which adds forward knee bend during swing while preserving outward separation. The weight follows the same eased bend/extend profile as the step cycle, so left/right handoff remains smooth.
+
+### Regression and verification
+
+M8 planner checks now assert the authored positive-X/negative-X side mapping, including strafing. The swing articulation check verifies that the knee-bend weight is available to the IK solver. Godot tests and in-game behavior have not been run by the assistant.
