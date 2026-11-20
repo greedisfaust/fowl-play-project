@@ -228,3 +228,11 @@ Implemented:
 
 Verification:
 - Source and regression assertions are committed; Godot execution and in-game visual checks have not been run by the assistant. The user should verify planted shoes, slope alignment, swing clearance, and stopping behavior after pulling.
+
+
+### Predictive stepping refinement — 2026-11-20
+
+- Replaced the fixed 0.12 m forward ground-probe lead with a predictive lead equal to the root travel over the gait's swing fraction (`LEG_STEP_CYCLE_DISTANCE_M * (1 - LEG_STANCE_FRACTION)`).
+- The swing foot now probes where the character will be when that foot lands, rather than probing almost directly beneath its current trailing position. The captured landing target remains stable throughout swing and stance.
+- This directly addresses the user's playtest report that planted feet appeared to trail/drag behind the moving player.
+- Godot execution and in-game verification remain pending; user should check forward/backward movement, strafing, and changes of direction after pulling.
