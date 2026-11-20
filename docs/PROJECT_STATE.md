@@ -471,3 +471,12 @@ Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep a
 - Replaced cubic smoothstep with quintic smootherstep for the swing path, reducing abrupt velocity changes at lift-off and touchdown.
 - Added planner regression assertions for anatomical left/right separation during strafing and diagonal movement.
 - Godot tests and in-game verification remain pending; this is procedural pose separation, not physical collision bodies between the legs.
+
+
+## Readable knee-lift walking pass — 2026-11-20
+
+- Restored the stance fraction from 0.50 to 0.58 so each foot has a more readable planted/support phase rather than spending half the cycle in swing.
+- Increased swing-foot vertical arc from 0.12 m to 0.28 m so the foot visibly clears the floor.
+- Changed knee flexion to bend early, hold through most of forward swing, and extend during the final approach to landing. The two-bone IK then follows the elevated foot target, producing the intended knee-up-then-place motion.
+- Reduced ground-hit foot clearance from 0.04 m to 0.015 m to reduce visible hovering. The value remains a small ankle/sole offset, not a guarantee of exact mesh contact because the foot bone origin is not necessarily the bottom of the shoe.
+- Added/updated M8 assertions for visible knee bend and the larger swing arc. Godot tests and in-game verification remain pending.
