@@ -139,6 +139,9 @@ func advance(delta: float) -> void:
 	var rig: Node3D = _player.get("rig") as Node3D
 	if is_instance_valid(rig):
 		rig.call("set_combat_body_pose", body_pose)
+func is_active() -> bool:
+	return _phase != Phase.IDLE or _recoil_elapsed >= 0.0
+
 func cancel() -> void:
 	_phase = Phase.IDLE
 	_phase_elapsed = 0.0

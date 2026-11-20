@@ -59,6 +59,8 @@ var _leg_pose_active: bool = false
 var _leg_status_watch_name: StringName
 var _leg_status_command_name: StringName
 var _chest_bone_index: int = -1
+var _combat_body_pose: Vector3 = Vector3.ZERO
+var _movement_body_pose: Vector3 = Vector3.ZERO
 var _right_viewmodel_upper_arm_bone_index: int = -1
 var _right_viewmodel_forearm_bone_index: int = -1
 var _right_viewmodel_hand_bone_index: int = -1
@@ -573,7 +575,7 @@ func _apply_procedural_leg_ik(
 		skeleton.set_bone_pose_rotation(foot_index, blended_foot)
 	return true
 
-func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: float) -> bool:
+func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: float, vertical_velocity: float = 0.0, landing_weight: float = 0.0) -> bool:
 	if _left_thigh_bone_index < 0 or _left_shin_bone_index < 0 or _left_foot_bone_index < 0:
 		return false
 	if _right_thigh_bone_index < 0 or _right_shin_bone_index < 0 or _right_foot_bone_index < 0:
@@ -599,7 +601,7 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 	skeleton.set_bone_pose_scale(_right_shin_bone_index, Vector3.ONE)
 	skeleton.force_update_all_bone_transforms()
 	var local_velocity: Vector3 = global_basis.inverse() * world_velocity
-	_leg_controller.call("update", delta, local_velocity, grounded)
+	_leg_controller.call("update", delta, local_velocity, grounded, vertical_velocity, landing_weight)
 	skeleton.force_update_all_bone_transforms()
 	var left_foot_world: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(_left_foot_bone_index).origin)
 	var right_foot_world: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(_right_foot_bone_index).origin)
@@ -751,11 +753,22 @@ func _debug_leg_ground_status(_args: Array[Variant]) -> String:
 ## Apply a small additive upper-body pose before the procedural arm IK pass.
 ## Pose values are local radians and are reset when standing animation ownership ends.
 func set_combat_body_pose(pose: Vector3) -> bool:
-	if _chest_bone_index < 0 or simulator.is_simulating_physics() or _remote_active or _pose_blend_active or _recovery_animation_active:
-		return false
 	if not pose.is_finite():
 		return false
-	var chest_rotation: Quaternion = Quaternion(Vector3.RIGHT, pose.x) * Quaternion(Vector3.UP, pose.y) * Quaternion(Vector3.BACK, pose.z)
+	_combat_body_pose = pose
+	return _apply_combined_body_pose()
+
+func set_movement_body_pose(pose: Vector3) -> bool:
+	if not pose.is_finite():
+		return false
+	_movement_body_pose = pose
+	return _apply_combined_body_pose()
+
+func _apply_combined_body_pose() -> bool:
+	if _chest_bone_index < 0 or simulator.is_simulating_physics() or _remote_active or _pose_blend_active or _recovery_animation_active:
+		return false
+	var combined_pose: Vector3 = _movement_body_pose + _combat_body_pose
+	var chest_rotation: Quaternion = Quaternion(Vector3.RIGHT, combined_pose.x) * Quaternion(Vector3.UP, combined_pose.y) * Quaternion(Vector3.BACK, combined_pose.z)
 	skeleton.set_bone_pose_rotation(_chest_bone_index, chest_rotation)
 	skeleton.force_update_all_bone_transforms()
 	return true
@@ -831,6 +844,8 @@ func begin_host_simulation() -> bool:
 		_standing_pose = _capture_skeleton_pose()
 	_leg_controller.call("reset")
 	_leg_pose_active = false
+	_combat_body_pose = Vector3.ZERO
+	_movement_body_pose = Vector3.ZERO
 	if _chest_bone_index >= 0:
 		skeleton.set_bone_pose_rotation(_chest_bone_index, Quaternion.IDENTITY)
 	_reset_leg_pose_scale(_left_thigh_bone_index, _left_shin_bone_index)

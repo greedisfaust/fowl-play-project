@@ -660,3 +660,12 @@ The M7.2 pose-curve assertions are included in `m7_jab_test.gd`; run them with `
 - Charged-lunge query reach is 1.75 m (half the previous 3.5 m), and its capsule radius is 0.22 m (60% smaller than 0.55 m). Lunge movement speed/duration remain 12 m/s and 0.5 s; only the hit query volume changed.
 - Guard now rotates the hand face around its local length axis rather than relying on a large wrist pitch. This is intended to show the dorsal/knuckle side while preserving the finger direction; verify both mirrored hands in-game.
 - Parry barrier keeps its player-colored translucent cylinder and moving pattern, but reduces shell opacity/emission, ring alpha and ring emission, and the amount of white mixed into dark player colors. This removes the overexposed stage-light look while retaining a readable edge and localized impact flash.
+
+
+### M8.1–M8.3 coordinated movement presentation
+
+- The procedural movement presenter derives cosmetic torso lean from measured local acceleration/braking and turn rate. It does not change CharacterBody velocity, jump timing, movement authority, or network payloads.
+- Takeoff blends into a tucked airborne leg pose; descent relaxes the tuck; touchdown triggers a short torso/leg compression pulse that eases back to neutral.
+- Movement body pose is layered with combat body pose in PlayerRig. Combat remains visually stronger, carry suppresses locomotion body language, and ragdoll/recovery continue to own the skeleton.
+- Remote players calculate the same presentation locally from their interpolated root velocity and replicated grounded state; no per-bone animation traffic is added.
+- Run `.\\tests\\run_checks.ps1 -OnlyStage movement-presentation` and `.\\tests\\run_checks.ps1 -OnlyStage procedural-legs` from `fowl-play/`. Then playtest walk/sprint acceleration, abrupt stops, strafes, sharp turns, jump ascent/descent/landing, jab/charged punch, carry, and ragdoll/recovery on host and client. Godot execution and in-game verification have not been run by the assistant.

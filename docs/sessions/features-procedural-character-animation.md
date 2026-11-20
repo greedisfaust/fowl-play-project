@@ -46,3 +46,13 @@ Remaining hand work is visual/pose polish rather than the old RPC delivery block
 - Do not transmit per-joint transforms for ordinary procedural poses.
 - No scene tree or mesh changes in this first slice.
 - Assistant cannot run Godot here; do not claim runtime tests passed until the user runs them.
+
+
+## M8.1–M8.3 coordinated movement presentation — 2026-11-20
+
+- Added a local movement-presentation controller for acceleration lean, braking transition, lateral counterbalance, turn response, airborne transition, and landing compression.
+- Added an airborne leg pose on top of the existing procedural gait controller. The gait still owns grounded cadence, two-bone IK and planted-foot targets; jump physics remain in the existing Player/jump controller.
+- PlayerRig now stores movement and combat chest poses separately and applies their combined rotation, preventing the new locomotion layer from overwriting jab/charged-punch/parry presentation.
+- Carry suppresses movement body language. Combat reduces its contribution so approved combat poses remain dominant. Existing ragdoll simulation, remote ragdoll playback and recovery ownership gates are preserved.
+- Remote standing players derive the same cosmetic movement pose from their interpolated root velocity and replicated grounded state. No per-bone network stream was added.
+- Added `m8_movement_presentation_test.gd` and the `movement-presentation` run_checks stage. Run it alongside `procedural-legs`; then perform host/client visual verification for movement transitions, jumping/landing, combat, carry and ragdoll.

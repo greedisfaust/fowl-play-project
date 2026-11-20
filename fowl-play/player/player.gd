@@ -606,6 +606,7 @@ func begin_host_limp() -> bool:
 	_combat_controller.call("cancel")
 	end_parry_presentation(false)
 	_combat_presentation.call("cancel")
+	_movement_presentation.call("reset", is_on_floor(), global_basis.inverse() * velocity)
 	if not bool(rig.call("begin_host_simulation")):
 		collision_layer = 1 << (LAYERS.HEALTHY_PLAYERS - 1)
 		collision_mask = LAYERS.LAYER_MASK_HEALTHY_PLAYERS

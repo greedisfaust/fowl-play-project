@@ -25,8 +25,10 @@ var left_swing_progress: float = 0.0
 var right_swing_progress: float = 0.0
 var left_knee_bend_weight: float = 0.0
 var right_knee_bend_weight: float = 0.0
+var air_weight: float = 0.0
+var landing_weight: float = 0.0
 
-func update(delta: float, local_velocity: Vector3, grounded: bool) -> void:
+func update(delta: float, local_velocity: Vector3, grounded: bool, vertical_velocity: float = 0.0, landing_amount: float = 0.0) -> void:
 	if not local_velocity.is_finite():
 		reset()
 		return
@@ -118,6 +120,28 @@ func update(delta: float, local_velocity: Vector3, grounded: bool) -> void:
 	var right_foot_axis: Vector3 = (right_thigh_rotation * right_shin_rotation).inverse() * swing_axis
 	right_foot_rotation = Quaternion(right_foot_axis, -(right_swing + right_knee) * TUNING.LEG_FOOT_COUNTER_ROTATION + right_foot_pitch * stride_weight * motion_weight)
 
+	# Airborne pose is layered after the grounded gait fades, keeping the same
+	# two-bone rig and avoiding any change to jump physics or foot placement.
+	var air_target: float = 0.0 if grounded else 1.0
+	air_weight = lerpf(air_weight, air_target, 1.0 - exp(-12.0 * safe_delta))
+	landing_weight = clampf(landing_amount, 0.0, 1.0)
+	if air_weight > 0.001:
+		var ascending: bool = vertical_velocity > 0.35
+		var tuck_angle: float = 0.16 if ascending else 0.045
+		var knee_angle: float = 0.34 if ascending else 0.12
+		var left_air_thigh: Quaternion = Quaternion(swing_axis, tuck_angle)
+		var right_air_thigh: Quaternion = Quaternion(swing_axis, tuck_angle)
+		var left_air_shin: Quaternion = Quaternion(swing_axis, knee_angle)
+		var right_air_shin: Quaternion = Quaternion(swing_axis, knee_angle)
+		left_thigh_rotation = left_thigh_rotation.slerp(left_air_thigh, air_weight)
+		right_thigh_rotation = right_thigh_rotation.slerp(right_air_thigh, air_weight)
+		left_shin_rotation = left_shin_rotation.slerp(left_air_shin, air_weight)
+		right_shin_rotation = right_shin_rotation.slerp(right_air_shin, air_weight)
+	if landing_weight > 0.001:
+		var landing_bend: float = 0.16 * landing_weight
+		left_shin_rotation = left_shin_rotation * Quaternion(swing_axis, landing_bend)
+		right_shin_rotation = right_shin_rotation * Quaternion(swing_axis, landing_bend)
+
 func _get_swing_progress(cycle: float) -> float:
 	if cycle < stance_fraction:
 		return 0.0
@@ -170,3 +194,5 @@ func reset() -> void:
 	right_swing_progress = 0.0
 	left_knee_bend_weight = 0.0
 	right_knee_bend_weight = 0.0
+	air_weight = 0.0
+	landing_weight = 0.0
