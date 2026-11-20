@@ -465,3 +465,11 @@ This is still the first M10 slice, not the complete milestone. Owner lower-body 
 - Owner look yaw/pitch remains layered over the live head orientation. Once the rig completes its get-up animation, the camera performs a short 0.16 s smootherstep alignment to the authored FPS camera mount before re-parenting, avoiding a sudden final snap.
 - Recovery now waits for that brief local camera alignment to complete before finishing. Remote recovery timing and ragdoll simulation/network authority are unchanged.
 - Extended the focused regression test to cover continued tracking when the head target moves during recovery. Run the m10-ragdoll-camera stage from fowl-play; tests and visual behavior remain user-run.
+
+
+## M11.1 — session shutdown cleanup regression coverage
+
+- Audited the existing exit paths: transport disconnect performs host-side carry/ragdoll/combat cleanup before the arena despawns the Player; ordinary Player tree removal invokes unregister cleanup; session shutdown emits `session_ended`, after which the arena queues all Player nodes for removal and each Carrier detaches its held item during `_exit_tree`.
+- Extended the lifecycle regression test to seed every peer-owned timer, cooldown, active-action, pending-ragdoll, and pending-player-state dictionary, then call `Network.shutdown()` and assert all caches, Player registrations, connected peers, and roster entries are cleared.
+- Focused check remains ` .\\tests\\run_checks.ps1 -OnlyStage m9-lifecycle` from `fowl-play/`. Godot execution and multiplayer runtime verification have not been performed by the assistant.
+- M11.1 is not complete yet: continue auditing interrupted carry/ragdoll/recovery transitions and verify the cleanup matrix in Godot before moving to M11.2.

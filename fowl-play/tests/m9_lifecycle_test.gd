@@ -90,8 +90,32 @@ func _run() -> void:
 	check(not active_jabs.has(5), "unregister clears active combat actions")
 	tracked_player.free()
 
+	# Session shutdown must clear every peer-owned cache, even when no
+	# transport disconnect event runs for the current local session.
+	var shutdown_state_names: Array[String] = [
+		"_interaction_times", "_carry_times", "_ragdoll_epochs",
+		"_pending_ragdoll_starts", "_pending_player_states",
+		"_combat_press_times", "_combat_charged_presses",
+		"_combat_jab_ready_times", "_charged_punch_ready_times",
+		"_combat_action_lock_until", "_active_jabs", "_active_lunges",
+		"_active_parries", "_parry_ready_times",
+	]
+	for state_name: String in shutdown_state_names:
+		var peer_state: Dictionary = network.get(state_name)
+		peer_state[6] = {"fixture": true}
+	network.get("movement_players")[6] = null
+	network.get("connected_peers").append(6)
+	network.get("roster").append(6)
+	network.call("shutdown")
+	for state_name: String in shutdown_state_names:
+		check((network.get(state_name) as Dictionary).is_empty(), "session shutdown clears %s" % state_name)
+	check((network.get("movement_players") as Dictionary).is_empty(), "session shutdown clears Player registrations")
+	check((network.get("connected_peers") as Array).is_empty(), "session shutdown clears connected peers")
+	check((network.get("roster") as Array).is_empty(), "session shutdown clears the published roster")
+	check(str(network.get("status")) == "disconnected", "session shutdown sets the disconnected status")
+
 	if not failed:
-		print("M9 lifecycle checks passed")
+		print("M9/M11 lifecycle cleanup checks passed")
 	quit(1 if failed else 0)
 
 func check(condition: bool, message: String) -> void:
