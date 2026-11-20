@@ -32,7 +32,7 @@ var limp_epoch: int = 0
 @onready var limp_interaction_proxy: StaticBody3D = get_node_or_null("LimpInteractionProxy") as StaticBody3D
 @onready var focus: Node = get_node_or_null("Head/Camera3D/Focus")
 @onready var gameplay_cursor: Control = get_node_or_null("GameplayCursor/CursorDisplay") as Control
-@onready var nameplate: Label3D = get_node_or_null("NamePlate") as Label3D
+@onready var nameplate: Node3D = get_node_or_null("NamePlate") as Node3D
 @onready var debug_hub: Node = get_node("/root/DebugHub")
 @onready var network: Node = get_node("/root/Network")
 

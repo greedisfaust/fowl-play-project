@@ -389,3 +389,12 @@ Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep a
 - Added `player_nameplate.gd` for an editor-authored Label3D. It displays `Nickname (#PeerID)`, uses the identity tint, billboards toward the camera, and hides for the local player or when no identity is assigned.
 - Added the `identity-presentation` contract test and extended `m1-cursor` to verify fallback restoration. Updated setup documentation.
 - The existing Player scene did not contain a `NamePlate` node, so no scene file was modified. The user must add a direct-child Label3D named `NamePlate` and attach `res://player/player_nameplate.gd`; suggested initial local position is `(0, 2.2, 0)`. Godot tests and actual host/client verification have not been run.
+
+
+## 2026-11-20 — SubViewport player nameplate presentation
+
+- Replaced the Label3D-based player nameplate controller with a reusable Node3D presentation that renders its UI through a 512 × 128 transparent SubViewport and displays it on a 2 m × 0.5 m QuadMesh.
+- The panel uses JetBrains Mono, a dark industrial backing, a player-identity-colored accent rail, a subtle divider, and secondary registration text. The panel billboards toward the active local camera and fades between configurable distances (18–28 m by default).
+- Player identity remains host-authoritative and keyed by peer ID internally. The visible nameplate displays the nickname only; no peer ID is rendered. The local player's own plate remains hidden.
+- Player scene integration expects a child Node3D named NamePlate (instance of res://player/player_nameplate.tscn) with Panel, Display/SubViewport, and Display/UI children Background, Accent, Nickname, Divider, and Status. The scene is editor-authored by the user; no .tscn was changed by this code slice.
+- The identity-presentation contract test now constructs the expected node hierarchy and checks nickname-only text, identity accent, local-player hiding, transparent high-resolution viewport, and 3D quad material. Godot execution and in-game visual/multiplayer verification remain pending.

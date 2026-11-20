@@ -411,3 +411,10 @@ The test arena now has an editor-authored `WorldEnvironment` with restrained Glo
 - Focused tests: `interactive-terminal` and `registration-terminal` stages. Setup: `docs/REGISTRATION_TERMINAL_SETUP.md`.
 
 - Registration Terminal wording is configured on the `RegistrationTerminal` root under the **Registration Copy** Inspector group. Idle/wake wording uses inherited `idle_header`, `idle_description`, and `idle_prompt` exports. See `docs/REGISTRATION_TERMINAL_SETUP.md` for formatting placeholders.
+
+
+## Player nameplates
+- Each remote player displays the assigned nickname only; networking peer IDs remain internal and are not rendered.
+- The reusable NamePlate scene uses a transparent 512 × 128 SubViewport displayed on a QuadMesh. Its root faces the active local camera and fades between the exported `fade_start_distance` and `fade_end_distance` values (defaults 18 m and 28 m).
+- The NamePlate scene must contain `Panel` (MeshInstance3D), `Display` (SubViewport), and `Display/UI` with `Background`, `Accent`, `Nickname`, `Divider`, and `Status`. The Player's `NamePlate` child must be a Node3D instance of that scene.
+- Focused contract: `identity-presentation` stage in `tests/run_checks.ps1`; rendered readability, occlusion, and host/client appearance require in-game verification.
