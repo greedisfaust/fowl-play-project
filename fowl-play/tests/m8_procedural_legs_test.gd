@@ -158,6 +158,21 @@ func _check_footstep_planner() -> void:
 	)
 	if predicted_landing.distance_to(Vector3(2.18, 1.0, 2.244)) > 0.001:
 		_fail("Predicted swing travel should move the landing target ahead of the current hip position")
+	var planned_step: Vector3 = planner.call(
+		"get_landing_target", hip, Basis.IDENTITY, Vector3(0.0, 0.0, -5.0), 1.0,
+		TUNING.LEG_NORMAL_FORWARD_PLACEMENT_M, 0.24,
+		TUNING.LEG_STEP_CYCLE_DISTANCE_M * (1.0 - TUNING.LEG_STANCE_FRACTION)
+	)
+	var expected_planned_step: Vector3 = Vector3(2.24, 1.0, 2.012)
+	if planned_step.distance_to(expected_planned_step) > 0.001:
+		_fail("Normal steps should land ahead of the hip after predicted swing travel to prevent stance drag")
+	var predicted_replant: Vector3 = planner.call(
+		"get_landing_target", hip, Basis.IDENTITY, Vector3(0.0, 0.0, -5.0), 1.0,
+		TUNING.LEG_EMERGENCY_FORWARD_PLACEMENT_M, TUNING.LEG_MIN_LANDING_LATERAL_M,
+		5.0 * TUNING.LEG_REPLANT_RECOVERY_SECONDS
+	)
+	if predicted_replant.z > hip.z - 1.0:
+		_fail("Emergency replant should predict player travel during its recovery arc")
 	var strafe: Vector3 = planner.call(
 		"get_landing_target", hip, Basis.IDENTITY, Vector3(5.0, 0.0, 0.0), -1.0
 	)
