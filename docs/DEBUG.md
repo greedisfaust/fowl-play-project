@@ -699,3 +699,14 @@ The local first-person camera adds a restrained velocity-driven bob while walkin
 - Mouse-look offsets should remain usable during recovery. Once the rig completes its get-up animation, expect only a short 0.16-second alignment into the authored FPS camera mount.
 - Test face-up and face-down recovery, including charged/parry launches, and verify there is no visible snap when normal camera parenting resumes. FOV should remain the normal gameplay FOV throughout.
 - Run the focused m10-ragdoll-camera test stage from fowl-play. These checks and in-game behavior have not been run by the assistant.
+
+
+## Casino table controller
+
+The generic table lifecycle controller registers these watches per configured table ID:
+
+- `casino_table/<table_id>/state` — idle/open/running/resolving/closed.
+- `casino_table/<table_id>/participants` — current participant count.
+- `casino_table/<table_id>/round_id` — active round identifier, or empty when idle.
+
+Lifecycle decisions are logged through the existing `wallet` category and include the table ID. There are no gameplay-changing debug commands; table actions must use the same host-authoritative controller API as normal gameplay.

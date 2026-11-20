@@ -1,6 +1,6 @@
 # Casino Foundation Design
 
-Status: APPROVED FOUNDATION CONTRACT — initial shared wallet slice implemented; table/game contracts remain subject to staged validation.
+Status: APPROVED FOUNDATION CONTRACT — shared wallet and first BaseTable lifecycle controller implemented; Godot test execution pending.
 Branch: `environment/world-building-and-gameplay-loop`
 Last updated: 2026-11-21
 Base commit: `75675cc31456c3b0d7b5bb365ec82fd81ced9a72`
@@ -68,6 +68,8 @@ Responsibilities:
 - Publish participant/nameplate state for all peers.
 - Ask the game implementation to resolve/auto-handle participants who leave after a round starts.
 - Expose lifecycle signals/API to game logic and betting adapters.
+
+Implementation note (2026-11-21): `fowl-play/casino/base_table.gd` now provides the first script-only lifecycle controller. It delegates money operations to `CasinoWallet`, exposes host-side proximity hooks, tracks participants, enforces capacity and wager ownership, locks wagers at start, and signals post-start departures to the game layer. See `docs/CASINO_BASE_TABLE.md`. Automated tests are authored but not yet executed in Godot.
 
 BaseTable must not:
 - Know how Roulette chip positions work.

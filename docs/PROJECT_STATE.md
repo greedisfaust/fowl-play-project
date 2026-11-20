@@ -686,3 +686,11 @@ Foot planting now records both a world-space target and, when the ground hit bel
 - M11.2 practical multiplayer movement, physics-heavy play, and combat/parry scenarios were previously user-reported smooth. No measured 60 FPS guarantee or long-session memory result is claimed.
 - M11.3 extended 10–15 minute soak remains DEFERRED because four instances are too demanding for the user's 8 GB RAM system. This is a documented scope limitation, not a failed test and not a passed test.
 - M11.4 closeout is complete. M11 is marked COMPLETE with the soak limitation explicitly retained.
+
+
+## Casino foundation update — 2026-11-21
+
+- Shared wallet transaction service is implemented (reservation, edit, withdrawal, round lock/cancel, gross-return settlement). Local Godot test execution remains pending.
+- Generic `BaseTable` controller is implemented as a script-only component for editor-authored table scenes. It coordinates proximity, participants, round lifecycle, wallet calls, and pre-start proximity refunds; post-start departures are signaled to game-specific auto-resolution logic.
+- BaseTable test script and `base-table` runner stage are added. Neither casino test stage has been executed in this environment; do not mark them verified until the user runs them in Godot.
+- Open policy gates remain: 45-second inactivity timeout behavior, early-departure refund scope for already-started rounds, and timer-expiry visual/settlement cleanup.
