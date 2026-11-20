@@ -53,6 +53,14 @@ func _initialize() -> void:
 	check(bool(buffered_landing.get("jumped", false)), "buffered jump fires on landing")
 
 	jump.call("reset")
+	jump.call("advance", 0.016, false, true, false, -1.0, 6.5, 0.10, 0.12, 0.45)
+	jump.call("advance", 0.016, false, false, true, -1.0, 6.5, 0.10, 0.12, 0.45)
+	var released_buffered_jump: Dictionary = jump.call("advance", 0.016, true, false, false, 0.0, 6.5, 0.10, 0.12, 0.45)
+	check(bool(released_buffered_jump.get("jumped", false)), "released buffered jump still triggers on landing")
+	check(bool(released_buffered_jump.get("jump_cut", false)), "released buffered jump retains tap-height behavior")
+	check(is_equal_approx(float(released_buffered_jump.get("vertical_velocity", 0.0)), 2.925), "released buffered jump starts as a short hop")
+
+	jump.call("reset")
 	jump.call("advance", 0.016, true, true, false, 0.0, 6.5, 0.10, 0.12, 0.45)
 	var short_hop: Dictionary = jump.call("advance", 0.016, false, false, true, 6.5, 6.5, 0.10, 0.12, 0.45)
 	check(bool(short_hop.get("jump_cut", false)), "releasing jump during ascent cuts the jump")
