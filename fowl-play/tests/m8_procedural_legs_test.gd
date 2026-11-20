@@ -183,6 +183,14 @@ func _check_footstep_planner() -> void:
 	)
 	if strafe_left.x <= hip.x or strafe_left.z >= hip.z or strafe_left.distance_to(strafe) < 0.35:
 		_fail("Sideways foot lanes should separate along the character's forward axis instead of crossing the centerline")
+	var left_strafe_right: Vector3 = planner.call(
+		"get_landing_target", hip, Basis.IDENTITY, Vector3(-5.0, 0.0, 0.0), -1.0
+	)
+	var left_strafe_left: Vector3 = planner.call(
+		"get_landing_target", hip, Basis.IDENTITY, Vector3(-5.0, 0.0, 0.0), 1.0
+	)
+	if left_strafe_right.x >= hip.x or left_strafe_right.z <= hip.z or left_strafe_left.z >= hip.z:
+		_fail("Leftward strafing should mirror rightward travel while preserving the same front/back foot lanes")
 	var diagonal_left: Vector3 = planner.call(
 		"get_landing_target", hip, Basis.IDENTITY, Vector3(5.0, 0.0, -5.0), 1.0
 	)
