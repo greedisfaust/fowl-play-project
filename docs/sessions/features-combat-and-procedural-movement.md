@@ -251,7 +251,7 @@ Commits:
 Implemented:
 - Added a dedicated pure `JumpController` that tracks a 0.10 s coyote window and a 0.12 s jump-input buffer.
 - Jump input pressed shortly before landing is retained and consumed on the first grounded physics update. Input pressed just after walking off a ledge is accepted while the coyote timer remains.
-- Releasing jump during upward travel scales the remaining vertical velocity by 0.45, producing a shorter hop; holding jump preserves the full 6.5 m/s launch.
+- Releasing jump during upward travel scales the remaining vertical velocity by 0.45, producing a shorter hop; holding jump preserves the full 6.5 m/s launch. A buffered press released before landing still triggers on landing, but retains the short-hop behavior.
 - Horizontal acceleration and deceleration are reduced to 55% while airborne. This preserves more horizontal momentum without removing midair steering.
 - Player physics remains the owner of gravity, collision, and movement. Console/terminal locks continue blocking new jump input.
 - Added local watches for remaining coyote and buffered-input time. No new RPCs, movement fields, scene edits, or Input Map changes were introduced.
