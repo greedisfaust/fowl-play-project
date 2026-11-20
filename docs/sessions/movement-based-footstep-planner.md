@@ -114,3 +114,21 @@ M8 planner checks now assert the authored positive-X/negative-X side mapping, in
 ### Verification
 
 Code and documentation were updated on the feature branch. Godot parsing, automated tests, and in-game visual behavior have not been run by the assistant; the user should pull and inspect the actual rig before treating the visual tuning as final.
+
+
+## Knee direction and speed synchronization follow-up — 2026-11-20
+
+### Knee direction
+
+- Increased leg IK outward pole bias to 0.95 m and reduced forward pole weighting to 0.55 m base plus 0.35 m swing-only addition. This keeps a forward bend component while making outward anatomical placement dominate, reducing the inward-folding appearance. Arm IK uses its own separate pole weight and is unchanged.
+- Added mirrored left/right solver assertions to verify each knee bends away from the character centerline.
+
+### Foot dragging / cadence
+
+- Gait phase and stride amplitude now use actual measured horizontal player speed instead of the lagging smoothed velocity magnitude. The smoothed vector remains responsible for direction transitions, and its response was increased from 12 to 20.
+- Restored cadence multiplier to 1.0 and shortened the full stride cycle distance from 1.8 m to 1.4 m. At the 0.58 stance fraction, a planted foot travels approximately 0.812 m during stance, less than the 0.94 m natural two-bone reach plus replant margin. The intended result is for the next swing to begin before the body pulls the foot into a long dragging reach.
+- The planner's predicted swing travel remains derived from the same stride distance and swing fraction, keeping the landing prediction consistent with the new cadence.
+
+### Verification
+
+M8 assertions were updated for actual-speed cadence, stance/reach margin, and outward knee poles. No scene files changed. Godot tests and in-game verification have not been executed by the assistant.
