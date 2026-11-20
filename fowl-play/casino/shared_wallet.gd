@@ -16,6 +16,7 @@ const ROUND_LOCKED: String = "locked"
 const ROUND_SETTLED: String = "settled"
 const ROUND_CANCELLED: String = "cancelled"
 
+var _debug_hub: Node = null
 var _run_active: bool = false
 var _initial_balance: int = 0
 var _available_balance: int = 0
@@ -24,20 +25,25 @@ var _wagers: Dictionary = {}
 var _rounds: Dictionary = {}
 
 func _ready() -> void:
-	DebugHub.watch(&"casino_wallet/available_balance", func() -> int: return _available_balance)
-	DebugHub.watch(&"casino_wallet/reserved_total", func() -> int: return _get_reserved_total())
-	DebugHub.watch(&"casino_wallet/wager_count", func() -> int: return _wagers.size())
-	DebugHub.watch(&"casino_wallet/round_count", func() -> int: return _rounds.size())
-	DebugHub.command(&"casino_wallet_status", _debug_wallet_status, "Show the shared wallet balance and reserved funds.", true, false)
-	DebugHub.command(&"casino_wallet_wagers", _debug_wallet_wagers, "List wager IDs, bettors, stakes and statuses.", true, false)
+	_debug_hub = get_node_or_null("/root/DebugHub")
+	if _debug_hub == null:
+		return
+	_debug_hub.call("watch", &"casino_wallet/available_balance", func() -> int: return _available_balance)
+	_debug_hub.call("watch", &"casino_wallet/reserved_total", func() -> int: return _get_reserved_total())
+	_debug_hub.call("watch", &"casino_wallet/wager_count", func() -> int: return _wagers.size())
+	_debug_hub.call("watch", &"casino_wallet/round_count", func() -> int: return _rounds.size())
+	_debug_hub.call("command", &"casino_wallet_status", _debug_wallet_status, "Show the shared wallet balance and reserved funds.", true, false)
+	_debug_hub.call("command", &"casino_wallet_wagers", _debug_wallet_wagers, "List wager IDs, bettors, stakes and statuses.", true, false)
 
 func _exit_tree() -> void:
-	DebugHub.unwatch(&"casino_wallet/available_balance")
-	DebugHub.unwatch(&"casino_wallet/reserved_total")
-	DebugHub.unwatch(&"casino_wallet/wager_count")
-	DebugHub.unwatch(&"casino_wallet/round_count")
-	DebugHub.unregister_command(&"casino_wallet_status")
-	DebugHub.unregister_command(&"casino_wallet_wagers")
+	if _debug_hub == null or not is_instance_valid(_debug_hub):
+		return
+	_debug_hub.call("unwatch", &"casino_wallet/available_balance")
+	_debug_hub.call("unwatch", &"casino_wallet/reserved_total")
+	_debug_hub.call("unwatch", &"casino_wallet/wager_count")
+	_debug_hub.call("unwatch", &"casino_wallet/round_count")
+	_debug_hub.call("unregister_command", &"casino_wallet_status")
+	_debug_hub.call("unregister_command", &"casino_wallet_wagers")
 
 ## Starts a fresh run. Active reserved or locked wagers prevent resetting the ledger.
 func begin_run(initial_balance: int) -> Dictionary:
@@ -339,7 +345,8 @@ func _failure(reason: String) -> Dictionary:
 	return {"ok": false, "reason": reason}
 
 func _log_wallet(message: String) -> void:
-	DebugHub.log(&"wallet", message)
+	if _debug_hub != null and is_instance_valid(_debug_hub):
+		_debug_hub.call("log", &"wallet", message)
 
 func _debug_wallet_status(_args: Array[Variant]) -> String:
 	var snapshot: Dictionary = get_snapshot()
