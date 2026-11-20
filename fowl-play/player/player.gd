@@ -105,6 +105,7 @@ func _ready() -> void:
 	_combat_controller.call("configure", self, network)
 	_combat_presentation.call("configure", self)
 	_parry_barrier.call("configure", self)
+	_configure_boxer_guard_hands()
 	camera.current = is_local_player
 	if rig != null:
 		# Hide the owner's world model until the first-person body visibility pass.
@@ -231,6 +232,7 @@ func _refresh_identity_presentation() -> void:
 	var identity_color: Color = identity.get_color() if identity != null else Color.WHITE
 	if is_instance_valid(rig) and rig.has_method("set_player_color"):
 		rig.call("set_player_color", identity_color)
+	_parry_barrier.call("set_color", identity_color)
 	if is_instance_valid(viewmodel_left_hand):
 		viewmodel_left_hand.set_color(identity_color)
 	if is_instance_valid(viewmodel_right_hand):
@@ -242,6 +244,16 @@ func _refresh_identity_presentation() -> void:
 			gameplay_cursor.call("reset_identity_color")
 	if is_instance_valid(nameplate) and nameplate.has_method("apply_player_identity"):
 		nameplate.call("apply_player_identity", identity, is_local_player)
+
+
+func _configure_boxer_guard_hands() -> void:
+	# The mirrored Viewmodel hand roots make the same inward local offset converge
+	# toward the centerline on both sides. The closed-fist curl remains Hand-owned.
+	for hand: Hand in [viewmodel_left_hand, viewmodel_right_hand]:
+		if not is_instance_valid(hand):
+			continue
+		hand.guard_position_offset = Vector3(-0.16, 0.27, -0.08)
+		hand.guard_rotation_degrees = Vector3(30.0, -10.0, 10.0)
 
 func _process(delta: float) -> void:
 	_parry_barrier.call("advance", delta)

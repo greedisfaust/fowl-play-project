@@ -646,3 +646,10 @@ The M7.2 pose-curve assertions are included in `m7_jab_test.gd`; run them with `
 - The barrier is a cosmetic runtime presentation; never treat its mesh or shader as a collision authority.
 - Playtest: press F with no incoming attack and verify expiry/cooldown; then have another player jab during the window; repeat with a charged punch and from front/side angles. Try F while carrying, limp, recovering, charging Q, during charged recovery, during an active jab, and during parry cooldown; each should reject. Repeat with host and client.
 - Run .\\tests\\run_checks.ps1 -OnlyStage m7-jab from fowl-play/. Godot execution and in-game verification have not yet been run for this slice.
+
+
+### M7.4 parry presentation visual refinement
+- The runtime barrier now inherits the owning player identity palette color on every peer. Dark palette entries are brightened for the energy emission so black remains distinguishable, while the player identity color itself is unchanged.
+- The cylinder uses layered moving scan/rib/stream patterns and a stronger view-angle rim emission. The two torus rings are substantially thinner; the upper ring sweeps from the base to the top during activation. Material emission is enabled; visible bloom still depends on the active WorldEnvironment glow setting.
+- Boxer guard keeps the existing closed-fist curl and smooth hand blend, but moves both Viewmodel fists higher and inward with a forward defensive wrist angle. The two hand roots are mirrored, so the same local inward offset moves each fist toward the centerline.
+- No parry timing, hit resolution, reflection, cooldown, networking, or collision authority changed.

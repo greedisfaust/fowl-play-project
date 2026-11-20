@@ -17,9 +17,11 @@ uniform vec2 impact_uv = vec2(0.0, 0.5);
 uniform float impact_age = -1.0;
 
 void fragment() {
-	float scan = 0.5 + 0.5 * sin(UV.y * 25.0 - TIME * 3.2);
-	float ribs = pow(max(0.0, sin(UV.x * 6.28318 * 18.0 + TIME * 1.1)), 10.0);
-	float weave = 0.5 + 0.5 * sin((UV.x * 12.0 + UV.y * 5.0) * 6.28318 - TIME * 2.0);
+	float scan = 0.5 + 0.5 * sin(UV.y * 34.0 - TIME * 4.2);
+	float ribs = pow(max(0.0, sin(UV.x * 6.28318 * 22.0 + TIME * 1.35)), 14.0);
+	float weave = 0.5 + 0.5 * sin((UV.x * 16.0 + UV.y * 7.0) * 6.28318 - TIME * 2.6);
+	float vertical_streams = pow(max(0.0, sin(UV.x * 6.28318 * 7.0 - UV.y * 8.0 - TIME * 2.0)), 7.0);
+	float rim = pow(1.0 - abs(dot(normalize(NORMAL), normalize(VIEW))), 2.4);
 	float angle_delta = abs(UV.x - impact_uv.x);
 	angle_delta = min(angle_delta, 1.0 - angle_delta);
 	vec2 ripple_offset = vec2(angle_delta * 6.28318, (UV.y - impact_uv.y) * 2.12);
@@ -29,10 +31,10 @@ void fragment() {
 		float ring_distance = abs(ripple_distance - impact_age * 3.2);
 		ripple = exp(-ring_distance * 26.0) * exp(-impact_age * 2.4);
 	}
-	float pattern = scan * 0.25 + ribs * 0.32 + weave * 0.18;
-	ALBEDO = shield_color.rgb * (0.22 + pattern + ripple * 1.4);
-	EMISSION = shield_color.rgb * (0.30 + pattern * 0.9 + ripple * 3.8);
-	ALPHA = opacity * (0.10 + scan * 0.075 + ribs * 0.08 + weave * 0.035 + ripple * 0.72);
+	float pattern = scan * 0.18 + ribs * 0.30 + weave * 0.12 + vertical_streams * 0.22;
+	ALBEDO = shield_color.rgb * (0.16 + pattern + rim * 0.42 + ripple * 1.35);
+	EMISSION = shield_color.rgb * (0.48 + pattern * 1.25 + rim * 2.8 + ripple * 4.2);
+	ALPHA = opacity * (0.075 + scan * 0.045 + ribs * 0.065 + weave * 0.025 + vertical_streams * 0.05 + rim * 0.09 + ripple * 0.72);
 }
 """
 
@@ -48,6 +50,7 @@ var _activation_elapsed: float = 0.0
 var _fade_elapsed: float = -1.0
 var _impact_age: float = -1.0
 var _opacity: float = 0.0
+var _player_color: Color = Color("#42a5f5")
 
 func configure(player: Node3D) -> void:
 	_player = player
@@ -80,13 +83,26 @@ func configure(player: Node3D) -> void:
 	_ring_material.albedo_color = Color(0.18, 0.82, 1.0, 0.72)
 	_ring_material.emission_enabled = true
 	_ring_material.emission = Color(0.10, 0.65, 1.0)
-	_ring_material.emission_energy_multiplier = 2.2
+	_ring_material.emission_energy_multiplier = 3.0
+	set_color(_player_color)
 	_top_ring = _make_ring("TopEnergyRing")
 	_top_ring.position.y = HEIGHT * 0.5
 	_bottom_ring = _make_ring("BottomEnergyRing")
 	_bottom_ring.position.y = -HEIGHT * 0.5
 	_root.add_child(_top_ring)
 	_root.add_child(_bottom_ring)
+
+func set_color(new_color: Color) -> void:
+	_player_color = new_color
+	# Brighten dark palette entries for visibility while retaining their hue.
+	var luminous_color: Color = new_color.lerp(Color.WHITE, 0.58)
+	if is_instance_valid(_shell_material):
+		_shell_material.set_shader_parameter("shield_color", luminous_color)
+	if is_instance_valid(_ring_material):
+		var ring_color: Color = luminous_color
+		ring_color.a = _ring_material.albedo_color.a
+		_ring_material.albedo_color = ring_color
+		_ring_material.emission = luminous_color
 
 func begin() -> void:
 	if not is_instance_valid(_root):
@@ -99,6 +115,8 @@ func begin() -> void:
 	_root.visible = true
 	_root.scale = Vector3(0.82, 0.06, 0.82)
 	_root.position.y = HEIGHT * 0.03
+	_top_ring.position.y = -HEIGHT * 0.5
+	_bottom_ring.position.y = -HEIGHT * 0.5
 	_shell_material.set_shader_parameter("opacity", 0.0)
 	_shell_material.set_shader_parameter("impact_age", -1.0)
 	var ring_color: Color = _ring_material.albedo_color
@@ -134,6 +152,7 @@ func advance(delta: float) -> void:
 		var current_height: float = lerpf(HEIGHT * 0.06, HEIGHT, eased)
 		_root.position.y = current_height * 0.5
 		_root.scale = Vector3(lerpf(0.82, 1.0, eased), current_height / HEIGHT, lerpf(0.82, 1.0, eased))
+		_top_ring.position.y = lerpf(-HEIGHT * 0.5, HEIGHT * 0.5, eased)
 		_opacity = smoothstep(0.0, 0.75, progress)
 		if progress >= 1.0:
 			_root.position.y = HEIGHT * 0.5
@@ -171,8 +190,8 @@ func dispose() -> void:
 
 func _make_ring(ring_name: String) -> MeshInstance3D:
 	var torus: TorusMesh = TorusMesh.new()
-	torus.inner_radius = RADIUS * 0.94
-	torus.outer_radius = RADIUS * 1.04
+	torus.inner_radius = RADIUS * 0.985
+	torus.outer_radius = RADIUS * 1.015
 	torus.rings = 48
 	torus.ring_segments = 8
 	var ring: MeshInstance3D = MeshInstance3D.new()
