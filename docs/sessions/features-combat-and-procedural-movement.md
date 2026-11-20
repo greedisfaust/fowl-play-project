@@ -114,12 +114,12 @@ Planned gameplay actions:
 Existing design decisions to preserve unless the user explicitly changes them:
 
 - `punch` is Q; `parry` is F.
-- A quick punch tap performs a jab; holding charges a punch and auto-fires at 1.0 s.
-- Movement remains full speed during wind-up.
-- Releasing before 1.0 s cancels without a punch or penalty.
+- While idle, releasing Q strictly before 1.0 s performs a jab; reaching 1.0 s while still held automatically fires the charged punch. Q must be released to re-arm, and the host enforces the 2.0 s charged-punch cooldown.
+- The carrier retains its separate Q timing: `TAP_MAX_SECONDS` distinguishes a quick drop from throw-charge feedback, while `THROW_AUTO_FIRE_SECONDS` controls auto-throw. Combat timing must not repurpose either carrier rule.
+- Movement remains full speed during charge. The 0.5 s lunge owns movement while active; use, grab and parry remain blocked through the charged-punch recovery lock.
 - A parried charged punch makes the attacker limp; a parried jab causes recoil only.
 - Combat gameplay outcomes remain host-authoritative.
-- Whether punches affect already-limp bodies and whether impact/wall-slam feedback is included remain open decisions; ask before implementing either.
+- A jab may physically impulse an already-limp body without resetting or extending recovery; charged lunge targets standing players only. Impact/wall-slam feedback remains open for a later decision.
 
 ## Procedural legs and movement scope
 

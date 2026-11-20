@@ -9,7 +9,7 @@ security secret.
 | Category | Owner script | What it logs |
 |---|---|---|
 | net | core/network.gd | network startup, shutdown, rejected RPCs |
-| combat | combat/combat_controller.gd, combat/combat_hit_detector.gd, combat/combat_presentation.gd and core/network.gd | Jab input, host validation, hit detection, recoil and limp-body impulse |
+| combat | combat/combat_controller.gd, combat/combat_hit_detector.gd, combat/combat_presentation.gd and core/network.gd | Jab and charged-punch input, host validation, lunge hit detection, action locks, recoil and limp-body impulse |
 | limp | core/limp.gd | limp start/end, recovery, phase changes |
 | carry | core/carry.gd | pickup, carry, throw, drop, state |
 | hands | core/hands.gd | reach, hover, guard, shake, color changes |
