@@ -585,3 +585,10 @@ Foot planting now records both a world-space target and, when the ground hit bel
 - Increased jump launch speed from 6.5 to 6.9 m/s. Gravity, coyote time, jump buffer, and variable-height release remain unchanged, giving a modestly higher/full jump without altering short-hop behavior.
 - Added regression assertions for faster-but-blended reversals, lower walking stride intensity, stronger sprint stride, and the revised jump tuning.
 - Godot tests and in-game visual behavior have not been run by the assistant; user playtesting is still required.
+
+
+### 2026-11-20 — grounded walk and energetic sprint gait
+
+- Split the procedural gait into independent walking and sprint profiles. Walking uses a longer cycle distance, a shorter planted phase, reduced thigh swing and knee flexion, and a low 0.09 m foot arc to keep steps grounded and alternating.
+- Sprint smoothly blends toward the previous faster 1.4 m cycle, longer stance, larger thigh swing, stronger knee flexion, and 0.20 m swing arc. Emergency replant retains its separate 0.30 m recovery lift.
+- Updated M8 regression checks for cadence, profile separation, stance reach, and normal swing height. Turning and jump launch tuning are unchanged. Godot tests and in-game verification have not been run by the assistant.
