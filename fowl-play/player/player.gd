@@ -920,7 +920,7 @@ func _finish_recovery() -> void:
 		_camera_collision.call("reset")
 		if rig != null:
 			rig.visible = true
-			rig.call("set_owner_view_visibility", true, float(OWNER_VIEW_PRESENTATION_SCRIPT.call("leg_visibility_weight", _pitch_radians)))
+			rig.call("set_owner_view_visibility", true, float(OWNER_VIEW_PRESENTATION_SCRIPT.leg_visibility_weight(_pitch_radians)))
 			rig.call("set_owner_head_visible", false)
 	if focus != null:
 		focus.call("set_active", is_local_player)
