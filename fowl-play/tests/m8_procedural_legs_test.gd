@@ -294,15 +294,15 @@ func _check_two_bone_solver() -> void:
 	var left_pole: Vector3 = Vector3(0.18, 0.0, -1.0)
 	var left_solution: Dictionary = LEG_IK.solve_two_bone(left_hip, left_foot, left_pole, 0.42, 0.42)
 	var left_knee_position: Vector3 = left_solution.get("elbow", Vector3.ZERO)
-	if left_solution.is_empty() or left_knee_position.x <= left_hip.x:
-		_fail("The left knee pole should bend outward, away from the body's centerline")
+	if left_solution.is_empty() or left_knee_position.x <= left_hip.x or left_knee_position.z >= left_hip.z:
+		_fail("The left knee should bend forward with a mild outward angle")
 	var right_hip: Vector3 = Vector3(-0.1, 1.0, 0.0)
 	var right_foot: Vector3 = Vector3(-0.2, 0.0, -0.25)
 	var right_pole: Vector3 = Vector3(-0.18, 0.0, -1.0)
 	var right_solution: Dictionary = LEG_IK.solve_two_bone(right_hip, right_foot, right_pole, 0.42, 0.42)
 	var right_knee_position: Vector3 = right_solution.get("elbow", Vector3.ZERO)
-	if right_solution.is_empty() or right_knee_position.x >= right_hip.x:
-		_fail("The right knee pole should bend outward, away from the body's centerline")
+	if right_solution.is_empty() or right_knee_position.x >= right_hip.x or right_knee_position.z >= right_hip.z:
+		_fail("The right knee should bend forward with a mild outward angle")
 	var stretched_solution: Dictionary = LEG_IK.solve_two_bone(
 		hip, Vector3(0.0, 0.1, 0.0), pole, 0.42 * 1.14, 0.42 * 1.14
 	)
