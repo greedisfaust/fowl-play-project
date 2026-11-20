@@ -522,6 +522,13 @@ The authored rig's `Thigh_L` bone is on local +X and `Thigh_R` is on local -X. F
 
 ## Sideways gait foot lanes
 
+## Rapid direction-change gait response
+
+- Gait heading smoothing now uses a faster response when the incoming movement direction differs sharply from the current smoothed heading (dot product below 0.55). Normal directional changes retain the original smoother response; sharp turns use a 42 response rate.
+- Filtered heading magnitude also tracks incoming speed with the faster response so repeated perpendicular/reversing inputs do not collapse the planner direction toward zero. This is intended to keep footstep targets following rapid WASD zig-zags without making ordinary walking jittery.
+- M8 includes a repeated forward/right/back/left sequence at 20 updates per second and checks that the filtered heading tracks each new direction.
+
+
 - Footstep planning now keeps the two foot lanes perpendicular to the current movement direction instead of forcing them to remain on fixed anatomical left/right offsets. Forward/backward movement still uses the rig-right axis; pure strafing uses the character-forward axis, giving the feet stable front/back lanes.
 - The same movement-relative axis is used by landing-target separation constraints, so a leading foot is not pushed back across the hip centerline while strafing. Lane orientation remains stable for left and right strafes.
 - M8 coverage now checks rightward and leftward strafing, front/back separation, and movement-relative replant constraints.
