@@ -433,13 +433,12 @@ func _physics_process(_delta: float) -> void:
 		return
 	if _left_foot_bone_index < 0 or _right_foot_bone_index < 0:
 		return
-	skeleton.force_update_all_bone_transforms()
-	var left_foot_world: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(_left_foot_bone_index).origin)
-	var right_foot_world: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(_right_foot_bone_index).origin)
+	# Landing probes are calculated after the gait update, from hip-relative
+	# planner targets, inside update_procedural_legs().
 	_left_ground_probe.clear()
 	_right_ground_probe.clear()
 
-func _probe_ground_beneath_foot(foot_world: Vector3, _step_direction_world: Vector3) -> Dictionary:
+func _probe_ground_at_target(foot_world: Vector3) -> Dictionary:
 	if not foot_world.is_finite():
 		return {}
 	# The planner supplies a hip-relative landing point. Probe vertically at
@@ -563,8 +562,8 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 	# Keep the probe height at the current sole; only X/Z come from the hip zone.
 	left_landing_world.y = left_foot_world.y
 	right_landing_world.y = right_foot_world.y
-	_left_ground_probe = _probe_ground_beneath_foot(left_landing_world, Vector3.ZERO)
-	_right_ground_probe = _probe_ground_beneath_foot(right_landing_world, Vector3.ZERO)
+	_left_ground_probe = _probe_ground_at_target(left_landing_world)
+	_right_ground_probe = _probe_ground_at_target(right_landing_world)
 	var left_ground_hit: Dictionary = _left_ground_probe
 	var right_ground_hit: Dictionary = _right_ground_probe
 	_left_foot_grounded = grounded and not left_ground_hit.is_empty()
