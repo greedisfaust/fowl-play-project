@@ -4,6 +4,8 @@
 extends CharacterBody3D
 
 const TUNING = preload("res://core/tuning.gd")
+const MOVEMENT_CONTROLLER_SCRIPT = preload("res://core/movement_controller.gd")
+var _movement_controller: RefCounted = MOVEMENT_CONTROLLER_SCRIPT.new()
 const LAYERS = preload("res://core/layers.gd")
 const PlayerIdentity = preload("res://core/player_identity.gd")
 const LIMP_LOOK_YAW_LIMIT: float = deg_to_rad(75.0)
@@ -496,10 +498,15 @@ func _physics_process(delta: float) -> void:
 	var target_speed: float = TUNING.PLAYER_SPEED_MPS
 	if move_direction != Vector3.ZERO and Input.is_action_pressed("sprint"):
 		target_speed = TUNING.PLAYER_RUN_SPEED_MPS
-	var target_horizontal_velocity: Vector3 = move_direction * target_speed
-	var horizontal_velocity: Vector3 = Vector3(velocity.x, 0.0, velocity.z)
-	var movement_rate: float = TUNING.PLAYER_ACCELERATION_MPS2 if move_direction != Vector3.ZERO else TUNING.PLAYER_DECELERATION_MPS2
-	horizontal_velocity = horizontal_velocity.move_toward(target_horizontal_velocity, movement_rate * delta)
+	var horizontal_velocity: Vector3 = _movement_controller.call(
+		"advance_horizontal_velocity",
+		Vector3(velocity.x, 0.0, velocity.z),
+		move_direction,
+		target_speed,
+		TUNING.PLAYER_ACCELERATION_MPS2,
+		TUNING.PLAYER_DECELERATION_MPS2,
+		delta
+	)
 	velocity.x = horizontal_velocity.x
 	velocity.z = horizontal_velocity.z
 

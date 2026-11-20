@@ -1,9 +1,32 @@
 extends SceneTree
 
 const STREAM = preload("res://core/movement_stream.gd")
+const MOVEMENT_CONTROLLER = preload("res://core/movement_controller.gd")
 var failed: bool = false
 
 func _initialize() -> void:
+	var movement: RefCounted = MOVEMENT_CONTROLLER.new()
+	var accelerating: Vector3 = movement.call(
+		"advance_horizontal_velocity", Vector3.ZERO, Vector3(0.0, 0.0, -1.0),
+		3.8, 14.0, 18.0, 0.1
+	)
+	check(is_equal_approx(accelerating.length(), 1.4), "movement accelerates instead of instantly reaching walking speed")
+	var decelerating: Vector3 = movement.call(
+		"advance_horizontal_velocity", Vector3(0.0, 0.0, -3.8), Vector3.ZERO,
+		3.8, 14.0, 18.0, 0.1
+	)
+	check(is_equal_approx(decelerating.length(), 2.0), "movement decelerates smoothly when input is released")
+	var turning: Vector3 = movement.call(
+		"advance_horizontal_velocity", Vector3(3.8, 0.0, 0.0), Vector3(-1.0, 0.0, 0.0),
+		3.8, 14.0, 18.0, 0.1
+	)
+	check(turning.x > 0.0, "direction reversals should blend through velocity rather than snap")
+	for step: int in 20:
+		turning = movement.call(
+			"advance_horizontal_velocity", turning, Vector3(-1.0, 0.0, 0.0),
+			3.8, 14.0, 18.0, 0.1
+		)
+	check(turning.x < -3.7, "acceleration should reach the requested movement speed over time")
 	var stream: STREAM = STREAM.new()
 	stream.reset(Vector3.ZERO, 0.0)
 	check(stream.accept(1, Vector3(0.25, 0, 0), Vector3(5, 0, 0), 0, 0, 0.05), "normal movement")

@@ -67,7 +67,7 @@ func update(delta: float, local_velocity: Vector3, grounded: bool) -> void:
 			phase = PI
 	else:
 		phase = PI
-	var stride_weight: float = clampf(speed / TUNING.PLAYER_RUN_SPEED_MPS, 0.0, 1.0)
+	var stride_weight: float = clampf(speed / TUNING.PLAYER_SPEED_MPS, 0.0, 1.0)
 	var run_stride_multiplier: float = lerpf(1.0, 1.15, run_weight)
 	var direction: Vector3 = smoothed_velocity.normalized() if smoothed_velocity.length_squared() > 0.001 else Vector3(0.0, 0.0, -1.0)
 	var swing_axis: Vector3 = direction.cross(Vector3.UP)
