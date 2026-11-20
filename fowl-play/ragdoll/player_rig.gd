@@ -174,8 +174,8 @@ const LEG_GROUND_PROBE_DOWN_M: float = 0.85
 const LEG_GROUND_FOOT_CLEARANCE_M: float = 0.015
 const LEG_GROUND_MIN_NORMAL_Y: float = 0.45
 const LEG_IK_BLEND_RESPONSE: float = 8.0
-const LEG_IK_POLE_FORWARD_WEIGHT: float = 1.0
-const LEG_KNEE_OUTWARD_BIAS_M: float = 0.48
+const LEG_IK_POLE_FORWARD_WEIGHT: float = 0.55
+const LEG_KNEE_OUTWARD_BIAS_M: float = 0.95
 const CARRY_HEAD_ANGULAR_DAMP: float = 12.0
 
 func _enter_tree() -> void:
