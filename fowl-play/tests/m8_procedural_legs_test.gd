@@ -1,6 +1,7 @@
 ## Headless checks for the local procedural leg gait and ragdoll ownership gate.
 extends SceneTree
 
+const TUNING = preload("res://core/tuning.gd")
 const LEG_CONTROLLER_SCRIPT = preload("res://ragdoll/procedural_leg_controller.gd")
 const FOOT_PLANT_SCRIPT = preload("res://ragdoll/procedural_foot_plant.gd")
 const LEG_IK = preload("res://ragdoll/procedural_arm_ik.gd")
@@ -30,6 +31,11 @@ func _check_controller_gait() -> void:
 	var right_thigh: Quaternion = controller.get("right_thigh_rotation")
 	if phase_after_walk <= 0.0:
 		_fail("Grounded movement should advance the gait phase")
+	var expected_phase: float = (5.0 / TUNING.LEG_STEP_CYCLE_DISTANCE_M) * TAU * 0.125
+	if not is_equal_approx(phase_after_walk, expected_phase):
+		_fail("Gait phase should advance at the configured stride cadence")
+	if TUNING.LEG_STEP_CYCLE_DISTANCE_M >= 2.0:
+		_fail("Procedural walking should use a brisker stride distance to avoid trailing")
 	if left_thigh.angle_to(Quaternion.IDENTITY) < 0.1:
 		_fail("Walking should move the left thigh away from its rest rotation")
 	if right_thigh.angle_to(Quaternion.IDENTITY) < 0.1:
