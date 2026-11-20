@@ -3,6 +3,7 @@ extends SceneTree
 
 const LEG_CONTROLLER_SCRIPT = preload("res://ragdoll/procedural_leg_controller.gd")
 const FOOT_PLANT_SCRIPT = preload("res://ragdoll/procedural_foot_plant.gd")
+const LEG_IK = preload("res://ragdoll/procedural_arm_ik.gd")
 const RIG_SCENE: PackedScene = preload("res://ragdoll/player_rig.tscn")
 
 var _failed: bool = false
@@ -13,6 +14,7 @@ func _initialize() -> void:
 func _run() -> void:
 	_check_controller_gait()
 	_check_foot_plant_targets()
+	_check_two_bone_solver()
 	await _check_rig_ownership()
 	if _failed:
 		quit(1)
@@ -136,6 +138,20 @@ func _check_foot_plant_targets() -> void:
 	if airborne.distance_to(next_landing + Vector3.UP) > 0.001:
 		_fail("Foot planting should yield to the current foot position while airborne")
 
+func _check_two_bone_solver() -> void:
+	var hip: Vector3 = Vector3(0.0, 1.0, 0.0)
+	var foot: Vector3 = Vector3(0.0, 0.2, 0.0)
+	var pole: Vector3 = Vector3(0.0, 1.0, -1.0)
+	var solution: Dictionary = LEG_IK.solve_two_bone(hip, foot, pole, 0.42, 0.42)
+	if solution.is_empty():
+		_fail("Two-bone IK should solve a reachable leg target")
+		return
+	var knee: Vector3 = solution["elbow"]
+	if not is_equal_approx(knee.distance_to(hip), 0.42) or not is_equal_approx(knee.distance_to(foot), 0.42):
+		_fail("Two-bone IK should preserve both authored leg segment lengths")
+	if knee.z >= 0.0:
+		_fail("The leg pole should bend the knee toward the character's forward side")
+
 func _check_rig_ownership() -> void:
 	var floor_body: StaticBody3D = StaticBody3D.new()
 	floor_body.name = "M8GroundProbeFloor"
@@ -164,6 +180,8 @@ func _check_rig_ownership() -> void:
 	var ground_status: String = str(rig.call("_debug_leg_ground_status", []))
 	if not ground_status.contains("left_hit=true") or not ground_status.contains("right_hit=true"):
 		_fail("Both feet should detect the static floor through their physics-space probes")
+	if not ground_status.contains("left_ik=true") or not ground_status.contains("right_ik=true"):
+		_fail("Both planted feet should apply two-bone IK to their Skeleton3D chains")
 	skeleton.force_update_all_bone_transforms()
 	var standing_rotation: Quaternion = skeleton.get_bone_pose_rotation(left_thigh_index)
 	if standing_rotation.angle_to(Quaternion.IDENTITY) < 0.1:
