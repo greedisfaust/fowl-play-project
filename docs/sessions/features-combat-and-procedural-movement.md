@@ -1,7 +1,7 @@
 # Session plan: Combat & Procedural Legs (Movement)
 
 Branch: `features/combat-and-procedural-movement`
-Status: ACTIVE — M7.1 jab and M7.2 presentation are user-playtested; M7.3 charged-punch refinements and M7.4 parry are implemented in source and awaiting Godot verification; procedural gait refinement continues.
+Status: ACTIVE — M7/M8/M9 implementation and M10 camera polish are complete by user confirmation. M11 hardening closeout is in progress; see M11.1–M11.4 notes below.
 Created: 2026-11-20
 Previous baseline: `features/player-identity-and-world-kit`
 
@@ -500,3 +500,29 @@ This is still the first M10 slice, not the complete milestone. Owner lower-body 
 - Host combat processing iterates active jab/parry/lunge state, and ragdoll pose publishing captures/quantizes the physical-bone pose at its configured send rate. These are secondary profiling targets; do not reduce update rates or alter network cadence without measurements.
 - No gameplay or source behavior was changed in this audit. No Godot profiler capture, frame-time measurement, or integrated-graphics runtime test has been performed by the assistant.
 - Next: capture a repeatable baseline with the Godot Profiler/Monitors during idle, walking/sprinting, and a ragdoll/carry sequence. Record FPS/frame time, physics time, physics 3D time, and script time, then compare the same scenes after each isolated optimization.
+
+
+## M11.2 — user-reported performance stress scenarios
+
+- Working target: modest laptop, integrated graphics, 8 GB RAM, with a 60 FPS goal at reasonable settings; this is not a measured guarantee.
+- USER REPORTED smooth: four game instances during simultaneous movement; physics-heavy gameplay with multiple ragdolls, carrying, throwing, and recovery; and multiplayer combat including punches, charged punches, and parries.
+- The first profiler screenshot was not a controlled four-player load capture. No numerical frame-time budget, long-session memory behavior, or sustained 60 FPS guarantee has been measured.
+- No optimization was made because the user reported smooth gameplay and no measured bottleneck justified risking movement, ragdoll, camera, or networking behavior.
+- The 10–15 minute soak is not part of this completed practical checkpoint; it is deferred under M11.3 due to the user's 8 GB RAM constraint.
+
+## M11.3 — extended four-player soak (deferred)
+
+- Short four-instance scenarios covering movement, physics-heavy play, and combat/parry were user-reported smooth.
+- The planned 10–15 minute continuous soak was deferred because four running instances put too much pressure on the user's 8 GB RAM system.
+- Status is DEFERRED, not passed. Revisit on a machine with more memory or when a lower-cost multi-client test harness is available.
+
+## M11.4 — final cleanup and verification closeout
+
+- Re-read the latest branch and checked the project-state, active-session, lifecycle-test, and test-runner documentation.
+- M11.1 implementation coverage includes carrier removal during carry, peer disconnect cleanup for active parry/combat state, unregister while a Player is recovering, and session-shutdown cache/roster cleanup.
+- The focused regression commands still require user execution:
+  - From fowl-play/: .\\tests\\run_checks.ps1 -OnlyStage m6
+  - From fowl-play/: .\\tests\\run_checks.ps1 -OnlyStage m9-lifecycle
+- No Godot tests were run by the assistant in this closeout. The committed test runner exposes these stages; passing source assertions are not equivalent to runtime verification.
+- No source or scene changes were necessary for this documentation closeout. Do not treat the extended soak as passed or claim a measured 60 FPS guarantee.
+- Remaining final acceptance: user runs the two focused stages above and reports results. If both pass, M11.1 cleanup coverage can be marked verified; M11.3 remains explicitly deferred.
