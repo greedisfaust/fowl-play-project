@@ -410,3 +410,11 @@ Verification:
 - Added m9-lifecycle focused checks for initial and deferred player-state application, invalid snapshots, and combat-state cleanup. Added a separate two-process late-join-during-recovery runner and registered it in the full test suite.
 - Debug watches net/player_state_sync_sent and net/player_state_sync_received expose baseline delivery counts.
 - Godot execution and rendered multiplayer verification have not been run by the assistant. Run tests/run_checks.ps1 -OnlyStage m9-lifecycle, then the full suite; the full suite includes tests/run_m9_late_join_checks.ps1.
+### Charged-punch and parry vertical launch polish
+
+- Charged punches and successful parries pass a dedicated extra vertical-velocity ratio into the host ragdoll impulse.
+- The extra lift is additive to the existing directional knockback, preserving the established horizontal launch response. The shared tuning ratio is 0.18 (18% of configured launch speed).
+- Ordinary jab impulses retain their previous baseline behavior.
+- The existing charged launch direction's angle-responsive elevation remains unchanged.
+- Godot execution and in-game verification have not been run by the assistant.
+

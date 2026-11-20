@@ -265,6 +265,8 @@ func _check_world_hit_and_recoil() -> void:
 		_fail("A jab contacting an active parry should resolve as a reflected hit")
 	if not bool(attacker.get("is_limp")) or bool(second_lunge_target.get("is_limp")):
 		_fail("Successful parry should knock the attacker into limp while protecting the defender")
+	if not _has_vertical_launch_impulse(attacker, TUNING.PARRY_REFLECT_LAUNCH_SPEED_MPS * TUNING.COMBAT_LAUNCH_VERTICAL_BONUS_RATIO * 0.8):
+		_fail("Successful parry should add the configured upward velocity to the reflected attacker")
 	if int(network.get("combat_parries")) != parries_before + 1:
 		_fail("Successful parry should increment the host parry counter exactly once")
 	var charged_attacker: CharacterBody3D = PLAYER_SCENE.instantiate() as CharacterBody3D
@@ -309,6 +311,16 @@ func _check_world_hit_and_recoil() -> void:
 	if active_parries.has(3) or bool(network.call("can_start_parry", 3)):
 		_fail("A missed parry should expire and enter its 1.5 s cooldown")
 	players.queue_free()
+
+func _has_vertical_launch_impulse(player: Node, minimum_upward_speed: float) -> bool:
+	var rig: Node3D = player.get("rig") as Node3D
+	if not is_instance_valid(rig):
+		return false
+	var bones: Array = rig.get("physical_bones")
+	for bone: PhysicalBone3D in bones:
+		if bone.linear_velocity.y >= minimum_upward_speed:
+			return true
+	return false
 
 func _fail(message: String) -> void:
 	_failed = true

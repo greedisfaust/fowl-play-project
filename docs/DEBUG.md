@@ -10,6 +10,7 @@ security secret.
 |---|---|---|
 | net | core/network.gd | network startup, shutdown, rejected RPCs |
 | combat | combat/combat_controller.gd, combat/combat_hit_detector.gd, combat/combat_presentation.gd and core/network.gd | Jab and charged-punch input, host validation, lunge hit detection, action locks, recoil and limp-body impulse |
+| Combat launch lift | core/tuning.gd and ragdoll/player_rig.gd | Charged-punch and parry ragdoll launches retain their horizontal impulse and receive an additional configurable upward velocity component; ordinary limp jabs retain the baseline impulse. |
 | limp | core/limp.gd | limp start/end, recovery, phase changes |
 | carry | core/carry.gd | pickup, carry, throw, drop, state |
 | hands | core/hands.gd | reach, hover, guard, shake, color changes |

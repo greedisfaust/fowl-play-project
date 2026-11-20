@@ -1076,7 +1076,7 @@ func _apply_charged_lunge_hit(result: Dictionary, attacker_id: int, attack_direc
 	if not is_instance_valid(target_rig) or not start_ragdoll_spike(target_id):
 		return false
 	var launch_direction: Vector3 = get_charged_launch_direction(attacker.global_position, impact_position, attack_direction)
-	var impulse_applied: bool = bool(target_rig.call("apply_combat_impulse", launch_direction, impact_position, TUNING.CHARGED_PUNCH_LAUNCH_SPEED_MPS))
+	var impulse_applied: bool = bool(target_rig.call("apply_combat_impulse", launch_direction, impact_position, TUNING.CHARGED_PUNCH_LAUNCH_SPEED_MPS, TUNING.COMBAT_LAUNCH_VERTICAL_BONUS_RATIO))
 	combat_lunge_hits += 1
 	_combat_log("Charged lunge hit attacker=%d target=%d launch=%s impulse=%s" % [attacker_id, target_id, str(launch_direction), impulse_applied])
 	return true
@@ -1234,7 +1234,7 @@ func _resolve_parry(attacker_id: int, defender_id: int, impact_position: Vector3
 	var attacker_impact: Vector3 = attacker.global_position + Vector3.UP * 0.9
 	var defender_center: Vector3 = defender.global_position + Vector3.UP * 0.9
 	var reflected_direction: Vector3 = get_charged_launch_direction(defender_center, attacker_impact, -attack_direction)
-	var impulse_applied: bool = bool(attacker_rig.call("apply_combat_impulse", reflected_direction, attacker_impact, TUNING.PARRY_REFLECT_LAUNCH_SPEED_MPS))
+	var impulse_applied: bool = bool(attacker_rig.call("apply_combat_impulse", reflected_direction, attacker_impact, TUNING.PARRY_REFLECT_LAUNCH_SPEED_MPS, TUNING.COMBAT_LAUNCH_VERTICAL_BONUS_RATIO))
 	_play_parry_hit(defender_id, impact_position)
 	if peer != null and is_host:
 		_parry_hit.rpc(defender_id, impact_position)
