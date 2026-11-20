@@ -81,16 +81,17 @@ Base docs: CLAUDE.md, docs/PROJECT_OVERVIEW.md, docs/PROJECT_STATE.md
 | 8 | Casino/gameplay outcome logic stays deferred. | This branch establishes identity and reusable presentation hardware only. | Expanding scope into betting, payouts, or table logic. |
 | 9 | If a requested color is occupied, assign the next free palette color in wraparound order. | Keeps registration smooth while guaranteeing lobby color uniqueness. | Rejecting registration and forcing another manual selection. |
 
-## In progress
-- [x] Player Identity Core — implementation added; Godot and two-instance host/client verification pending.
-- [x] Reusable Physical USE Button — reusable presentation script and automated test added; editor-authored scene fixture and runtime verification remain.
-- [x] Reusable World Screen Housing — FAT/SLIM responsive controllers and shared optical glass shader added; attach scripts to scene roots and verify in Godot.
-- [x] Dynamic Screen Content — ScreenText script and focused test added; Godot execution pending.
-- [x] Registration Terminal controller and local menu/input flow added; editor-authored fixture and Godot/host-client verification pending.
-- [ ] Gameplay Integration — not started.
+## Archived implementation status
 
-## Exact next step
-Pull the Registration Terminal implementation. In the editor, create the terminal controller node under the authored terminal root (do not rebuild the screen or button), attach ui/registration_terminal.gd, assign its screen and use_interactable exports, and ensure the same button Interactable is assigned to PhysicalUseButton. Then run the registration-terminal test stage and verify local menu behavior plus host/client identity assignment. No Godot execution or terminal scene verification has been performed by the assistant.
+- [x] Player Identity Core — host-authoritative nickname/color assignment and roster replication implemented; user verified the identity/color flow in-game.
+- [x] Reusable Physical USE Button — reusable presentation component and focused contract test implemented. Keep its scene/runtime verification status distinct from the terminal's screen-Interactable path.
+- [x] Reusable World Screen Housing and Dynamic Screen Content — FAT/SLIM controllers, ScreenText, WorldScreen content APIs, presentation presets, and ScreenMenu implemented and documented. Final automated housing checks/rendered sizing verification were not independently confirmed in this archive.
+- [x] Registration Terminal — registration UI, nickname/color submission, InteractiveTerminal wake/session/range behavior, keyboard/mouse/USE interaction, and movement/proximity fixes implemented; user confirmed the terminal issues are fixed.
+- [x] Gameplay Integration — identity color reaches the cursor, world rig, world hands, first-person hands, and nameplate accent; nickname-only nameplates follow the head during ragdoll/recovery. User confirmed the latest coloring implementation works in-game.
+
+## Archived next step
+
+No further implementation task remains on this branch. It is closed as the Player Identity & World Kit baseline. The next feature is Combat & Procedural Legs (Movement), beginning with a read-only rig audit. See [features-combat-and-procedural-movement.md](features-combat-and-procedural-movement.md).
 
 ## Verification requirements
 - Add focused automated tests for identity data validation, host authority, unique color assignment, duplicate nickname suffixing, peer ID preservation, and display-label formatting.
@@ -109,11 +110,11 @@ Pull the Registration Terminal implementation. In the editor, create the termina
 - Do not commit, push, reset, or discard changes without explicit authorization. The user normally owns commits and pushes.
 
 ## Known constraints and gotchas
-- The current gameplay cursor has a temporary fallback accent; it is not a unique player identity color.
+- The gameplay cursor uses the assigned identity color and retains its configured fallback only when identity data is unavailable.
 - `Network.player_color()` is not implemented; do not call it.
 - Existing Focus/Interactable systems must remain the single physical interaction path.
 - No scene ownership/open-scene status has yet been confirmed for any scene that may be touched.
-- No automated or multiplayer verification has been performed for this branch's planned work.
+- User-confirmed in-game behavior: multiplayer hand hover/poke synchronization, Interactive Terminal fixes, golden Interactable highlighting, and player identity coloring. Automated checks not explicitly run by the user or assistant remain unverified; consult the focused test runner before relying on them.
 
 ## Files touched
 - fowl-play/ui/screen_text.gd — reusable CMD-style RichTextLabel component, configurable font/size/colors, styled append/clear API, and line-count watch.

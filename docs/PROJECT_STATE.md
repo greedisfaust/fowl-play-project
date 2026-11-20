@@ -432,7 +432,7 @@ Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep a
 - The authoritative `PlayerIdentity.color_index` now drives the world Rig body geometry, both world-rig hands, both first-person Viewmodel hands, and the existing nameplate accent.
 - Rig geometry materials are duplicated per player before tinting; the temporary `FacePhoto` placeholder is excluded.
 - No scene files or authored node hierarchies were changed. The user's existing rig and nameplate scenes remain intact.
-- Pending: run the focused Godot test suite and verify host/client color consistency, including ragdoll, carried ragdoll, and recovery.
+- USER VERIFIED: the player-color presentation works in-game across the character presentation, including hands and ragdoll. Automated Godot test execution was not performed by the assistant; use the focused checks as regression coverage.
 
 
 ## 2026-11-20 — Player Identity & World Kit closeout
