@@ -67,8 +67,9 @@ const LUNGE_HIT_RADIUS_M: float = 0.55
 const LUNGE_SPEED_MPS: float = 12.0
 const LUNGE_DURATION_S: float = 0.5
 const LUNGE_STEER_MAX_RAD_S: float = 3.0
-const PARRY_GRACE_SECONDS: float = 1.5
+const PARRY_GRACE_SECONDS: float = 1.25
 const PARRY_COOLDOWN_SECONDS: float = 1.5
+const PARRY_REFLECT_LAUNCH_SPEED_MPS: float = 10.5
 const PARRY_LIMP_SECONDS: float = 3.5
 
 const LIMP_SECONDS: float = 3.5

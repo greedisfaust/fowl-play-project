@@ -6,6 +6,7 @@ const LAYERS = preload("res://core/layers.gd")
 const COMBAT_CONTROLLER = preload("res://combat/combat_controller.gd")
 const HIT_DETECTOR = preload("res://combat/combat_hit_detector.gd")
 const COMBAT_PRESENTATION = preload("res://combat/combat_presentation.gd")
+const PARRY_BARRIER = preload("res://combat/parry_barrier_presentation.gd")
 const NETWORK = preload("res://core/network.gd")
 var _failed: bool = false
 func _initialize() -> void:
@@ -18,9 +19,13 @@ func _run() -> void:
 	if _failed:
 		quit(1)
 		return
-	print("M7 combat timing, presentation and hit checks passed")
+	print("M7 combat timing, presentation, hit and parry checks passed")
 	quit(0)
 func _check_tap_window() -> void:
+	if not is_equal_approx(TUNING.PARRY_GRACE_SECONDS, 1.25) or not is_equal_approx(TUNING.PARRY_COOLDOWN_SECONDS, 1.5):
+		_fail("Parry should use a 1.25 s active window followed by a 1.5 s cooldown")
+	if PARRY_BARRIER.HEIGHT <= 1.8 or PARRY_BARRIER.RADIUS <= 0.35:
+		_fail("Parry barrier should be a full-height cylinder wider than the player capsule")
 	if not is_equal_approx(TUNING.TAP_MAX_SECONDS, 0.25):
 		_fail("Carrier drop/throw tap classification must retain its existing 0.25 s threshold")
 	if not COMBAT_CONTROLLER.is_jab_tap(0.10):
@@ -86,6 +91,9 @@ func _check_presentation_curves() -> void:
 	var lunge_hand: Vector3 = COMBAT_PRESENTATION.get_charged_lunge_hand_offset(base_hand_offset, 0.12)
 	if lunge_pose_start.x >= 0.0 or lunge_pose_end.x <= 0.0 or lunge_hand.z >= base_hand_offset.z:
 		_fail("Charged lunge presentation should move from anticipation into a committed fist-first extension")
+	var parry_pose: Vector3 = COMBAT_PRESENTATION.get_parry_body_pose(0.2, Vector3.FORWARD)
+	if parry_pose.x >= 0.0:
+		_fail("Parry presentation should hold a readable defensive torso lean")
 	var recoil_peak: Vector3 = COMBAT_PRESENTATION.get_recoil_body_pose(0.0, Vector3.FORWARD, 1.0)
 	var recoil_overshoot: Vector3 = COMBAT_PRESENTATION.get_recoil_body_pose(0.20, Vector3.FORWARD)
 	var recoil_end: Vector3 = COMBAT_PRESENTATION.get_recoil_body_pose(COMBAT_PRESENTATION.RECOIL_POSE_DURATION_S, Vector3.FORWARD)
@@ -223,6 +231,67 @@ func _check_world_hit_and_recoil() -> void:
 			_fail("The struck limp physical bone should receive a forward velocity change")
 		if not is_equal_approx(float(target.get("_limp_elapsed_s")), limp_elapsed_before):
 			_fail("A limp-player jab must not reset or extend the recovery timer")
+	attacker.set("auto_recovery_enabled", false)
+	var parries_before: int = int(network.get("combat_parries"))
+	if not bool(network.call("_receive_parry_input", 3)):
+		_fail("Host should accept a parry from an eligible standing player")
+	var active_parries: Dictionary = network.get("_active_parries")
+	if not active_parries.has(3) or not bool(network.call("is_combat_action_locked", 3)):
+		_fail("Accepted parry should activate its host window and action lock")
+	var parry_interaction_reason: String = str(network.call("_interaction_rejection", second_lunge_target, null, &"use"))
+	if parry_interaction_reason != "parry blocks interaction":
+		_fail("Host should reject interactions during the active parry window")
+	var parry_contact: Dictionary = {
+		"target": second_lunge_target,
+		"position": second_lunge_target.global_position + Vector3.UP * 0.9
+	}
+	if not bool(network.call("_apply_jab_hit", parry_contact, 1, Vector3.FORWARD, Vector3.ZERO)):
+		_fail("A jab contacting an active parry should resolve as a reflected hit")
+	if not bool(attacker.get("is_limp")) or bool(second_lunge_target.get("is_limp")):
+		_fail("Successful parry should knock the attacker into limp while protecting the defender")
+	if int(network.get("combat_parries")) != parries_before + 1:
+		_fail("Successful parry should increment the host parry counter exactly once")
+	var charged_attacker: CharacterBody3D = PLAYER_SCENE.instantiate() as CharacterBody3D
+	charged_attacker.name = "4"
+	charged_attacker.set("input_peer_id", 4)
+	charged_attacker.set("auto_recovery_enabled", false)
+	players.add_child(charged_attacker)
+	charged_attacker.global_position = Vector3(2.0, 0.0, 0.0)
+	charged_attacker.set_physics_process(false)
+	for frame_index: int in range(3):
+		await physics_frame
+	var ready_times_for_charged: Dictionary = network.get("_parry_ready_times")
+	ready_times_for_charged[3] = 0.0
+	network.set("_parry_ready_times", ready_times_for_charged)
+	var charged_parries_before: int = int(network.get("combat_parries"))
+	if not bool(network.call("_receive_parry_input", 3)):
+		_fail("Defender should be able to begin another parry after its cooldown")
+	var charged_contact: Dictionary = {
+		"target": second_lunge_target,
+		"position": second_lunge_target.global_position + Vector3.UP * 0.9
+	}
+	if not bool(network.call("_apply_charged_lunge_hit", charged_contact, 4, Vector3.FORWARD)):
+		_fail("A charged punch contacting an active parry should be reflected")
+	if not bool(charged_attacker.get("is_limp")) or bool(second_lunge_target.get("is_limp")):
+		_fail("Charged punch must not overpower parry; its attacker should be launched into limp")
+	if int(network.get("combat_parries")) != charged_parries_before + 1:
+		_fail("Charged-punch reflection should increment the parry counter")
+	if bool(network.call("can_start_parry", 3)):
+		_fail("Successful parry should enter its cooldown")
+	var ready_times: Dictionary = network.get("_parry_ready_times")
+	ready_times[3] = 0.0
+	network.set("_parry_ready_times", ready_times)
+	if not bool(network.call("_receive_parry_input", 3)):
+		_fail("Defender should be able to parry again after the cooldown is cleared for the expiry test")
+	active_parries = network.get("_active_parries")
+	var expired_entry: Dictionary = active_parries.get(3, {})
+	expired_entry["expires_at"] = Time.get_ticks_msec() / 1000.0 - 1.0
+	active_parries[3] = expired_entry
+	network.set("_active_parries", active_parries)
+	network.call("_advance_parries")
+	active_parries = network.get("_active_parries")
+	if active_parries.has(3) or bool(network.call("can_start_parry", 3)):
+		_fail("A missed parry should expire and enter its 1.5 s cooldown")
 	players.queue_free()
 
 func _fail(message: String) -> void:

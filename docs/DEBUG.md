@@ -634,3 +634,15 @@ The M7.2 pose-curve assertions are included in `m7_jab_test.gd`; run them with `
 - A charged hit launches the target away from the actual attacker-to-impact position. Side impacts push sideways; strike pitch and relative impact height contribute a bounded vertical component. The host enters limp first, then applies the impulse to the simulating physical rig.
 - Tuning: `CHARGED_PUNCH_LAUNCH_SPEED_MPS` is 10.5 m/s; `CHARGED_PUNCH_LAUNCH_BASE_LIFT` is 0.34 and `CHARGED_PUNCH_LAUNCH_MAX_LIFT` is 0.48. These are starting values for playtesting, not final balance claims.
 - Run `.\tests\run_checks.ps1 -OnlyStage m7-jab` from `fowl-play/`. Playtest front, side and elevated/low-angle charged hits, then repeat with host and client. Confirm the target flies away from the impact direction without excessive distance. These checks have not yet been run for this refinement.
+
+
+### M7.4 parry and cylindrical barrier
+
+- Press **F** to request a parry. The host approves the action; the client does not decide the active window or reflection.
+- net/combat_parries counts successful reflections, net/combat_parry_rejected counts rejected parry requests, and net/combat_parries_active reports active host windows.
+- The active window is 1.25 s. A missed window expires automatically, then a 1.5 s cooldown begins. Successful reflection also begins a 1.5 s cooldown.
+- During the window, the defender's full-height translucent cylindrical barrier should expand from the ground, follow the player, and show animated surface patterns with top/bottom rings. On contact, a ripple should appear at the actual impact side before the barrier dissolves.
+- A jab or charged punch that contacts an active parry should leave the defender standing and send the attacker into limp, launched away from the defender. Charged punches must not bypass parry.
+- The barrier is a cosmetic runtime presentation; never treat its mesh or shader as a collision authority.
+- Playtest: press F with no incoming attack and verify expiry/cooldown; then have another player jab during the window; repeat with a charged punch and from front/side angles. Try F while carrying, limp, recovering, charging Q, during charged recovery, during an active jab, and during parry cooldown; each should reject. Repeat with host and client.
+- Run .\\tests\\run_checks.ps1 -OnlyStage m7-jab from fowl-play/. Godot execution and in-game verification have not yet been run for this slice.

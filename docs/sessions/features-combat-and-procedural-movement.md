@@ -1,7 +1,7 @@
 # Session plan: Combat & Procedural Legs (Movement)
 
 Branch: `features/combat-and-procedural-movement`
-Status: ACTIVE — M7.1 jab and M7.2 presentation are user-playtested; initial M7.3 charged-punch/lunge implementation is in source and awaiting Godot verification; procedural gait refinement continues.
+Status: ACTIVE — M7.1 jab and M7.2 presentation are user-playtested; M7.3 charged-punch refinements and M7.4 parry are implemented in source and awaiting Godot verification; procedural gait refinement continues.
 Created: 2026-11-20
 Previous baseline: `features/player-identity-and-world-kit`
 
@@ -367,3 +367,16 @@ Verification:
 - Added bounded launch tuning at 10.5 m/s with a capped elevation component. The host starts the target's existing limp lifecycle first, then applies the impulse to the newly simulating physical rig so the handoff's initial velocity reset cannot erase the hit.
 - Added regression assertions for stronger full-charge pose progression, fist draw-back, side-angle launch direction, pitch-sensitive elevation, and the launch elevation cap.
 - Godot headless checks and in-game/multiplayer verification remain pending; this commit has not been run in the Godot runtime by the assistant.
+
+
+## M7.4 — host-authoritative parry and cylindrical barrier
+
+- F submits a parry intent through the same host-authoritative input path used by combat. The host validates the active player, action locks, carrying/carried state, limp/recovery state, terminal movement lock, and parry cooldown.
+- The active parry window is 1.25 seconds. If no punch arrives, the state expires and starts a 1.5-second cooldown. A successful reflection also starts the 1.5-second cooldown immediately.
+- Both quick jabs and charged lunges are reflected. The defender remains standing; the attacker enters the existing host-simulated limp lifecycle and receives a bounded impulse away from the defender. Charged punches do not overpower parry.
+- Parry blocks starting another punch and blocks interactions while its active window is open. It cannot start during a held/charged punch, charged recovery, active jab, carry, carried state, limp, recovery, terminal movement lock, or parry cooldown.
+- The procedural parry stance raises both existing Viewmodel hands through their Guard pose and adds a restrained defensive torso lean. No scene hierarchy or authored animation assets are required.
+- Added a runtime-generated, full-height transparent cylinder barrier (2.12 m tall, 0.82 m radius) with animated scan/rib patterns, top/bottom energy rings, an expanding activation, a localized contact ripple, and a short dissolve. It is cosmetic only; host combat logic, not the visual mesh, decides whether a punch is reflected.
+- Host-approved start, hit and end events replicate the stance and barrier to remote players. net/combat_parries, net/combat_parry_rejected, and net/combat_parries_active expose host-side diagnostics.
+- m7_jab_test.gd now checks the 1.25/1.5-second timing, full-height barrier dimensions, defensive pose, successful jab reflection, defender protection, attacker limp handoff, and failed-window cooldown.
+- Godot headless checks and rendered host/client playtesting remain pending. The assistant has not run Godot for this implementation.

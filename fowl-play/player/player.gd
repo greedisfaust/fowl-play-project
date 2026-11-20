@@ -8,10 +8,13 @@ const MOVEMENT_CONTROLLER_SCRIPT = preload("res://core/movement_controller.gd")
 const JUMP_CONTROLLER_SCRIPT = preload("res://core/jump_controller.gd")
 const COMBAT_CONTROLLER_SCRIPT = preload("res://combat/combat_controller.gd")
 const COMBAT_PRESENTATION_SCRIPT = preload("res://combat/combat_presentation.gd")
+const PARRY_BARRIER_SCRIPT = preload("res://combat/parry_barrier_presentation.gd")
 var _movement_controller: RefCounted = MOVEMENT_CONTROLLER_SCRIPT.new()
 var _jump_controller: RefCounted = JUMP_CONTROLLER_SCRIPT.new()
 var _combat_controller: RefCounted = COMBAT_CONTROLLER_SCRIPT.new()
 var _combat_presentation: RefCounted = COMBAT_PRESENTATION_SCRIPT.new()
+var _parry_barrier: RefCounted = PARRY_BARRIER_SCRIPT.new()
+var _parry_active: bool = false
 const LAYERS = preload("res://core/layers.gd")
 const PlayerIdentity = preload("res://core/player_identity.gd")
 const LIMP_LOOK_YAW_LIMIT: float = deg_to_rad(75.0)
@@ -101,6 +104,7 @@ func _ready() -> void:
 	is_local_player = input_peer_id == 0 or input_peer_id == multiplayer.get_unique_id()
 	_combat_controller.call("configure", self, network)
 	_combat_presentation.call("configure", self)
+	_parry_barrier.call("configure", self)
 	camera.current = is_local_player
 	if rig != null:
 		# Hide the owner's world model until the first-person body visibility pass.
@@ -175,7 +179,9 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	_combat_controller.call("abandon")
+	end_parry_presentation(false)
 	_combat_presentation.call("cancel")
+	_parry_barrier.call("dispose")
 	if (is_limp or is_recovering) and is_instance_valid(rig):
 		rig.call("stop_host_simulation")
 	if is_instance_valid(network):
@@ -238,6 +244,7 @@ func _refresh_identity_presentation() -> void:
 		nameplate.call("apply_player_identity", identity, is_local_player)
 
 func _process(delta: float) -> void:
+	_parry_barrier.call("advance", delta)
 	if is_limp:
 		_update_limp_camera(delta)
 		_update_limp_interaction_proxy()
@@ -343,6 +350,7 @@ func is_carrying() -> bool:
 ## ragdoll Rig hands remain dedicated to physical/ragdoll presentation.
 func _on_carry_started(item: Node3D) -> void:
 	_combat_controller.call("cancel")
+	end_parry_presentation(false)
 	_combat_presentation.call("cancel")
 	_set_carry_hand_pose(true, item)
 
@@ -477,7 +485,7 @@ func correct_movement(at: Vector3) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if bool(debug_hub.call("is_console_open")):
-		if event.is_action_released("punch"):
+		if event.is_action_released("punch") or event.is_action_released("parry"):
 			_combat_controller.call("cancel")
 		return
 	if event is InputEventMouseMotion:
@@ -485,6 +493,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		_rotate_view(mouse_event.relative)
 	elif event.is_action_pressed("ui_cancel"):
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	elif event.is_action_pressed("parry") or event.is_action_released("parry"):
+		if is_carrying():
+			return
+		if _combat_controller.call("handle_input", event):
+			return
 	elif event.is_action_pressed("punch") or event.is_action_released("punch"):
 		# While carrying, punch remains exclusively owned by Carrier (drop/throw).
 		if is_carrying():
@@ -579,6 +592,7 @@ func begin_host_limp() -> bool:
 	collision_layer = 0
 	collision_mask = 0
 	_combat_controller.call("cancel")
+	end_parry_presentation(false)
 	_combat_presentation.call("cancel")
 	if not bool(rig.call("begin_host_simulation")):
 		collision_layer = 1 << (LAYERS.HEALTHY_PLAYERS - 1)
@@ -688,6 +702,7 @@ func begin_remote_limp(epoch: int, world_transform: Transform3D, initial_pose: P
 	if is_limp or is_recovering or epoch <= limp_epoch or rig == null:
 		return false
 	_combat_controller.call("cancel")
+	end_parry_presentation(false)
 	_combat_presentation.call("cancel")
 	if not bool(rig.call("begin_remote_pose", world_transform, initial_pose)):
 		return false
@@ -835,6 +850,33 @@ func _update_limp_camera(delta: float) -> void:
 	var look_yaw: Basis = Basis(Vector3.UP, _limp_look_yaw)
 	var look_pitch: Basis = Basis(Vector3.RIGHT, _limp_look_pitch)
 	camera.global_transform = Transform3D(Basis(head_rotation) * look_yaw * look_pitch, camera_origin)
+
+## Host-approved parry presentation, shared by first-person and remote copies.
+func begin_parry_presentation() -> void:
+	if is_limp or is_recovering or is_carrying():
+		return
+	_parry_active = true
+	_combat_presentation.call("begin_parry")
+	if is_instance_valid(viewmodel_left_hand):
+		viewmodel_left_hand.set_guard(true)
+	if is_instance_valid(viewmodel_right_hand):
+		viewmodel_right_hand.set_guard(true)
+	_parry_barrier.call("begin")
+
+func play_parry_hit(world_position: Vector3) -> void:
+	if _parry_active and world_position.is_finite():
+		_parry_barrier.call("play_impact", world_position)
+
+func end_parry_presentation(_successful: bool = false) -> void:
+	if not _parry_active:
+		return
+	_parry_active = false
+	if is_instance_valid(viewmodel_left_hand):
+		viewmodel_left_hand.set_guard(false)
+	if is_instance_valid(viewmodel_right_hand):
+		viewmodel_right_hand.set_guard(false)
+	_combat_presentation.call("end_parry")
+	_parry_barrier.call("end")
 
 ## Host-approved combat presentation, shared by first-person and remote copies.
 func play_combat_windup() -> void:

@@ -15,7 +15,7 @@ const RECOIL_ROLL_RAD: float = 0.21
 const LUNGE_POSE_DURATION_S: float = 0.50
 const LUNGE_RECOVERY_DURATION_S: float = 0.30
 const LUNGE_FOLLOW_THROUGH_RAD: float = 0.34
-enum Phase { IDLE, WINDUP, JAB, LUNGE, LUNGE_RECOVERY }
+enum Phase { IDLE, WINDUP, JAB, LUNGE, LUNGE_RECOVERY, PARRY }
 var _player: Node
 var _phase: Phase = Phase.IDLE
 var _phase_elapsed: float = 0.0
@@ -76,6 +76,15 @@ func end_charged_lunge() -> void:
 		return
 	_phase = Phase.LUNGE_RECOVERY
 	_phase_elapsed = 0.0
+func begin_parry() -> void:
+	if not _can_present():
+		return
+	_phase = Phase.PARRY
+	_phase_elapsed = 0.0
+func end_parry() -> void:
+	if _phase == Phase.PARRY:
+		_phase = Phase.IDLE
+		_phase_elapsed = 0.0
 func play_recoil(direction: Vector3, strength: float = 1.0) -> void:
 	if not _can_present() or not direction.is_finite() or direction.length_squared() < 0.0001:
 		return
@@ -109,6 +118,8 @@ func advance(delta: float) -> void:
 			body_pose += get_charged_lunge_body_pose(_phase_elapsed, _local_direction(_lunge_direction))
 			if hand != null:
 				hand.punch_position_offset = get_charged_lunge_hand_offset(_base_punch_position_offset, _phase_elapsed)
+		Phase.PARRY:
+			body_pose = get_parry_body_pose(_phase_elapsed, _local_direction(_get_aim_direction()))
 		Phase.LUNGE_RECOVERY:
 			var recovery: float = smoothstep(0.0, LUNGE_RECOVERY_DURATION_S, _phase_elapsed)
 			body_pose = get_charged_lunge_body_pose(LUNGE_POSE_DURATION_S, _local_direction(_lunge_direction)) * (1.0 - recovery)
@@ -193,6 +204,10 @@ static func get_charged_lunge_hand_offset(base_offset: Vector3, elapsed: float) 
 	var loaded_hand: Vector3 = get_windup_hand_offset(base_offset, TUNING.CHARGED_PUNCH_HOLD_SECONDS)
 	var strike_hand: Vector3 = base_offset + Vector3(0.0, -0.04, -0.24)
 	return loaded_hand.lerp(strike_hand, extension)
+static func get_parry_body_pose(elapsed: float, local_direction: Vector3) -> Vector3:
+	var settle: float = sin(maxf(elapsed, 0.0) * 5.5) * 0.012
+	var direction_yaw: float = clampf(atan2(-local_direction.x, -local_direction.z), -0.6, 0.6)
+	return Vector3(-0.095 + settle, direction_yaw * 0.12, 0.045 - direction_yaw * 0.08)
 static func get_recoil_body_pose(elapsed: float, local_direction: Vector3, strength: float = 1.0) -> Vector3:
 	var t: float = maxf(elapsed, 0.0)
 	if t >= RECOIL_POSE_DURATION_S:
