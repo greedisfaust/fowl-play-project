@@ -507,6 +507,20 @@ func _apply_procedural_leg_ik(
 	var parent_index: int = skeleton.get_bone_parent(thigh_index)
 	if parent_index < 0 or upper_length <= 0.001 or lower_length <= 0.001:
 		return false
+	# Scale both bone segments only as much as the planted-foot reach requires.
+	# Their attached meshes inherit this scale, so the visual leg stays connected.
+	var raw_reach: float = hip_world.distance_to(foot_target_world)
+	var natural_reach: float = upper_length + lower_length
+	var stretch_ratio: float = clampf(
+		raw_reach / maxf(natural_reach, 0.001),
+		1.0,
+		TUNING.LEG_IK_MAX_STRETCH_RATIO
+	)
+	skeleton.set_bone_pose_scale(thigh_index, Vector3(1.0, stretch_ratio, 1.0))
+	skeleton.set_bone_pose_scale(shin_index, Vector3(1.0, stretch_ratio, 1.0))
+	skeleton.force_update_all_bone_transforms()
+	upper_length *= stretch_ratio
+	lower_length *= stretch_ratio
 	var parent_world_basis: Basis = skeleton.global_basis * skeleton.get_bone_global_pose(parent_index).basis
 	var pole_world: Vector3 = hip_world + global_basis * Vector3.FORWARD * (LEG_IK_POLE_FORWARD_WEIGHT + knee_bend_weight * TUNING.LEG_IK_SWING_KNEE_FORWARD_BIAS_M)
 	pole_world += global_basis * Vector3.RIGHT * signf(foot_side) * LEG_KNEE_OUTWARD_BIAS_M
@@ -516,6 +530,7 @@ func _apply_procedural_leg_ik(
 	if solution.is_empty():
 		return false
 	var knee_world: Vector3 = solution["elbow"]
+	var solved_foot_world: Vector3 = solution.get("target", foot_target_world)
 	var upper_direction_parent: Vector3 = parent_world_basis.inverse() * (knee_world - hip_world).normalized()
 	var upper_rest_axis: Vector3 = upper_rest_offset.normalized()
 	var upper_target_rotation: Quaternion = Quaternion(upper_rest_axis, upper_direction_parent.normalized())
@@ -526,7 +541,7 @@ func _apply_procedural_leg_ik(
 	var actual_knee_local: Vector3 = skeleton.get_bone_global_pose(shin_index).origin
 	var actual_knee_world: Vector3 = skeleton.to_global(actual_knee_local)
 	var thigh_world_basis: Basis = skeleton.global_basis * skeleton.get_bone_global_pose(thigh_index).basis
-	var lower_direction_local: Vector3 = thigh_world_basis.inverse() * (foot_target_world - actual_knee_world).normalized()
+	var lower_direction_local: Vector3 = thigh_world_basis.inverse() * (solved_foot_world - actual_knee_world).normalized()
 	var lower_rest_axis: Vector3 = lower_rest_offset.normalized()
 	var lower_target_rotation: Quaternion = Quaternion(lower_rest_axis, lower_direction_local.normalized())
 	var blended_shin: Quaternion = base_shin_rotation.slerp(lower_target_rotation, blend_weight)
@@ -559,6 +574,13 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 		return false
 	if not world_velocity.is_finite():
 		return false
+	# Clear last frame's reach compensation before measuring this frame.
+	# The IK pass reapplies only the amount currently needed.
+	skeleton.set_bone_pose_scale(_left_thigh_bone_index, Vector3.ONE)
+	skeleton.set_bone_pose_scale(_left_shin_bone_index, Vector3.ONE)
+	skeleton.set_bone_pose_scale(_right_thigh_bone_index, Vector3.ONE)
+	skeleton.set_bone_pose_scale(_right_shin_bone_index, Vector3.ONE)
+	skeleton.force_update_all_bone_transforms()
 	var local_velocity: Vector3 = global_basis.inverse() * world_velocity
 	_leg_controller.call("update", delta, local_velocity, grounded)
 	skeleton.force_update_all_bone_transforms()
