@@ -678,3 +678,8 @@ The M7.2 pose-curve assertions are included in `m7_jab_test.gd`; run them with `
 - Movement body pose is layered with combat body pose in PlayerRig. Combat remains visually stronger, carry suppresses locomotion body language, and ragdoll/recovery continue to own the skeleton.
 - Remote players calculate the same presentation locally from their interpolated root velocity and replicated grounded state; no per-bone animation traffic is added.
 - Run `.\\tests\\run_checks.ps1 -OnlyStage movement-presentation` and `.\\tests\\run_checks.ps1 -OnlyStage procedural-legs` from `fowl-play/`. Then playtest walk/sprint acceleration, abrupt stops, strafes, sharp turns, jump ascent/descent/landing, jab/charged punch, carry, and ragdoll/recovery on host and client. Godot execution and in-game verification have not been run by the assistant.
+
+
+### M10 first-person camera presentation
+
+The local first-person camera adds a restrained velocity-driven bob while walking/running, lateral sway while strafing, vertical response while airborne, and a short landing-compression pulse. Approved standing combat recoil also adds a brief directional camera impulse. These are local cosmetic effects and do not add network traffic or change movement authority. Ragdoll head-follow and the recovery camera blend retain ownership while limp/recovering; first-person movement effects are suspended during those states. The Player's exported `camera_motion_intensity` property scales the effect (0 disables it, 1 is the default, and values up to 1.5 amplify it). Run `tests/run_checks.ps1 -OnlyStage m10-camera` for the pure camera-controller regression checks. Godot execution and visual tuning remain user-run.

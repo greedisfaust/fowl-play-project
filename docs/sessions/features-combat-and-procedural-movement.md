@@ -418,3 +418,12 @@ Verification:
 - The existing charged launch direction's angle-responsive elevation remains unchanged.
 - Godot execution and in-game verification have not been run by the assistant.
 
+
+
+## M10 camera and owner-view polish — implementation slice 1
+
+M10.1 adds a dedicated local-only `player/camera_presentation.gd` controller. It derives restrained walking/running bob and lateral sway from local horizontal velocity, vertical camera pitch response while airborne, a landing compression pulse scaled by the peak descent speed, and decaying directional impact offset/roll. The exported Player property `camera_motion_intensity` scales all of these effects (0–1.5, default 1.0). Standing combat recoil feeds the local camera impulse; no camera presentation state is replicated and gameplay authority is unchanged.
+
+The existing simulated-head limp camera and recovery transform blend remain the owners of the camera during those states. Procedural movement camera effects are suspended during limp/recovery and reset after the recovery handoff. Added `tests/m10_camera_presentation_test.gd` and the `m10-camera` stage in `tests/run_checks.ps1`.
+
+This is the first M10 slice, not the complete milestone. Owner lower-body visibility/fade refinement and camera wall avoidance remain. The source and regression test are committed but have not been executed in Godot by the assistant; the user must run the focused stage and visual checks.
