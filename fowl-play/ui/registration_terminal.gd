@@ -6,7 +6,7 @@ const PlayerIdentity = preload("res://core/player_identity.gd")
 
 @export_group("Registration Copy")
 @export var registration_header: String = "PLAYER REGISTRATION"
-		main_menu_description_format % [
+@export_multiline var main_menu_description_format: String = "NICKNAME: %s\\nCOLOR: %s\\n\\nChoose your identity settings."
 @export var main_menu_prompt: String = "CLICK OPTION  •  ARROWS MOVE  •  M1 / E / ENTER SELECT"
 @export var edit_nickname_option_label: String = "EDIT NICKNAME"
 @export var choose_color_option_label: String = "SELECT COLOR"
@@ -17,7 +17,7 @@ const PlayerIdentity = preload("res://core/player_identity.gd")
 @export var color_menu_prompt: String = "CLICK OPTION  •  ARROWS MOVE  •  M1 / E / ENTER SELECT"
 @export var nickname_editor_header: String = "SET NICKNAME"
 @export var nickname_editor_instruction_format: String = "TYPE A NAME (MAX %d CHARACTERS)."
-		nickname_editor_prompt
+@export var nickname_editor_prompt: String = "ENTER ACCEPTS  •  ESC CANCELS  •  BACKSPACE ERASES"
 @export var connection_lost_header: String = "CONNECTION LOST"
 @export_multiline var connection_lost_description: String = "You moved too far from the terminal. Registration was reset."
 @export var connection_lost_prompt: String = "RETURN TO THE TERMINAL TO RECONNECT"
@@ -30,8 +30,8 @@ const PlayerIdentity = preload("res://core/player_identity.gd")
 @export_multiline var registration_sent_description: String = "Waiting for the host to assign your identity..."
 @export var please_wait_prompt: String = "PLEASE WAIT"
 @export var registration_success_header: String = "REGISTRATION COMPLETE"
-@export var registration_success_body_format: String = "%s\nCOLOR: %s"
-		registration_success_prompt
+@export var registration_success_body_format: String = "%s\\nCOLOR: %s"
+@export var registration_success_prompt: String = "IDENTITY ASSIGNED BY HOST"
 
 var _menu: ScreenMenu = ScreenMenu.new()
 var _network: Node = null
@@ -235,10 +235,10 @@ func _handle_nickname_key(event: InputEventKey) -> void:
 
 func _show_main_menu() -> void:
 	var options: Array[Dictionary] = [
-{"id": &"edit_nickname", "label": edit_nickname_option_label}
-{"id": &"choose_color", "label": choose_color_option_label}
-{"id": &"register", "label": confirm_registration_option_label}
-{"id": &"close", "label": close_terminal_option_label}
+		{"id": &"edit_nickname", "label": edit_nickname_option_label},
+		{"id": &"choose_color", "label": choose_color_option_label},
+		{"id": &"register", "label": confirm_registration_option_label},
+		{"id": &"close", "label": close_terminal_option_label}
 	]
 	_menu.open(
 		screen,
@@ -285,9 +285,9 @@ func _render_nickname_editor() -> void:
 	screen.show_layout(
 		"information",
 		nickname_editor_header,
-"%s_\n\n%s" % [_nickname_buffer, nickname_editor_instruction_format % [PlayerIdentity.MAX_NICKNAME_LENGTH]],
+		"%s_\\n\\n%s" % [
 			_nickname_buffer,
-			PlayerIdentity.MAX_NICKNAME_LENGTH
+			nickname_editor_instruction_format % [PlayerIdentity.MAX_NICKNAME_LENGTH]
 		],
 		nickname_editor_prompt
 	)
@@ -311,7 +311,7 @@ func _submit_registration() -> void:
 	if not is_instance_valid(_network):
 		_menu.close()
 		end_session(END_CLOSED)
-screen.show_layout("warning", network_unavailable_header, network_unavailable_description, reopen_prompt)
+		screen.show_layout("warning", network_unavailable_header, network_unavailable_description, reopen_prompt)
 		return
 	_pending_nickname = _requested_nickname
 	_registration_pending = true
@@ -320,11 +320,11 @@ screen.show_layout("warning", network_unavailable_header, network_unavailable_de
 		_registration_pending = false
 		_menu.close()
 		end_session(END_CLOSED)
-screen.show_layout("warning", registration_rejected_header, registration_rejected_description, reopen_prompt)
+		screen.show_layout("warning", registration_rejected_header, registration_rejected_description, reopen_prompt)
 		return
 	if _registration_pending:
 		_menu.close()
-screen.show_layout("information", registration_sent_header, registration_sent_description, please_wait_prompt)
+		screen.show_layout("information", registration_sent_header, registration_sent_description, please_wait_prompt)
 
 func _on_identity_roster_changed() -> void:
 	if not _registration_pending or not is_instance_valid(_network):
