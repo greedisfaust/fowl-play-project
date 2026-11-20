@@ -517,3 +517,12 @@ Added `ui/interactive_terminal.gd`: reusable local-player proximity wake/sleep a
 - Increased swing/recovery foot arc height to 0.30 m, thigh swing to 46 degrees, knee flex to 68 degrees, and forward knee-pole guidance to make each step lift more visibly before extending toward landing.
 - Added M8 assertions for stretch/lift tuning and the farther reachable IK target.
 - No scene files changed. Godot tests and in-game behavior have not been executed by the assistant.
+
+
+## 2026-11-20 — correct inward knee bend and foot drag
+
+- Adjusted the leg IK pole to prioritize outward anatomical knee direction: outward bias increased from 0.48 m to 0.95 m, forward base bias reduced to 0.55 m, and swing-only forward addition reduced to 0.35 m. Arm IK pole settings remain independent and unchanged.
+- Fixed cadence lag by driving gait phase and stride amplitude from actual measured horizontal player velocity, while retaining smoothed velocity only for direction changes and landing-target orientation. Increased direction smoothing response from 12 to 20 for quicker tracking.
+- Reduced stride cycle distance from 1.8 m to 1.4 m and restored the cadence multiplier from 0.78 to 1.0. With 0.58 stance fraction, stance travel is 0.812 m, below the 0.94 m two-bone reach plus replant margin, so the player should enter the next swing before the planted foot is dragged beyond comfortable reach.
+- M8 tests now cover stance travel versus leg reach and mirrored outward knee placement.
+- No scene files changed. Godot tests and in-game behavior have not been executed by the assistant.
