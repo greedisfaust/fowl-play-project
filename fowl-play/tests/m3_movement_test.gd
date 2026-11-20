@@ -19,13 +19,14 @@ func _initialize() -> void:
 	check(is_equal_approx(decelerating.length(), 2.0), "movement decelerates smoothly when input is released")
 	var turning: Vector3 = movement.call(
 		"advance_horizontal_velocity", Vector3(3.8, 0.0, 0.0), Vector3(-1.0, 0.0, 0.0),
-		3.8, 14.0, 18.0, 0.1
+		3.8, 14.0, 18.0, 0.1, 24.0
 	)
 	check(turning.x > 0.0, "direction reversals should blend through velocity rather than snap")
+	check(turning.x < 2.0, "direction reversals should respond more quickly than ordinary acceleration")
 	for step: int in 20:
 		turning = movement.call(
 			"advance_horizontal_velocity", turning, Vector3(-1.0, 0.0, 0.0),
-			3.8, 14.0, 18.0, 0.1
+			3.8, 14.0, 18.0, 0.1, 24.0
 		)
 	check(turning.x < -3.7, "acceleration should reach the requested movement speed over time")
 	var air_controlled: Vector3 = movement.call(
