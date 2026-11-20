@@ -46,6 +46,7 @@ func update_target(
 		has_anchor = false
 		emergency_replant_active = false
 		emergency_replant_elapsed = 0.0
+		emergency_replant_suppress_gait_swing = false
 		return current_foot_world
 
 	if not emergency_replant_active and emergency_replant_suppress_gait_swing and not in_swing:
