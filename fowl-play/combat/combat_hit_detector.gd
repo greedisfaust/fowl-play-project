@@ -2,7 +2,7 @@
 extends RefCounted
 const LAYERS = preload("res://core/layers.gd")
 static func get_jab_collision_mask() -> int:
-	return LAYERS.LAYER_MASK_PUNCH_HITBOX | (1 << (LAYERS.WORLD_STATIC - 1)) | (1 << (LAYERS.ELEVATOR - 1))
+	return LAYERS.LAYER_MASK_PUNCH_HITBOX | (1 << (LAYERS.WORLD_STATIC - 1)) | (1 << (LAYERS.DEVICES - 1)) | (1 << (LAYERS.CARRIED - 1)) | (1 << (LAYERS.ELEVATOR - 1))
 
 static func trace_jab(attacker: Node3D, origin: Vector3, direction: Vector3, reach: float) -> Dictionary:
 	if not is_instance_valid(attacker) or not origin.is_finite() or not direction.is_finite():

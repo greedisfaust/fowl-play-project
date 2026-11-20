@@ -55,8 +55,8 @@ func _check_world_hit_and_recoil() -> void:
 	if result.get("target") != target:
 		_fail("A clear ray within range should identify the target Player")
 	var mask: int = HIT_DETECTOR.get_jab_collision_mask()
-	if (mask & (1 << (LAYERS.WORLD_STATIC - 1))) == 0 or (mask & (1 << (LAYERS.ELEVATOR - 1))) == 0:
-		_fail("Jab ray should include static world and elevator layers so obstacles block hits")
+	if (mask & (1 << (LAYERS.WORLD_STATIC - 1))) == 0 or (mask & (1 << (LAYERS.DEVICES - 1))) == 0 or (mask & (1 << (LAYERS.CARRIED - 1))) == 0 or (mask & (1 << (LAYERS.ELEVATOR - 1))) == 0:
+		_fail("Jab ray should include world, device, carried-prop and elevator layers so obstacles block hits")
 	var network: Node = root.get_node("Network")
 	var jab_count_before_cancel: int = int(network.get("combat_jabs"))
 	if not bool(network.call("_receive_combat_input", 1, true)):
