@@ -631,21 +631,6 @@ func _on_peer_connected(peer_id: int) -> void:
 func _on_peer_disconnected(peer_id: int) -> void:
 	_interaction_times.erase(peer_id)
 	_clear_combat_peer_state(peer_id)
-
-## Remove every combat timer/action owned by a departing peer.
-func _clear_combat_peer_state(owner_id: int) -> void:
-	if peer == null or is_host:
-		cancel_combat_state(owner_id)
-	_active_jabs.erase(owner_id)
-	_active_lunges.erase(owner_id)
-	_active_parries.erase(owner_id)
-	_combat_press_times.erase(owner_id)
-	_combat_charged_presses.erase(owner_id)
-	_combat_jab_ready_times.erase(owner_id)
-	_charged_punch_ready_times.erase(owner_id)
-	_combat_action_lock_until.erase(owner_id)
-	_parry_ready_times.erase(owner_id)
-	_carry_times.erase(owner_id)
 	force_drop_carry(peer_id, "disconnect")
 	_carry_times.erase(peer_id)
 	# G8 forced-exit cleanup: if a limp player disconnects, broadcast the
@@ -666,6 +651,21 @@ func _clear_combat_peer_state(owner_id: int) -> void:
 	_debug_log("Peer %d disconnected" % peer_id)
 	if is_host:
 		_publish_roster()
+
+## Remove every combat timer/action owned by a departing peer.
+func _clear_combat_peer_state(owner_id: int) -> void:
+	if peer == null or is_host:
+		cancel_combat_state(owner_id)
+	_active_jabs.erase(owner_id)
+	_active_lunges.erase(owner_id)
+	_active_parries.erase(owner_id)
+	_combat_press_times.erase(owner_id)
+	_combat_charged_presses.erase(owner_id)
+	_combat_jab_ready_times.erase(owner_id)
+	_charged_punch_ready_times.erase(owner_id)
+	_combat_action_lock_until.erase(owner_id)
+	_parry_ready_times.erase(owner_id)
+	_carry_times.erase(owner_id)
 
 func _publish_roster() -> void:
 	roster = connected_peers.duplicate()
