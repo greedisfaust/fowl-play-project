@@ -119,7 +119,7 @@ func update(delta: float, local_velocity: Vector3, grounded: bool) -> void:
 	right_foot_rotation = Quaternion(right_foot_axis, -(right_swing + right_knee) * TUNING.LEG_FOOT_COUNTER_ROTATION + right_foot_pitch * stride_weight * motion_weight)
 
 func _get_swing_progress(cycle: float) -> float:
-	if cycle < stance_fraction
+	if cycle < stance_fraction:
 		return 0.0
 	return clampf(
 		(cycle - stance_fraction) / (1.0 - stance_fraction),
