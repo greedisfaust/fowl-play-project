@@ -271,3 +271,10 @@ Verification:
 - Increased jump launch speed from 6.5 to 6.9 m/s. Gravity, coyote time, jump buffer, and variable-height release remain unchanged, giving a modestly higher/full jump without altering short-hop behavior.
 - Added regression assertions for faster-but-blended reversals, lower walking stride intensity, stronger sprint stride, and the revised jump tuning.
 - Godot tests and in-game visual behavior have not been run by the assistant; user playtesting is still required.
+
+
+## 2026-11-20 — grounded walking and energetic sprint profile
+
+- Reworked the gait controller so walking is not merely a smaller sprint. It now has a longer cycle distance (2.4 m), shorter stance fraction (0.38), smaller 24-degree thigh swing, gentler 30-degree knee flex, and 0.09 m normal foot arc.
+- Sprint blends continuously toward the established 1.4 m cycle, 0.58 stance fraction, 46-degree thigh swing, 68-degree knee flex, and 0.20 m normal foot arc. Emergency replant remains a distinct 0.30 m recovery step.
+- Foot planting, moving-platform anchors, IK, strafing, and rapid-direction response remain in place. M8 now asserts separate walk/run profiles and reach-safe stance travel. No scene files changed. Godot tests and in-game verification remain pending.
