@@ -2,6 +2,7 @@ extends SceneTree
 
 const STREAM = preload("res://core/movement_stream.gd")
 const MOVEMENT_CONTROLLER = preload("res://core/movement_controller.gd")
+const JUMP_CONTROLLER = preload("res://core/jump_controller.gd")
 var failed: bool = false
 
 func _initialize() -> void:
@@ -27,6 +28,41 @@ func _initialize() -> void:
 			3.8, 14.0, 18.0, 0.1
 		)
 	check(turning.x < -3.7, "acceleration should reach the requested movement speed over time")
+	var air_controlled: Vector3 = movement.call(
+		"advance_horizontal_velocity", Vector3.ZERO, Vector3(0.0, 0.0, -1.0),
+		3.8, 14.0 * 0.55, 18.0 * 0.55, 0.1
+	)
+	check(air_controlled.length() < accelerating.length(), "air steering acceleration is weaker than grounded acceleration")
+
+	var jump: RefCounted = JUMP_CONTROLLER.new()
+	jump.call("advance", 0.016, true, false, false, 0.0, 6.5, 0.10, 0.12, 0.45)
+	var coyote_jump: Dictionary = jump.call("advance", 0.05, false, true, false, 0.0, 6.5, 0.10, 0.12, 0.45)
+	check(bool(coyote_jump.get("jumped", false)), "jump input is accepted briefly after leaving a ledge")
+	check(is_equal_approx(float(coyote_jump.get("vertical_velocity", 0.0)), 6.5), "coyote jump receives full jump speed")
+
+	jump.call("reset")
+	jump.call("advance", 0.016, true, false, false, 0.0, 6.5, 0.10, 0.12, 0.45)
+	jump.call("advance", 0.11, false, false, false, 0.0, 6.5, 0.10, 0.12, 0.45)
+	var expired_coyote: Dictionary = jump.call("advance", 0.016, false, true, false, 0.0, 6.5, 0.10, 0.12, 0.45)
+	check(not bool(expired_coyote.get("jumped", false)), "coyote grace expires after its configured window")
+
+	jump.call("reset")
+	var buffered_press: Dictionary = jump.call("advance", 0.016, false, true, false, -1.0, 6.5, 0.10, 0.12, 0.45)
+	check(not bool(buffered_press.get("jumped", false)), "jump pressed in midair waits for landing")
+	var buffered_landing: Dictionary = jump.call("advance", 0.04, true, false, false, 0.0, 6.5, 0.10, 0.12, 0.45)
+	check(bool(buffered_landing.get("jumped", false)), "buffered jump fires on landing")
+
+	jump.call("reset")
+	jump.call("advance", 0.016, true, true, false, 0.0, 6.5, 0.10, 0.12, 0.45)
+	var short_hop: Dictionary = jump.call("advance", 0.016, false, false, true, 6.5, 6.5, 0.10, 0.12, 0.45)
+	check(bool(short_hop.get("jump_cut", false)), "releasing jump during ascent cuts the jump")
+	check(is_equal_approx(float(short_hop.get("vertical_velocity", 0.0)), 2.925), "short hop reduces upward velocity")
+
+	jump.call("reset")
+	jump.call("advance", 0.016, true, true, false, 0.0, 6.5, 0.10, 0.12, 0.45)
+	var full_jump: Dictionary = jump.call("advance", 0.016, false, false, false, 6.5, 6.5, 0.10, 0.12, 0.45)
+	check(is_equal_approx(float(full_jump.get("vertical_velocity", 0.0)), 6.5), "holding jump preserves full upward velocity")
+
 	var stream: STREAM = STREAM.new()
 	stream.reset(Vector3.ZERO, 0.0)
 	check(stream.accept(1, Vector3(0.25, 0, 0), Vector3(5, 0, 0), 0, 0, 0.05), "normal movement")
