@@ -2,7 +2,7 @@
 
 **Status:** Combat & Procedural Legs (Movement) is active on `features/combat-and-procedural-movement`. The branch starts from the merged Player Identity & World Kit baseline. The read-only rig audit is complete and the first procedural gait slice is committed; Godot execution and in-game verification remain pending. Previous identity/world-kit work remains archived as implemented, with verification caveats retained below.
 
-## Last updated (2026-11-20; world-space foot target foundation)
+## Last updated (2026-11-20; procedural foot ground detection)
 
 - Current branch: `features/combat-and-procedural-movement` (based on merged `main` commit `1506c03746e158c74ffcd2da5df042b20435db25`). Read-only rig audit is complete; initial procedural gait slice is committed and awaiting Godot verification.
 - Godot 4.7 project: `fowl-play/`, using Jolt Physics, Forward+, and D3D12.
@@ -29,7 +29,7 @@
 | World kit — WorldScreen | Reusable size-adaptive 3D screen, CMD-style text renderer, and FAT/SLIM housings | Reusable content APIs, menus, FAT/SLIM controllers and glass treatments are implemented and documented. Automated housing checks and final rendered sizing/material verification remain unconfirmed in this archive. |
 | M6 Carry and throw | Props and limp bodies, auto-fire throw, dangling limbs | IMPLEMENTED; USER VISUAL-PLAYTESTED: host-authoritative carry/drop/throw; Chest spring/torque stabilisation at the carrier anchor; selective opposite-side limb self-collision; carried-only head/arm damping and narrower neck joint limits; smoothed head-mounted first-person camera while preserving mouse-look and dynamic FOV. Player root stays fixed, remote peers render host poses without local ragdoll collision, recovery pauses while carried, and each release resets a fresh 3.5 s countdown. Automated M6 test and full two-instance host/client verification remain pending. |
 | M7 Combat | Jab/recoil, charged punch, lunge, parry outcomes | Not started |
-| M8 Procedural legs | Hybrid locomotion, zero network traffic | IN PROGRESS: local velocity-driven gait and grounded-state replication are implemented; filtered velocity now smooths starts, stops, and directional changes. Stance/swing foot articulation with swing-phase knee flex and toe-lift pitch is implemented locally. A tested world-space foot target tracker now captures stance anchors and interpolates lifted swing targets; PlayerRig ground probing and two-bone leg rotation application are the next integration step. Turn-in-place, owner-view leg visibility, combat balance reactions, visual tuning, and Godot verification remain. |
+| M8 Procedural legs | Hybrid locomotion, zero network traffic | IN PROGRESS: local velocity-driven gait and grounded-state replication are implemented; filtered velocity now smooths starts, stops, and directional changes. Stance/swing foot articulation with swing-phase knee flex and toe-lift pitch is implemented locally. A world-space foot target tracker captures stance anchors and interpolates lifted swing targets. PlayerRig now performs downward physics-space ground probes beneath both feet, excludes the owning Player body, filters steep surfaces, and exposes hit/target/normal diagnostics; two-bone leg rotation application is the next integration step. Turn-in-place, owner-view leg visibility, combat balance reactions, visual tuning, and Godot verification remain. |
 | M9 Camera + owner view | Camera follow target, owner legs visibility | Limp camera follows the simulated head position and orientation; the owner's head geometry is hidden and body visible. Head rotational stability is user-verified after physical head tuning; visual comfort, wall avoidance and final camera transitions remain. |
 | M10 Hardening | Cleanup matrix, weak-laptop budget, 4-player soak | Not started |
 
@@ -64,7 +64,7 @@ Late join is decided: allowed during the rest of a day, not during casino/elevat
 
 The user also confirmed the latest player-color implementation works in-game. This is user verification, not a claim that the assistant ran Godot tests. Existing automated test stages and any unconfirmed WorldScreen visual checks remain recorded as pending rather than being silently marked passed.
 
-**Active feature:** Combat & Procedural Legs (Movement), branch `features/combat-and-procedural-movement`. Read-only rig audit completed; the gait controller and world-space foot target tracker are implemented. Next integrate ground probes and IK into the existing rig, preserving the scene hierarchy, movement stream, and ragdoll/recovery ownership. See [the active feature session](sessions/features-combat-and-procedural-movement.md).
+**Active feature:** Combat & Procedural Legs (Movement), branch `features/combat-and-procedural-movement`. Read-only rig audit completed; the gait controller, world-space foot target tracker, and per-foot ground probes are implemented. Next integrate two-bone IK into the existing rig, preserving the scene hierarchy, movement stream, and ragdoll/recovery ownership. See [the active feature session](sessions/features-combat-and-procedural-movement.md).
 
 ## Historical verification notes
 
