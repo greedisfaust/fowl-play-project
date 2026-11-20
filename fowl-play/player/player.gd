@@ -726,6 +726,8 @@ func begin_remote_limp(epoch: int, world_transform: Transform3D, initial_pose: P
 	if limp_interactable != null:
 		limp_interactable.enabled = true
 	velocity = Vector3.ZERO
+	_movement_presentation.call("reset", true, Vector3.ZERO)
+	_movement_presentation_yaw_initialized = false
 	collision_layer = 0
 	collision_mask = 0
 	if focus != null:

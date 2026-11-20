@@ -1080,6 +1080,8 @@ func begin_remote_pose(world_transform: Transform3D, initial_pose: PackedInt32Ar
 	# Capture the standing pose before limp overwrites it, so recovery
 	# blends back to the actual standing pose instead of the rest/T-pose.
 	_standing_pose = _capture_skeleton_pose()
+	_combat_body_pose = Vector3.ZERO
+	_movement_body_pose = Vector3.ZERO
 	var previous_transform: Transform3D = global_transform
 	top_level = true
 	global_transform = world_transform if world_transform.is_finite() else previous_transform
