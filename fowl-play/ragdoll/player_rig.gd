@@ -482,6 +482,12 @@ func _probe_ground_at_target(foot_world: Vector3) -> Dictionary:
 		"collider": hit.get("collider")
 	}
 
+func _reset_leg_pose_scale(thigh_index: int, shin_index: int) -> void:
+	if thigh_index >= 0:
+		skeleton.set_bone_pose_scale(thigh_index, Vector3.ONE)
+	if shin_index >= 0:
+		skeleton.set_bone_pose_scale(shin_index, Vector3.ONE)
+
 func _apply_procedural_leg_ik(
 	thigh_index: int,
 	shin_index: int,
@@ -493,7 +499,8 @@ func _apply_procedural_leg_ik(
 	base_foot_rotation: Quaternion,
 	ik_weight: float,
 	foot_side: float,
-	knee_bend_weight: float
+	knee_bend_weight: float,
+	delta: float
 ) -> bool:
 	if thigh_index < 0 or shin_index < 0 or foot_index < 0 or not foot_target_world.is_finite():
 		return false
@@ -511,13 +518,18 @@ func _apply_procedural_leg_ik(
 	# Their attached meshes inherit this scale, so the visual leg stays connected.
 	var raw_reach: float = hip_world.distance_to(foot_target_world)
 	var natural_reach: float = upper_length + lower_length
-	var stretch_ratio: float = clampf(
+	var target_stretch_ratio: float = clampf(
 		raw_reach / maxf(natural_reach, 0.001),
 		1.0,
 		TUNING.LEG_IK_MAX_STRETCH_RATIO
 	)
-	skeleton.set_bone_pose_scale(thigh_index, Vector3(1.0, stretch_ratio, 1.0))
-	skeleton.set_bone_pose_scale(shin_index, Vector3(1.0, stretch_ratio, 1.0))
+	var stretch_blend: float = 1.0 - exp(-10.0 * maxf(delta, 0.0))
+	var current_stretch_ratio: float = _bone_axis_scale_value(
+		upper_rest_offset, skeleton.get_bone_pose_scale(thigh_index)
+	)
+	var stretch_ratio: float = lerpf(current_stretch_ratio, target_stretch_ratio, stretch_blend)
+	skeleton.set_bone_pose_scale(thigh_index, _bone_axis_scale(upper_rest_offset, stretch_ratio))
+	skeleton.set_bone_pose_scale(shin_index, _bone_axis_scale(lower_rest_offset, stretch_ratio))
 	skeleton.force_update_all_bone_transforms()
 	upper_length *= stretch_ratio
 	lower_length *= stretch_ratio
@@ -567,6 +579,8 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 		_right_foot_grounded = false
 		_left_foot_plant.call("reset")
 		_right_foot_plant.call("reset")
+		_reset_leg_pose_scale(_left_thigh_bone_index, _left_shin_bone_index)
+		_reset_leg_pose_scale(_right_thigh_bone_index, _right_shin_bone_index)
 		_left_leg_ik_weight = 0.0
 		_right_leg_ik_weight = 0.0
 		_left_leg_ik_active = false
@@ -679,22 +693,24 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 			_left_foot_ground_target_world,
 			_left_foot_ground_normal if not bool(_leg_controller.get("left_in_swing")) and not bool(_left_foot_plant.get("emergency_replant_active")) else Vector3.ZERO,
 			left_thigh_rotation, left_shin_rotation, left_foot_rotation, _left_leg_ik_weight, 1.0,
-			float(_leg_controller.get("left_knee_bend_weight"))
+			float(_leg_controller.get("left_knee_bend_weight")), delta
 	)
 		_left_leg_ik_active = left_ik_applied
 	else:
 		_left_leg_ik_active = false
+		_reset_leg_pose_scale(_left_thigh_bone_index, _left_shin_bone_index)
 	if _right_leg_ik_weight > 0.01:
 		var right_ik_applied: bool = _apply_procedural_leg_ik(
 			_right_thigh_bone_index, _right_shin_bone_index, _right_foot_bone_index,
 			_right_foot_ground_target_world,
 			_right_foot_ground_normal if not bool(_leg_controller.get("right_in_swing")) and not bool(_right_foot_plant.get("emergency_replant_active")) else Vector3.ZERO,
 			right_thigh_rotation, right_shin_rotation, right_foot_rotation, _right_leg_ik_weight, -1.0,
-			float(_leg_controller.get("right_knee_bend_weight"))
+			float(_leg_controller.get("right_knee_bend_weight")), delta
 	)
 		_right_leg_ik_active = right_ik_applied
 	else:
 		_right_leg_ik_active = false
+		_reset_leg_pose_scale(_right_thigh_bone_index, _right_shin_bone_index)
 	skeleton.force_update_all_bone_transforms()
 	_leg_pose_active = bool(_leg_controller.call("is_active"))
 	return true
