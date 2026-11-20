@@ -141,6 +141,12 @@ func _check_footstep_planner() -> void:
 	)
 	if forward_right.distance_to(Vector3(2.18, 1.0, 2.64)) > 0.001:
 		_fail("Right foot target should mirror the left foot's lateral offset")
+	var predicted_landing: Vector3 = planner.call(
+		"get_landing_target", hip, Basis.IDENTITY, Vector3(0.0, 0.0, -5.0), -1.0,
+		0.0, 0.18, 0.756
+	)
+	if predicted_landing.distance_to(Vector3(1.82, 1.0, 2.244)) > 0.001:
+		_fail("Predicted swing travel should move the landing target ahead of the current hip position")
 	var strafe: Vector3 = planner.call(
 		"get_landing_target", hip, Basis.IDENTITY, Vector3(5.0, 0.0, 0.0), 1.0
 	)
