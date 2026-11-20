@@ -51,6 +51,14 @@ func _check_controller_gait() -> void:
 		_fail("Movement acceleration and deceleration must be positive")
 	if float(controller.get("run_weight")) <= 0.0:
 		_fail("Higher movement speeds should blend the procedural gait toward its running style")
+	if float(controller.get("stride_weight")) >= 0.8:
+		_fail("Walking stride intensity should be restrained below full sprint intensity")
+	var sprint_controller: RefCounted = LEG_CONTROLLER_SCRIPT.new()
+	sprint_controller.call("update", 0.125, Vector3(0.0, 0.0, -TUNING.PLAYER_RUN_SPEED_MPS), true)
+	if float(sprint_controller.get("stride_weight")) <= float(controller.get("stride_weight")):
+		_fail("Sprint should use a stronger stride than normal walking")
+	if not is_equal_approx(TUNING.JUMP_SPEED_MPS, 6.9):
+		_fail("Jump launch speed should use the slightly increased tuning value")
 	if TUNING.LEG_STEP_CYCLE_DISTANCE_M >= 1.6:
 		_fail("Stride cycle distance should keep planted feet from exceeding natural reach before swing begins")
 	var stance_travel_m: float = TUNING.LEG_STEP_CYCLE_DISTANCE_M * TUNING.LEG_STANCE_FRACTION
