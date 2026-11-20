@@ -490,3 +490,13 @@ This is still the first M10 slice, not the complete milestone. Owner lower-body 
 - Changed the ordinary unregister fixture to remove a real Player node while its recovery flag is active. The test now exercises the actual `_exit_tree()` → `unregister_movement_player()` path and verifies peer-owned timing, ragdoll epoch, and combat cooldown/action state are cleared.
 - Focused check: `.\\tests\\run_checks.ps1 -OnlyStage m9-lifecycle` from `fowl-play/`. Godot execution has not been performed by the assistant.
 - This is regression coverage only; no combat timing, recovery behavior, network authority, or scene files changed. M11.1 remains in progress pending user-run checks and the remaining interruption audit.
+
+
+## M11.2 — performance audit (source inspection)
+
+- Agreed minimum target: modest laptop, integrated graphics, 8 GB RAM, with a 60 FPS goal at reasonable settings. This is a target, not a measured guarantee.
+- Initial source inspection identified `PlayerRig.update_procedural_legs()` as the first profiling candidate. It currently refreshes all skeleton bone transforms twice per standing-player update and performs two ground probes per update. Since standing local and remote Players call this from `Player._process()`, the work scales with player count and rendered frame rate.
+- The local first-person camera also performs one obstruction ray query per rendered frame. Keep its immediate inward response and smooth outward recovery intact unless profiling proves it material.
+- Host combat processing iterates active jab/parry/lunge state, and ragdoll pose publishing captures/quantizes the physical-bone pose at its configured send rate. These are secondary profiling targets; do not reduce update rates or alter network cadence without measurements.
+- No gameplay or source behavior was changed in this audit. No Godot profiler capture, frame-time measurement, or integrated-graphics runtime test has been performed by the assistant.
+- Next: capture a repeatable baseline with the Godot Profiler/Monitors during idle, walking/sprinting, and a ragdoll/carry sequence. Record FPS/frame time, physics time, physics 3D time, and script time, then compare the same scenes after each isolated optimization.
