@@ -36,6 +36,8 @@ var _left_foot_bone_index: int = -1
 var _right_thigh_bone_index: int = -1
 var _right_shin_bone_index: int = -1
 var _right_foot_bone_index: int = -1
+var _left_leg_replant_distance_m: float = 0.0
+var _right_leg_replant_distance_m: float = 0.0
 var _leg_controller: RefCounted = LEG_CONTROLLER_SCRIPT.new()
 var _left_foot_plant: RefCounted = FOOT_PLANT_SCRIPT.new()
 var _right_foot_plant: RefCounted = FOOT_PLANT_SCRIPT.new()
@@ -214,6 +216,8 @@ func _ready() -> void:
 	_right_thigh_bone_index = skeleton.find_bone("Thigh_R")
 	_right_shin_bone_index = skeleton.find_bone("Shin_R")
 	_right_foot_bone_index = skeleton.find_bone("Foot_R")
+	_left_leg_replant_distance_m = _get_leg_chain_length(_left_thigh_bone_index, _left_shin_bone_index, _left_foot_bone_index) * TUNING.LEG_REPLANT_MAX_REACH_RATIO
+	_right_leg_replant_distance_m = _get_leg_chain_length(_right_thigh_bone_index, _right_shin_bone_index, _right_foot_bone_index) * TUNING.LEG_REPLANT_MAX_REACH_RATIO
 	_right_viewmodel_upper_arm_bone_index = skeleton.find_bone("UpperArm_L")
 	_right_viewmodel_forearm_bone_index = skeleton.find_bone("Forearm_L")
 	_right_viewmodel_hand_bone_index = skeleton.find_bone("Hand_L")
@@ -438,6 +442,13 @@ func _physics_process(_delta: float) -> void:
 	_left_ground_probe.clear()
 	_right_ground_probe.clear()
 
+func _get_leg_chain_length(thigh_index: int, shin_index: int, foot_index: int) -> float:
+	if thigh_index < 0 or shin_index < 0 or foot_index < 0:
+		return 0.0
+	var upper_length: float = skeleton.get_bone_rest(shin_index).origin.length()
+	var lower_length: float = skeleton.get_bone_rest(foot_index).origin.length()
+	return upper_length + lower_length
+
 func _probe_ground_at_target(foot_world: Vector3) -> Dictionary:
 	if not foot_world.is_finite():
 		return {}
@@ -566,8 +577,30 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 	if bool(_leg_controller.get("right_in_swing")) and planner_velocity.length() > TUNING.LEG_MIN_WALK_SPEED_MPS:
 		right_landing_world = _footstep_planner.call(
 			"get_landing_target", hip_center_world, global_basis, planner_velocity, 1.0,
-			0.0, 0.18, TUNING.LEG_STEP_CYCLE_DISTANCE_M * (1.0 - TUNING.LEG_STANCE_FRACTION)
+			0.0, 0.24, TUNING.LEG_STEP_CYCLE_DISTANCE_M * (1.0 - TUNING.LEG_STANCE_FRACTION)
 		)
+	var left_replant_requested: bool = false
+	var right_replant_requested: bool = false
+	var left_needs_replant: bool = not bool(_leg_controller.get("left_in_swing")) and bool(_left_foot_plant.call("needs_replant", left_hip_world, _left_leg_replant_distance_m))
+	var right_needs_replant: bool = not bool(_leg_controller.get("right_in_swing")) and bool(_right_foot_plant.call("needs_replant", right_hip_world, _right_leg_replant_distance_m))
+	if left_needs_replant or right_needs_replant:
+		var left_stretch_ratio: float = float(_left_foot_plant.call("get_stretch_ratio", left_hip_world, _left_leg_replant_distance_m))
+		var right_stretch_ratio: float = float(_right_foot_plant.call("get_stretch_ratio", right_hip_world, _right_leg_replant_distance_m))
+		# Only one leg may emergency-step at a time; recover the more stretched leg first.
+		if left_needs_replant and (not right_needs_replant or left_stretch_ratio >= right_stretch_ratio):
+			left_replant_requested = true
+			left_landing_world = _footstep_planner.call(
+				"get_landing_target", hip_center_world, global_basis, planner_velocity, -1.0,
+				TUNING.LEG_EMERGENCY_FORWARD_PLACEMENT_M, TUNING.LEG_MIN_LANDING_LATERAL_M, 0.0
+			)
+		elif right_needs_replant:
+			right_replant_requested = true
+			right_landing_world = _footstep_planner.call(
+				"get_landing_target", hip_center_world, global_basis, planner_velocity, 1.0,
+				TUNING.LEG_EMERGENCY_FORWARD_PLACEMENT_M, TUNING.LEG_MIN_LANDING_LATERAL_M, 0.0
+			)
+	left_landing_world = _footstep_planner.call("constrain_anatomical_side", left_landing_world, hip_center_world, global_basis, -1.0, TUNING.LEG_MIN_LANDING_LATERAL_M)
+	right_landing_world = _footstep_planner.call("constrain_anatomical_side", right_landing_world, hip_center_world, global_basis, 1.0, TUNING.LEG_MIN_LANDING_LATERAL_M)
 	# Keep each probe at its current sole height; only X/Z come from the hip zone.
 	left_landing_world.y = left_foot_world.y
 	right_landing_world.y = right_foot_world.y
@@ -584,12 +617,16 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 	var left_target: Vector3 = _left_foot_plant.call(
 		"update_target", left_foot_world, _left_foot_ground_target_world,
 		_left_foot_grounded, bool(_leg_controller.get("left_in_swing")),
-		float(_leg_controller.get("left_swing_progress")), 0.28
+		float(_leg_controller.get("left_swing_progress")), TUNING.LEG_REPLANT_LIFT_M,
+		delta, left_hip_world, _left_leg_replant_distance_m,
+		TUNING.LEG_REPLANT_RECOVERY_SECONDS, left_replant_requested
 	)
 	var right_target: Vector3 = _right_foot_plant.call(
 		"update_target", right_foot_world, _right_foot_ground_target_world,
 		_right_foot_grounded, bool(_leg_controller.get("right_in_swing")),
-		float(_leg_controller.get("right_swing_progress")), 0.28
+		float(_leg_controller.get("right_swing_progress")), TUNING.LEG_REPLANT_LIFT_M,
+		delta, right_hip_world, _right_leg_replant_distance_m,
+		TUNING.LEG_REPLANT_RECOVERY_SECONDS, right_replant_requested
 	)
 	_left_foot_ground_target_world = left_target
 	_right_foot_ground_target_world = right_target
@@ -645,9 +682,11 @@ func _debug_leg_status(_args: Array[Variant]) -> String:
 	]
 
 func _debug_leg_ground_status(_args: Array[Variant]) -> String:
-	return "left_hit=%s left_ik=%s left_weight=%.2f left_anchor=%s left_target=%s left_normal=%s right_hit=%s right_ik=%s right_weight=%.2f right_anchor=%s right_target=%s right_normal=%s" % [
+	return "left_hit=%s left_ik=%s left_weight=%.2f left_anchor=%s left_target=%s left_normal=%s left_replant=%s left_stretch=%.2f right_hit=%s right_ik=%s right_weight=%.2f right_anchor=%s right_target=%s right_normal=%s right_replant=%s right_stretch=%.2f" % [
 		_left_foot_grounded, _left_leg_ik_active, _left_leg_ik_weight, _left_foot_plant.get("anchor_world"), _left_foot_ground_target_world, _left_foot_ground_normal,
-		_right_foot_grounded, _right_leg_ik_active, _right_leg_ik_weight, _right_foot_plant.get("anchor_world"), _right_foot_ground_target_world, _right_foot_ground_normal
+		_left_foot_plant.get("emergency_replant_active"), _left_foot_plant.call("get_stretch_ratio", skeleton.to_global(skeleton.get_bone_global_pose(_left_thigh_bone_index).origin), _left_leg_replant_distance_m),
+		_right_foot_grounded, _right_leg_ik_active, _right_leg_ik_weight, _right_foot_plant.get("anchor_world"), _right_foot_ground_target_world, _right_foot_ground_normal,
+		_right_foot_plant.get("emergency_replant_active"), _right_foot_plant.call("get_stretch_ratio", skeleton.to_global(skeleton.get_bone_global_pose(_right_thigh_bone_index).origin), _right_leg_replant_distance_m)
 	]
 
 func update_procedural_right_arm(wrist_target_world: Vector3, delta: float) -> bool:
