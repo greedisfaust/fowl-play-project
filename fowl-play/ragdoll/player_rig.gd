@@ -78,8 +78,8 @@ func set_player_color(new_color: Color) -> void:
 		if geometry == null or geometry.name == &"FacePhoto" or _is_attached_hand_visual(geometry):
 			continue
 		var original: Material = geometry.material_override
-		if original == null:
-			original = geometry.get("material") as Material
+		if original == null and geometry is CSGShape3D:
+			original = (geometry as CSGShape3D).material
 		if original == null and geometry is MeshInstance3D:
 			var mesh_instance: MeshInstance3D = geometry as MeshInstance3D
 			if mesh_instance.mesh != null and mesh_instance.mesh.get_surface_count() > 0:
