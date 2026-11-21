@@ -1,7 +1,10 @@
 ## Persistent application root controller.
-## World scenes are replaceable children; session services remain in autoloads.
+## World scenes are replaceable children; players and session services remain persistent.
 class_name MainController
 extends Node3D
+
+const PLAYER_SCENE: PackedScene = preload("res://player/player.tscn")
+const TUNING = preload("res://core/tuning.gd")
 
 enum World {
 	APARTMENT,
@@ -19,6 +22,8 @@ signal world_changed(previous_world: int, current_world: int)
 
 @export_group("Scene References")
 @export var world_root_path: NodePath = ^"WorldRoot"
+@export var players_path: NodePath = ^"Players"
+@export var player_spawner_path: NodePath = ^"MultiplayerSpawner"
 
 @export_group("Transition")
 @export_range(0.0, 2.0, 0.05) var fade_duration_seconds: float = 0.35
@@ -30,23 +35,55 @@ var _has_active_world: bool = false
 var _transition_in_progress: bool = false
 
 var _world_root: Node3D
+var _players: Node3D
+var _player_spawner: MultiplayerSpawner
+var _network: Node
+var _debug_hub: Node
 var _transition_layer: CanvasLayer
 var _fade_rect: ColorRect
+## Stable peer-to-spawn-marker assignment, mirrored by MultiplayerSpawner spawn data.
+var _spawn_slots: Dictionary = {}
 
 
 func _ready() -> void:
 	_world_root = get_node_or_null(world_root_path) as Node3D
-	if _world_root == null:
-		push_error("MainController requires a Node3D at WorldRoot.")
+	_players = get_node_or_null(players_path) as Node3D
+	_player_spawner = get_node_or_null(player_spawner_path) as MultiplayerSpawner
+	_network = get_node_or_null("/root/Network")
+	_debug_hub = get_node_or_null("/root/DebugHub")
+
+	if _world_root == null or _players == null or _player_spawner == null:
+		push_error("MainController requires WorldRoot, Players, and MultiplayerSpawner nodes.")
 		return
+	if _network == null:
+		push_error("MainController requires the Network autoload.")
+		return
+
+	_player_spawner.spawn_path = _player_spawner.get_path_to(_players)
+	_player_spawner.spawn_function = _create_player
+	multiplayer.peer_connected.connect(_on_peer_connected)
+	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
+	if not _network.is_connected("session_started", _on_session_started):
+		_network.connect("session_started", _on_session_started)
+	if not _network.is_connected("session_ended", _on_session_ended):
+		_network.connect("session_ended", _on_session_ended)
+
+	if _debug_hub != null:
+		_debug_hub.call("watch", &"net/player_count", func() -> int: return _players.get_child_count())
 
 	_create_transition_overlay()
 	var initial_scene: PackedScene = _get_scene_for_world(initial_world)
 	if initial_scene == null:
-		push_warning("MainController has no Initial World scene assigned yet.")
+		push_warning("MainController has no Initial World scene assigned yet; player spawning will wait for a world.")
 		return
 
 	_install_world(initial_world, initial_scene)
+	_refresh_players_for_world.call_deferred()
+
+
+func _exit_tree() -> void:
+	if is_instance_valid(_debug_hub):
+		_debug_hub.call("unwatch", &"net/player_count")
 
 
 ## Called by the host when the team moves to another world.
@@ -122,6 +159,7 @@ func _install_world(world: int, packed_scene: PackedScene) -> bool:
 	active_world_instance = world_instance
 	_has_active_world = true
 	world_changed.emit(previous_world, active_world)
+	_refresh_players_for_world()
 	return true
 
 
@@ -152,9 +190,143 @@ func _perform_transition(destination: int, packed_scene: PackedScene) -> void:
 	active_world_instance = next_world
 	_has_active_world = true
 	world_changed.emit(previous_world, active_world)
+	_refresh_players_for_world()
 
 	await _fade_to(0.0)
 	_transition_in_progress = false
+
+
+## The world owns only its spawn markers. Main owns every player instance.
+func _refresh_players_for_world() -> void:
+	if not _has_active_world or not is_instance_valid(_players):
+		return
+	var spawn_points: Node3D = active_world_instance.get_node_or_null("SpawnPoints") as Node3D
+	if spawn_points == null or spawn_points.get_child_count() == 0:
+		push_warning("World %s needs SpawnPoints with Marker3D children; player spawning is waiting." % active_world_instance.name)
+		return
+
+	_place_existing_players(spawn_points)
+	_spawn_connected_players(spawn_points)
+
+
+func _place_existing_players(spawn_points: Node3D) -> void:
+	for player: Node in _players.get_children():
+		var peer_id: int = int(str(player.name))
+		var slot: int = int(_spawn_slots.get(peer_id, -1))
+		var marker: Marker3D = _get_spawn_marker(spawn_points, slot)
+		if marker == null:
+			push_warning("No matching spawn marker for existing player %d in %s." % [peer_id, active_world_instance.name])
+			continue
+		if bool(player.get("is_limp")) or bool(player.get("is_recovering")):
+			push_warning("Player %d is ragdolled/recovering; world placement waits for the elevator reset step." % peer_id)
+			continue
+		if player.has_method("is_carried") and bool(player.call("is_carried")):
+			push_warning("Player %d is being carried; world placement waits for the elevator reset step." % peer_id)
+			continue
+		if player.has_method("is_carrying") and bool(player.call("is_carrying")):
+			push_warning("Player %d is carrying an item; world placement waits for the elevator reset step." % peer_id)
+			continue
+		if player.has_method("place_at_world_spawn"):
+			player.call("place_at_world_spawn", marker.global_transform)
+		else:
+			player.global_transform = marker.global_transform
+
+
+func _spawn_connected_players(spawn_points: Node3D) -> void:
+	if not _can_spawn_players():
+		return
+	_spawn_player(TUNING.PEER_ID_HOST, spawn_points)
+	for peer_id: int in multiplayer.get_peers():
+		_spawn_player(peer_id, spawn_points)
+
+
+func _can_spawn_players() -> bool:
+	if _network == null:
+		return false
+	return str(_network.get("status")) == "offline" or bool(_network.get("is_host"))
+
+
+func _on_session_started() -> void:
+	_refresh_players_for_world.call_deferred()
+
+
+func _on_session_ended() -> void:
+	for player: Node in _players.get_children():
+		player.queue_free()
+	_spawn_slots.clear()
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+
+
+func _on_peer_connected(peer_id: int) -> void:
+	if not _can_spawn_players() or not _has_active_world:
+		return
+	_spawn_player.call_deferred(peer_id, active_world_instance.get_node_or_null("SpawnPoints"))
+
+
+func _on_peer_disconnected(peer_id: int) -> void:
+	_spawn_slots.erase(peer_id)
+	if not bool(_network.get("is_host")):
+		return
+	var player: Node = _players.get_node_or_null(str(peer_id))
+	if player != null:
+		player.queue_free()
+	if _debug_hub != null:
+		_debug_hub.call("log", &"net", "Despawning player %d from persistent Main." % peer_id)
+
+
+func _spawn_player(peer_id: int, spawn_points: Node3D) -> void:
+	if peer_id <= 0 or _players.has_node(str(peer_id)):
+		return
+	if spawn_points == null:
+		return
+	var slot: int = _find_available_spawn_slot(spawn_points.get_child_count())
+	if slot < 0:
+		if _debug_hub != null:
+			_debug_hub.call("warn", &"net", "No spawn slot available for peer %d." % peer_id)
+		return
+	_spawn_slots[peer_id] = slot
+	if _player_spawner.spawn({"peer_id": peer_id, "slot": slot}) == null:
+		_spawn_slots.erase(peer_id)
+		if _debug_hub != null:
+			_debug_hub.call("warn", &"net", "Failed to spawn player %d." % peer_id)
+
+
+func _find_available_spawn_slot(spawn_count: int) -> int:
+	for slot: int in range(mini(spawn_count, TUNING.MAX_PLAYERS)):
+		if not _spawn_slots.values().has(slot):
+			return slot
+	return -1
+
+
+func _create_player(data: Variant) -> Node:
+	if not data is Dictionary:
+		return null
+	var spawn_data: Dictionary = data
+	var peer_id: int = int(spawn_data.get("peer_id", 0))
+	var slot: int = int(spawn_data.get("slot", -1))
+	if peer_id <= 0:
+		return null
+	var spawn_points: Node3D = active_world_instance.get_node_or_null("SpawnPoints") as Node3D if is_instance_valid(active_world_instance) else null
+	var marker: Marker3D = _get_spawn_marker(spawn_points, slot)
+	if marker == null:
+		push_warning("Rejected player spawn for peer %d: invalid spawn slot %d." % [peer_id, slot])
+		return null
+
+	var player: CharacterBody3D = PLAYER_SCENE.instantiate() as CharacterBody3D
+	if player == null:
+		push_error("Player scene root must be CharacterBody3D.")
+		return null
+	player.name = str(peer_id)
+	player.set("input_peer_id", peer_id)
+	player.transform = _players.global_transform.affine_inverse() * marker.global_transform
+	_spawn_slots[peer_id] = slot
+	return player
+
+
+func _get_spawn_marker(spawn_points: Node3D, slot: int) -> Marker3D:
+	if spawn_points == null or slot < 0 or slot >= spawn_points.get_child_count():
+		return null
+	return spawn_points.get_child(slot) as Marker3D
 
 
 func _create_transition_overlay() -> void:
