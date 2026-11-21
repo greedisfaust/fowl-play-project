@@ -91,7 +91,7 @@ func refresh_display() -> void:
 
 	var left_rows: Array[String] = _build_pending_rows()
 	var right_rows: Array[String] = _build_player_rows()
-	var row_count: int = maxi(left_rows.size(), right_rows.size())
+	var row_count: int = maxi(left_rows.size(), right_rows.size() + 1)
 	var available_balance: int = _get_available_balance()
 	var minimum_value: int = profile.get_effective_minimum()
 	var maximum_value: int = profile.get_effective_maximum()
@@ -100,7 +100,11 @@ func refresh_display() -> void:
 	var amount_font_size: int = roundi(float(screen_text.terminal_font_size) * 1.45)
 	for row_index: int in range(row_count):
 		var left_value: String = left_rows[row_index] if row_index < left_rows.size() else ""
-		var right_value: String = right_rows[row_index] if row_index < right_rows.size() else ""
+		# Give the enlarged pending amount its own row. The confirmed-wager column
+		# starts on the following row so RichTextLabel's larger glyphs can never
+		# push player text sideways or wrap it into another line.
+		var right_index: int = row_index - 1
+		var right_value: String = right_rows[right_index] if right_index >= 0 and right_index < right_rows.size() else ""
 		var left_color: Color = profile.body_color
 		var left_size: int = 0
 		var center_left: bool = true
@@ -216,25 +220,17 @@ func _trim_decimal(value: float) -> String:
 
 func _format_split_row(left_text: String, right_text: String, left_width: int, right_width: int, center_left: bool, left_color: Color, left_font_size: int) -> String:
 	var safe_left: String = _fit_text(left_text, left_width)
-	var leading_padding: int = 0
-	var trailing_padding: int = maxi(left_width - safe_left.length(), 0)
-	var font_scale: float = 1.0
-	if left_font_size > 0:
-		# RichTextLabel scales glyphs, not the column's character budget. Account
-		# for the larger glyph width before placing the separator/right column.
-		font_scale = minf(1.45, float(left_width - 2) / maxf(float(safe_left.length()), 1.0))
-		font_scale = maxf(font_scale, 1.0)
-	if center_left:
-		var rendered_width: float = float(safe_left.length()) * font_scale
-		leading_padding = maxi(floori((float(left_width) - rendered_width) / 2.0), 0)
-		trailing_padding = maxi(floori(float(left_width) - rendered_width - float(leading_padding)), 0)
-	var right_value: String = _fit_text(right_text, right_width)
+\tvar leading_padding: int = 0
+\tvar trailing_padding: int = maxi(left_width - safe_left.length(), 0)
+\tif center_left:
+\t\tleading_padding = maxi(floori(float(left_width - safe_left.length()) / 2.0), 0)
+\t\ttrailing_padding = maxi(left_width - safe_left.length() - leading_padding, 0)
+\tvar right_value: String = _fit_text(right_text, right_width)
 	var right_padding: String = " ".repeat(maxi(right_width - right_value.length(), 0))
 	var color_hex: String = left_color.to_html(false)
 	var left_markup: String = "[color=#%s]" % color_hex
 	if left_font_size > 0:
-		var scaled_font_size: int = maxi(roundi(float(screen_text.terminal_font_size) * font_scale), screen_text.terminal_font_size)
-		left_markup += "[font_size=%d]" % scaled_font_size
+		left_markup += "[font_size=%d]" % left_font_size
 	left_markup += " ".repeat(leading_padding) + _escape_display_markup(safe_left)
 	if left_font_size > 0:
 		left_markup += "[/font_size]"
