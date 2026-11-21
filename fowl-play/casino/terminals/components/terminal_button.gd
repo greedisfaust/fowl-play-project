@@ -2,6 +2,11 @@
 ## Attach to the TerminalButton root and assign ButtonKey + Interactable.
 extends Node3D
 
+## Emitted by the authority when this physical key is pressed.
+signal button_pressed(button_id: StringName)
+
+## Unique action identifier consumed by the parent keypad/terminal.
+@export var button_id: StringName = &"1"
 @export var button_key: Node3D
 @export var interactable: Interactable
 @export_range(0.001, 0.03, 0.001, "suffix:m") var press_depth: float = 0.008
@@ -41,6 +46,7 @@ func _on_interacted(_actor: Node, action: StringName) -> void:
 	# still owns the local interaction.
 	if network_peer != null and not bool(network.get("is_host")):
 		return
+	button_pressed.emit(button_id)
 	_play_press_local()
 	if network_peer != null:
 		_receive_press_presentation.rpc()
