@@ -1,12 +1,12 @@
 # Fowl Play — Project State
 
-**Status:** Casino Foundation & World Gameplay Loop is active on `environment/world-building-and-gameplay-loop`, based on merged main commit `75675cc31456c3b0d7b5bb365ec82fd81ced9a72`. Phase 0 audit and architecture specification are complete. The host-authoritative shared wallet and script-only BaseTable lifecycle controller are implemented. USER VERIFIED: both casino headless suites pass in Godot 4.7.2.
+**Status:** Casino Foundation & World Gameplay Loop is active on `environment/world-building-and-gameplay-loop`. Phase 0 audit and architecture specification are complete. The host-authoritative shared wallet and script-only BaseTable lifecycle controller are implemented. USER VERIFIED: wallet and BaseTable headless suites pass in Godot 4.7.2. Chicken Cross pure rules and per-player round-state model are implemented; its focused test is awaiting user execution.
 
 ## Last updated (2026-11-21; casino wallet + BaseTable test verification)
 
-- Current branch: `environment/world-building-and-gameplay-loop` (based on merged main commit `75675cc31456c3b0d7b5bb365ec82fd81ced9a72`). The first wallet implementation slice is committed. Shared wallet API and test are in `fowl-play/casino/shared_wallet.gd` and `fowl-play/tests/casino_wallet_test.gd`; no BaseTable or casino scenes exist yet.
+- Current branch: `environment/world-building-and-gameplay-loop`. Latest Chicken Cross rules/model commit: `6b4ce2b7ca39c117835bc5337bdb6fc6f9e01521`. Shared wallet and BaseTable scripts/tests exist; physical casino scenes remain editor-authored and have not started.
 - Godot 4.7 project: `fowl-play/`, using Jolt Physics, Forward+, and D3D12.
-- `fowl-play/project.godot` contains the project settings, input actions, and five autoload entries, including the new `CasinoWallet` service.
+- `fowl-play/project.godot` contains the project settings, input actions, and five autoload entries, including the `CasinoWallet` service.
 - Foundation scripts exist in `fowl-play/core/`: `layers.gd`, `tuning.gd`, `network.gd`, and `debug_hub.gd`. The shared casino wallet is `fowl-play/casino/shared_wallet.gd`.
 - Debug-console work is committed as `762c00f`; M0 is committed as `017f1cb`.
 - D0, M1, M2 hand checks, and M0 network checks pass with Godot 4.7.2. Prop/profile and hand scripts import cleanly.
@@ -42,7 +42,7 @@
 
 Late join is decided: allowed during the rest of a day, not during casino/elevator gameplay. Throw power is decided: fixed full power with auto-fire at one second.
 
-Casino foundation decisions and open questions are tracked in [the active casino session](sessions/environment-world-building-and-gameplay-loop.md) and [Casino Foundation Design](CASINO_FOUNDATION_DESIGN.md).
+Casino foundation decisions and open questions are tracked in [the active casino session](sessions/environment-world-building-and-gameplay-loop.md), [Casino Foundation Design](CASINO_FOUNDATION_DESIGN.md), and [Chicken Cross rules](CASINO_CHICKEN_CROSS.md).
 
 ## Known limitations
 
@@ -64,7 +64,7 @@ Casino foundation decisions and open questions are tracked in [the active casino
 
 The user also confirmed the latest player-color implementation works in-game. This is user verification, not a claim that the assistant ran Godot tests. Existing automated test stages and any unconfirmed WorldScreen visual checks remain recorded as pending rather than being silently marked passed.
 
-**Active feature:** Casino Foundation & World Gameplay Loop, branch `environment/world-building-and-gameplay-loop`. The branch starts from merged main commit `75675cc31456c3b0d7b5bb365ec82fd81ced9a72`. The read-only repository audit is underway; the first deliverable is `docs/CASINO_FOUNDATION_DESIGN.md`, followed by a reviewed BaseTable/shared-service contract. No casino code or scenes have been implemented yet. See [the active feature session](sessions/environment-world-building-and-gameplay-loop.md).
+**Active feature:** Casino Foundation & World Gameplay Loop, branch `environment/world-building-and-gameplay-loop`. Shared wallet, BaseTable lifecycle, and Chicken Cross pure rules/model are implemented. Chicken Cross network/table integration is next; physical casino scenes remain editor-authored. See [the active feature session](sessions/environment-world-building-and-gameplay-loop.md).
 
 ## Historical verification notes
 

@@ -9,12 +9,12 @@ Base docs: `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `
 
 ## Current state (rewrite every session)
 
-- Branch `environment/world-building-and-gameplay-loop` is active; latest verified head before this documentation update is `70f49bf5677c333ee8de1beb3179a400b1a216a7`.
+- Branch `environment/world-building-and-gameplay-loop` is active; latest verified head is `6b4ce2b7ca39c117835bc5337bdb6fc6f9e01521`.
 - Shared wallet and generic script-only `BaseTable` controller are implemented. Both casino headless test suites have been USER VERIFIED passing in Godot 4.7.2.
 - The project is Godot 4.7, typed GDScript, Jolt, ENet, max four players; `fowl-play/` is the Godot project.
 - Existing reusable foundations include `Interactable` / `Focus`, `Network`, `PlayerIdentity`, `DebugHub`, and the current player/nameplate presentation.
 - The user's editor-authored scenes remain user-owned. Do not generate scene trees, meshes, collision shapes, or physical table art in code.
-- Phase 0 repository audit and architecture specification are complete. Shared wallet and BaseTable lifecycle implementation are complete for this initial slice; Chicken Cross and physical casino scenes are not implemented.
+- Phase 0 repository audit and architecture specification are complete. Shared wallet and BaseTable lifecycle implementation are complete. Chicken Cross pure rules and per-player round-state model are implemented; the networked table adapter and physical casino scenes are not implemented.
 
 ## Done (this branch)
 
@@ -31,10 +31,11 @@ Base docs: `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `
 - [DONE] Shared wallet implementation — host-authoritative `CasinoWallet` autoload, per-wager attribution, round open/edit/withdraw/lock/cancel/settle lifecycle, DebugHub watches/commands, and headless test script added.
 - [DONE] Authoritative project overview updated to include the approved casino foundation scope and wallet rules.
 - [DONE] Wallet and BaseTable test execution — user ran `tests/run_casino_checks.bat`; `CASINO WALLET PASS`, `BASE TABLE PASS`, and `ALL CASINO CHECKS PASSED` were printed in Godot 4.7.2. Two Jolt cone-twist warnings during import were non-fatal.
+- [DONE] Chicken Cross rules/model slice — added the approved 12-tile failure/multiplier tables, deterministic per-player round state, locked-wager validation, independent roll injection, cash-out/failure tracking, final-tile auto-cashout, gross payout map, and a focused headless test. Test execution is pending user run.
 
 ## Exact next step
 
-Close the remaining shared-table policy gates before implementing Chicken Cross: define the 45-second inactivity timeout's activity/reset/refund behavior, clarify early-departure force-refunds for already-started rounds, and define what happens visually/operationally to active rounds after timer expiry. Then write the Chicken Cross reference-game contract and implementation slice.
+Implement the Chicken Cross table adapter that uses BaseTable, binds host-validated Cross/Cash Out intents to each participant's own chicken, generates a fresh host-side random roll per accepted tile entry, and settles only after all participants finish. Before implementing departure handling, ask the user whether a started participant who leaves/disconnects should auto-cash-out at their current tile or lose their wager.
 
 ## Waiting on the user
 
@@ -103,6 +104,10 @@ Close the remaining shared-table policy gates before implementing Chicken Cross:
 - `docs/CASINO_FOUNDATION_DESIGN.md` — architecture contract and implementation plan.
 - `fowl-play/casino/shared_wallet.gd` — host-authoritative shared wallet and wager ledger.
 - `fowl-play/tests/casino_wallet_test.gd` — headless wallet lifecycle regression test.
+- `fowl-play/casino/chicken_cross_rules.gd` — approved 12-tile tuning and pure payout rules.
+- `fowl-play/casino/chicken_cross_round.gd` — individual player progress/outcome model.
+- `fowl-play/tests/chicken_cross_rules_test.gd` — deterministic Chicken Cross regression test.
+- `docs/CASINO_CHICKEN_CROSS.md` — rules, tuning, and integration contract.
 - `fowl-play/project.godot` — `CasinoWallet` autoload registration.
 - `fowl-play/core/debug_hub.gd` — wallet diagnostics category.
 
@@ -153,3 +158,12 @@ Close the remaining shared-table policy gates before implementing Chicken Cross:
 - `CASINO WALLET PASS`, `BASE TABLE PASS`, and `ALL CASINO CHECKS PASSED` were printed. Import-time Jolt cone-twist bias/softness warnings were non-fatal.
 - Fixed the BaseTable test's extra argument to `cancel_open_round()` in commit `70f49bf5677c333ee8de1beb3179a400b1a216a7`.
 - Next: finalize inactivity timeout, started-round early-departure refund scope, and timer-expiry cleanup policies before Chicken Cross implementation.
+
+
+### Session 2 — 2026-11-21 — GPT-6
+- Verified active branch head `484c1bd6a4f3774b6731557eec1ee47be0fa4910` and audited the actual wallet/BaseTable implementation. Older project-state/index notes contradicted the code by claiming BaseTable did not exist; the branch session itself correctly described it as implemented.
+- User approved Chicken Cross mode B: one chicken per participating player, shared lane, shared Cross and Cash Out controls routed to the pressing player's own chicken, independent per-player tile rolls, and completion only when every participant is cashed out or failed.
+- User approved the twelve-tile risk curve and multiplier curve recorded in `docs/CASINO_CHICKEN_CROSS.md`.
+- Added pure rules and per-player round model, deterministic tests, test-runner stages, and the Chicken Cross rules contract. New head is `6b4ce2b7ca39c117835bc5337bdb6fc6f9e01521`.
+- Godot execution is pending user verification. No scene files were changed. No push was performed.
+- Next: implement the host-authoritative table adapter after resolving the started-participant departure/disconnect outcome.
