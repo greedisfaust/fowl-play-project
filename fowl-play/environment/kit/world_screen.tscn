@@ -62,8 +62,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-text = "LOBOTOMY
-I NEED"
 script = ExtResource("1_screen_text")
 terminal_font = ExtResource("3_vx1u1")
 terminal_font_size = 88

@@ -188,8 +188,8 @@ depth = 0.001
 script = ExtResource("4_m66nv")
 game_title = "CHICKEN CROSS"
 game_description = "WHY DID THE CHICKEN CROSS THE ROAD?"
-minimum_label = "MIN: >"
-maximum_label = "MAX: >"
+minimum_label = "MIN"
+maximum_label = "MAX"
 insufficient_funds_message = "INSUFFICIENT FUNDS"
 metadata/_custom_type_script = "uid://wf882bhl4vvh"
 
