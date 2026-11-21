@@ -62,7 +62,13 @@ func _rebuild_mesh() -> void:
 				_add_vertex(surface_tool, p11, inner_half, radius, normal)
 				_add_vertex(surface_tool, p01, inner_half, radius, normal)
 
-	mesh = surface_tool.commit()
+	var existing_material: Material = null
+	if mesh != null and mesh.get_surface_count() > 0:
+		existing_material = mesh.surface_get_material(0)
+	var generated_mesh: ArrayMesh = surface_tool.commit() as ArrayMesh
+	if generated_mesh != null and existing_material != null:
+		generated_mesh.surface_set_material(0, existing_material)
+	mesh = generated_mesh
 
 func _rounded_surface_point(
 	normal: Vector3,
