@@ -5,6 +5,7 @@ const BaseTableScript = preload("res://casino/base_table.gd")
 const KeypadControllerScript = preload("res://casino/terminals/components/betting_keypad_controller.gd")
 const BettingProfileScript = preload("res://casino/terminals/resources/betting_terminal_profile.gd")
 const BettingDisplayScript = preload("res://casino/terminals/display/betting_terminal_display.gd")
+const PlayerIdentityScript = preload("res://core/player_identity.gd")
 
 var _failed: bool = false
 
@@ -114,8 +115,16 @@ func _run() -> void:
 	_check(bool(display.call("_is_pending_wager_valid", 50, 500, 850)), "In-range affordable wager is marked valid")
 	_check(not bool(display.call("_is_pending_wager_valid", 50, 500, 99)), "Unaffordable wager is marked invalid")
 
+	var network: Node = root.get_node("Network")
+	var identities: Dictionary = network.get("player_identities")
+	identities[1] = PlayerIdentityScript.new(1, "RED", 0)
+	network.set("player_identities", identities)
+	display.set("_network", network)
 	var occupancy_rows: Array[String] = display.call("_build_player_rows")
 	_check(not occupancy_rows.is_empty() and occupancy_rows[0] == "2 / 2 PLAYERS", "Terminal occupancy counts players currently inside its proximity")
+	_check(display.call("_get_player_color", 1) == Color("#ef5350"), "Confirmed player row uses the assigned identity color")
+	var player_row_colors: Dictionary = display.get("_player_row_colors")
+	_check(player_row_colors.has(1) and player_row_colors.has(2), "Every confirmed player row receives its own identity color")
 	display.free()
 	controller.queue_free()
 	table.queue_free()
