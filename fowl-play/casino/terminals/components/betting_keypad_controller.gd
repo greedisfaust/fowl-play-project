@@ -82,9 +82,11 @@ func handle_button_input(button_id: StringName, peer_id: int) -> Dictionary:
 	if action.length() == 1 and action.is_valid_int():
 		if _pending_digits.length() >= MAX_WAGER_DIGITS:
 			return _failure("The wager amount has reached the maximum supported digits.")
-		var next_amount: int = int(_pending_digits) * 10 + int(action)
-		if next_amount > MAX_WAGER_AMOUNT:
+		var current_amount: int = int(_pending_digits)
+		var next_digit: int = int(action)
+		if current_amount > floori(float(MAX_WAGER_AMOUNT - next_digit) / 10.0):
 			return _failure("The wager amount exceeds the supported 64-bit wallet limit.")
+		var next_amount: int = current_amount * 10 + next_digit
 		if _pending_digits == "0":
 			_pending_digits = action
 		else:
