@@ -29,7 +29,7 @@ func _ready() -> void:
 	_network = get_node_or_null("/root/Network")
 	_debug_hub = get_node_or_null("/root/DebugHub")
 	if is_instance_valid(_debug_hub):
-		var table_key: String = table.table_id if is_instance_valid(table) else name
+		var table_key: String = table.table_id if is_instance_valid(table) else str(name)
 		_debug_watch_prefix = "casino_keypad/%s/" % table_key
 		_debug_hub.call("watch", StringName(_debug_watch_prefix + "pending_amount"), func() -> int: return get_pending_wager_amount())
 		_debug_hub.call("watch", StringName(_debug_watch_prefix + "snapshot_revision"), func() -> int: return _snapshot_revision)
