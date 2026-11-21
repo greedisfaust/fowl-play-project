@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cvivaojdxc1yn"]
 
 [ext_resource type="Script" uid="uid://c87t4r001otjo" path="res://casino/tables/chicken_cross/chicken_cross_table.gd" id="1_qj6gr"]
+[ext_resource type="FontFile" uid="uid://yp8swvkjd53f" path="res://assets/fonts/BADABB__.TTF" id="2_j2b8q"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qj6gr"]
 albedo_color = Color(0.14901961, 0.105882354, 0.07450981, 1)
@@ -51,7 +52,7 @@ roughness = 0.95
 
 [sub_resource type="BoxMesh" id="BoxMesh_57qmd"]
 material = SubResource("StandardMaterial3D_h37pg")
-size = Vector3(0.205, 0.01, 0.7)
+size = Vector3(0.205, 0.01, 0.85)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3gngh"]
 albedo_color = Color(0.9490196, 0.9411765, 0.9098039, 1)
@@ -72,6 +73,109 @@ size = Vector3(0.007, 0.002, 0.85)
 [sub_resource type="BoxMesh" id="BoxMesh_j2b8q"]
 material = SubResource("StandardMaterial3D_kfe3w")
 size = Vector3(0.007, 0.002, 0.85)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_g4v7s"]
+albedo_color = Color(0.21176471, 0.27058825, 0.30980393, 1)
+metallic = 0.25
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_m66nv"]
+metallic = 0.25
+roughness = 0.85
+emission_enabled = true
+emission = Color(1, 1, 1, 1)
+emission_energy_multiplier = 2.2
+
+[sub_resource type="TextMesh" id="TextMesh_g4v7s"]
+text = "01"
+font = ExtResource("2_j2b8q")
+font_size = 12
+pixel_size = 0.005
+depth = 0.001
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ycxhi"]
+albedo_color = Color(0.14901961, 0.105882354, 0.07450981, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_fcnqv"]
+material = SubResource("StandardMaterial3D_ycxhi")
+size = Vector3(0.105, 0.025, 0.105)
+
+[sub_resource type="TextMesh" id="TextMesh_j2b8q"]
+text = "02"
+font = ExtResource("2_j2b8q")
+font_size = 12
+pixel_size = 0.005
+depth = 0.001
+
+[sub_resource type="TextMesh" id="TextMesh_lhivj"]
+text = "03"
+font = ExtResource("2_j2b8q")
+font_size = 12
+pixel_size = 0.005
+depth = 0.001
+
+[sub_resource type="TextMesh" id="TextMesh_u8m3w"]
+text = "04"
+font = ExtResource("2_j2b8q")
+font_size = 12
+pixel_size = 0.005
+depth = 0.001
+
+[sub_resource type="TextMesh" id="TextMesh_ndg1d"]
+text = "05"
+font = ExtResource("2_j2b8q")
+font_size = 12
+pixel_size = 0.005
+depth = 0.001
+
+[sub_resource type="TextMesh" id="TextMesh_h37pg"]
+text = "06"
+font = ExtResource("2_j2b8q")
+font_size = 12
+pixel_size = 0.005
+depth = 0.001
+
+[sub_resource type="TextMesh" id="TextMesh_lwvou"]
+text = "07"
+font = ExtResource("2_j2b8q")
+font_size = 12
+pixel_size = 0.005
+depth = 0.001
+
+[sub_resource type="TextMesh" id="TextMesh_kfe3w"]
+text = "08"
+font = ExtResource("2_j2b8q")
+font_size = 12
+pixel_size = 0.005
+depth = 0.001
+
+[sub_resource type="TextMesh" id="TextMesh_m66nv"]
+text = "09"
+font = ExtResource("2_j2b8q")
+font_size = 12
+pixel_size = 0.005
+depth = 0.001
+
+[sub_resource type="TextMesh" id="TextMesh_ycxhi"]
+text = "10"
+font = ExtResource("2_j2b8q")
+font_size = 12
+pixel_size = 0.005
+depth = 0.001
+
+[sub_resource type="TextMesh" id="TextMesh_kvjqb"]
+text = "11"
+font = ExtResource("2_j2b8q")
+font_size = 12
+pixel_size = 0.005
+depth = 0.001
+
+[sub_resource type="TextMesh" id="TextMesh_3hc4c"]
+text = "12"
+font = ExtResource("2_j2b8q")
+font_size = 12
+pixel_size = 0.005
+depth = 0.001
 
 [node name="ChickenCrossTable" type="Node3D" unique_id=1850824241]
 script = ExtResource("1_qj6gr")
@@ -103,6 +207,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, 0)
 mesh = SubResource("BoxMesh_yf5fn")
 
 [node name="TileLane" type="Node3D" parent="Visuals" unique_id=1683505106]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.01, 0)
 
 [node name="Tile_01" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=215189896]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.38, 1.08, 0)
@@ -120,6 +225,23 @@ mesh = SubResource("BoxMesh_3gngh")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.007, 0)
 mesh = SubResource("BoxMesh_j2b8q")
 
+[node name="TileNumber01" type="Node3D" parent="Visuals/TileLane/Tile_01" unique_id=828186681]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.515)
+
+[node name="CSGPolygon3D" type="CSGPolygon3D" parent="Visuals/TileLane/Tile_01/TileNumber01" unique_id=458434594]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -0.050198197, 0, -0.05025003)
+polygon = PackedVector2Array(0, 0, 0, 0.05, 0.1, 0.015, 0.1, 0)
+depth = 0.1
+material = SubResource("StandardMaterial3D_g4v7s")
+
+[node name="TileNumber" type="MeshInstance3D" parent="Visuals/TileLane/Tile_01/TileNumber01/CSGPolygon3D" unique_id=930150153]
+transform = Transform3D(-0.00523593, -0.93967974, 0.34201548, 0, 0.34202015, 0.9396926, -0.9999863, 0.0049201646, -0.0017907936, 0.055, 0.031148553, -0.049999952)
+material_override = SubResource("StandardMaterial3D_m66nv")
+mesh = SubResource("TextMesh_g4v7s")
+
+[node name="TileNumberPlate" type="MeshInstance3D" parent="Visuals/TileLane/Tile_01/TileNumber01" unique_id=1061015]
+mesh = SubResource("BoxMesh_fcnqv")
+
 [node name="Tile_02" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=1505357518]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.13, 1.08, 0)
 mesh = SubResource("BoxMesh_57qmd")
@@ -135,6 +257,23 @@ mesh = SubResource("BoxMesh_3gngh")
 [node name="RoadEdge_Right" type="MeshInstance3D" parent="Visuals/TileLane/Tile_02" unique_id=317266269]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.007, 0)
 mesh = SubResource("BoxMesh_j2b8q")
+
+[node name="TileNumber02" type="Node3D" parent="Visuals/TileLane/Tile_02" unique_id=1102441526]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.515)
+
+[node name="CSGPolygon3D" type="CSGPolygon3D" parent="Visuals/TileLane/Tile_02/TileNumber02" unique_id=1245223453]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -0.050198197, 0, -0.05025003)
+polygon = PackedVector2Array(0, 0, 0, 0.05, 0.1, 0.015, 0.1, 0)
+depth = 0.1
+material = SubResource("StandardMaterial3D_g4v7s")
+
+[node name="TileNumber" type="MeshInstance3D" parent="Visuals/TileLane/Tile_02/TileNumber02/CSGPolygon3D" unique_id=533489533]
+transform = Transform3D(-0.00523593, -0.93967974, 0.34201548, 0, 0.34202015, 0.9396926, -0.9999863, 0.0049201646, -0.0017907936, 0.054999977, 0.031148553, -0.053691268)
+material_override = SubResource("StandardMaterial3D_m66nv")
+mesh = SubResource("TextMesh_j2b8q")
+
+[node name="TileNumberPlate" type="MeshInstance3D" parent="Visuals/TileLane/Tile_02/TileNumber02" unique_id=218857818]
+mesh = SubResource("BoxMesh_fcnqv")
 
 [node name="Tile_03" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=1113328987]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.88, 1.08, 0)
@@ -152,6 +291,23 @@ mesh = SubResource("BoxMesh_3gngh")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.007, 0)
 mesh = SubResource("BoxMesh_j2b8q")
 
+[node name="TileNumber03" type="Node3D" parent="Visuals/TileLane/Tile_03" unique_id=93427686]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.515)
+
+[node name="CSGPolygon3D" type="CSGPolygon3D" parent="Visuals/TileLane/Tile_03/TileNumber03" unique_id=1184017419]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -0.050198197, 0, -0.05025003)
+polygon = PackedVector2Array(0, 0, 0, 0.05, 0.1, 0.015, 0.1, 0)
+depth = 0.1
+material = SubResource("StandardMaterial3D_g4v7s")
+
+[node name="TileNumber" type="MeshInstance3D" parent="Visuals/TileLane/Tile_03/TileNumber03/CSGPolygon3D" unique_id=750216567]
+transform = Transform3D(-0.00523593, -0.93967974, 0.34201548, 0, 0.34202015, 0.9396926, -0.9999863, 0.0049201646, -0.0017907936, 0.055000007, 0.031148553, -0.052683413)
+material_override = SubResource("StandardMaterial3D_m66nv")
+mesh = SubResource("TextMesh_lhivj")
+
+[node name="TileNumberPlate" type="MeshInstance3D" parent="Visuals/TileLane/Tile_03/TileNumber03" unique_id=972243496]
+mesh = SubResource("BoxMesh_fcnqv")
+
 [node name="Tile_04" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=474754693]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.63, 1.08, 0)
 mesh = SubResource("BoxMesh_57qmd")
@@ -167,6 +323,23 @@ mesh = SubResource("BoxMesh_3gngh")
 [node name="RoadEdge_Right" type="MeshInstance3D" parent="Visuals/TileLane/Tile_04" unique_id=1804633739]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.007, 0)
 mesh = SubResource("BoxMesh_j2b8q")
+
+[node name="TileNumber04" type="Node3D" parent="Visuals/TileLane/Tile_04" unique_id=622363302]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.515)
+
+[node name="CSGPolygon3D" type="CSGPolygon3D" parent="Visuals/TileLane/Tile_04/TileNumber04" unique_id=765352338]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -0.050198197, 0, -0.05025003)
+polygon = PackedVector2Array(0, 0, 0, 0.05, 0.1, 0.015, 0.1, 0)
+depth = 0.1
+material = SubResource("StandardMaterial3D_g4v7s")
+
+[node name="TileNumber" type="MeshInstance3D" parent="Visuals/TileLane/Tile_04/TileNumber04/CSGPolygon3D" unique_id=1566295148]
+transform = Transform3D(-0.00523593, -0.93967974, 0.34201548, 0, 0.34202015, 0.9396926, -0.9999863, 0.0049201646, -0.0017907936, 0.054999948, 0.031148553, -0.053756416)
+material_override = SubResource("StandardMaterial3D_m66nv")
+mesh = SubResource("TextMesh_u8m3w")
+
+[node name="TileNumberPlate" type="MeshInstance3D" parent="Visuals/TileLane/Tile_04/TileNumber04" unique_id=874450156]
+mesh = SubResource("BoxMesh_fcnqv")
 
 [node name="Tile_05" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=467229850]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.38, 1.08, 0)
@@ -184,6 +357,23 @@ mesh = SubResource("BoxMesh_3gngh")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.007, 0)
 mesh = SubResource("BoxMesh_j2b8q")
 
+[node name="TileNumber05" type="Node3D" parent="Visuals/TileLane/Tile_05" unique_id=513330314]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.515)
+
+[node name="CSGPolygon3D" type="CSGPolygon3D" parent="Visuals/TileLane/Tile_05/TileNumber05" unique_id=30521990]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -0.050198197, 0, -0.05025003)
+polygon = PackedVector2Array(0, 0, 0, 0.05, 0.1, 0.015, 0.1, 0)
+depth = 0.1
+material = SubResource("StandardMaterial3D_g4v7s")
+
+[node name="TileNumber" type="MeshInstance3D" parent="Visuals/TileLane/Tile_05/TileNumber05/CSGPolygon3D" unique_id=800566375]
+transform = Transform3D(-0.00523593, -0.93967974, 0.34201548, 0, 0.34202015, 0.9396926, -0.9999863, 0.0049201646, -0.0017907936, 0.054999948, 0.031148553, -0.05539733)
+material_override = SubResource("StandardMaterial3D_m66nv")
+mesh = SubResource("TextMesh_ndg1d")
+
+[node name="TileNumberPlate" type="MeshInstance3D" parent="Visuals/TileLane/Tile_05/TileNumber05" unique_id=1189729815]
+mesh = SubResource("BoxMesh_fcnqv")
+
 [node name="Tile_06" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=214893932]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.13, 1.08, 0)
 mesh = SubResource("BoxMesh_57qmd")
@@ -199,6 +389,23 @@ mesh = SubResource("BoxMesh_3gngh")
 [node name="RoadEdge_Right" type="MeshInstance3D" parent="Visuals/TileLane/Tile_06" unique_id=515642548]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.007, 0)
 mesh = SubResource("BoxMesh_j2b8q")
+
+[node name="TileNumber06" type="Node3D" parent="Visuals/TileLane/Tile_06" unique_id=777572292]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.515)
+
+[node name="CSGPolygon3D" type="CSGPolygon3D" parent="Visuals/TileLane/Tile_06/TileNumber06" unique_id=712626852]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -0.050198197, 0, -0.05025003)
+polygon = PackedVector2Array(0, 0, 0, 0.05, 0.1, 0.015, 0.1, 0)
+depth = 0.1
+material = SubResource("StandardMaterial3D_g4v7s")
+
+[node name="TileNumber" type="MeshInstance3D" parent="Visuals/TileLane/Tile_06/TileNumber06/CSGPolygon3D" unique_id=1022489342]
+transform = Transform3D(-0.00523593, -0.93967974, 0.34201548, 0, 0.34202015, 0.9396926, -0.9999863, 0.0049201646, -0.0017907936, 0.054999977, 0.031148553, -0.054747775)
+material_override = SubResource("StandardMaterial3D_m66nv")
+mesh = SubResource("TextMesh_h37pg")
+
+[node name="TileNumberPlate" type="MeshInstance3D" parent="Visuals/TileLane/Tile_06/TileNumber06" unique_id=679942243]
+mesh = SubResource("BoxMesh_fcnqv")
 
 [node name="Tile_07" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=939049867]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.12, 1.08, 0)
@@ -216,6 +423,23 @@ mesh = SubResource("BoxMesh_3gngh")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.007, 0)
 mesh = SubResource("BoxMesh_j2b8q")
 
+[node name="TileNumber07" type="Node3D" parent="Visuals/TileLane/Tile_07" unique_id=1707456275]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.515)
+
+[node name="CSGPolygon3D" type="CSGPolygon3D" parent="Visuals/TileLane/Tile_07/TileNumber07" unique_id=1319406336]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -0.050198197, 0, -0.05025003)
+polygon = PackedVector2Array(0, 0, 0, 0.05, 0.1, 0.015, 0.1, 0)
+depth = 0.1
+material = SubResource("StandardMaterial3D_g4v7s")
+
+[node name="TileNumber" type="MeshInstance3D" parent="Visuals/TileLane/Tile_07/TileNumber07/CSGPolygon3D" unique_id=805496362]
+transform = Transform3D(-0.00523593, -0.93967974, 0.34201548, 0, 0.34202015, 0.9396926, -0.9999863, 0.0049201646, -0.0017907936, 0.054999977, 0.031148553, -0.05207383)
+material_override = SubResource("StandardMaterial3D_m66nv")
+mesh = SubResource("TextMesh_lwvou")
+
+[node name="TileNumberPlate" type="MeshInstance3D" parent="Visuals/TileLane/Tile_07/TileNumber07" unique_id=2050150318]
+mesh = SubResource("BoxMesh_fcnqv")
+
 [node name="Tile_08" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=411359710]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.37, 1.08, 0)
 mesh = SubResource("BoxMesh_57qmd")
@@ -231,6 +455,23 @@ mesh = SubResource("BoxMesh_3gngh")
 [node name="RoadEdge_Right" type="MeshInstance3D" parent="Visuals/TileLane/Tile_08" unique_id=659561157]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.007, 0)
 mesh = SubResource("BoxMesh_j2b8q")
+
+[node name="TileNumber08" type="Node3D" parent="Visuals/TileLane/Tile_08" unique_id=1116257863]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.515)
+
+[node name="CSGPolygon3D" type="CSGPolygon3D" parent="Visuals/TileLane/Tile_08/TileNumber08" unique_id=26407602]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -0.050198197, 0, -0.05025003)
+polygon = PackedVector2Array(0, 0, 0, 0.05, 0.1, 0.015, 0.1, 0)
+depth = 0.1
+material = SubResource("StandardMaterial3D_g4v7s")
+
+[node name="TileNumber" type="MeshInstance3D" parent="Visuals/TileLane/Tile_08/TileNumber08/CSGPolygon3D" unique_id=909042167]
+transform = Transform3D(-0.00523593, -0.93967974, 0.34201548, 0, 0.34202015, 0.9396926, -0.9999863, 0.0049201646, -0.0017907936, 0.054999977, 0.031148553, -0.052084506)
+material_override = SubResource("StandardMaterial3D_m66nv")
+mesh = SubResource("TextMesh_kfe3w")
+
+[node name="TileNumberPlate" type="MeshInstance3D" parent="Visuals/TileLane/Tile_08/TileNumber08" unique_id=1544299831]
+mesh = SubResource("BoxMesh_fcnqv")
 
 [node name="Tile_09" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=1359833630]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.62, 1.08, 0)
@@ -248,6 +489,23 @@ mesh = SubResource("BoxMesh_3gngh")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.007, 0)
 mesh = SubResource("BoxMesh_j2b8q")
 
+[node name="TileNumber09" type="Node3D" parent="Visuals/TileLane/Tile_09" unique_id=674573527]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.515)
+
+[node name="CSGPolygon3D" type="CSGPolygon3D" parent="Visuals/TileLane/Tile_09/TileNumber09" unique_id=1302862175]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -0.050198197, 0, -0.05025003)
+polygon = PackedVector2Array(0, 0, 0, 0.05, 0.1, 0.015, 0.1, 0)
+depth = 0.1
+material = SubResource("StandardMaterial3D_g4v7s")
+
+[node name="TileNumber" type="MeshInstance3D" parent="Visuals/TileLane/Tile_09/TileNumber09/CSGPolygon3D" unique_id=1161946149]
+transform = Transform3D(-0.00523593, -0.93967974, 0.34201548, 0, 0.34202015, 0.9396926, -0.9999863, 0.0049201646, -0.0017907936, 0.055000126, 0.031148553, -0.052036464)
+material_override = SubResource("StandardMaterial3D_m66nv")
+mesh = SubResource("TextMesh_m66nv")
+
+[node name="TileNumberPlate" type="MeshInstance3D" parent="Visuals/TileLane/Tile_09/TileNumber09" unique_id=1691356954]
+mesh = SubResource("BoxMesh_fcnqv")
+
 [node name="Tile_10" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=106725934]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.87, 1.08, 0)
 mesh = SubResource("BoxMesh_57qmd")
@@ -263,6 +521,23 @@ mesh = SubResource("BoxMesh_3gngh")
 [node name="RoadEdge_Right" type="MeshInstance3D" parent="Visuals/TileLane/Tile_10" unique_id=1384720375]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.007, 0)
 mesh = SubResource("BoxMesh_j2b8q")
+
+[node name="TileNumber10" type="Node3D" parent="Visuals/TileLane/Tile_10" unique_id=1849897394]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.515)
+
+[node name="CSGPolygon3D" type="CSGPolygon3D" parent="Visuals/TileLane/Tile_10/TileNumber10" unique_id=149237079]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -0.050198197, 0, -0.05025003)
+polygon = PackedVector2Array(0, 0, 0, 0.05, 0.1, 0.015, 0.1, 0)
+depth = 0.1
+material = SubResource("StandardMaterial3D_g4v7s")
+
+[node name="TileNumber" type="MeshInstance3D" parent="Visuals/TileLane/Tile_10/TileNumber10/CSGPolygon3D" unique_id=1324632490]
+transform = Transform3D(-0.00523593, -0.93967974, 0.34201548, 0, 0.34202015, 0.9396926, -0.9999863, 0.0049201646, -0.0017907936, 0.055, 0.031148553, -0.049999952)
+material_override = SubResource("StandardMaterial3D_m66nv")
+mesh = SubResource("TextMesh_ycxhi")
+
+[node name="TileNumberPlate" type="MeshInstance3D" parent="Visuals/TileLane/Tile_10/TileNumber10" unique_id=237926456]
+mesh = SubResource("BoxMesh_fcnqv")
 
 [node name="Tile_11" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=777564088]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.12, 1.08, 0)
@@ -280,6 +555,23 @@ mesh = SubResource("BoxMesh_3gngh")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.007, 0)
 mesh = SubResource("BoxMesh_j2b8q")
 
+[node name="TileNumber11" type="Node3D" parent="Visuals/TileLane/Tile_11" unique_id=1032204287]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.515)
+
+[node name="CSGPolygon3D" type="CSGPolygon3D" parent="Visuals/TileLane/Tile_11/TileNumber11" unique_id=643816441]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -0.050198197, 0, -0.05025003)
+polygon = PackedVector2Array(0, 0, 0, 0.05, 0.1, 0.015, 0.1, 0)
+depth = 0.1
+material = SubResource("StandardMaterial3D_g4v7s")
+
+[node name="TileNumber" type="MeshInstance3D" parent="Visuals/TileLane/Tile_11/TileNumber11/CSGPolygon3D" unique_id=1304929920]
+transform = Transform3D(-0.00523593, -0.93967974, 0.34201548, 0, 0.34202015, 0.9396926, -0.9999863, 0.0049201646, -0.0017907936, 0.054999977, 0.031148553, -0.05220604)
+material_override = SubResource("StandardMaterial3D_m66nv")
+mesh = SubResource("TextMesh_kvjqb")
+
+[node name="TileNumberPlate" type="MeshInstance3D" parent="Visuals/TileLane/Tile_11/TileNumber11" unique_id=726739776]
+mesh = SubResource("BoxMesh_fcnqv")
+
 [node name="Tile_12" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=2088261246]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.37, 1.08, 0)
 mesh = SubResource("BoxMesh_57qmd")
@@ -295,3 +587,20 @@ mesh = SubResource("BoxMesh_3gngh")
 [node name="RoadEdge_Right" type="MeshInstance3D" parent="Visuals/TileLane/Tile_12" unique_id=1489740985]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.007, 0)
 mesh = SubResource("BoxMesh_j2b8q")
+
+[node name="TileNumber12" type="Node3D" parent="Visuals/TileLane/Tile_12" unique_id=1596763371]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.515)
+
+[node name="CSGPolygon3D" type="CSGPolygon3D" parent="Visuals/TileLane/Tile_12/TileNumber12" unique_id=958034151]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -0.050198197, 0, -0.05025003)
+polygon = PackedVector2Array(0, 0, 0, 0.05, 0.1, 0.015, 0.1, 0)
+depth = 0.1
+material = SubResource("StandardMaterial3D_g4v7s")
+
+[node name="TileNumber" type="MeshInstance3D" parent="Visuals/TileLane/Tile_12/TileNumber12/CSGPolygon3D" unique_id=1278538185]
+transform = Transform3D(-0.00523593, -0.93967974, 0.34201548, 0, 0.34202015, 0.9396926, -0.9999863, 0.0049201646, -0.0017907936, 0.055, 0.031148553, -0.049999952)
+material_override = SubResource("StandardMaterial3D_m66nv")
+mesh = SubResource("TextMesh_3hc4c")
+
+[node name="TileNumberPlate" type="MeshInstance3D" parent="Visuals/TileLane/Tile_12/TileNumber12" unique_id=148475996]
+mesh = SubResource("BoxMesh_fcnqv")
