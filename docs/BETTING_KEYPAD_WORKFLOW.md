@@ -20,7 +20,7 @@ Set each physical TerminalButton's **Button Id** in the Inspector to one of thes
 | Clear | `CLEAR` |
 | Backspace | `BACKSPACE` |
 
-The controller also accepts common aliases such as `ENTER`, `OK`, `CLR`, `RESET`, `DELETE`, and `BKSP`. Numeric prefixes such as `DIGIT_1`, `NUM_1`, and `KEY_1` are accepted too.
+If **Button Id** is blank, the controller uses the physical button's **Display Text** as its ID. It also accepts common aliases such as `ENTER`, `OK`, `CLR`, `RESET`, `C`, `DELETE`, and `BKSP`. Numeric prefixes such as `DIGIT_1`, `NUM_1`, `NUMPAD_1`, `NUMBER_1`, and `KEY_1` are accepted too.
 
 ## Player workflow
 
