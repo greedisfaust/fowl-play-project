@@ -127,8 +127,8 @@ func open_round(peer_id: int) -> Dictionary:
 	if not bool(result.get("ok", false)):
 		return result
 	current_round_id = next_round_id
-	_reset_open_round_inactivity()
 	_set_state(TableState.OPEN)
+	_reset_open_round_inactivity()
 	round_opened.emit(table_id, current_round_id)
 	_log("Peer %d opened round %s." % [peer_id, current_round_id])
 	return _success({"table_id": table_id, "game_id": game_id, "round_id": current_round_id})
