@@ -173,6 +173,5 @@ func _publish_player_state(peer_id: int) -> void:
 
 @rpc("authority", "call_remote", "reliable")
 func _receive_player_state(peer_id: int, player_state: Dictionary) -> void:
-	if not validate_rpc(1):
-		return
+	# The authority-only RPC annotation restricts this update to the host.
 	player_state_changed.emit(peer_id, player_state.duplicate(true))
