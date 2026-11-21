@@ -192,7 +192,7 @@ func _ready() -> void:
 ## Move a standing player to the active world's authored spawn marker.
 ## Ragdoll/carry cleanup belongs to the elevator transition before this is called.
 func place_at_world_spawn(at: Transform3D) -> bool:
-	if not at.is_finite() or is_limp or is_recovering or is_carried or is_carrying():
+	if not at.is_finite() or is_limp or is_recovering or is_carried() or is_carrying():
 		return false
 	global_transform = at
 	velocity = Vector3.ZERO
