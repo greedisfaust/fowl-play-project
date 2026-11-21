@@ -35,10 +35,10 @@ metallic = 0.15
 roughness = 0.35
 emission_enabled = true
 emission = Color(1, 0.8352941, 0.5411765, 1)
+emission_energy_multiplier = 1.3
 
-[sub_resource type="TextMesh" id="TextMesh_to3h0"]
+[sub_resource type="TextMesh" id="TextMesh_b0q1i"]
 material = SubResource("StandardMaterial3D_1ca6i")
-text = ""
 font_size = 64
 pixel_size = 0.001
 depth = 0.001
@@ -137,7 +137,7 @@ script = ExtResource("1_uuisg")
 
 [node name="ButtonLabel" type="MeshInstance3D" parent="Visuals/ButtonKey" unique_id=654358772]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0.033, 0)
-mesh = SubResource("TextMesh_to3h0")
+mesh = SubResource("TextMesh_b0q1i")
 
 [node name="Bezel_Front" type="MeshInstance3D" parent="Visuals" unique_id=1931341464]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.019, 0.066)
