@@ -1,6 +1,6 @@
 # BaseTable Controller
 
-Status: first generic lifecycle controller implemented; Godot execution pending.
+Status: implemented; shared wallet and BaseTable headless checks USER VERIFIED PASS (Godot 4.7.2).
 Branch: `environment/world-building-and-gameplay-loop`
 
 ## Responsibility
@@ -45,4 +45,4 @@ The controller creates a unique round ID for each round opened on that table.
 
 ## Verification
 
-Run both headless test scripts after importing the project. For users who do not use PowerShell, double-click `fowl-play/tests/run_casino_checks.bat`. It uses the default Steam Godot installation path used by the existing PowerShell runner; edit the `GODOT` variable near the top if Steam is installed elsewhere.
+USER VERIFIED: The user ran `fowl-play/tests/run_casino_checks.bat` with Godot 4.7.2.stable.steam. Both `CASINO WALLET PASS` and `BASE TABLE PASS` printed, followed by `ALL CASINO CHECKS PASSED`. Import emitted two non-fatal Jolt warnings about unsupported cone-twist bias/softness parameters. This verifies the current headless wallet/BaseTable test coverage; it does not verify multiplayer RPC integration, physical table scenes, or game-specific behavior.

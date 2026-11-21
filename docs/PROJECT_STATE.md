@@ -1,8 +1,8 @@
 # Fowl Play — Project State
 
-**Status:** Casino Foundation & World Gameplay Loop is active on `environment/world-building-and-gameplay-loop`, based on merged main commit `75675cc31456c3b0d7b5bb365ec82fd81ced9a72`. Phase 0 audit and architecture specification are complete. The host-authoritative shared wallet, diagnostics, and headless lifecycle test are implemented; Godot execution is pending, and BaseTable/game integration has not started.
+**Status:** Casino Foundation & World Gameplay Loop is active on `environment/world-building-and-gameplay-loop`, based on merged main commit `75675cc31456c3b0d7b5bb365ec82fd81ced9a72`. Phase 0 audit and architecture specification are complete. The host-authoritative shared wallet and script-only BaseTable lifecycle controller are implemented. USER VERIFIED: both casino headless suites pass in Godot 4.7.2.
 
-## Last updated (2026-11-21; shared wallet implementation slice)
+## Last updated (2026-11-21; casino wallet + BaseTable test verification)
 
 - Current branch: `environment/world-building-and-gameplay-loop` (based on merged main commit `75675cc31456c3b0d7b5bb365ec82fd81ced9a72`). The first wallet implementation slice is committed. Shared wallet API and test are in `fowl-play/casino/shared_wallet.gd` and `fowl-play/tests/casino_wallet_test.gd`; no BaseTable or casino scenes exist yet.
 - Godot 4.7 project: `fowl-play/`, using Jolt Physics, Forward+, and D3D12.
@@ -690,7 +690,8 @@ Foot planting now records both a world-space target and, when the ground hit bel
 
 ## Casino foundation update — 2026-11-21
 
-- Shared wallet transaction service is implemented (reservation, edit, withdrawal, round lock/cancel, gross-return settlement). Local Godot test execution remains pending.
+- Shared wallet transaction service is implemented (reservation, edit, withdrawal, round lock/cancel, gross-return settlement).
 - Generic `BaseTable` controller is implemented as a script-only component for editor-authored table scenes. It coordinates proximity, participants, round lifecycle, wallet calls, and pre-start proximity refunds; post-start departures are signaled to game-specific auto-resolution logic.
-- BaseTable test script and `base-table` runner stage are added. Neither casino test stage has been executed in this environment; do not mark them verified until the user runs them in Godot.
+- USER VERIFIED: `fowl-play/tests/run_casino_checks.bat` completed successfully in Godot 4.7.2. Output included `CASINO WALLET PASS`, `BASE TABLE PASS`, and `ALL CASINO CHECKS PASSED`. Import emitted two non-fatal Jolt cone-twist warnings; neither test failed.
+- This verifies the current headless wallet/BaseTable tests only. Multiplayer RPC integration, editor-authored physical table scenes, and game-specific gameplay are not yet verified or implemented.
 - Open policy gates remain: 45-second inactivity timeout behavior, early-departure refund scope for already-started rounds, and timer-expiry visual/settlement cleanup.

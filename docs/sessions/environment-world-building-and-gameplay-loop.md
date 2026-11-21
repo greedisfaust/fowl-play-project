@@ -9,12 +9,12 @@ Base docs: `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `
 
 ## Current state (rewrite every session)
 
-- The branch exists and was verified at `75675cc31456c3b0d7b5bb365ec82fd81ced9a72`, matching the merged main baseline at the time of audit.
-- The shared wallet/wager ledger has been added; no BaseTable, game rules, or casino physical scenes have been added yet.
+- Branch `environment/world-building-and-gameplay-loop` is active; latest verified head before this documentation update is `70f49bf5677c333ee8de1beb3179a400b1a216a7`.
+- Shared wallet and generic script-only `BaseTable` controller are implemented. Both casino headless test suites have been USER VERIFIED passing in Godot 4.7.2.
 - The project is Godot 4.7, typed GDScript, Jolt, ENet, max four players; `fowl-play/` is the Godot project.
 - Existing reusable foundations include `Interactable` / `Focus`, `Network`, `PlayerIdentity`, `DebugHub`, and the current player/nameplate presentation.
 - The user's editor-authored scenes remain user-owned. Do not generate scene trees, meshes, collision shapes, or physical table art in code.
-- Phase 0 repository audit and architecture specification are complete. The first shared financial service slice is implemented; BaseTable/game implementation is not started.
+- Phase 0 repository audit and architecture specification are complete. Shared wallet and BaseTable lifecycle implementation are complete for this initial slice; Chicken Cross and physical casino scenes are not implemented.
 
 ## Done (this branch)
 
@@ -30,11 +30,11 @@ Base docs: `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `
 - [DONE] Wallet transaction policy gate — user approved immediate reservation on confirmation, editable/refundable while open, locked at round start, gross-return settlement, and no timer-expiry refund.
 - [DONE] Shared wallet implementation — host-authoritative `CasinoWallet` autoload, per-wager attribution, round open/edit/withdraw/lock/cancel/settle lifecycle, DebugHub watches/commands, and headless test script added.
 - [DONE] Authoritative project overview updated to include the approved casino foundation scope and wallet rules.
-- [PARTIAL] Wallet test execution — test and runner stage are authored; Godot execution still needs to be run in the user's local environment.
+- [DONE] Wallet and BaseTable test execution — user ran `tests/run_casino_checks.bat`; `CASINO WALLET PASS`, `BASE TABLE PASS`, and `ALL CASINO CHECKS PASSED` were printed in Godot 4.7.2. Two Jolt cone-twist warnings during import were non-fatal.
 
 ## Exact next step
 
-Pull the latest branch commit, then run both casino checks. Use `tests/run_casino_checks.bat` if PowerShell is unavailable. Report both results. If they pass, proceed to the Chicken Cross reference-game contract after reviewing any test failures or engine warnings.
+Close the remaining shared-table policy gates before implementing Chicken Cross: define the 45-second inactivity timeout's activity/reset/refund behavior, clarify early-departure force-refunds for already-started rounds, and define what happens visually/operationally to active rounds after timer expiry. Then write the Chicken Cross reference-game contract and implementation slice.
 
 ## Waiting on the user
 
@@ -110,7 +110,7 @@ Pull the latest branch commit, then run both casino checks. Use `tests/run_casin
 
 - Verify branch head and changed paths through GitHub.
 - User pulls the branch before local Godot work.
-- The wallet test script and runner stage are committed, but have not been executed in this environment. User should run the `casino-wallet` stage locally before the next implementation slice.
+- USER VERIFIED: the committed casino runner completed both `casino-wallet` and `base-table` suites successfully in Godot 4.7.2. The user-visible output ended with `ALL CASINO CHECKS PASSED`.
 - The committed `casino-wallet` headless test covers reservation, overspend rejection, edit, withdrawal, locking, gross-return settlement, loss settlement, open-round cancellation, and run reset. A separate multi-process host/client authority test remains required when client RPCs are introduced.
 
 ## Contracts to not break
@@ -146,3 +146,10 @@ Pull the latest branch commit, then run both casino checks. Use `tests/run_casin
 - Recorded current casino/world design decisions and open questions.
 - Completed `docs/CASINO_FOUNDATION_DESIGN.md` and branch session/index/state documentation. No gameplay implementation yet.
 - Next: confirm the wager reservation timing, update project scope authority, then build and test the wallet transaction service.
+
+
+### Session 1 update — 2026-11-21 — casino test verification
+- User ran `fowl-play/tests/run_casino_checks.bat` with Godot 4.7.2.stable.steam.
+- `CASINO WALLET PASS`, `BASE TABLE PASS`, and `ALL CASINO CHECKS PASSED` were printed. Import-time Jolt cone-twist bias/softness warnings were non-fatal.
+- Fixed the BaseTable test's extra argument to `cancel_open_round()` in commit `70f49bf5677c333ee8de1beb3179a400b1a216a7`.
+- Next: finalize inactivity timeout, started-round early-departure refund scope, and timer-expiry cleanup policies before Chicken Cross implementation.
