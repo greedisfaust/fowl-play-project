@@ -1,0 +1,203 @@
+## Local cosmetic gait model. It owns phase and target rotations, not Skeleton3D nodes.
+extends RefCounted
+
+const TUNING = preload("res://core/tuning.gd")
+const STOP_SETTLE_PHASE_SPEED_RAD_S: float = 16.0
+
+var phase: float = 0.0
+var motion_weight: float = 0.0
+var run_weight: float = 0.0
+var stride_weight: float = 0.0
+var stance_fraction: float = TUNING.LEG_STANCE_FRACTION
+var thigh_swing_limit: float = TUNING.LEG_MAX_THIGH_SWING_RAD
+var knee_bend_limit: float = TUNING.LEG_MAX_KNEE_BEND_RAD
+var smoothed_velocity: Vector3 = Vector3.ZERO
+
+var left_thigh_rotation: Quaternion = Quaternion.IDENTITY
+var left_shin_rotation: Quaternion = Quaternion.IDENTITY
+var left_foot_rotation: Quaternion = Quaternion.IDENTITY
+var right_thigh_rotation: Quaternion = Quaternion.IDENTITY
+var right_shin_rotation: Quaternion = Quaternion.IDENTITY
+var right_foot_rotation: Quaternion = Quaternion.IDENTITY
+var left_in_swing: bool = false
+var right_in_swing: bool = false
+var left_swing_progress: float = 0.0
+var right_swing_progress: float = 0.0
+var left_knee_bend_weight: float = 0.0
+var right_knee_bend_weight: float = 0.0
+var air_weight: float = 0.0
+var landing_weight: float = 0.0
+
+func update(delta: float, local_velocity: Vector3, grounded: bool, vertical_velocity: float = 0.0, landing_amount: float = 0.0) -> void:
+	if not local_velocity.is_finite():
+		reset()
+		return
+	var safe_delta: float = maxf(delta, 0.0)
+	var target_velocity: Vector3 = Vector3(local_velocity.x, 0.0, local_velocity.z)
+	# Keep normal movement smooth, but react quickly when the player changes
+	# direction sharply (e.g. rapidly alternating W/A/S/D).
+	var direction_response: float = TUNING.LEG_VELOCITY_RESPONSE
+	if smoothed_velocity.length_squared() > 0.04 and target_velocity.length_squared() > 0.04:
+		var direction_dot: float = smoothed_velocity.normalized().dot(target_velocity.normalized())
+		if direction_dot < TUNING.LEG_DIRECTION_CHANGE_DOT:
+			direction_response = TUNING.LEG_TURN_RESPONSE
+	var velocity_blend: float = 1.0 - exp(-direction_response * safe_delta)
+	smoothed_velocity = smoothed_velocity.lerp(target_velocity, velocity_blend)
+	if smoothed_velocity.length_squared() > 0.0001 and target_velocity.length_squared() > 0.0001:
+		var speed_blend: float = 1.0 - exp(-TUNING.LEG_TURN_RESPONSE * safe_delta)
+		smoothed_velocity = smoothed_velocity.normalized() * lerpf(
+			smoothed_velocity.length(), target_velocity.length(), speed_blend
+		)
+	# Drive cadence from actual measured root velocity, not the lagged
+	# direction filter. Otherwise the feet trail during acceleration and turns.
+	var speed: float = target_velocity.length()
+	var moving: bool = grounded and speed > TUNING.LEG_MIN_WALK_SPEED_MPS
+	var target_weight: float = 1.0 if moving else 0.0
+	var blend_weight: float = 1.0 - exp(-TUNING.LEG_BLEND_RESPONSE * safe_delta)
+	motion_weight = lerpf(motion_weight, target_weight, blend_weight)
+	var target_run_weight: float = smoothstep(TUNING.PLAYER_SPEED_MPS, TUNING.PLAYER_RUN_SPEED_MPS, speed) if moving else 0.0
+	run_weight = lerpf(run_weight, target_run_weight, blend_weight)
+	if moving:
+		var cycle_distance: float = lerpf(TUNING.LEG_WALK_STEP_CYCLE_DISTANCE_M, TUNING.LEG_STEP_CYCLE_DISTANCE_M, run_weight)
+		phase = fposmod(
+			phase + (speed / cycle_distance) * TAU * TUNING.LEG_GAIT_RATE_MULTIPLIER * lerpf(1.0, 1.12, run_weight) * safe_delta,
+			TAU
+		)
+	elif motion_weight > 0.01:
+		# A stopped character must finish the current swing instead of freezing
+		# one foot in mid-air. PI is the overlap where both feet are in stance.
+		var cycle_phase: float = fposmod(phase, TAU)
+		var settle_distance: float = fposmod(PI - cycle_phase, TAU)
+		var settle_step: float = minf(settle_distance, STOP_SETTLE_PHASE_SPEED_RAD_S * safe_delta)
+		phase = fposmod(phase + settle_step, TAU)
+		if settle_distance <= settle_step + 0.0001:
+			phase = PI
+	else:
+		phase = PI
+	stride_weight = lerpf(0.75, 1.0, run_weight)
+	stance_fraction = lerpf(TUNING.LEG_WALK_STANCE_FRACTION, TUNING.LEG_STANCE_FRACTION, run_weight)
+	thigh_swing_limit = lerpf(TUNING.LEG_WALK_MAX_THIGH_SWING_RAD, TUNING.LEG_MAX_THIGH_SWING_RAD, run_weight)
+	knee_bend_limit = lerpf(TUNING.LEG_WALK_MAX_KNEE_BEND_RAD, TUNING.LEG_MAX_KNEE_BEND_RAD, run_weight)
+	var run_stride_multiplier: float = lerpf(1.0, 1.15, run_weight)
+	var direction: Vector3 = smoothed_velocity.normalized() if smoothed_velocity.length_squared() > 0.001 else Vector3(0.0, 0.0, -1.0)
+	var swing_axis: Vector3 = direction.cross(Vector3.UP)
+	if swing_axis.length_squared() < 0.0001:
+		swing_axis = Vector3.RIGHT
+	else:
+		swing_axis = swing_axis.normalized()
+
+	var left_swing: float = sin(phase) * thigh_swing_limit * stride_weight * run_stride_multiplier * motion_weight
+	var right_phase: float = phase + PI
+	var right_swing: float = sin(right_phase) * thigh_swing_limit * stride_weight * run_stride_multiplier * motion_weight
+	var left_cycle: float = fposmod(phase / TAU, 1.0)
+	var right_cycle: float = fposmod(left_cycle + 0.5, 1.0)
+	left_in_swing = left_cycle >= stance_fraction
+	right_in_swing = right_cycle >= stance_fraction
+	left_swing_progress = _get_swing_progress(left_cycle)
+	right_swing_progress = _get_swing_progress(right_cycle)
+
+	# Stance keeps the knee comparatively quiet; swing flexes it to clear the
+	# ground, then extends toward heel contact. This is angular foot clearance,
+	# not world-space IK or a tracked planted-foot target.
+	var left_knee_shape: float = _get_knee_shape(left_cycle, left_swing_progress, left_in_swing)
+	var right_knee_shape: float = _get_knee_shape(right_cycle, right_swing_progress, right_in_swing)
+	left_knee_bend_weight = clampf(left_knee_shape * stride_weight * run_stride_multiplier * motion_weight, 0.0, 1.0)
+	right_knee_bend_weight = clampf(right_knee_shape * stride_weight * run_stride_multiplier * motion_weight, 0.0, 1.0)
+	var left_knee: float = left_knee_bend_weight * knee_bend_limit
+	var right_knee: float = right_knee_bend_weight * knee_bend_limit
+	var left_foot_pitch: float = _get_foot_pitch(left_cycle, left_swing_progress, left_in_swing)
+	var right_foot_pitch: float = _get_foot_pitch(right_cycle, right_swing_progress, right_in_swing)
+
+	left_thigh_rotation = Quaternion(swing_axis, left_swing)
+	var left_shin_axis: Vector3 = left_thigh_rotation.inverse() * swing_axis
+	left_shin_rotation = Quaternion(left_shin_axis, left_knee)
+	var left_foot_axis: Vector3 = (left_thigh_rotation * left_shin_rotation).inverse() * swing_axis
+	left_foot_rotation = Quaternion(left_foot_axis, -(left_swing + left_knee) * TUNING.LEG_FOOT_COUNTER_ROTATION + left_foot_pitch * stride_weight * motion_weight)
+
+	right_thigh_rotation = Quaternion(swing_axis, right_swing)
+	var right_shin_axis: Vector3 = right_thigh_rotation.inverse() * swing_axis
+	right_shin_rotation = Quaternion(right_shin_axis, right_knee)
+	var right_foot_axis: Vector3 = (right_thigh_rotation * right_shin_rotation).inverse() * swing_axis
+	right_foot_rotation = Quaternion(right_foot_axis, -(right_swing + right_knee) * TUNING.LEG_FOOT_COUNTER_ROTATION + right_foot_pitch * stride_weight * motion_weight)
+
+	# Airborne pose is layered after the grounded gait fades, keeping the same
+	# two-bone rig and avoiding any change to jump physics or foot placement.
+	var air_target: float = 0.0 if grounded else 1.0
+	air_weight = lerpf(air_weight, air_target, 1.0 - exp(-12.0 * safe_delta))
+	landing_weight = clampf(landing_amount, 0.0, 1.0)
+	if air_weight > 0.001:
+		var ascending: bool = vertical_velocity > 0.35
+		var tuck_angle: float = 0.16 if ascending else 0.045
+		var knee_angle: float = 0.34 if ascending else 0.12
+		var left_air_thigh: Quaternion = Quaternion(swing_axis, tuck_angle)
+		var right_air_thigh: Quaternion = Quaternion(swing_axis, tuck_angle)
+		var left_air_shin: Quaternion = Quaternion(swing_axis, knee_angle)
+		var right_air_shin: Quaternion = Quaternion(swing_axis, knee_angle)
+		var air_foot_pitch: float = 0.08 if ascending else -0.12
+		var left_air_foot: Quaternion = Quaternion(swing_axis, air_foot_pitch)
+		var right_air_foot: Quaternion = Quaternion(swing_axis, air_foot_pitch)
+		left_thigh_rotation = left_thigh_rotation.slerp(left_air_thigh, air_weight)
+		right_thigh_rotation = right_thigh_rotation.slerp(right_air_thigh, air_weight)
+		left_shin_rotation = left_shin_rotation.slerp(left_air_shin, air_weight)
+		right_shin_rotation = right_shin_rotation.slerp(right_air_shin, air_weight)
+		left_foot_rotation = left_foot_rotation.slerp(left_air_foot, air_weight)
+		right_foot_rotation = right_foot_rotation.slerp(right_air_foot, air_weight)
+	if landing_weight > 0.001:
+		var landing_bend: float = 0.16 * landing_weight
+		left_shin_rotation = left_shin_rotation * Quaternion(swing_axis, landing_bend)
+		right_shin_rotation = right_shin_rotation * Quaternion(swing_axis, landing_bend)
+
+func _get_swing_progress(cycle: float) -> float:
+	if cycle < stance_fraction:
+		return 0.0
+	return clampf(
+		(cycle - stance_fraction) / (1.0 - stance_fraction),
+		0.0,
+		1.0
+	)
+
+func _get_knee_shape(cycle: float, swing_progress: float, in_swing: bool) -> float:
+	if in_swing:
+		# Bend early to lift the heel, hold flex through the forward swing,
+		# then extend during the final approach to the floor.
+		var bend_in: float = sin(clampf(swing_progress / 0.42, 0.0, 1.0) * PI * 0.5)
+		var extend_out: float = smoothstep(0.72, 1.0, swing_progress)
+		return bend_in * (1.0 - extend_out)
+	var stance_progress: float = cycle / stance_fraction
+	return 0.08 * sin(stance_progress * PI)
+
+func _get_foot_pitch(cycle: float, swing_progress: float, in_swing: bool) -> float:
+	if in_swing:
+		# Lift the toe through early swing, then point it down slightly for contact.
+		var lift: float = sin(clampf(swing_progress / 0.72, 0.0, 1.0) * PI * 0.5)
+		var contact: float = smoothstep(0.72, 1.0, swing_progress)
+		return lerpf(0.0, TUNING.LEG_SWING_FOOT_LIFT_RAD, lift) - contact * TUNING.LEG_STANCE_TOE_ROLL_RAD
+	var stance_progress: float = cycle / stance_fraction
+	return sin(stance_progress * PI) * TUNING.LEG_STANCE_TOE_ROLL_RAD
+
+func is_active() -> bool:
+	return motion_weight > 0.01
+
+func reset() -> void:
+	phase = 0.0
+	motion_weight = 0.0
+	run_weight = 0.0
+	stride_weight = 0.0
+	stance_fraction = TUNING.LEG_STANCE_FRACTION
+	thigh_swing_limit = TUNING.LEG_MAX_THIGH_SWING_RAD
+	knee_bend_limit = TUNING.LEG_MAX_KNEE_BEND_RAD
+	smoothed_velocity = Vector3.ZERO
+	left_thigh_rotation = Quaternion.IDENTITY
+	left_shin_rotation = Quaternion.IDENTITY
+	left_foot_rotation = Quaternion.IDENTITY
+	right_thigh_rotation = Quaternion.IDENTITY
+	right_shin_rotation = Quaternion.IDENTITY
+	right_foot_rotation = Quaternion.IDENTITY
+	left_in_swing = false
+	right_in_swing = false
+	left_swing_progress = 0.0
+	right_swing_progress = 0.0
+	left_knee_bend_weight = 0.0
+	right_knee_bend_weight = 0.0
+	air_weight = 0.0
+	landing_weight = 0.0

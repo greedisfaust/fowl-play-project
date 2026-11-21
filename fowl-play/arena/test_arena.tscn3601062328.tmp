@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://ctr8im3lpy4pn"]
+
+[ext_resource type="PackedScene" uid="uid://cekl57c15blgh" path="res://player/player.tscn" id="1_f82bo"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_g4v7s"]
+size = Vector3(20, 1, 20)
+
+[sub_resource type="BoxMesh" id="BoxMesh_g4v7s"]
+size = Vector3(20, 1, 20)
+
+[node name="TestArena" type="Node3D" unique_id=2059650083]
+
+[node name="World" type="StaticBody3D" parent="." unique_id=865268742]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="World" unique_id=871451487]
+shape = SubResource("BoxShape3D_g4v7s")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="World" unique_id=271891051]
+mesh = SubResource("BoxMesh_g4v7s")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="World" unique_id=1677053292]
+transform = Transform3D(0.8660254, 0.40957603, -0.28678823, 0, 0.57357645, 0.81915206, 0.5, -0.7094065, 0.49673176, 0, 5, 0)
+
+[node name="PlayerPreview" parent="." unique_id=50883763 instance=ExtResource("1_f82bo")]

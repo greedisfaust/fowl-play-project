@@ -1,0 +1,129 @@
+[gd_scene format=3 uid="uid://cekl57c15blgh"]
+
+[ext_resource type="Script" uid="uid://djeisjdkdfl3t" path="res://player/player.gd" id="1_oul6g"]
+[ext_resource type="Script" uid="uid://j6ue4b8hbpys" path="res://player/focus.gd" id="2_rkbax"]
+[ext_resource type="PackedScene" uid="uid://bvhjtats68aqm" path="res://ragdoll/player_rig.tscn" id="3_g1dw6"]
+[ext_resource type="PackedScene" uid="uid://d2b5kkylkuxn2" path="res://hands/hand.tscn" id="3_g6k8r"]
+[ext_resource type="Script" uid="uid://mes0wg5fca0j" path="res://player/carrier.gd" id="4_yw30f"]
+[ext_resource type="Script" uid="uid://dd5c04repreo1" path="res://interaction/interactable.gd" id="5_qjkh3"]
+[ext_resource type="PackedScene" path="res://ui/gameplay_cursor.tscn" id="6_cursor"]
+[ext_resource type="PackedScene" uid="uid://klvjq86v6uar" path="res://player/player_nameplate.tscn" id="8_rgyib"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_yf5fn"]
+radius = 0.35
+height = 1.8
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_limp_proxy"]
+radius = 0.3
+height = 0.9
+
+[node name="Player" type="CharacterBody3D" unique_id=50883763]
+collision_layer = 16
+collision_mask = 103
+script = ExtResource("1_oul6g")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=960286442]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_yf5fn")
+
+[node name="Head" type="Node3D" parent="." unique_id=1053757555]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.69, 0)
+
+[node name="Camera3D" type="Camera3D" parent="Head" unique_id=1396311451]
+current = true
+
+[node name="Focus" type="Node3D" parent="Head/Camera3D" unique_id=996878220]
+script = ExtResource("2_rkbax")
+
+[node name="FocusRay" type="RayCast3D" parent="Head/Camera3D/Focus" unique_id=290176198]
+target_position = Vector3(0, 0, -3.2)
+collision_mask = 38
+
+[node name="CarryAnchor" type="Marker3D" parent="Head/Camera3D" unique_id=923696488]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, -1.2)
+
+[node name="CarryWallRay" type="RayCast3D" parent="Head/Camera3D" unique_id=2146854618]
+target_position = Vector3(0, -0.2, -1.5)
+
+[node name="ViewmodelHands" type="Node3D" parent="Head/Camera3D" unique_id=381231923]
+
+[node name="LeftHand" parent="Head/Camera3D/ViewmodelHands" unique_id=1049811483 instance=ExtResource("3_g6k8r")]
+transform = Transform3D(-0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, -0.25, -0.25, -0.55)
+
+[node name="RightHand" parent="Head/Camera3D/ViewmodelHands" unique_id=1368451350 instance=ExtResource("3_g6k8r")]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0.25, -0.25, -0.55)
+
+[node name="Rig" parent="." unique_id=695809982 instance=ExtResource("3_g1dw6")]
+
+[node name="ForearmLMesh" parent="Rig/Skeleton3D/ForearmAttachment_L" parent_id_path=PackedInt32Array(695809982, 628518846) index="0" unique_id=1122780713]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0.125, 0, 0)
+
+[node name="ForearmRMesh" parent="Rig/Skeleton3D/ForearmAttachment_R" parent_id_path=PackedInt32Array(695809982, 236525658) index="0" unique_id=1748494854]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, -0.125, 0, 0)
+
+[node name="Physical Bone Hips" parent="Rig/Skeleton3D/PhysicalBoneSimulator3D" parent_id_path=PackedInt32Array(695809982, 1180662878) index="0" unique_id=1493760396]
+transform = Transform3D(0.9999999, -0.00028892615, 0.00042408146, 0.00042385556, -0.0007813795, -0.99999964, 0.00028925744, 0.99999964, -0.000781257, 4.2507243e-05, 0.18840206, 4.455447e-06)
+joint_offset = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.150112e-05, 4.9004797e-05, 0.06840201)
+body_offset = Transform3D(0.9999999, -0.00028892615, 0.00042408146, 0.00042385556, -0.0007813795, -0.99999964, 0.00028925744, 0.99999964, -0.000781257, 4.2507243e-05, 0.06840205, 4.455447e-06)
+
+[node name="Physical Bone Chest" parent="Rig/Skeleton3D/PhysicalBoneSimulator3D" parent_id_path=PackedInt32Array(695809982, 1180662878) index="1" unique_id=519863505]
+transform = Transform3D(1, -5.2531028e-05, -7.374687e-05, -7.387781e-05, -0.002497062, -0.99999696, 5.234671e-05, 0.99999696, -0.002497066, 3.3471646e-05, 0.53761166, 5.708635e-05)
+joint_offset = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6263298e-05, 0.00018665797, 0.0976115)
+body_offset = Transform3D(1, -5.2531028e-05, -7.374687e-05, -7.387781e-05, -0.002497062, -0.99999696, 5.234671e-05, 0.99999696, -0.002497066, 3.3471646e-05, 0.097611666, 5.708635e-05)
+
+[node name="Physical Bone UpperArm_L" parent="Rig/Skeleton3D/PhysicalBoneSimulator3D" parent_id_path=PackedInt32Array(695809982, 1180662878) index="3" unique_id=1301498496]
+transform = Transform3D(4.44781e-05, -0.0002630949, -1, 6.3166015e-05, 1, -0.00026309208, 1, -6.3154315e-05, 4.4494718e-05, 0.34969884, 0.57008237, 4.720688e-05)
+joint_offset = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.342562e-05, -4.561658e-05, 0.13969885)
+body_offset = Transform3D(4.44781e-05, -0.0002630949, -1, 6.3166015e-05, 1, -0.00026309208, 1, -6.3154315e-05, 4.4494718e-05, 0.13969885, 8.237362e-05, 4.720688e-05)
+
+[node name="Physical Bone Forearm_L" parent="Rig/Skeleton3D/PhysicalBoneSimulator3D" parent_id_path=PackedInt32Array(695809982, 1180662878) index="4" unique_id=280787384]
+transform = Transform3D(-9.360444e-05, -9.505822e-05, -1, 0.00016279495, 1, -9.5073454e-05, 1, -0.00016280384, -9.358896e-05, 0.6144406, 0.5697536, -0.00012366474)
+joint_offset = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00013535304, 0.00025821457, 0.12444057)
+body_offset = Transform3D(-9.360444e-05, -9.505822e-05, -1, 0.00016279495, 1, -9.5073454e-05, 1, -0.00016280384, -9.358896e-05, 0.12444061, -0.0002464056, -0.00012366474)
+
+[node name="Physical Bone UpperArm_R" parent="Rig/Skeleton3D/PhysicalBoneSimulator3D" parent_id_path=PackedInt32Array(695809982, 1180662878) index="5" unique_id=377488469]
+transform = Transform3D(0.0003873185, -0.0007650853, 0.99999964, 0.0001086686, 0.9999997, 0.00076504325, -0.99999994, 0.000108372245, 0.00038740152, -0.34999785, 0.56991607, -6.978959e-05)
+joint_offset = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5556703e-05, -2.3179415e-05, 0.1399979)
+body_offset = Transform3D(0.0003873185, -0.0007650853, 0.99999964, 0.0001086686, 0.9999997, 0.00076504325, -0.99999994, 0.000108372245, 0.00038740152, -0.13999785, -8.392334e-05, -6.978959e-05)
+
+[node name="Physical Bone Forearm_R" parent="Rig/Skeleton3D/PhysicalBoneSimulator3D" parent_id_path=PackedInt32Array(695809982, 1180662878) index="6" unique_id=718992011]
+transform = Transform3D(2.0071866e-05, 0.00036360466, 0.99999994, -0.0011441234, 0.9999993, -0.00036358146, -0.99999934, -0.0011441159, 2.048786e-05, -0.615711, 0.56999975, -1.5310943e-05)
+joint_offset = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2787951e-05, 4.5929995e-05, 0.12571095)
+body_offset = Transform3D(2.0071866e-05, 0.00036360466, 0.99999994, -0.0011441234, 0.9999993, -0.00036358146, -0.99999934, -0.0011441159, 2.048786e-05, -0.12571096, -2.3841858e-07, -1.5310943e-05)
+
+[node name="Physical Bone Shin_L" parent="Rig/Skeleton3D/PhysicalBoneSimulator3D" parent_id_path=PackedInt32Array(695809982, 1180662878) index="8" unique_id=2104686390]
+transform = Transform3D(-1, -0.00021726685, -0.00010792605, -0.000118046984, 0.0471351, 0.99888855, -0.00021193826, 0.9988885, -0.047135126, 0.10006126, -0.55048, -0.009919632)
+joint_offset = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.854855e-05, -0.000148152, 0.21072124)
+body_offset = Transform3D(-1, -0.00021726685, -0.00010792605, -0.000118046984, 0.0471351, 0.99888855, -0.00021193826, 0.9988885, -0.047135126, 6.1258674e-05, -0.21048003, 0.010080367)
+
+[node name="Physical Bone Thigh_R" parent="Rig/Skeleton3D/PhysicalBoneSimulator3D" parent_id_path=PackedInt32Array(695809982, 1180662878) index="9" unique_id=399281604]
+transform = Transform3D(1, 0.00028269543, -0.00017309959, 0.00015920402, 0.04843519, 0.9988263, 0.00029074776, -0.9988263, 0.04843514, -0.10001182, -0.13007602, -0.010065973)
+joint_offset = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.818823e-05, 0.00012091827, 0.21031702)
+body_offset = Transform3D(1, 0.00028269543, -0.00017309959, 0.00015920402, 0.04843519, 0.9988263, 0.00029074776, -0.9988263, 0.04843514, -1.1816621e-05, -0.21007603, -0.010065973)
+
+[node name="Carrier" type="Node3D" parent="." unique_id=2012841287]
+script = ExtResource("4_yw30f")
+
+[node name="Interactable" type="Node" parent="." unique_id=2041131228]
+script = ExtResource("5_qjkh3")
+kind = 1
+prompt_text = "[GRAB] Limp Body"
+metadata/_custom_type_script = "uid://dd5c04repreo1"
+
+[node name="LimpInteractionProxy" type="StaticBody3D" parent="." unique_id=301311761]
+collision_layer = 32
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="LimpInteractionProxy" unique_id=1773732524]
+shape = SubResource("CapsuleShape3D_limp_proxy")
+
+[node name="GameplayCursor" parent="." unique_id=284158454 instance=ExtResource("6_cursor")]
+
+[node name="NamePlate" parent="." unique_id=922107948 instance=ExtResource("8_rgyib")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+
+[editable path="Head/Camera3D/ViewmodelHands/LeftHand"]
+[editable path="Head/Camera3D/ViewmodelHands/RightHand"]
+[editable path="Rig"]
+[editable path="Rig/Skeleton3D/HandAttachment_L/HandMount_L/Hand"]
+[editable path="Rig/Skeleton3D/HandAttachment_R/HandMount_R/Hand"]

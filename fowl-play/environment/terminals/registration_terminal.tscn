@@ -1,0 +1,419 @@
+[gd_scene format=3 uid="uid://cfhki0q6u05ao"]
+
+[ext_resource type="Script" uid="uid://4buxy8oodxyx" path="res://ui/registration_terminal.gd" id="1_wp3qh"]
+[ext_resource type="PackedScene" uid="uid://cejw4b824vtv2" path="res://environment/kit/fat_world_screen.tscn" id="2_5vwm0"]
+[ext_resource type="Script" uid="uid://dd5c04repreo1" path="res://interaction/interactable.gd" id="3_asggy"]
+[ext_resource type="FontFile" uid="uid://ws0yv8acsgcw" path="res://assets/fonts/JetBrainsMonoNL-Regular.ttf" id="3_t8kwc"]
+[ext_resource type="Shader" uid="uid://c4kdaasjbi04y" path="res://environment/kit/world_screen_glass.gdshader" id="4_asggy"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_s3hgk"]
+size = Vector3(3.925, 1.95, 0.08)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_asggy"]
+albedo_color = Color(0.1254902, 0.14901961, 0.1882353, 1)
+metallic = 0.8
+roughness = 0.32
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6ljlw"]
+albedo_color = Color(0.1254902, 0.14901961, 0.1882353, 1)
+metallic = 0.8
+roughness = 0.32
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mhapl"]
+albedo_color = Color(0.1254902, 0.14901961, 0.1882353, 1)
+metallic = 0.8
+roughness = 0.32
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dr6gj"]
+albedo_color = Color(0.1254902, 0.14901961, 0.1882353, 1)
+metallic = 0.8
+roughness = 0.32
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yv52k"]
+albedo_color = Color(0.10280716, 0.12345097, 0.15785909, 1)
+metallic = 0.25
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_2408p"]
+material = SubResource("StandardMaterial3D_yv52k")
+size = Vector3(0.025, 0.115555555, 0.012)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3c567"]
+albedo_color = Color(0.10280716, 0.12345097, 0.15785909, 1)
+metallic = 0.25
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_vjlbn"]
+material = SubResource("StandardMaterial3D_3c567")
+size = Vector3(0.025, 0.115555555, 0.012)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_74qs8"]
+albedo_color = Color(0.10280716, 0.12345097, 0.15785909, 1)
+metallic = 0.25
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_jqfi5"]
+material = SubResource("StandardMaterial3D_74qs8")
+size = Vector3(0.025, 0.115555555, 0.012)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qxjxr"]
+albedo_color = Color(0.10280716, 0.12345097, 0.15785909, 1)
+metallic = 0.25
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_4hitg"]
+material = SubResource("StandardMaterial3D_qxjxr")
+size = Vector3(0.025, 0.115555555, 0.012)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wbeek"]
+albedo_color = Color(0.10280716, 0.12345097, 0.15785909, 1)
+metallic = 0.25
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_5pn14"]
+material = SubResource("StandardMaterial3D_wbeek")
+size = Vector3(0.025, 0.115555555, 0.012)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6p54u"]
+albedo_color = Color(0.10280716, 0.12345097, 0.15785909, 1)
+metallic = 0.25
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_udcop"]
+material = SubResource("StandardMaterial3D_6p54u")
+size = Vector3(0.025, 0.115555555, 0.012)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nx8da"]
+albedo_color = Color(0.10280716, 0.12345097, 0.15785909, 1)
+metallic = 0.25
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_0p4re"]
+material = SubResource("StandardMaterial3D_nx8da")
+size = Vector3(0.025, 0.115555555, 0.012)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_spsf1"]
+albedo_color = Color(0.10280716, 0.12345097, 0.15785909, 1)
+metallic = 0.25
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_o5t62"]
+material = SubResource("StandardMaterial3D_spsf1")
+size = Vector3(0.025, 0.115555555, 0.012)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_behbx"]
+albedo_color = Color(0.10280716, 0.12345097, 0.15785909, 1)
+metallic = 0.25
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_had11"]
+material = SubResource("StandardMaterial3D_behbx")
+size = Vector3(0.025, 0.115555555, 0.012)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jfihp"]
+albedo_color = Color(0.10280716, 0.12345097, 0.15785909, 1)
+metallic = 0.25
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_1kh2t"]
+material = SubResource("StandardMaterial3D_jfihp")
+size = Vector3(0.025, 0.115555555, 0.012)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_txnwj"]
+albedo_color = Color(0.09019608, 0.11372549, 0.14509805, 1)
+metallic = 0.75
+roughness = 0.38
+
+[sub_resource type="BoxMesh" id="BoxMesh_oo72p"]
+size = Vector3(2.7, 0.16, 0.055)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_lrqs5"]
+albedo_color = Color(1, 0.70980394, 0.18039216, 1)
+metallic = 0.2
+roughness = 0.25
+emission_enabled = true
+emission = Color(1, 0.6039216, 0.09411765, 1)
+emission_energy_multiplier = 3.2
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_pk5k6"]
+top_radius = 0.025
+bottom_radius = 0.025
+height = 0.012
+radial_segments = 16
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_q8rsl"]
+metallic = 0.2
+roughness = 0.25
+emission_enabled = true
+emission = Color(1, 1, 1, 1)
+emission_energy_multiplier = 2.6
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_8flbt"]
+top_radius = 0.025
+bottom_radius = 0.025
+height = 0.012
+radial_segments = 16
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7e2ax"]
+metallic = 0.2
+roughness = 0.25
+emission_enabled = true
+emission = Color(1, 1, 1, 1)
+emission_energy_multiplier = 2.6
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_c6omu"]
+top_radius = 0.025
+bottom_radius = 0.025
+height = 0.012
+radial_segments = 16
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tevgs"]
+albedo_color = Color(0.1882353, 0.22352941, 0.26666668, 1)
+metallic = 0.8
+roughness = 0.3
+
+[sub_resource type="BoxMesh" id="BoxMesh_ql63g"]
+size = Vector3(0.96, 0.075, 0.012)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_p0fip"]
+albedo_color = Color(0.4509804, 0.4862745, 0.5176471, 1)
+metallic = 0.65
+metallic_specular = 0.8
+emission_enabled = true
+emission = Color(1, 1, 1, 1)
+emission_energy_multiplier = 1.77
+
+[sub_resource type="TextMesh" id="TextMesh_x0vee"]
+material = SubResource("StandardMaterial3D_p0fip")
+text = "T-HOUSE / TERMINAL"
+font = ExtResource("3_t8kwc")
+font_size = 32
+pixel_size = 0.0012
+curve_step = 0.3
+depth = 0.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2e80v"]
+albedo_color = Color(0.5372549, 0.5686275, 0.6039216, 1)
+metallic = 0.9
+roughness = 0.3
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_rr2as"]
+top_radius = 0.022
+bottom_radius = 0.022
+height = 0.012
+radial_segments = 12
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yvlou"]
+albedo_color = Color(0.5372549, 0.5686275, 0.6039216, 1)
+metallic = 0.9
+roughness = 0.3
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_oo2jr"]
+top_radius = 0.022
+bottom_radius = 0.022
+height = 0.012
+radial_segments = 12
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_a7pht"]
+albedo_color = Color(0.5372549, 0.5686275, 0.6039216, 1)
+metallic = 0.9
+roughness = 0.3
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_o7udk"]
+top_radius = 0.022
+bottom_radius = 0.022
+height = 0.012
+radial_segments = 12
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vxnsi"]
+albedo_color = Color(0.5372549, 0.5686275, 0.6039216, 1)
+metallic = 0.9
+roughness = 0.3
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_65jpa"]
+top_radius = 0.022
+bottom_radius = 0.022
+height = 0.012
+radial_segments = 12
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_75gyg"]
+render_priority = 0
+shader = ExtResource("4_asggy")
+shader_parameter/reflection_color = Color(0.72, 0.86, 1, 1)
+shader_parameter/reflection_strength = 0.55
+shader_parameter/edge_highlight_strength = 0.1
+shader_parameter/highlight_opacity = 0.035
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_s3hgk"]
+size = Vector2(4, 2)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_yf5fn"]
+radius = 6.2
+
+[node name="RegistrationTerminal" type="Node3D" unique_id=70243720 node_paths=PackedStringArray("screen", "screen_interactable", "proximity_area")]
+script = ExtResource("1_wp3qh")
+screen = NodePath("Housing/WorldScreen")
+screen_interactable = NodePath("Housing/WorldScreen/ScreenHit/Interactable")
+proximity_area = NodePath("ProximityArea")
+wake_distance = 6.0
+
+[node name="Housing" parent="." unique_id=1276401181 instance=ExtResource("2_5vwm0")]
+display_size = Vector2(4, 2)
+
+[node name="WorldScreen" parent="Housing" index="0" unique_id=1656044326]
+display_size = Vector2(4, 2)
+content_padding_ratio = 1.0
+text_scale = 0.8
+
+[node name="ScreenHit" type="StaticBody3D" parent="Housing/WorldScreen" index="0" unique_id=1072231198]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.04)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Housing/WorldScreen/ScreenHit" unique_id=1279377589]
+shape = SubResource("BoxShape3D_s3hgk")
+
+[node name="Interactable" type="Node" parent="Housing/WorldScreen/ScreenHit" unique_id=767303753]
+script = ExtResource("3_asggy")
+prompt_text = "[USE] Registration Terminal"
+metadata/_custom_type_script = "uid://dd5c04repreo1"
+
+[node name="OuterShell" parent="Housing/Chassis" parent_id_path=PackedInt32Array(1276401181, 896814966) index="0" unique_id=241930705]
+polygon = PackedVector2Array(-2.1, -1.22, 2.1, -1.22, 2.22, -1.1, 2.22, 1.1, 2.1, 1.22, -2.1, 1.22, -2.22, 1.1, -2.22, -1.1)
+
+[node name="TopArmor" parent="Housing/Chassis/InnerArmor" parent_id_path=PackedInt32Array(1276401181, 1934588388) index="0" unique_id=1642629032]
+material_override = SubResource("StandardMaterial3D_asggy")
+polygon = PackedVector2Array(-2.0804, 0.9875, 2.0804, 0.9875, 2.1596, 1.12, -2.1596, 1.12)
+
+[node name="BottomArmor" parent="Housing/Chassis/InnerArmor" parent_id_path=PackedInt32Array(1276401181, 1934588388) index="1" unique_id=1692322410]
+material_override = SubResource("StandardMaterial3D_6ljlw")
+polygon = PackedVector2Array(-2.1596, -1.12, 2.1596, -1.12, 2.0804, -0.9875, -2.0804, -0.9875)
+
+[node name="LeftArmor" parent="Housing/Chassis/InnerArmor" parent_id_path=PackedInt32Array(1276401181, 1934588388) index="2" unique_id=1781666988]
+material_override = SubResource("StandardMaterial3D_mhapl")
+polygon = PackedVector2Array(-2.1596, -0.9875, -1.96, -0.9875, -1.96, 0.9875, -2.1596, 0.9875)
+
+[node name="RightArmor" parent="Housing/Chassis/InnerArmor" parent_id_path=PackedInt32Array(1276401181, 1934588388) index="3" unique_id=978561599]
+material_override = SubResource("StandardMaterial3D_dr6gj")
+polygon = PackedVector2Array(1.96, -0.9875, 2.1596, -0.9875, 2.1596, 0.9875, 1.96, 0.9875)
+
+[node name="LeftVent" parent="Housing/Chassis/SideDetails" parent_id_path=PackedInt32Array(1276401181, 626883711) index="0" unique_id=622792050]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.1694, 0, 0.02)
+
+[node name="Vent1" parent="Housing/Chassis/SideDetails/LeftVent" index="0" unique_id=750534057]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.3484772, 0)
+mesh = SubResource("BoxMesh_2408p")
+
+[node name="Vent2" parent="Housing/Chassis/SideDetails/LeftVent" index="1" unique_id=621629105]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.6742386, 0)
+mesh = SubResource("BoxMesh_vjlbn")
+
+[node name="Vent3" parent="Housing/Chassis/SideDetails/LeftVent" index="2" unique_id=906315242]
+mesh = SubResource("BoxMesh_jqfi5")
+
+[node name="Vent4" parent="Housing/Chassis/SideDetails/LeftVent" index="3" unique_id=932069470]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6742386, 0)
+mesh = SubResource("BoxMesh_4hitg")
+
+[node name="Vent5" parent="Housing/Chassis/SideDetails/LeftVent" index="4" unique_id=1688231557]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3484772, 0)
+mesh = SubResource("BoxMesh_5pn14")
+
+[node name="RightVent" parent="Housing/Chassis/SideDetails" parent_id_path=PackedInt32Array(1276401181, 626883711) index="1" unique_id=88088852]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.1694, 0, 0.02)
+
+[node name="Vent6" parent="Housing/Chassis/SideDetails/RightVent" index="0" unique_id=588788927]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.3484772, 0)
+mesh = SubResource("BoxMesh_udcop")
+
+[node name="Vent7" parent="Housing/Chassis/SideDetails/RightVent" index="1" unique_id=2034216986]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.6742386, 0)
+mesh = SubResource("BoxMesh_0p4re")
+
+[node name="Vent8" parent="Housing/Chassis/SideDetails/RightVent" index="2" unique_id=1469080913]
+mesh = SubResource("BoxMesh_o5t62")
+
+[node name="Vent9" parent="Housing/Chassis/SideDetails/RightVent" index="3" unique_id=1029671947]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6742386, 0)
+mesh = SubResource("BoxMesh_had11")
+
+[node name="Vent10" parent="Housing/Chassis/SideDetails/RightVent" index="4" unique_id=1561835074]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3484772, 0)
+mesh = SubResource("BoxMesh_1kh2t")
+
+[node name="TopLeft" parent="Housing/Chassis/CornerArmor" parent_id_path=PackedInt32Array(1276401181, 1518325116) index="0" unique_id=1165353451]
+polygon = PackedVector2Array(-1.98, 1.0616, -1.879, 1.2, -2.1, 1.2, -2.2, 1.1)
+
+[node name="TopRight" parent="Housing/Chassis/CornerArmor" parent_id_path=PackedInt32Array(1276401181, 1518325116) index="1" unique_id=1655426099]
+polygon = PackedVector2Array(2.2, 1.1, 2.1, 1.2, 1.879, 1.2, 1.98, 1.0616)
+
+[node name="BottomLeft" parent="Housing/Chassis/CornerArmor" parent_id_path=PackedInt32Array(1276401181, 1518325116) index="2" unique_id=1378192554]
+polygon = PackedVector2Array(-2.2, -1.1, -2.1, -1.2, -1.879, -1.2, -1.98, -1.0616)
+
+[node name="BottomRight" parent="Housing/Chassis/CornerArmor" parent_id_path=PackedInt32Array(1276401181, 1518325116) index="3" unique_id=353270423]
+polygon = PackedVector2Array(1.98, -1.0616, 1.879, -1.2, 2.1, -1.2, 2.2, -1.1)
+
+[node name="PanelBody" parent="Housing/Chassis/ControlPanel" parent_id_path=PackedInt32Array(1276401181, 580430552) index="0" unique_id=2013980107]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.1, 0.035)
+material_override = SubResource("StandardMaterial3D_txnwj")
+mesh = SubResource("BoxMesh_oo72p")
+
+[node name="IndicatorGroup" parent="Housing/Chassis/ControlPanel" parent_id_path=PackedInt32Array(1276401181, 580430552) index="1" unique_id=1750623697]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.1, 0.035)
+
+[node name="Button1" parent="Housing/Chassis/ControlPanel/IndicatorGroup" index="0" unique_id=854842712]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, -0.9, 0, 0.04)
+material_override = SubResource("StandardMaterial3D_lrqs5")
+mesh = SubResource("CylinderMesh_pk5k6")
+
+[node name="Button2" parent="Housing/Chassis/ControlPanel/IndicatorGroup" index="1" unique_id=1703512645]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, -0.82, 0, 0.04)
+material_override = SubResource("StandardMaterial3D_q8rsl")
+mesh = SubResource("CylinderMesh_8flbt")
+
+[node name="Button3" parent="Housing/Chassis/ControlPanel/IndicatorGroup" index="2" unique_id=88442090]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, -0.74, 0, 0.04)
+material_override = SubResource("StandardMaterial3D_7e2ax")
+mesh = SubResource("CylinderMesh_c6omu")
+
+[node name="IdentificationPlate" parent="Housing/Chassis/ControlPanel" parent_id_path=PackedInt32Array(1276401181, 580430552) index="2" unique_id=1224424019]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.1, 0.035)
+
+[node name="PlateMesh" parent="Housing/Chassis/ControlPanel/IdentificationPlate" index="0" unique_id=596034988]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.54, 0, 0.04)
+material_override = SubResource("StandardMaterial3D_tevgs")
+mesh = SubResource("BoxMesh_ql63g")
+
+[node name="EngravedText" parent="Housing/Chassis/ControlPanel/IdentificationPlate" index="1" unique_id=129356557]
+transform = Transform3D(8, 0, 0, 0, 8, 0, 0, 0, 8, 0.54, 0, 0.049)
+mesh = SubResource("TextMesh_x0vee")
+
+[node name="TopLeftFastener" parent="Housing/Chassis/Fasteners" parent_id_path=PackedInt32Array(1276401181, 892892411) index="0" unique_id=357282570]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, -4.0792, 2.0026, 0.085)
+material_override = SubResource("StandardMaterial3D_2e80v")
+mesh = SubResource("CylinderMesh_rr2as")
+
+[node name="TopRightFastener" parent="Housing/Chassis/Fasteners" parent_id_path=PackedInt32Array(1276401181, 892892411) index="1" unique_id=870569978]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 4.0792, 2.0026, 0.085)
+material_override = SubResource("StandardMaterial3D_yvlou")
+mesh = SubResource("CylinderMesh_oo2jr")
+
+[node name="BottomLeftFastener" parent="Housing/Chassis/Fasteners" parent_id_path=PackedInt32Array(1276401181, 892892411) index="2" unique_id=1480906850]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, -4.0792, -2.0026, 0.085)
+material_override = SubResource("StandardMaterial3D_a7pht")
+mesh = SubResource("CylinderMesh_o7udk")
+
+[node name="BottomRightFastener" parent="Housing/Chassis/Fasteners" parent_id_path=PackedInt32Array(1276401181, 892892411) index="3" unique_id=1078629511]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 4.0792, -2.0026, 0.085)
+material_override = SubResource("StandardMaterial3D_vxnsi")
+mesh = SubResource("CylinderMesh_65jpa")
+
+[node name="Glass" parent="Housing" index="2" unique_id=2127681974]
+material_override = SubResource("ShaderMaterial_75gyg")
+mesh = SubResource("PlaneMesh_s3hgk")
+
+[node name="ProximityArea" type="Area3D" parent="." unique_id=1454274502]
+collision_mask = 16
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ProximityArea" unique_id=569885246]
+shape = SubResource("SphereShape3D_yf5fn")
+
+[editable path="Housing"]
