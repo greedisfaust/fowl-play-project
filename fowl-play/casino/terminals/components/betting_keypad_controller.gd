@@ -253,14 +253,13 @@ func _publish_snapshot() -> void:
 	_apply_pending_amount()
 	if not multiplayer.is_server() or not _is_network_session_active():
 		return
-	var participants: Array[Dictionary] = table.get_participants() if is_instance_valid(table) else []
 	var wagers: Array[Dictionary] = table.get_round_wagers() if is_instance_valid(table) else []
 	var available_balance: int = 0
 	if is_instance_valid(_wallet):
 		var wallet_snapshot: Dictionary = _wallet.call("get_snapshot")
 		available_balance = int(wallet_snapshot.get("available_balance", 0))
 	var nearby_peer_ids: Array[int] = table.get_nearby_peer_ids() if is_instance_valid(table) else []
-	_sync_snapshot.rpc(get_pending_wager_amount(), _snapshot_revision, participants, wagers, available_balance, nearby_peer_ids)
+	_sync_snapshot.rpc(get_pending_wager_amount(), _snapshot_revision, wagers, available_balance, nearby_peer_ids)
 
 func _apply_pending_amount() -> void:
 	if is_instance_valid(display) and display.has_method("set_pending_wager_amount"):
@@ -273,7 +272,7 @@ func _is_network_client() -> bool:
 	return _is_network_session_active() and not multiplayer.is_server()
 
 @rpc("authority", "call_remote", "reliable", 0)
-func _sync_snapshot(amount: int, revision: int, participants: Array[Dictionary], wagers: Array[Dictionary], available_balance: int, nearby_peer_ids: Array[int]) -> void:
+func _sync_snapshot(amount: int, revision: int, wagers: Array[Dictionary], available_balance: int, nearby_peer_ids: Array[int]) -> void:
 	if not is_instance_valid(_network) or not bool(_network.call("validate_rpc", 1)):
 		return
 	if revision < _snapshot_revision:
@@ -282,7 +281,7 @@ func _sync_snapshot(amount: int, revision: int, participants: Array[Dictionary],
 	_pending_digits = str(maxi(amount, 0))
 	_apply_pending_amount()
 	if is_instance_valid(display) and display.has_method("set_network_snapshot"):
-		display.call("set_network_snapshot", participants, wagers, available_balance, nearby_peer_ids)
+		display.call("set_network_snapshot", wagers, available_balance, nearby_peer_ids)
 
 @rpc("any_peer", "call_remote", "reliable", 0)
 func _request_snapshot() -> void:
@@ -296,7 +295,7 @@ func _request_snapshot() -> void:
 		var wallet_snapshot: Dictionary = _wallet.call("get_snapshot")
 		available_balance = int(wallet_snapshot.get("available_balance", 0))
 	var nearby_peer_ids: Array[int] = table.get_nearby_peer_ids() if is_instance_valid(table) else []
-	_sync_snapshot.rpc_id(sender_id, get_pending_wager_amount(), _snapshot_revision, participants, wagers, available_balance, nearby_peer_ids)
+	_sync_snapshot.rpc_id(sender_id, get_pending_wager_amount(), _snapshot_revision, wagers, available_balance, nearby_peer_ids)
 
 func _success(data: Dictionary = {}) -> Dictionary:
 	var result: Dictionary = {"ok": true, "reason": ""}
