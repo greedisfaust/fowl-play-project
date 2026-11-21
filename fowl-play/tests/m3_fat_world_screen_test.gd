@@ -60,6 +60,20 @@ func _run() -> void:
 	if _failed:
 		quit(1)
 		return
+	# Simulate a parent scene that saved already-resized child transforms.
+	var nested_parent: Node3D = Node3D.new()
+	var nested_instance: Node3D = packed.instantiate() as Node3D
+	nested_instance.set_script(FatScript)
+	nested_instance.set("display_size", Vector2(3.0, 1.6875))
+	var nested_left_vent: Node3D = nested_instance.get_node("Chassis/SideDetails/LeftVent") as Node3D
+	nested_left_vent.position.x = -1.6694
+	root.add_child(nested_parent)
+	nested_parent.add_child(nested_instance)
+	await process_frame
+	_check(is_equal_approx(nested_left_vent.position.x, -1.6694), "Nested FAT instance should not apply the saved resize offset twice")
+	nested_parent.queue_free()
+	await process_frame
+
 	print("FAT WORLD SCREEN PASS")
 	quit(0)
 
