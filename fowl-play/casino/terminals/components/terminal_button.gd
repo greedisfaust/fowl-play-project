@@ -79,7 +79,7 @@ func _on_interacted(_actor: Node, action: StringName) -> void:
 	if actor_peer_id <= 0:
 		actor_peer_id = multiplayer.get_unique_id()
 	var effective_button_id: StringName = button_id
-	if effective_button_id.is_empty():
+	if String(effective_button_id).is_empty():
 		effective_button_id = StringName(display_text.strip_edges().to_upper())
 	button_pressed.emit(effective_button_id)
 	button_activated.emit(effective_button_id, actor_peer_id)
