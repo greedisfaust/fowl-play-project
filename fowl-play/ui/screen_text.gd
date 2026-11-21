@@ -95,6 +95,10 @@ func fit_font_size_to_columns(character_count: int, minimum_size: int = 8) -> vo
 	if character_count <= 0 or size.x <= 0.0 or size.y <= 0.0:
 		return
 	var base_size: int = terminal_font_size
+	# Measure content at the authored size every time. Measuring after a previous
+	# fit would use the smaller height and produce a different result on refresh.
+	_effective_font_size = base_size
+	_apply_appearance()
 	var font: Font = terminal_font
 	if font == null:
 		font = get_theme_font("normal_font")
