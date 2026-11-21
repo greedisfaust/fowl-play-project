@@ -41,8 +41,11 @@ func _ready() -> void:
 func _setup_betting_keypad() -> void:
 	var keypad: Node = get_node_or_null("BettingKeypad")
 	var display: Node = get_node_or_null("BettingTerminalDisplay")
+	if not is_instance_valid(keypad) and not is_instance_valid(display):
+		# Lightweight headless table tests instantiate this controller without a scene.
+		return
 	if not is_instance_valid(keypad) or not is_instance_valid(display):
-		push_warning("ChickenCrossTable needs its BettingKeypad and BettingTerminalDisplay nodes.")
+		push_warning("ChickenCrossTable needs both BettingKeypad and BettingTerminalDisplay nodes.")
 		return
 	if keypad.get_node_or_null("BettingKeypadController") != null:
 		return
