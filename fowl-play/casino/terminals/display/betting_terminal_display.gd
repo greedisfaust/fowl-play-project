@@ -220,12 +220,12 @@ func _trim_decimal(value: float) -> String:
 
 func _format_split_row(left_text: String, right_text: String, left_width: int, right_width: int, center_left: bool, left_color: Color, left_font_size: int) -> String:
 	var safe_left: String = _fit_text(left_text, left_width)
-\tvar leading_padding: int = 0
-\tvar trailing_padding: int = maxi(left_width - safe_left.length(), 0)
-\tif center_left:
-\t\tleading_padding = maxi(floori(float(left_width - safe_left.length()) / 2.0), 0)
-\t\ttrailing_padding = maxi(left_width - safe_left.length() - leading_padding, 0)
-\tvar right_value: String = _fit_text(right_text, right_width)
+	var leading_padding: int = 0
+	var trailing_padding: int = maxi(left_width - safe_left.length(), 0)
+	if center_left:
+		leading_padding = maxi(floori(float(left_width - safe_left.length()) / 2.0), 0)
+		trailing_padding = maxi(left_width - safe_left.length() - leading_padding, 0)
+	var right_value: String = _fit_text(right_text, right_width)
 	var right_padding: String = " ".repeat(maxi(right_width - right_value.length(), 0))
 	var color_hex: String = left_color.to_html(false)
 	var left_markup: String = "[color=#%s]" % color_hex
