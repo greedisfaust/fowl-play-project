@@ -5,7 +5,8 @@ extends Node
 
 signal wager_confirmation_result(peer_id: int, result: Dictionary)
 
-const MAX_WAGER_DIGITS: int = 10
+const MAX_WAGER_DIGITS: int = 19
+const MAX_WAGER_AMOUNT: int = 9223372036854775807
 const TABLE_STATE_IDLE: int = 0
 const TABLE_STATE_OPEN: int = 1
 
@@ -58,6 +59,7 @@ func _exit_tree() -> void:
 		_debug_hub.call("unwatch", StringName(_debug_watch_prefix + "last_confirmation"))
 	if is_instance_valid(table):
 		_disconnect_table_signal(&"participants_changed", _on_participants_changed)
+		_disconnect_table_signal(&"proximity_changed", _on_proximity_changed)
 		_disconnect_table_signal(&"state_changed", _on_state_changed)
 		_disconnect_table_signal(&"round_opened", _on_round_opened)
 		_disconnect_table_signal(&"round_started", _on_round_started)
@@ -80,6 +82,9 @@ func handle_button_input(button_id: StringName, peer_id: int) -> Dictionary:
 	if action.length() == 1 and action.is_valid_int():
 		if _pending_digits.length() >= MAX_WAGER_DIGITS:
 			return _failure("The wager amount has reached the maximum supported digits.")
+		var next_amount: int = int(_pending_digits) * 10 + int(action)
+		if next_amount > MAX_WAGER_AMOUNT:
+			return _failure("The wager amount exceeds the supported 64-bit wallet limit.")
 		if _pending_digits == "0":
 			_pending_digits = action
 		else:
@@ -176,6 +181,7 @@ func _on_button_activated(button_id: StringName, peer_id: int) -> void:
 func _connect_authority_signals() -> void:
 	if is_instance_valid(table):
 		_connect_table_signal(&"participants_changed", _on_participants_changed)
+		_connect_table_signal(&"proximity_changed", _on_proximity_changed)
 		_connect_table_signal(&"state_changed", _on_state_changed)
 		_connect_table_signal(&"round_opened", _on_round_opened)
 		_connect_table_signal(&"round_started", _on_round_started)
@@ -197,6 +203,9 @@ func _disconnect_table_signal(signal_name: StringName, callback: Callable) -> vo
 		table.disconnect(signal_name, callback)
 
 func _on_participants_changed(_participants: Array[Dictionary]) -> void:
+	_publish_snapshot()
+
+func _on_proximity_changed(_nearby_peer_ids: Array[int]) -> void:
 	_publish_snapshot()
 
 func _on_state_changed(_previous_state: int, _new_state: int) -> void:
@@ -248,7 +257,8 @@ func _publish_snapshot() -> void:
 	if is_instance_valid(_wallet):
 		var wallet_snapshot: Dictionary = _wallet.call("get_snapshot")
 		available_balance = int(wallet_snapshot.get("available_balance", 0))
-	_sync_snapshot.rpc(get_pending_wager_amount(), _snapshot_revision, participants, wagers, available_balance)
+	var nearby_peer_ids: Array[int] = table.get_nearby_peer_ids() if is_instance_valid(table) else []
+	_sync_snapshot.rpc(get_pending_wager_amount(), _snapshot_revision, participants, wagers, available_balance, nearby_peer_ids)
 
 func _apply_pending_amount() -> void:
 	if is_instance_valid(display) and display.has_method("set_pending_wager_amount"):
@@ -261,7 +271,7 @@ func _is_network_client() -> bool:
 	return _is_network_session_active() and not multiplayer.is_server()
 
 @rpc("authority", "call_remote", "reliable", 0)
-func _sync_snapshot(amount: int, revision: int, participants: Array[Dictionary], wagers: Array[Dictionary], available_balance: int) -> void:
+func _sync_snapshot(amount: int, revision: int, participants: Array[Dictionary], wagers: Array[Dictionary], available_balance: int, nearby_peer_ids: Array[int]) -> void:
 	if not is_instance_valid(_network) or not bool(_network.call("validate_rpc", 1)):
 		return
 	if revision < _snapshot_revision:
@@ -270,7 +280,7 @@ func _sync_snapshot(amount: int, revision: int, participants: Array[Dictionary],
 	_pending_digits = str(maxi(amount, 0))
 	_apply_pending_amount()
 	if is_instance_valid(display) and display.has_method("set_network_snapshot"):
-		display.call("set_network_snapshot", participants, wagers, available_balance)
+		display.call("set_network_snapshot", participants, wagers, available_balance, nearby_peer_ids)
 
 @rpc("any_peer", "call_remote", "reliable", 0)
 func _request_snapshot() -> void:
@@ -283,7 +293,8 @@ func _request_snapshot() -> void:
 	if is_instance_valid(_wallet):
 		var wallet_snapshot: Dictionary = _wallet.call("get_snapshot")
 		available_balance = int(wallet_snapshot.get("available_balance", 0))
-	_sync_snapshot.rpc_id(sender_id, get_pending_wager_amount(), _snapshot_revision, participants, wagers, available_balance)
+	var nearby_peer_ids: Array[int] = table.get_nearby_peer_ids() if is_instance_valid(table) else []
+	_sync_snapshot.rpc_id(sender_id, get_pending_wager_amount(), _snapshot_revision, participants, wagers, available_balance, nearby_peer_ids)
 
 func _success(data: Dictionary = {}) -> Dictionary:
 	var result: Dictionary = {"ok": true, "reason": ""}
