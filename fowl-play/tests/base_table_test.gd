@@ -45,7 +45,7 @@ func _run() -> void:
 
 	_check_result(table.call("enter_proximity", 2), true, "Starter returns to proximity")
 	_check_result(table.call("start_round", 2), true, "Nearby non-participant can start the round")
-	_check(int(wallet.call("get_wager", first_wager_id)["status"]) == "locked", "Starting locks remaining wagers")
+	_check(str(wallet.call("get_wager", first_wager_id)["status"]) == "locked", "Starting locks remaining wagers")
 	_check_result(table.call("withdraw_wager", 1, first_wager_id), false, "Locked wager cannot be withdrawn")
 
 	var post_start_exit: Dictionary = table.call("exit_proximity", 1)
