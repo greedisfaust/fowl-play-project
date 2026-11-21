@@ -44,6 +44,8 @@ Inspector assignments:
 - `Initial World`: choose the first world scene once it exists.
 - `Apartment Scene`, `Casino Scene`, `Rest Area Scene`: assign the corresponding PackedScenes.
 - `World Root Path`: leave as `WorldRoot` unless the hierarchy changes.
+- `Players Path`: leave as `Players`.
+- `Player Spawner Path`: leave as `MultiplayerSpawner`; MainController sets its spawn path to the persistent Players node.
 - `Fade Duration Seconds`: defaults to 0.35 seconds.
 
 The host calls `transition_to(MainController.World.CASINO)` (or the corresponding enum value). The host broadcasts only the small world ID; each peer loads its local PackedScene. This avoids trying to send scene resources over RPC. The RPC is reliable and authority-restricted. Offline play uses the same transition path locally.
