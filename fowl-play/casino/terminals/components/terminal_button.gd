@@ -42,27 +42,8 @@ func _apply_display_text() -> void:
 	var source_text_mesh: TextMesh = label.mesh as TextMesh
 	if source_text_mesh == null:
 		return
-	var resolved_text: String = display_text
-	if resolved_text.is_empty():
-		match button_id:
-			&"backspace":
-				resolved_text = "<"
-			&"clear":
-				resolved_text = "C"
-			&"min":
-				resolved_text = "MIN"
-			&"quarter":
-				resolved_text = "1/4"
-			&"half":
-				resolved_text = "1/2"
-			&"max":
-				resolved_text = "MAX"
-			&"confirm":
-				resolved_text = "CONFIRM"
-			_:
-				resolved_text = String(button_id)
 	var unique_text_mesh: TextMesh = source_text_mesh.duplicate() as TextMesh
-	unique_text_mesh.text = resolved_text
+	unique_text_mesh.text = display_text
 	label.mesh = unique_text_mesh
 
 func _exit_tree() -> void:
