@@ -19,6 +19,7 @@ var _debug_watch_prefix: String = ""
 var _last_confirmation_status: String = "No wager confirmed yet."
 var _pending_digits: String = "0"
 var _snapshot_revision: int = 0
+var _snapshot_request_sent: bool = false
 var _connected_buttons: Array[Node] = []
 
 func _ready() -> void:
@@ -41,8 +42,7 @@ func _ready() -> void:
 	_connect_key_buttons()
 	_connect_authority_signals()
 	_apply_pending_amount()
-	if _is_network_client():
-		_request_snapshot.rpc_id(1)
+	_try_request_snapshot()
 
 func _exit_tree() -> void:
 	for button: Node in _connected_buttons:
@@ -65,6 +65,8 @@ func _exit_tree() -> void:
 		_wallet.disconnect("wallet_changed", _on_wallet_changed)
 	if is_instance_valid(_network) and _network.has_signal("session_ended") and _network.is_connected("session_ended", _on_session_ended):
 		_network.disconnect("session_ended", _on_session_ended)
+	if is_instance_valid(_network) and _network.has_signal("roster_changed") and _network.is_connected("roster_changed", _on_roster_changed):
+		_network.disconnect("roster_changed", _on_roster_changed)
 
 ## Public entry point used by physical TerminalButton instances and headless tests.
 func handle_button_input(button_id: StringName, peer_id: int) -> Dictionary:
@@ -181,6 +183,8 @@ func _connect_authority_signals() -> void:
 		_wallet.connect("wallet_changed", _on_wallet_changed)
 	if is_instance_valid(_network) and _network.has_signal("session_ended"):
 		_network.connect("session_ended", _on_session_ended)
+	if is_instance_valid(_network) and _network.has_signal("roster_changed"):
+		_network.connect("roster_changed", _on_roster_changed)
 
 func _connect_table_signal(signal_name: StringName, callback: Callable) -> void:
 	if table.has_signal(signal_name) and not table.is_connected(signal_name, callback):
@@ -214,9 +218,22 @@ func _on_wallet_changed(_available_balance: int, _reserved_total: int) -> void:
 func _on_session_ended() -> void:
 	_pending_digits = "0"
 	_snapshot_revision = 0
+	_snapshot_request_sent = false
 	if is_instance_valid(display):
 		display.call("clear_network_snapshot")
 		_apply_pending_amount()
+
+func _on_roster_changed() -> void:
+	_try_request_snapshot()
+
+func _try_request_snapshot() -> void:
+	if _snapshot_request_sent or not _is_network_client():
+		return
+	var network_peer: MultiplayerPeer = _network.get("peer") as MultiplayerPeer
+	if network_peer == null or network_peer.get_connection_status() != MultiplayerPeer.CONNECTION_CONNECTED:
+		return
+	_snapshot_request_sent = true
+	_request_snapshot.rpc_id(1)
 
 func _publish_snapshot() -> void:
 	_snapshot_revision += 1
