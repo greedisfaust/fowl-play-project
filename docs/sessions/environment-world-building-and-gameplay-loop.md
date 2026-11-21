@@ -3,13 +3,13 @@
 Branch: `environment/world-building-and-gameplay-loop`
 Goal: Establish the casino/world gameplay foundation and a reusable table framework, beginning with Chicken Cross as the reference game.
 Status: IN PROGRESS
-Last updated: 2026-11-21 by GPT-6 (session 1)
+Last updated: 2026-11-22 by GPT-6 (session 3)
 Base: merged main commit `75675cc31456c3b0d7b5bb365ec82fd81ced9a72`
 Base docs: `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `docs/PROJECT_STATE.md`
 
 ## Current state (rewrite every session)
 
-- Branch `environment/world-building-and-gameplay-loop` is active; latest verified head is `76cbbd8059579247cbb3cf4c8cb1f5561950dcae`.
+- Branch `environment/world-building-and-gameplay-loop` is active; W1 architecture work is being added on top of `cd5c501b7b9f401832a25497b5e75307c3dac399`.
 - Shared wallet and generic script-only `BaseTable` controller are implemented. Both casino headless test suites have been USER VERIFIED passing in Godot 4.7.2.
 - The project is Godot 4.7, typed GDScript, Jolt, ENet, max four players; `fowl-play/` is the Godot project.
 - Existing reusable foundations include `Interactable` / `Focus`, `Network`, `PlayerIdentity`, `DebugHub`, and the current player/nameplate presentation.
@@ -35,7 +35,7 @@ Base docs: `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `
 
 ## Exact next step
 
-Implement the Chicken Cross table adapter that uses BaseTable, binds host-validated Cross/Cash Out intents to each participant's own chicken, generates a fresh host-side random roll per accepted tile entry, and settles only after all participants finish. Before implementing departure handling, ask the user whether a started participant who leaves/disconnects should auto-cash-out at their current tile or lose their wager.
+Continue W1 world architecture: user creates the editor-authored Main hierarchy and world scene roots using `docs/WORLD_SCENE_ARCHITECTURE.md`. Then implement the persistent player-spawn controller so player instances survive world swaps. Do not change the project startup scene until that migration and an initial Apartment scene are ready.
 
 ## Waiting on the user
 
@@ -175,3 +175,13 @@ Implement the Chicken Cross table adapter that uses BaseTable, binds host-valida
 - Moved Chicken Cross rules and round model into `fowl-play/casino/tables/chicken_cross/`; updated preload paths and kept tests in the shared `fowl-play/tests/` folder.
 - Added the Chicken Cross folder README and documented the shared/game-specific boundary. Shared `base_table.gd` and `shared_wallet.gd` remain directly under `casino/`.
 - New branch commit records the folder move; no scene files changed and no push performed.
+
+
+### Session 3 — 2026-11-22 — Main scene architecture (W1)
+- Audited the active branch and confirmed `project.godot` currently points to `res://arena/test_arena.tscn` by UID. That scene owns the current player spawning, spawn markers, and development DebugConsole; it must remain intact as a test scene.
+- User approved establishing the production Main scene and the three world spaces before implementing run/day state.
+- Added `fowl-play/world/main_controller.gd` as the persistent root controller. It loads one Node3D-rooted world PackedScene at a time, performs a fade transition, and lets the host broadcast a world ID so peers load their local scene copy.
+- Added `docs/WORLD_SCENE_ARCHITECTURE.md` with the Main hierarchy, world-scene contract, and explicit migration boundaries.
+- No `.tscn` files or `project.godot` settings were changed. The new Main scene is not yet the startup scene; player spawning must first be migrated to a persistent Main-owned container, and the editor-authored Apartment scene must exist.
+- Godot is unavailable in the assistant environment; script parsing/runtime behavior has not been verified. User verification is required after pulling.
+- Next: user creates the editor-authored Main hierarchy and Apartment/Casino/Rest Area scene roots per the architecture doc; then implement the persistent player-spawn controller and wire the Main scene safely.
