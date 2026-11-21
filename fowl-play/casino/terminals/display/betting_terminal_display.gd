@@ -56,32 +56,52 @@ func set_profile(next_profile: BettingTerminalProfile) -> void:
 	profile = next_profile
 	refresh_display()
 
-## Rebuilds the terminal readout from the current table/wallet snapshot.
+## Rebuilds the readout as paired rows: each column owns a fixed character budget.
+## The longest column determines row count; no blank-line positioning is used.
 func refresh_display() -> void:
 	if not is_instance_valid(screen_text) or profile == null:
 		return
+
 	screen_text.clear_screen()
-	# The two-column format is a fixed-width line. Fit its font to the actual
-	# ScreenText width before appending content (30 + 42 columns + separator).
-	screen_text.fit_font_size_to_columns(maxi(profile.left_column_width, 12) + maxi(profile.right_column_width, 12) + 3)
-	var previous_body_color: Color = screen_text.body_color
+	var left_width: int = maxi(profile.left_column_width, 12)
+	var right_width: int = maxi(profile.right_column_width, 12)
+	var total_width: int = left_width + right_width + 3
+
 	screen_text.header_color = profile.accent_color
 	screen_text.body_color = profile.body_color
 	screen_text.prompt_color = profile.accent_color
-	screen_text.append_header(_center_text(profile.game_title, profile.left_column_width + profile.right_column_width + 3))
+	screen_text.append_header(_center_text(profile.game_title, total_width))
 	if not profile.game_description.is_empty():
 		screen_text.append_paragraph(profile.game_description)
-	screen_text.append_paragraph("")
-	var left_heading: String = profile.pending_heading
-	var right_heading: String = profile.player_list_heading
-	screen_text.append_header(_two_columns(left_heading, right_heading))
-	screen_text.append_paragraph(_two_columns("----------------", "--------------------------------"))
-	_render_pending_column()
-	_render_player_wagers()
-	screen_text.body_color = previous_body_color
+
+	screen_text.append_header(_two_columns(profile.pending_heading, profile.player_list_heading))
+	screen_text.append_paragraph(_two_columns("-".repeat(mini(left_width, 24)), "-".repeat(mini(right_width, 32))))
+
+	var left_rows: Array[String] = _build_pending_rows()
+	var right_rows: Array[String] = _build_player_rows()
+	var row_count: int = maxi(left_rows.size(), right_rows.size())
+	for row_index: int in range(row_count):
+		var left_value: String = left_rows[row_index] if row_index < left_rows.size() else ""
+		var right_value: String = right_rows[row_index] if row_index < right_rows.size() else ""
+		var row_text: String = _two_columns(left_value, right_value)
+		if row_index == 0 and not left_rows.is_empty():
+			var minimum_value: int = profile.get_effective_minimum()
+			var maximum_value: int = profile.get_effective_maximum()
+			var available_balance: int = _get_available_balance()
+			var valid: bool = _pending_wager_amount >= minimum_value and _pending_wager_amount <= maximum_value and _pending_wager_amount <= available_balance
+			screen_text.body_color = profile.valid_color if valid else profile.invalid_color
+			if _pending_wager_amount > available_balance and _pending_wager_amount > 0:
+				screen_text.body_color = profile.invalid_color
+		else:
+			screen_text.body_color = profile.body_color
+		screen_text.append_paragraph(row_text)
+
+	screen_text.body_color = profile.body_color
+	screen_text.fit_font_size_to_columns(total_width)
 	display_refreshed.emit()
 
-func _render_pending_column() -> void:
+func _build_pending_rows() -> Array[String]:
+	var rows: Array[String] = []
 	var minimum_value: int = profile.get_effective_minimum()
 	var maximum_value: int = profile.get_effective_maximum()
 	var available_balance: int = _get_available_balance()
@@ -89,27 +109,22 @@ func _render_pending_column() -> void:
 	var status_text: String = profile.valid_message if valid else profile.invalid_message
 	if _pending_wager_amount > available_balance and _pending_wager_amount > 0:
 		status_text = profile.insufficient_funds_message
-	screen_text.append_paragraph(_two_columns(_format_money(_pending_wager_amount), ""))
-	var status_color: Color = profile.valid_color if valid else profile.invalid_color
-	screen_text.body_color = status_color
-	screen_text.append_paragraph(_two_columns(status_text, ""))
-	screen_text.body_color = profile.body_color
-	screen_text.append_paragraph(_two_columns("%s: %s" % [profile.minimum_label, _format_money(minimum_value)], ""))
-	screen_text.append_paragraph(_two_columns("%s: %s" % [profile.maximum_label, _format_money(maximum_value)], ""))
-	screen_text.append_paragraph(_two_columns("", ""))
-	screen_text.append_paragraph(_two_columns("", ""))
-	screen_text.append_paragraph(_two_columns("", ""))
+	rows.append(_format_money(_pending_wager_amount))
+	rows.append(status_text)
+	rows.append("%s: %s" % [profile.minimum_label, _format_money(minimum_value)])
+	rows.append("%s: %s" % [profile.maximum_label, _format_money(maximum_value)])
+	return rows
 
-func _render_player_wagers() -> void:
+func _build_player_rows() -> Array[String]:
+	var rows: Array[String] = []
 	var participants: Array[Dictionary] = []
 	var wagers: Array[Dictionary] = []
 	if is_instance_valid(table):
 		participants = table.get_participants()
 		wagers = table.get_round_wagers()
 	var capacity: int = table.max_participants if is_instance_valid(table) else 0
-	var right_width: int = maxi(profile.right_column_width, 12)
-	var player_count: String = profile.player_count_format % [participants.size(), capacity]
-	screen_text.append_header(_two_columns("", player_count))
+	rows.append(profile.player_count_format % [participants.size(), capacity])
+
 	var totals_by_peer: Dictionary = {}
 	var total_reserved: int = 0
 	for wager: Dictionary in wagers:
@@ -122,21 +137,20 @@ func _render_player_wagers() -> void:
 			continue
 		totals_by_peer[peer_id] = int(totals_by_peer.get(peer_id, 0)) + stake
 		total_reserved += stake
+
 	var peer_ids: Array = totals_by_peer.keys()
 	peer_ids.sort()
 	if peer_ids.is_empty():
-		screen_text.append_paragraph(_two_columns("", profile.no_wagers_message))
+		rows.append(profile.no_wagers_message)
 	else:
 		var visible_count: int = mini(peer_ids.size(), profile.list_rows)
 		for index: int in range(visible_count):
 			var peer_id: int = int(peer_ids[index])
-			var player_label: String = _get_player_label(peer_id)
-			var amount_label: String = _format_money(int(totals_by_peer[peer_id]))
-			screen_text.append_paragraph(_two_columns("", "%s — %s" % [player_label, amount_label]))
+			rows.append("%s — %s" % [_get_player_label(peer_id), _format_money(int(totals_by_peer[peer_id]))])
 		if peer_ids.size() > visible_count:
-			screen_text.append_paragraph(_two_columns("", "+ %d MORE" % (peer_ids.size() - visible_count)))
-	screen_text.append_paragraph(_two_columns("", ""))
-	screen_text.append_header(_two_columns("", "%s: %s" % [profile.total_reserved_label, _format_money(total_reserved)]))
+			rows.append("+ %d MORE" % (peer_ids.size() - visible_count))
+	rows.append("%s: %s" % [profile.total_reserved_label, _format_money(total_reserved)])
+	return rows
 
 func _get_available_balance() -> int:
 	if not is_instance_valid(_wallet) or not _wallet.has_method("get_snapshot"):
@@ -171,9 +185,19 @@ func _format_money(amount: int) -> String:
 
 func _two_columns(left_text: String, right_text: String) -> String:
 	var left_width: int = maxi(profile.left_column_width, 12)
-	var left_value: String = left_text.left(left_width)
-	var padding: int = maxi(left_width - left_value.length(), 1)
-	return left_value + " ".repeat(padding) + " | " + right_text
+	var right_width: int = maxi(profile.right_column_width, 12)
+	var left_value: String = _fit_text(left_text, left_width)
+	var right_value: String = _fit_text(right_text, right_width)
+	return left_value + " ".repeat(left_width - left_value.length()) + " | " + right_value
+
+func _fit_text(value: String, width: int) -> String:
+	if width <= 0 or value.is_empty():
+		return ""
+	if value.length() <= width:
+		return value
+	if width <= 3:
+		return value.left(width)
+	return value.left(width - 1) + "…"
 
 func _center_text(value: String, width: int) -> String:
 	var safe_width: int = maxi(width, value.length())
