@@ -20,9 +20,12 @@ func _run() -> void:
 	terminal.content_padding_ratio = 0.7
 	terminal.size = Vector2(3226.0, 1382.0)
 	terminal.fit_font_size_to_columns(75)
-	_check(terminal.terminal_font_size < 106, "Wide two-column layouts should reduce font size to fit the actual screen width")
-	_check(terminal.terminal_font_size >= 8, "Auto-fit font size should respect its minimum")
-	terminal.terminal_font_size = 106
+	_check(terminal.get_effective_font_size() < 106, "Wide two-column layouts should reduce the rendered font size to fit the screen")
+	_check(terminal.get_effective_font_size() >= 8, "Auto-fit font size should respect its minimum")
+	_check(terminal.terminal_font_size == 106, "Auto-fit must preserve the Inspector-configured design font size")
+	var first_fitted_size: int = terminal.get_effective_font_size()
+	terminal.fit_font_size_to_columns(75)
+	_check(terminal.get_effective_font_size() == first_fitted_size, "Repeated fitting must not progressively shrink the rendered font")
 
 	_check(terminal.bbcode_enabled, "Terminal must support per-line header/body colors")
 	_check(terminal.background_color == ScreenText.DEFAULT_BACKGROUND, "Terminal should use the dark blue-black backing by default")
