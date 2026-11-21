@@ -30,17 +30,21 @@ var _warning_sent: bool = false
 var _authored_positions: Dictionary = {}
 var _layout_initialized: bool = false
 
+## Cache authored local positions by node identity, not absolute scene path.
+## Absolute paths change when this scene is instanced under a different parent
+## or the instance is reparented; node references remain stable for this instance.
 func _capture_authored_positions(node: Node) -> void:
+	if node == self:
+		_authored_positions.clear()
 	if node is Node3D:
 		var spatial: Node3D = node as Node3D
-		_authored_positions[String(spatial.get_path())] = spatial.position
+		_authored_positions[spatial] = spatial.position
 	for child: Node in node.get_children():
 		_capture_authored_positions(child)
 
 func _authored_position(node: Node3D) -> Vector3:
-	var key: String = String(node.get_path())
-	if _authored_positions.has(key):
-		return _authored_positions[key]
+	if _authored_positions.has(node):
+		return _authored_positions[node] as Vector3
 	return node.position
 
 func _width_delta() -> float:
