@@ -2,6 +2,9 @@
 
 [ext_resource type="Script" uid="uid://c87t4r001otjo" path="res://casino/tables/chicken_cross/chicken_cross_table.gd" id="1_qj6gr"]
 [ext_resource type="FontFile" uid="uid://yp8swvkjd53f" path="res://assets/fonts/BADABB__.TTF" id="2_j2b8q"]
+[ext_resource type="Script" uid="uid://dmvo854545ehc" path="res://casino/terminals/display/betting_terminal_display.gd" id="3_lhivj"]
+[ext_resource type="PackedScene" uid="uid://bohm84tw787n0" path="res://environment/kit/slim_world_screen.tscn" id="4_ndg1d"]
+[ext_resource type="PackedScene" uid="uid://mwappxxqs7en" path="res://casino/terminals/components/betting_keypad.tscn" id="5_h37pg"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qj6gr"]
 albedo_color = Color(0.14901961, 0.105882354, 0.07450981, 1)
@@ -288,7 +291,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08500004, 0.0070061684, 0)
 mesh = SubResource("BoxMesh_3gngh")
 
 [node name="RoadEdge_Right" type="MeshInstance3D" parent="Visuals/TileLane/Tile_03" unique_id=961963540]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.007, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08499998, 0.012078643, 0)
 mesh = SubResource("BoxMesh_j2b8q")
 
 [node name="TileNumber03" type="Node3D" parent="Visuals/TileLane/Tile_03" unique_id=93427686]
@@ -604,3 +607,13 @@ mesh = SubResource("TextMesh_3hc4c")
 
 [node name="TileNumberPlate" type="MeshInstance3D" parent="Visuals/TileLane/Tile_12/TileNumber12" unique_id=148475996]
 mesh = SubResource("BoxMesh_fcnqv")
+
+[node name="BettingTerminalDisplay" type="Node" parent="." unique_id=323032881]
+script = ExtResource("3_lhivj")
+
+[node name="SlimWorldScreen" parent="." unique_id=1216012003 instance=ExtResource("4_ndg1d")]
+transform = Transform3D(0.656059, 0, 0.75470954, 0, 1, 0, -0.75470954, 0, 0.656059, -3.111896, 1.8736949, 1.086505)
+display_size = Vector2(3.15, 1.35)
+
+[node name="BettingKeypad" parent="." unique_id=402367980 instance=ExtResource("5_h37pg")]
+transform = Transform3D(0.9366722, 0.29370865, 0.19073659, 0, 0.544639, -0.8386706, -0.3502074, 0.7855595, 0.5101482, -2.2241924, 1.0293341, 1.0189003)
