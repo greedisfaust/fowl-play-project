@@ -2,9 +2,6 @@
 ## Uses temporary in-memory worlds so no editor-authored scene files are modified.
 extends SceneTree
 
-var _failed: bool = false
-
-
 func _initialize() -> void:
 	_run.call_deferred()
 
@@ -87,6 +84,5 @@ func _finish(passed: bool, message: String) -> void:
 		print("MAIN CONTROLLER PASS: %s" % message)
 		quit(0)
 	else:
-		_failed = true
 		push_error("MAIN CONTROLLER FAIL: %s" % message)
 		quit(1)
