@@ -2,21 +2,70 @@
 
 [ext_resource type="Script" uid="uid://dd5c04repreo1" path="res://interaction/interactable.gd" id="1_to3h0"]
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_uuisg"]
+albedo_color = Color(0.72156864, 0.58431375, 0.34509805, 1)
+metallic = 0.85
+roughness = 0.28
+
+[sub_resource type="BoxMesh" id="BoxMesh_to3h0"]
+material = SubResource("StandardMaterial3D_uuisg")
+size = Vector3(0.155, 0.025, 0.155)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yf5fn"]
+albedo_color = Color(0.8156863, 0.6784314, 0.4392157, 1)
+metallic = 0.9
+roughness = 0.22
+
+[sub_resource type="BoxMesh" id="BoxMesh_g4v7s"]
+material = SubResource("StandardMaterial3D_yf5fn")
+size = Vector3(0.145, 0.018, 0.145)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_to3h0"]
+albedo_color = Color(0.09803922, 0.101960786, 0.11372549, 1)
+metallic = 0.25
+roughness = 0.32
+
 [sub_resource type="BoxMesh" id="BoxMesh_uuisg"]
+material = SubResource("StandardMaterial3D_to3h0")
 size = Vector3(0.12, 0.045, 0.12)
+
+[sub_resource type="TextMesh" id="TextMesh_to3h0"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_57qmd"]
+albedo_color = Color(1, 0.70980394, 0.18039216, 1)
+metallic = 0.15
+roughness = 0.35
+emission_enabled = true
+emission = Color(1, 0.6156863, 0.14117648, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_yf5fn"]
+material = SubResource("StandardMaterial3D_57qmd")
+size = Vector3(0.132, 0.004, 0.132)
 
 [node name="TerminalButton" type="Node3D" unique_id=354275653]
 
 [node name="Visuals" type="Node3D" parent="." unique_id=3246193]
 
 [node name="ButtonHousing" type="MeshInstance3D" parent="Visuals" unique_id=2064425087]
+mesh = SubResource("BoxMesh_to3h0")
+
+[node name="Bezel" type="MeshInstance3D" parent="Visuals" unique_id=1581973703]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
+mesh = SubResource("BoxMesh_g4v7s")
 
 [node name="ButtonKey" type="Node3D" parent="Visuals" unique_id=1669914177]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 0)
 
 [node name="KeyMesh" type="MeshInstance3D" parent="Visuals/ButtonKey" unique_id=1470809806]
 mesh = SubResource("BoxMesh_uuisg")
 
 [node name="ButtonLabel" type="MeshInstance3D" parent="Visuals/ButtonKey" unique_id=654358772]
+mesh = SubResource("TextMesh_to3h0")
+
+[node name="AccentRing" type="MeshInstance3D" parent="Visuals" unique_id=1672891594]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.019448476, 0)
+mesh = SubResource("BoxMesh_yf5fn")
 
 [node name="Interactable" type="Node" parent="." unique_id=1168464]
 script = ExtResource("1_to3h0")
