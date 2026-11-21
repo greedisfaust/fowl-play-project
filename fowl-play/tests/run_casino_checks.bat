@@ -1,5 +1,12 @@
 @echo off
+if /i not "%~1"=="__runner" (
+	start "Fowl Play Casino Checks" cmd /k ""%~f0" __runner"
+	exit /b
+)
 setlocal
+echo Fowl Play casino test runner
+echo This window will remain open so you can read the results.
+echo.
 
 set "GODOT=%ProgramFiles(x86)%\Steam\steamapps\common\Godot Engine\godot.windows.opt.tools.64.exe"
 if not exist "%GODOT%" (
