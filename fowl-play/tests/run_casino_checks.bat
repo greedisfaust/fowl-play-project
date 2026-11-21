@@ -9,14 +9,15 @@ echo This window will remain open so you can read the results.
 echo.
 
 set "GODOT=%ProgramFiles(x86)%\Steam\steamapps\common\Godot Engine\godot.windows.opt.tools.64.exe"
-if not exist "%GODOT%" (
-	echo Could not find Steam Godot at:
-	echo %GODOT%
-	echo.
-	echo Edit the GODOT path near the top of this file to match your Steam installation.
-	pause
-	exit /b 2
-)
+if exist "%GODOT%" goto godot_found
+echo Could not find Steam Godot at:
+echo %GODOT%
+echo.
+echo Edit the GODOT path near the top of this file to match your Steam installation.
+pause
+exit /b 2
+
+:godot_found
 
 set "PROJECT=%~dp0.."
 echo Importing Fowl Play project...
