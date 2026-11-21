@@ -37,7 +37,7 @@ The keypad does not call `CasinoWallet.reserve_wager()` directly. It does not st
 
 - The host is the only peer that processes physical button actions and changes the pending amount.
 - The actor's peer ID is captured from the server-side interaction actor. A client cannot submit a wager on behalf of another peer.
-- The host broadcasts a revisioned snapshot containing the pending amount, table participants, current-round wagers, available shared-wallet balance, and the peer IDs currently inside terminal proximity.
+- The host broadcasts a revisioned snapshot containing the pending amount, current-round wagers, available shared-wallet balance, and the peer IDs currently inside terminal proximity.
 - The terminal occupancy line reports `nearby players / terminal capacity` and updates as players enter or leave the terminal's proximity. This is distinct from the participant list, which tracks players who have joined the active round.
 - Each confirmed player's wager row uses that player's `PlayerIdentity` color from the network identity roster.
 - Clients render that snapshot through `BettingTerminalDisplay.set_network_snapshot()`; clients do not mutate their local wallet or table ledger.
