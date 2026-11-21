@@ -7,6 +7,9 @@ signal button_pressed(button_id: StringName)
 
 ## Unique action identifier consumed by the parent keypad/terminal.
 @export var button_id: StringName = &"1"
+
+## Text shown on the physical key. Each instance gets its own TextMesh copy.
+@export var display_text: String = "1"
 @export var button_key: Node3D
 @export var interactable: Interactable
 @export_range(0.001, 0.03, 0.001, "suffix:m") var press_depth: float = 0.008
@@ -27,9 +30,21 @@ func _ready() -> void:
 		push_warning("TerminalButton requires its Interactable reference.")
 		set_process(false)
 		return
+	_apply_display_text()
 	_rest_position = button_key.position
 	_setup_click_audio()
 	interactable.interacted.connect(_on_interacted)
+
+func _apply_display_text() -> void:
+	var label: MeshInstance3D = get_node_or_null("Visuals/ButtonKey/ButtonLabel") as MeshInstance3D
+	if not is_instance_valid(label):
+		return
+	var source_text_mesh: TextMesh = label.mesh as TextMesh
+	if source_text_mesh == null:
+		return
+	var unique_text_mesh: TextMesh = source_text_mesh.duplicate() as TextMesh
+	unique_text_mesh.text = display_text
+	label.mesh = unique_text_mesh
 
 func _exit_tree() -> void:
 	if _press_tween != null and _press_tween.is_running():
