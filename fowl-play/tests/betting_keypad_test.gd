@@ -100,6 +100,7 @@ func _run() -> void:
 	for digit: String in ["9", "2", "2", "3", "3", "7", "2", "0", "3", "6", "8", "5", "4", "7", "7", "5", "8", "0", "7"]:
 		_check_result(controller.call("handle_button_input", StringName(digit), 1), true, "64-bit maximum digit %s is accepted" % digit)
 	_check(int(controller.call("get_pending_wager_amount")) == 9223372036854775807, "Keypad supports the signed 64-bit maximum")
+	_check_result(controller.call("handle_button_input", &"BACKSPACE", 1), true, "Backspace returns to the largest 18-digit prefix")
 	_check_result(controller.call("handle_button_input", &"8", 1), false, "Keypad rejects an amount above the signed 64-bit maximum")
 
 	var formatted_billion: String = str(display.call("_format_compact_money", 1000000000))
@@ -108,6 +109,10 @@ func _run() -> void:
 	_check(formatted_billion == "1B$", "Billion denomination remains readable")
 	_check(formatted_trillion == "1T$", "Trillion denomination is supported")
 	_check(formatted_quintillion == "1.23Qi$", "Quintillion denomination is supported")
+	_check(bool(display.call("_is_pending_wager_valid", 50, 500, 850)) == false, "Zero wager is never marked valid")
+	display.set("_pending_wager_amount", 100)
+	_check(bool(display.call("_is_pending_wager_valid", 50, 500, 850)), "In-range affordable wager is marked valid")
+	_check(not bool(display.call("_is_pending_wager_valid", 50, 500, 99)), "Unaffordable wager is marked invalid")
 
 	var occupancy_rows: Array[String] = display.call("_build_player_rows")
 	_check(not occupancy_rows.is_empty() and occupancy_rows[0] == "2 / 2 PLAYERS", "Terminal occupancy counts players currently inside its proximity")
