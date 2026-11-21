@@ -28,21 +28,27 @@ func start_round(peer_id: int) -> Dictionary:
 		return _failure("Only the host can start Chicken Cross.")
 	if state != TableState.OPEN:
 		return _failure("Chicken Cross is not open for starting.")
-	var reserved_wagers: Array[Dictionary] = get_round_wagers()
+	var round_wagers: Array[Dictionary] = get_round_wagers()
+	var reserved_wagers: Array[Dictionary] = []
+	for wager: Dictionary in round_wagers:
+		if str(wager.get("status", "")) == "reserved":
+			reserved_wagers.append(wager)
 	if reserved_wagers.is_empty():
-		return _failure("Chicken Cross needs at least one wager.")
+		return _failure("Chicken Cross needs at least one active wager.")
 	var seen_peers: Dictionary = {}
 	for wager: Dictionary in reserved_wagers:
 		var bettor_id: int = int(wager.get("peer_id", 0))
 		if bettor_id <= 0 or seen_peers.has(bettor_id):
-			return _failure("Chicken Cross allows exactly one wager per participant.")
-		if str(wager.get("status", "")) != "reserved":
-			return _failure("Every Chicken Cross wager must still be reserved before start.")
+			return _failure("Chicken Cross allows exactly one active wager per participant.")
 		seen_peers[bettor_id] = true
 	var start_result: Dictionary = super.start_round(peer_id)
 	if not bool(start_result.get("ok", false)):
 		return start_result
-	var locked_wagers: Array[Dictionary] = get_round_wagers()
+	var all_round_wagers: Array[Dictionary] = get_round_wagers()
+	var locked_wagers: Array[Dictionary] = []
+	for wager: Dictionary in all_round_wagers:
+		if str(wager.get("status", "")) == "locked":
+			locked_wagers.append(wager)
 	_round_model = RoundModel.new()
 	var model_result: Dictionary = _round_model.call("begin", locked_wagers)
 	if not bool(model_result.get("ok", false)):
