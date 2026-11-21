@@ -33,6 +33,10 @@ echo Running Chicken Cross rules checks...
 "%GODOT%" --headless --path "%PROJECT%" --script res://tests/chicken_cross_rules_test.gd
 if errorlevel 1 goto failed
 echo.
+echo Running betting keypad checks...
+"%GODOT%" --headless --path "%PROJECT%" --script res://tests/betting_keypad_test.gd
+if errorlevel 1 goto failed
+echo.
 echo Running Chicken Cross table checks...
 "%GODOT%" --headless --path "%PROJECT%" --script res://tests/chicken_cross_table_test.gd
 if errorlevel 1 goto failed
