@@ -9,12 +9,12 @@ Base docs: `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `
 
 ## Current state (rewrite every session)
 
-- Branch `environment/world-building-and-gameplay-loop` is active; latest verified head is `6b4ce2b7ca39c117835bc5337bdb6fc6f9e01521`.
+- Branch `environment/world-building-and-gameplay-loop` is active; latest verified head is `76cbbd8059579247cbb3cf4c8cb1f5561950dcae`.
 - Shared wallet and generic script-only `BaseTable` controller are implemented. Both casino headless test suites have been USER VERIFIED passing in Godot 4.7.2.
 - The project is Godot 4.7, typed GDScript, Jolt, ENet, max four players; `fowl-play/` is the Godot project.
 - Existing reusable foundations include `Interactable` / `Focus`, `Network`, `PlayerIdentity`, `DebugHub`, and the current player/nameplate presentation.
 - The user's editor-authored scenes remain user-owned. Do not generate scene trees, meshes, collision shapes, or physical table art in code.
-- Phase 0 repository audit and architecture specification are complete. Shared wallet and BaseTable lifecycle implementation are complete. Chicken Cross pure rules and per-player round-state model are implemented; the networked table adapter and physical casino scenes are not implemented.
+- Phase 0 repository audit and architecture specification are complete. Shared wallet and BaseTable lifecycle implementation are complete. Chicken Cross pure rules and per-player round-state model are implemented under `casino/tables/chicken_cross/`; the networked table adapter and physical casino scenes are not implemented.
 
 ## Done (this branch)
 
@@ -104,8 +104,9 @@ Implement the Chicken Cross table adapter that uses BaseTable, binds host-valida
 - `docs/CASINO_FOUNDATION_DESIGN.md` — architecture contract and implementation plan.
 - `fowl-play/casino/shared_wallet.gd` — host-authoritative shared wallet and wager ledger.
 - `fowl-play/tests/casino_wallet_test.gd` — headless wallet lifecycle regression test.
-- `fowl-play/casino/chicken_cross_rules.gd` — approved 12-tile tuning and pure payout rules.
-- `fowl-play/casino/chicken_cross_round.gd` — individual player progress/outcome model.
+- `fowl-play/casino/tables/chicken_cross/chicken_cross_rules.gd` — approved 12-tile tuning and pure payout rules.
+- `fowl-play/casino/tables/chicken_cross/chicken_cross_round.gd` — individual player progress/outcome model.
+- `fowl-play/casino/tables/chicken_cross/README.md` — table folder responsibilities and boundaries.
 - `fowl-play/tests/chicken_cross_rules_test.gd` — deterministic Chicken Cross regression test.
 - `docs/CASINO_CHICKEN_CROSS.md` — rules, tuning, and integration contract.
 - `fowl-play/project.godot` — `CasinoWallet` autoload registration.
@@ -167,3 +168,10 @@ Implement the Chicken Cross table adapter that uses BaseTable, binds host-valida
 - Added pure rules and per-player round model, deterministic tests, test-runner stages, and the Chicken Cross rules contract. New head is `6b4ce2b7ca39c117835bc5337bdb6fc6f9e01521`.
 - Godot execution is pending user verification. No scene files were changed. No push was performed.
 - Next: implement the host-authoritative table adapter after resolving the started-participant departure/disconnect outcome.
+
+
+### Session 2 update — 2026-11-21 — table folder organization
+- User requested a `casino/tables/<table>/` folder convention.
+- Moved Chicken Cross rules and round model into `fowl-play/casino/tables/chicken_cross/`; updated preload paths and kept tests in the shared `fowl-play/tests/` folder.
+- Added the Chicken Cross folder README and documented the shared/game-specific boundary. Shared `base_table.gd` and `shared_wallet.gd` remain directly under `casino/`.
+- New branch commit records the folder move; no scene files changed and no push performed.

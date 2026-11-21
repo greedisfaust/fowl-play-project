@@ -1,6 +1,6 @@
 # Fowl Play — Project State
 
-**Status:** Casino Foundation & World Gameplay Loop is active on `environment/world-building-and-gameplay-loop`. Phase 0 audit and architecture specification are complete. The host-authoritative shared wallet and script-only BaseTable lifecycle controller are implemented. USER VERIFIED: wallet and BaseTable headless suites pass in Godot 4.7.2. Chicken Cross pure rules and per-player round-state model are implemented; its focused test is awaiting user execution.
+**Status:** Casino Foundation & World Gameplay Loop is active on `environment/world-building-and-gameplay-loop`. Phase 0 audit and architecture specification are complete. The host-authoritative shared wallet and script-only BaseTable lifecycle controller are implemented. USER VERIFIED: wallet and BaseTable headless suites pass in Godot 4.7.2. Chicken Cross pure rules and per-player round-state model are implemented under `casino/tables/chicken_cross/`; its focused test is awaiting user execution.
 
 ## Last updated (2026-11-21; casino wallet + BaseTable test verification)
 

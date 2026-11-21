@@ -35,10 +35,16 @@ Status: Initial rules/model slice implemented; Godot execution pending.
 
 These values are approved by the user as the initial balancing curve. Keep them in chicken_cross_rules.gd, not duplicated in scene scripts.
 
+## Folder layout
+
+- `fowl-play/casino/` contains shared casino infrastructure such as `base_table.gd` and `shared_wallet.gd`.
+- `fowl-play/casino/tables/chicken_cross/` contains Chicken Cross-specific rules, round state, future table adapter/configuration, and its local README.
+- `fowl-play/tests/` contains automated tests, including the Chicken Cross rules test.
+
 ## Code responsibilities
 
-- casino/chicken_cross_rules.gd: pure tuning lookup, failure evaluation and gross-return calculation.
-- casino/chicken_cross_round.gd: scene/network-independent per-player progress and outcome state.
+- casino/tables/chicken_cross/chicken_cross_rules.gd: pure tuning lookup, failure evaluation and gross-return calculation.
+- casino/tables/chicken_cross/chicken_cross_round.gd: scene/network-independent per-player progress and outcome state.
 - tests/chicken_cross_rules_test.gd: deterministic tests using supplied rolls; production host code must generate a new random roll for every accepted player action.
 
 The model accepts a roll as an argument so tests can be deterministic. It does not generate randomness itself and does not trust client-supplied rolls.

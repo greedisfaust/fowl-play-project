@@ -1,8 +1,8 @@
 ## Deterministic rules and per-player round-state checks for Chicken Cross.
 extends SceneTree
 
-const Rules = preload("res://casino/chicken_cross_rules.gd")
-const RoundModel = preload("res://casino/chicken_cross_round.gd")
+const Rules = preload("res://casino/tables/chicken_cross/chicken_cross_rules.gd")
+const RoundModel = preload("res://casino/tables/chicken_cross/chicken_cross_round.gd")
 
 var _failed: bool = false
 

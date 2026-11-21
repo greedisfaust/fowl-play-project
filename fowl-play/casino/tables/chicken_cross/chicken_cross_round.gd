@@ -1,7 +1,7 @@
 ## Game-state model for one Chicken Cross round; no scene or network dependencies.
 extends RefCounted
 
-const Rules = preload("res://casino/chicken_cross_rules.gd")
+const Rules = preload("res://casino/tables/chicken_cross/chicken_cross_rules.gd")
 
 const PLAYER_ACTIVE: String = "active"
 const PLAYER_CASHED_OUT: String = "cashed_out"
