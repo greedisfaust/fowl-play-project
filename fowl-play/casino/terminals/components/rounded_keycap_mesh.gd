@@ -13,7 +13,7 @@ extends MeshInstance3D
 		corner_radius = maxf(value, 0.0)
 		_rebuild_mesh()
 
-@export_range(2, 24, 1) var bevel_segments: int = 8:
+@export_range(4, 64, 1) var bevel_segments: int = 32:
 	set(value):
 		bevel_segments = maxi(value, 2)
 		_rebuild_mesh()
@@ -51,10 +51,10 @@ func _rebuild_mesh() -> void:
 				var x1: float = -1.0 + 2.0 * float(x_index + 1) / float(bevel_segments)
 				var y0: float = -1.0 + 2.0 * float(y_index) / float(bevel_segments)
 				var y1: float = -1.0 + 2.0 * float(y_index + 1) / float(bevel_segments)
-				var p00: Vector3 = _rounded_surface_point(normal, axis_u, axis_v, extent_u, extent_v, x0, y0, half_size, inner_half, radius)
-				var p10: Vector3 = _rounded_surface_point(normal, axis_u, axis_v, extent_u, extent_v, x1, y0, half_size, inner_half, radius)
-				var p11: Vector3 = _rounded_surface_point(normal, axis_u, axis_v, extent_u, extent_v, x1, y1, half_size, inner_half, radius)
-				var p01: Vector3 = _rounded_surface_point(normal, axis_u, axis_v, extent_u, extent_v, x0, y1, half_size, inner_half, radius)
+				var p00: Vector3 = _rounded_surface_point(normal, axis_u, axis_v, extent_u, extent_v, x0, y0, half_size)
+				var p10: Vector3 = _rounded_surface_point(normal, axis_u, axis_v, extent_u, extent_v, x1, y0, half_size)
+				var p11: Vector3 = _rounded_surface_point(normal, axis_u, axis_v, extent_u, extent_v, x1, y1, half_size)
+				var p01: Vector3 = _rounded_surface_point(normal, axis_u, axis_v, extent_u, extent_v, x0, y1, half_size)
 				_add_vertex(surface_tool, p00, inner_half, radius, normal)
 				_add_vertex(surface_tool, p10, inner_half, radius, normal)
 				_add_vertex(surface_tool, p11, inner_half, radius, normal)
@@ -79,8 +79,6 @@ func _rounded_surface_point(
 	u_value: float,
 	v_value: float,
 	half_size: Vector3,
-	_inner_half: Vector3,
-	_radius: float
 ) -> Vector3:
 	return normal * half_size.dot(normal.abs()) + axis_u * extent_u * u_value + axis_v * extent_v * v_value
 
