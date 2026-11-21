@@ -60,6 +60,7 @@ func _ready() -> void:
 		return
 
 	_player_spawner.spawn_path = _player_spawner.get_path_to(_players)
+	_player_spawner.spawn_limit = TUNING.MAX_PLAYERS
 	_player_spawner.spawn_function = _create_player
 	multiplayer.peer_connected.connect(_on_peer_connected)
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
@@ -260,7 +261,8 @@ func _on_session_ended() -> void:
 func _on_peer_connected(peer_id: int) -> void:
 	if not _can_spawn_players() or not _has_active_world:
 		return
-	_spawn_player.call_deferred(peer_id, active_world_instance.get_node_or_null("SpawnPoints"))
+	var spawn_points: Node3D = active_world_instance.get_node_or_null("SpawnPoints") as Node3D
+	_spawn_player.call_deferred(peer_id, spawn_points)
 
 
 func _on_peer_disconnected(peer_id: int) -> void:
