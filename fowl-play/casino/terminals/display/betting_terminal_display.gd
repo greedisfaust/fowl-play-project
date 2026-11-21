@@ -230,6 +230,10 @@ func _build_description_lines(value: String, width: int, maximum_lines: int) -> 
 	if not all_words_consumed and not lines.is_empty():
 		var last_line: String = lines[lines.size() - 1]
 		lines[lines.size() - 1] = _fit_text(last_line, maxi(width - 1, 1)) + "…"
+
+	# Also protect against unusually long unbroken words.
+	for line_index: int in range(lines.size()):
+		lines[line_index] = _fit_text(lines[line_index], width)
 	return lines
 
 
