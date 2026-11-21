@@ -1,6 +1,6 @@
 # Chicken Cross — Rules and Round-State Contract
 
-Status: Rules/model checks user-verified PASS. Host-authoritative table adapter implemented; local Godot verification pending.
+Status: Chicken Cross rules and table integration checks user-verified PASS. Physical button/proximity hookups are implemented in the table script; scene references and in-game multiplayer presentation verification remain pending.
 
 ## Approved game rules
 
@@ -39,9 +39,10 @@ These values are approved as the initial balancing curve. Keep them in chicken_c
 
 - chicken_cross_table.gd inherits BaseTable; it does not duplicate wallet/table lifecycle logic.
 - start_round validates one reserved wager per bettor, delegates locking to BaseTable, then initializes one model chicken per locked wager.
-- request_cross() and request_cash_out() are the intended shared-button entry points.
+- request_cross() and request_cash_out() remain available for direct local UI intents. Physical USE buttons connect through the exported `cross_interactable` and `cash_out_interactable` references; the host derives the acting peer from the validated actor's `input_peer_id`.
 - Client requests contain no peer ID, tile, roll, or payout. The host derives the sender with multiplayer.get_remote_sender_id().
 - The host validates running state and proximity before processing each action. It generates the random roll itself after validation.
+- The exported `proximity_area` connects body-entered/exited events to BaseTable proximity tracking. Assign the table's Area3D in the Inspector.
 - player_state_changed publishes authoritative per-player state for presentation listeners; clients accept host state only.
 - round_finished reports the final payout map and wallet settlement result.
 - The adapter settles only when every wagered participant has finished, using one gross return per locked wager ID.
@@ -59,5 +60,5 @@ These values are approved as the initial balancing curve. Keep them in chicken_c
 ## Physical presentation and remaining integration
 
 - The physical lane, chicken visuals, button nodes and spawn markers remain editor-authored by the user.
-- Wire the shared Cross button to request_cross() and shared Cash Out button to request_cash_out() through the existing Interactable/Focus framework.
-- Client/server RPC behavior, replicated chicken transforms/animations, physical button wiring, and in-game visual verification remain follow-up work. This adapter currently replicates authoritative player-state data, not scene presentation.
+- Assign the Cross button's Interactable to `cross_interactable`, the Cash Out button's Interactable to `cash_out_interactable`, and the lane/table proximity Area3D to `proximity_area` in the Inspector. Each button must be configured as USE or BOTH. Keep the existing Interactable/Focus/Network path; do not call the table from `interaction_requested`.
+- Client/server RPC behavior, replicated chicken transforms/animations, and in-game visual verification remain follow-up work. This adapter currently replicates authoritative player-state data, not scene presentation.
