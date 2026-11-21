@@ -1,5 +1,6 @@
 ## Persistent application root controller.
 ## World scenes are replaceable children; session services remain in autoloads.
+class_name MainController
 extends Node3D
 
 enum World {
@@ -11,7 +12,7 @@ enum World {
 signal world_changed(previous_world: int, current_world: int)
 
 @export_group("World Scenes")
-@export var initial_world: World = World.APARTMENT
+@export_enum("Apartment", "Casino", "Rest Area") var initial_world: int = World.APARTMENT
 @export var apartment_scene: PackedScene
 @export var casino_scene: PackedScene
 @export var rest_area_scene: PackedScene
@@ -23,7 +24,7 @@ signal world_changed(previous_world: int, current_world: int)
 @export_range(0.0, 2.0, 0.05) var fade_duration_seconds: float = 0.35
 @export var fade_color: Color = Color.BLACK
 
-var active_world: World = World.APARTMENT
+var active_world: int = World.APARTMENT
 var active_world_instance: Node3D = null
 var _has_active_world: bool = false
 var _transition_in_progress: bool = false
@@ -50,7 +51,10 @@ func _ready() -> void:
 
 ## Called by the host when the team moves to another world.
 ## Every peer receives the same world ID and loads its local copy of that scene.
-func transition_to(destination: World) -> void:
+func transition_to(destination: int) -> void:
+	if destination < World.APARTMENT or destination > World.REST_AREA:
+		push_warning("Rejected invalid world transition ID: %d" % destination)
+		return
 	if _transition_in_progress:
 		return
 	if _has_active_world and active_world == destination:
@@ -70,16 +74,15 @@ func transition_to(destination: World) -> void:
 		push_warning("Only the host may request a world transition.")
 		return
 
-	rpc("_rpc_transition_to", int(destination))
+	rpc("_rpc_transition_to", destination)
 
 
 @rpc("authority", "call_local", "reliable")
-func _rpc_transition_to(destination_value: int) -> void:
-	if destination_value < World.APARTMENT or destination_value > World.REST_AREA:
-		push_warning("Rejected invalid world transition ID: %d" % destination_value)
+func _rpc_transition_to(destination: int) -> void:
+	if destination < World.APARTMENT or destination > World.REST_AREA:
+		push_warning("Rejected invalid world transition ID: %d" % destination)
 		return
 
-	var destination: World = destination_value
 	var destination_scene: PackedScene = _get_scene_for_world(destination)
 	if destination_scene == null:
 		push_error("A peer is missing the PackedScene for %s." % _world_name(destination))
@@ -92,7 +95,7 @@ func get_active_world() -> Node3D:
 	return active_world_instance
 
 
-func _get_scene_for_world(world: World) -> PackedScene:
+func _get_scene_for_world(world: int) -> PackedScene:
 	match world:
 		World.APARTMENT:
 			return apartment_scene
@@ -103,7 +106,7 @@ func _get_scene_for_world(world: World) -> PackedScene:
 	return null
 
 
-func _install_world(world: World, packed_scene: PackedScene) -> bool:
+func _install_world(world: int, packed_scene: PackedScene) -> bool:
 	var instance: Node = packed_scene.instantiate()
 	var world_instance: Node3D = instance as Node3D
 	if world_instance == null:
@@ -114,15 +117,15 @@ func _install_world(world: World, packed_scene: PackedScene) -> bool:
 	world_instance.name = _world_name(world)
 	_world_root.add_child(world_instance)
 
-	var previous_world: int = int(active_world) if _has_active_world else -1
+	var previous_world: int = active_world if _has_active_world else -1
 	active_world = world
 	active_world_instance = world_instance
 	_has_active_world = true
-	world_changed.emit(previous_world, int(active_world))
+	world_changed.emit(previous_world, active_world)
 	return true
 
 
-func _perform_transition(destination: World, packed_scene: PackedScene) -> void:
+func _perform_transition(destination: int, packed_scene: PackedScene) -> void:
 	if _transition_in_progress:
 		return
 
@@ -144,11 +147,11 @@ func _perform_transition(destination: World, packed_scene: PackedScene) -> void:
 	next_world.name = _world_name(destination)
 	_world_root.add_child(next_world)
 
-	var previous_world: int = int(active_world) if _has_active_world else -1
+	var previous_world: int = active_world if _has_active_world else -1
 	active_world = destination
 	active_world_instance = next_world
 	_has_active_world = true
-	world_changed.emit(previous_world, int(active_world))
+	world_changed.emit(previous_world, active_world)
 
 	await _fade_to(0.0)
 	_transition_in_progress = false
@@ -179,7 +182,7 @@ func _fade_to(alpha: float) -> void:
 	await tween.finished
 
 
-func _world_name(world: World) -> String:
+func _world_name(world: int) -> String:
 	match world:
 		World.APARTMENT:
 			return "Apartment"
