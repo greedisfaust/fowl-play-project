@@ -86,9 +86,6 @@ func refresh_display() -> void:
 	screen_text.append_paragraph("-".repeat(mini(total_width, 64)))
 
 	# The two betting columns begin only after the complete header block.
-	screen_text.append_header(_two_columns(profile.pending_heading, profile.player_list_heading))
-	screen_text.append_paragraph(_two_columns("-".repeat(mini(left_width, 24)), "-".repeat(mini(right_width, 32))))
-
 	var left_rows: Array[String] = _build_pending_rows()
 	var right_rows: Array[String] = _build_player_rows()
 	var row_count: int = maxi(left_rows.size(), right_rows.size() + 1)
@@ -98,28 +95,49 @@ func refresh_display() -> void:
 	var valid: bool = _pending_wager_amount >= minimum_value and _pending_wager_amount <= maximum_value and _pending_wager_amount <= available_balance
 	var amount_color: Color = profile.valid_color if valid else profile.invalid_color
 	var amount_font_size: int = roundi(float(screen_text.terminal_font_size) * 1.45)
-	for row_index: int in range(row_count):
-		var left_value: String = left_rows[row_index] if row_index < left_rows.size() else ""
-		# Give the enlarged pending amount its own row. The confirmed-wager column
-		# starts on the following row so RichTextLabel's larger glyphs can never
-		# push player text sideways or wrap it into another line.
-		var right_index: int = row_index - 1
-		var right_value: String = right_rows[right_index] if right_index >= 0 and right_index < right_rows.size() else ""
-		var left_color: Color = profile.body_color
-		var left_size: int = 0
-		var center_left: bool = true
-		if row_index == 0:
-			left_color = amount_color
-			left_size = amount_font_size
-		elif row_index == 1:
-			left_color = profile.valid_color if valid else profile.invalid_color
-			if _pending_wager_amount > available_balance and _pending_wager_amount > 0:
-				left_color = profile.invalid_color
-		screen_text.append_text(_format_split_row(left_value, right_value, left_width, right_width, center_left, left_color, left_size))
+	var columns_markup: String = _build_columns_table(left_rows, right_rows, row_count, left_width, right_width, amount_color, amount_font_size, valid)
+	screen_text.append_text(columns_markup)
 
 	screen_text.body_color = profile.body_color
 	screen_text.fit_font_size_to_columns(total_width)
 	display_refreshed.emit()
+
+func _build_columns_table(left_rows: Array[String], right_rows: Array[String], row_count: int, left_width: int, right_width: int, amount_color: Color, amount_font_size: int, valid: bool) -> String:
+	var left_ratio: int = maxi(left_width, 1)
+	var right_ratio: int = maxi(right_width, 1)
+	var header_color_hex: String = profile.accent_color.to_html(false)
+	var divider_color_hex: String = profile.accent_color.to_html(false)
+	var output: String = "[table=3]"
+	output += "[cell=%d][color=#%s][b]%s[/b][/color][/cell]" % [left_ratio, header_color_hex, _escape_display_markup(_fit_text(profile.pending_heading, left_width))]
+	output += "[cell=1][color=#%s]|[/color][/cell]" % divider_color_hex
+	output += "[cell=%d][color=#%s][b]%s[/b][/color][/cell]" % [right_ratio, header_color_hex, _escape_display_markup(_fit_text(profile.player_list_heading, right_width))]
+	output += "[cell=%d][color=#%s]%s[/color][/cell]" % [left_ratio, divider_color_hex, "-".repeat(mini(left_width, 24))]
+	output += "[cell=1][color=#%s]|[/color][/cell]" % divider_color_hex
+	output += "[cell=%d][color=#%s]%s[/color][/cell]" % [right_ratio, divider_color_hex, "-".repeat(mini(right_width, 32))]
+	for row_index: int in range(row_count):
+		var left_value: String = left_rows[row_index] if row_index < left_rows.size() else ""
+		var right_index: int = row_index - 1
+		var right_value: String = right_rows[right_index] if right_index >= 0 and right_index < right_rows.size() else ""
+		var left_color: Color = profile.body_color
+		var left_font_size: int = 0
+		if row_index == 0:
+			left_color = amount_color
+			left_font_size = amount_font_size
+		elif row_index == 1:
+			left_color = profile.valid_color if valid else profile.invalid_color
+		var left_markup: String = "[center][color=#%s]" % left_color.to_html(false)
+		if left_font_size > 0:
+			left_markup += "[font_size=%d]" % left_font_size
+		left_markup += _escape_display_markup(_fit_text(left_value, left_width))
+		if left_font_size > 0:
+			left_markup += "[/font_size]"
+		left_markup += "[/color][/center]"
+		output += "[cell=%d]%s[/cell]" % [left_ratio, left_markup]
+		output += "[cell=1][color=#%s]|[/color][/cell]" % divider_color_hex
+		output += "[cell=%d]%s[/cell]" % [right_ratio, _escape_display_markup(_fit_text(right_value, right_width))]
+	output += "[/table]\n"
+	return output
+
 
 func _build_pending_rows() -> Array[String]:
 	var rows: Array[String] = []
