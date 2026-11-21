@@ -19,6 +19,8 @@ func _run() -> void:
 	terminal.terminal_font_size = 106
 	terminal.content_padding_ratio = 0.7
 	terminal.size = Vector2(3226.0, 1382.0)
+	for row_index: int in range(16):
+		terminal.append_paragraph("LAYOUT TEST ROW %02d" % row_index)
 	terminal.fit_font_size_to_columns(75)
 	_check(terminal.get_effective_font_size() < 106, "Wide two-column layouts should reduce the rendered font size to fit the screen")
 	_check(terminal.get_effective_font_size() >= 8, "Auto-fit font size should respect its minimum")
