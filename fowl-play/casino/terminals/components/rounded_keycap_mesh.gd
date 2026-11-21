@@ -30,19 +30,14 @@ func _rebuild_mesh() -> void:
 	var surface_tool: SurfaceTool = SurfaceTool.new()
 	surface_tool.begin(Mesh.PRIMITIVE_TRIANGLES)
 
-	var faces: Array[Dictionary] = [
-		{"normal": Vector3.RIGHT, "u": Vector3.UP, "v": Vector3.BACK},
-		{"normal": Vector3.LEFT, "u": Vector3.BACK, "v": Vector3.UP},
-		{"normal": Vector3.UP, "u": Vector3.BACK, "v": Vector3.RIGHT},
-		{"normal": Vector3.DOWN, "u": Vector3.RIGHT, "v": Vector3.BACK},
-		{"normal": Vector3.BACK, "u": Vector3.RIGHT, "v": Vector3.UP},
-		{"normal": Vector3.FORWARD, "u": Vector3.UP, "v": Vector3.RIGHT},
-	]
+	var face_normals: Array[Vector3] = [Vector3.RIGHT, Vector3.LEFT, Vector3.UP, Vector3.DOWN, Vector3.BACK, Vector3.FORWARD]
+	var face_u_axes: Array[Vector3] = [Vector3.UP, Vector3.BACK, Vector3.BACK, Vector3.RIGHT, Vector3.RIGHT, Vector3.UP]
+	var face_v_axes: Array[Vector3] = [Vector3.BACK, Vector3.UP, Vector3.RIGHT, Vector3.BACK, Vector3.UP, Vector3.RIGHT]
 
-	for face: Dictionary in faces:
-		var normal: Vector3 = face["normal"]
-		var axis_u: Vector3 = face["u"]
-		var axis_v: Vector3 = face["v"]
+	for face_index: int in range(face_normals.size()):
+		var normal: Vector3 = face_normals[face_index]
+		var axis_u: Vector3 = face_u_axes[face_index]
+		var axis_v: Vector3 = face_v_axes[face_index]
 		var extent_u: float = half_size.dot(axis_u.abs())
 		var extent_v: float = half_size.dot(axis_v.abs())
 		for y_index: int in range(bevel_segments):
@@ -78,7 +73,7 @@ func _rounded_surface_point(
 	extent_v: float,
 	u_value: float,
 	v_value: float,
-	half_size: Vector3,
+	half_size: Vector3
 ) -> Vector3:
 	return normal * half_size.dot(normal.abs()) + axis_u * extent_u * u_value + axis_v * extent_v * v_value
 
