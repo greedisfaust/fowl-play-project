@@ -52,6 +52,8 @@ func _run() -> void:
 	profile.set("maximum_wager", 500)
 
 	_check_result(controller.call("handle_button_input", &"CLEAR", 1), true, "Clear pending amount before backspace test")
+	controller.call("handle_button_input", &"1", 1)
+	controller.call("handle_button_input", &"0", 1)
 	_check_result(controller.call("handle_button_input", &"BACKSPACE", 1), true, "Backspace removes the last digit")
 	_check(int(controller.call("get_pending_wager_amount")) == 1, "Backspace updates the pending amount")
 	_check_result(controller.call("handle_button_input", &"CLEAR", 1), true, "Clear resets the shared amount")
