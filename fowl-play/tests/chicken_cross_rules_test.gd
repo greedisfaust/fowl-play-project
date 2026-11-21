@@ -80,7 +80,10 @@ func _run() -> void:
 	)
 
 	var final_tile_model: RefCounted = RoundModel.new()
-	_check_result(final_tile_model.call("begin", [{"peer_id": 4, "wager_id": "W4", "stake": 10, "status": "locked"}]), true, "Single-player final-tile test starts")
+	var final_tile_wagers: Array[Dictionary] = [
+		{"peer_id": 4, "wager_id": "W4", "stake": 10, "status": "locked"}
+	]
+	_check_result(final_tile_model.call("begin", final_tile_wagers), true, "Single-player final-tile test starts")
 	for tile_number: int in range(1, Rules.TILE_COUNT):
 		var chance: float = Rules.failure_chance_for_tile(tile_number)
 		var safe_roll: float = chance
