@@ -41,7 +41,7 @@ button_id = &"9"
 
 [node name="Key_<" parent="." unique_id=561734198 instance=ExtResource("1_8ahfg")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.24, 0, 0.24)
-button_id = &"<"
+button_id = &"backspace"
 
 [node name="Key_0" parent="." unique_id=775195756 instance=ExtResource("1_8ahfg")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 0, 0.24)
@@ -49,4 +49,20 @@ button_id = &"0"
 
 [node name="Key_C" parent="." unique_id=597558014 instance=ExtResource("1_8ahfg")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, 0, 0.24)
-button_id = &"C"
+button_id = &"clear"
+
+[node name="MinButton" parent="." unique_id=1075090677 instance=ExtResource("1_8ahfg")]
+transform = Transform3D(1.5, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0, -0.24)
+button_id = &"min"
+
+[node name="QuarterButton" parent="." unique_id=632961264 instance=ExtResource("1_8ahfg")]
+transform = Transform3D(1.5, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0, -0.08)
+button_id = &"quarter"
+
+[node name="HalfButton" parent="." unique_id=887718131 instance=ExtResource("1_8ahfg")]
+transform = Transform3D(1.5, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0, 0.08)
+button_id = &"half"
+
+[node name="MaxButton" parent="." unique_id=2027848886 instance=ExtResource("1_8ahfg")]
+transform = Transform3D(1.5, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0, 0.24)
+button_id = &"max"
