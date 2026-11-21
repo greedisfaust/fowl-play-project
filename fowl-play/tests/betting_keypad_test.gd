@@ -46,7 +46,7 @@ func _run() -> void:
 		_check_result(controller.call("handle_button_input", StringName(digit), 1), true, "Player one enters wager digit %s" % digit)
 	var first_result: Dictionary = controller.call("handle_button_input", &"CONFIRM", 1)
 	_check_result(first_result, true, "Confirm submits the first player's wager")
-	_check(int(first_result.get("wager_id", "").length()) > 0, "Successful confirmation returns a wager ID")
+	_check(not str(first_result.get("wager_id", "")).is_empty(), "Successful confirmation returns a wager ID")
 	_check(int(controller.call("get_pending_wager_amount")) == 0, "Successful confirmation resets the pending amount")
 	_check(int(wallet.call("get_snapshot")["available_balance"]) == 900, "First confirmation reserves shared funds")
 	var first_wagers: Array[Dictionary] = table.call("get_round_wagers")
