@@ -84,7 +84,7 @@ func refresh_display() -> void:
 		var left_value: String = left_rows[row_index] if row_index < left_rows.size() else ""
 		var right_value: String = right_rows[row_index] if row_index < right_rows.size() else ""
 		var row_text: String = _two_columns(left_value, right_value)
-		if row_index == 0 and not left_rows.is_empty():
+		if row_index == 1 and not left_rows.is_empty():
 			var minimum_value: int = profile.get_effective_minimum()
 			var maximum_value: int = profile.get_effective_maximum()
 			var available_balance: int = _get_available_balance()
