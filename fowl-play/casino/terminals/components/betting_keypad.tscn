@@ -6,63 +6,79 @@
 
 [node name="Key_1" parent="." unique_id=354275653 instance=ExtResource("1_8ahfg")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.24, 0, -0.24)
+display_text = "1"
 
 [node name="Key_2" parent="." unique_id=947992501 instance=ExtResource("1_8ahfg")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 0, -0.24)
+display_text = "2"
 button_id = &"2"
 
 [node name="Key_3" parent="." unique_id=2124272220 instance=ExtResource("1_8ahfg")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, 0, -0.24)
+display_text = "3"
 button_id = &"3"
 
 [node name="Key_4" parent="." unique_id=1259664340 instance=ExtResource("1_8ahfg")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.24, 0, -0.08)
+display_text = "4"
 button_id = &"4"
 
 [node name="Key_5" parent="." unique_id=1698238713 instance=ExtResource("1_8ahfg")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 0, -0.08)
+display_text = "5"
 button_id = &"5"
 
 [node name="Key_6" parent="." unique_id=1479723812 instance=ExtResource("1_8ahfg")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, 0, -0.08)
+display_text = "6"
 button_id = &"6"
 
 [node name="Key_7" parent="." unique_id=2089723636 instance=ExtResource("1_8ahfg")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.24, 0, 0.08)
+display_text = "7"
 button_id = &"7"
 
 [node name="Key_8" parent="." unique_id=1289351328 instance=ExtResource("1_8ahfg")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 0, 0.08)
+display_text = "8"
 button_id = &"8"
 
 [node name="Key_9" parent="." unique_id=1541618980 instance=ExtResource("1_8ahfg")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, 0, 0.08)
+display_text = "9"
 button_id = &"9"
 
 [node name="Key_<" parent="." unique_id=561734198 instance=ExtResource("1_8ahfg")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.24, 0, 0.24)
+display_text = "<"
 button_id = &"backspace"
 
 [node name="Key_0" parent="." unique_id=775195756 instance=ExtResource("1_8ahfg")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 0, 0.24)
+display_text = "0"
 button_id = &"0"
 
 [node name="Key_C" parent="." unique_id=597558014 instance=ExtResource("1_8ahfg")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, 0, 0.24)
+display_text = "C"
 button_id = &"clear"
 
 [node name="MinButton" parent="." unique_id=1075090677 instance=ExtResource("1_8ahfg")]
 transform = Transform3D(1.5, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0, -0.24)
+display_text = "MIN"
 button_id = &"min"
 
 [node name="QuarterButton" parent="." unique_id=632961264 instance=ExtResource("1_8ahfg")]
 transform = Transform3D(1.5, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0, -0.08)
+display_text = "1/4"
 button_id = &"quarter"
 
 [node name="HalfButton" parent="." unique_id=887718131 instance=ExtResource("1_8ahfg")]
 transform = Transform3D(1.5, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0, 0.08)
+display_text = "1/2"
 button_id = &"half"
 
 [node name="MaxButton" parent="." unique_id=2027848886 instance=ExtResource("1_8ahfg")]
 transform = Transform3D(1.5, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0, 0.24)
+display_text = "MAX"
 button_id = &"max"
