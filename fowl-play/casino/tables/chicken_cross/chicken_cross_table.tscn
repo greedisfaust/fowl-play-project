@@ -2,5 +2,127 @@
 
 [ext_resource type="Script" uid="uid://c87t4r001otjo" path="res://casino/tables/chicken_cross/chicken_cross_table.gd" id="1_qj6gr"]
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qj6gr"]
+albedo_color = Color(0.14901961, 0.105882354, 0.07450981, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_g4v7s"]
+material = SubResource("StandardMaterial3D_qj6gr")
+size = Vector3(3.4, 0.16, 2.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_j2b8q"]
+albedo_color = Color(0.30980393, 0.2, 0.12941177, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_qj6gr"]
+material = SubResource("StandardMaterial3D_j2b8q")
+size = Vector3(0.22, 0.9, 0.22)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_lhivj"]
+albedo_color = Color(0.30980393, 0.2, 0.12941177, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_u8m3w"]
+material = SubResource("StandardMaterial3D_lhivj")
+size = Vector3(0.22, 0.9, 0.22)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ndg1d"]
+albedo_color = Color(0.30980393, 0.2, 0.12941177, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_h37pg"]
+material = SubResource("StandardMaterial3D_ndg1d")
+size = Vector3(0.22, 0.9, 0.22)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_lwvou"]
+albedo_color = Color(0.30980393, 0.2, 0.12941177, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_kfe3w"]
+material = SubResource("StandardMaterial3D_lwvou")
+size = Vector3(0.22, 0.9, 0.22)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_u8m3w"]
+albedo_color = Color(0.02745098, 0.35686275, 0.2627451, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="BoxMesh_yf5fn"]
+material = SubResource("StandardMaterial3D_u8m3w")
+size = Vector3(3.12, 0.035, 1.92)
+
+[sub_resource type="BoxMesh" id="BoxMesh_57qmd"]
+size = Vector3(0.205, 0.01, 0.7)
+
 [node name="ChickenCrossTable" type="Node3D" unique_id=1850824241]
 script = ExtResource("1_qj6gr")
+
+[node name="Visuals" type="Node3D" parent="." unique_id=139286661]
+
+[node name="TableTop" type="MeshInstance3D" parent="Visuals" unique_id=1473427167]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 0)
+mesh = SubResource("BoxMesh_g4v7s")
+
+[node name="Leg_Front_Left" type="MeshInstance3D" parent="Visuals" unique_id=1906140903]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.48, 0.45, 0.88)
+mesh = SubResource("BoxMesh_qj6gr")
+
+[node name="Leg_Front_Right" type="MeshInstance3D" parent="Visuals" unique_id=1280599895]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.48, 0.45, 0.88)
+mesh = SubResource("BoxMesh_u8m3w")
+
+[node name="Leg_Back_Left" type="MeshInstance3D" parent="Visuals" unique_id=498547467]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.48, 0.45, -0.88)
+mesh = SubResource("BoxMesh_h37pg")
+
+[node name="Leg_Back_Right" type="MeshInstance3D" parent="Visuals" unique_id=1719116024]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.48, 0.45, -0.88)
+mesh = SubResource("BoxMesh_kfe3w")
+
+[node name="PlayingSurface" type="MeshInstance3D" parent="Visuals" unique_id=1378958580]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, 0)
+mesh = SubResource("BoxMesh_yf5fn")
+
+[node name="TileLane" type="Node3D" parent="Visuals" unique_id=1683505106]
+
+[node name="Tile_01" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=215189896]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.38, 1.08, 0)
+mesh = SubResource("BoxMesh_57qmd")
+
+[node name="Tile_02" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=1505357518]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.13, 1.08, 0)
+mesh = SubResource("BoxMesh_57qmd")
+
+[node name="Tile_03" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=1113328987]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.88, 1.08, 0)
+mesh = SubResource("BoxMesh_57qmd")
+
+[node name="Tile_04" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=474754693]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.63, 1.08, 0)
+mesh = SubResource("BoxMesh_57qmd")
+
+[node name="Tile_05" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=467229850]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.38, 1.08, 0)
+mesh = SubResource("BoxMesh_57qmd")
+
+[node name="Tile_06" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=214893932]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.13, 1.08, 0)
+mesh = SubResource("BoxMesh_57qmd")
+
+[node name="Tile_07" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=939049867]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.12, 1.08, 0)
+mesh = SubResource("BoxMesh_57qmd")
+
+[node name="Tile_08" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=411359710]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.37, 1.08, 0)
+mesh = SubResource("BoxMesh_57qmd")
+
+[node name="Tile_09" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=1359833630]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.62, 1.08, 0)
+mesh = SubResource("BoxMesh_57qmd")
+
+[node name="Tile_10" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=106725934]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.87, 1.08, 0)
+mesh = SubResource("BoxMesh_57qmd")
+
+[node name="Tile_11" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=777564088]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.12, 1.08, 0)
+mesh = SubResource("BoxMesh_57qmd")
+
+[node name="Tile_12" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=2088261246]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.37, 1.08, 0)
+mesh = SubResource("BoxMesh_57qmd")
