@@ -23,6 +23,8 @@ const TRANSITION_SECONDS: float = 0.18
 @export var kind: InteractionKind = InteractionKind.USE
 @export var prompt_text: String = ""
 @export var enabled: bool = true
+## Scales the visual outline without changing interaction or focus behavior.
+@export_range(0.1, 2.0, 0.05) var outline_width_multiplier: float = 1.0
 
 ## Optional host-side state predicate supplied by the target owner.
 var availability_check: Callable
@@ -126,7 +128,7 @@ func _setup_highlight() -> void:
 		var outline: ShaderMaterial = ShaderMaterial.new()
 		outline.shader = OUTLINE_SHADER
 		outline.set_shader_parameter("outline_color", IDLE_OUTLINE_COLOR)
-		outline.set_shader_parameter("outline_width", IDLE_OUTLINE_WIDTH)
+		outline.set_shader_parameter("outline_width", IDLE_OUTLINE_WIDTH * outline_width_multiplier)
 		outline.set_shader_parameter("glow_strength", 0.0)
 		_highlighted_geometry.append(geometry)
 		_original_overlays.append(geometry.material_overlay)
@@ -136,7 +138,7 @@ func _setup_highlight() -> void:
 func _set_highlight_amount(amount: float) -> void:
 	_highlight_amount = clampf(amount, 0.0, 1.0)
 	var outline_color: Color = IDLE_OUTLINE_COLOR.lerp(FOCUSED_OUTLINE_COLOR, _highlight_amount)
-	var outline_width: float = lerpf(IDLE_OUTLINE_WIDTH, FOCUSED_OUTLINE_WIDTH, _highlight_amount)
+	var outline_width: float = lerpf(IDLE_OUTLINE_WIDTH, FOCUSED_OUTLINE_WIDTH, _highlight_amount) * outline_width_multiplier
 	var pulse: float = 1.0
 	if is_focused:
 		pulse += sin(_glow_pulse_elapsed * TAU / GLOW_PULSE_PERIOD_SECONDS) * GLOW_PULSE_AMOUNT
