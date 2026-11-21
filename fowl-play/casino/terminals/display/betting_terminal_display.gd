@@ -171,7 +171,7 @@ func _build_pending_rows() -> Array[String]:
 	var minimum_value: int = profile.get_effective_minimum()
 	var maximum_value: int = profile.get_effective_maximum()
 	var available_balance: int = _get_available_balance()
-	var valid: bool = _pending_wager_amount >= minimum_value and _pending_wager_amount <= maximum_value and _pending_wager_amount <= available_balance
+	var valid: bool = _is_pending_wager_valid(minimum_value, maximum_value, available_balance)
 	var status_text: String = profile.valid_message if valid else profile.invalid_message
 	if _pending_wager_amount > available_balance and _pending_wager_amount > 0:
 		status_text = profile.insufficient_funds_message
