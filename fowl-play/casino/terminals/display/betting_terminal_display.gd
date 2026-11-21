@@ -63,6 +63,10 @@ func refresh_display() -> void:
 		return
 
 	screen_text.clear_screen()
+	# This is a fixed physical readout, not a scrollable document. Following the
+	# newest appended row would scroll the title and headings out of view.
+	screen_text.scroll_active = false
+	screen_text.scroll_following = false
 	var left_width: int = maxi(profile.left_column_width, 12)
 	var right_width: int = maxi(profile.right_column_width, 12)
 	var total_width: int = left_width + right_width + 3
