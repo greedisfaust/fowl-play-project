@@ -31,8 +31,8 @@ func _rebuild_mesh() -> void:
 	surface_tool.begin(Mesh.PRIMITIVE_TRIANGLES)
 
 	var face_normals: Array[Vector3] = [Vector3.RIGHT, Vector3.LEFT, Vector3.UP, Vector3.DOWN, Vector3.BACK, Vector3.FORWARD]
-	var face_u_axes: Array[Vector3] = [Vector3.UP, Vector3.BACK, Vector3.BACK, Vector3.RIGHT, Vector3.RIGHT, Vector3.UP]
-	var face_v_axes: Array[Vector3] = [Vector3.BACK, Vector3.UP, Vector3.RIGHT, Vector3.BACK, Vector3.UP, Vector3.RIGHT]
+	var face_u_axes: Array[Vector3] = [Vector3.UP, Vector3.UP, Vector3.BACK, Vector3.BACK, Vector3.RIGHT, Vector3.RIGHT]
+	var face_v_axes: Array[Vector3] = [Vector3.BACK, Vector3.FORWARD, Vector3.RIGHT, Vector3.RIGHT, Vector3.UP, Vector3.DOWN]
 
 	for face_index: int in range(face_normals.size()):
 		var normal: Vector3 = face_normals[face_index]
