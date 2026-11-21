@@ -50,7 +50,7 @@ The Chicken Cross scene already contains the editor-authored `BettingTerminalDis
 
 ## Multiplayer readout
 
-The host replicates the pending amount, table participants, current-round wagers, available wallet balance, and nearby peer IDs in a revisioned snapshot. Clients render this snapshot through `set_network_snapshot()`; they do not mutate their local table or wallet. Newly connected clients request the current snapshot from the host.
+The host replicates the pending amount, current-round wagers, available wallet balance, and nearby peer IDs in a revisioned snapshot. Clients render this snapshot through `set_network_snapshot()`; they do not mutate their local table or wallet. Newly connected clients request the current snapshot from the host.
 
 ## Important integration boundary
 
