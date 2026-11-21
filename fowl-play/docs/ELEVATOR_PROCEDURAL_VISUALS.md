@@ -45,3 +45,28 @@ piano-black lacquer, champagne brass, walnut accents, dark inset panels, and war
 This is the initial geometry and material pass only. Sliding-door animation, elevator buttons,
 occupancy tracking, network synchronization, and MainController transition integration are
 separate follow-up slices. No runtime or multiplayer behavior is claimed by this visual builder.
+
+
+## Sliding door controller
+
+The four door pivots are animated by `world/elevator/elevator_door_controller.gd`.
+
+1. Select the existing `DoorAnimation` child (the AnimationPlayer).
+2. Attach `res://world/elevator/elevator_door_controller.gd`.
+3. Save the scene.
+4. Run the elevator scene or the project.
+5. To test from another script, call `$DoorAnimation.open_doors()` and
+   `$DoorAnimation.close_doors()`.
+
+The controller moves all four leaves together, with a subtle inner-panel delay.
+Default travel time is 0.9 seconds. The outer leaves travel farther into the side
+pockets while the inner leaves travel a shorter distance, clearing the 2.4 m entrance.
+
+Signals:
+- `door_state_changed(is_open: bool)` fires when the doors finish moving.
+- `door_motion_finished(is_open: bool)` fires at the same completion point.
+
+This is a local mechanical controller for the current scene pass. It does not yet
+authorize network requests, detect obstructions, or connect to elevator occupancy
+and world transitions. Those responsibilities belong to the later multiplayer
+elevator interaction slice.
