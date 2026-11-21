@@ -44,7 +44,8 @@ func _capture_authored_positions(node: Node) -> void:
 
 func _authored_position(node: Node3D) -> Vector3:
 	if _authored_positions.has(node):
-		return _authored_positions[node] as Vector3
+		var authored_position: Vector3 = _authored_positions[node]
+		return authored_position
 	return node.position
 
 func _width_delta() -> float:
