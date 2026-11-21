@@ -1,6 +1,7 @@
 extends BaseTable
 
 const RoundModel = preload("res://casino/tables/chicken_cross/chicken_cross_round.gd")
+const BettingKeypadControllerScript = preload("res://casino/terminals/components/betting_keypad_controller.gd")
 
 signal player_state_changed(peer_id: int, player_state: Dictionary)
 signal round_finished(payouts: Dictionary, settlement: Dictionary)
@@ -34,6 +35,24 @@ func _ready() -> void:
 		var roster_callback: Callable = Callable(self, "_on_network_roster_changed")
 		if not _network.is_connected("roster_changed", roster_callback):
 			_network.connect("roster_changed", roster_callback)
+	_setup_betting_keypad()
+
+## Adds the reusable controller at runtime without changing the editor-authored keypad scene.
+func _setup_betting_keypad() -> void:
+	var keypad: Node = get_node_or_null("BettingKeypad")
+	var display: Node = get_node_or_null("BettingTerminalDisplay")
+	if not is_instance_valid(keypad) or not is_instance_valid(display):
+		push_warning("ChickenCrossTable needs its BettingKeypad and BettingTerminalDisplay nodes.")
+		return
+	if keypad.get_node_or_null("BettingKeypadController") != null:
+		return
+	var controller: Node = BettingKeypadControllerScript.new()
+	controller.name = "BettingKeypadController"
+	controller.set("table", self)
+	controller.set("display", display)
+	controller.set("profile", display.get("profile"))
+	controller.set("one_wager_per_player", true)
+	keypad.add_child(controller)
 
 func _exit_tree() -> void:
 	if is_instance_valid(_network) and _network.has_signal("roster_changed"):
