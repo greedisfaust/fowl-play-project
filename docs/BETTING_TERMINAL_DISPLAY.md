@@ -26,6 +26,9 @@ The reusable betting display is a presentation-only layer for the casino termina
 - Player count uses `BaseTable.get_participants()` and the table's configured capacity.
 - The total reserved amount includes only reserved/locked wagers in this table's current round.
 - Names are resolved from `Network.player_identities` when available, with a peer-number fallback.
+- The two columns are rendered as paired rows with fixed character budgets from the profile. Long labels, player names, and messages are shortened within their own column instead of pushing the other column off-screen.
+- The renderer does not use blank rows to position one column independently of the other. The longer column determines the number of displayed rows.
+- `ScreenText` fits the rendered font against both the configured line width and the actual text-surface height. The Inspector font size remains the design size, so refreshes do not progressively shrink the text.
 
 ## Important integration boundary
 
@@ -43,6 +46,8 @@ This slice does not yet implement the shared pending amount's multiplayer author
 - [ ] Confirm multiple wagers by one peer and verify they aggregate into one row.
 - [ ] Withdraw an unstarted wager and verify the row and total update.
 - [ ] Start a round and verify locked wagers remain visible.
+- [ ] Verify long player names and status messages remain inside their own column.
+- [ ] Verify the complete display remains within the screen at the configured viewport dimensions and with the maximum player count.
 - [ ] Verify the same display refreshes on every multiplayer client after the presentation replication path is connected.
 
 Godot runtime and multiplayer tests have not been run as part of this source-only implementation.
