@@ -200,9 +200,9 @@ func _fit_text(value: String, width: int) -> String:
 	return value.left(width - 1) + "…"
 
 func _center_text(value: String, width: int) -> String:
-	var safe_width: int = maxi(width, value.length())
-	var left_padding: int = maxi((safe_width - value.length()) / 2, 0)
-	return " ".repeat(left_padding) + value
+	var fitted_value: String = _fit_text(value, width)
+	var left_padding: int = maxi((width - fitted_value.length()) / 2, 0)
+	return " ".repeat(left_padding) + fitted_value
 
 func _connect_table_signals() -> void:
 	var callbacks: Array[Dictionary] = [
