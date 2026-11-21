@@ -50,7 +50,10 @@ func _ready() -> void:
 	scroll_following = true
 	fit_content = false
 	selection_enabled = false
-	autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	# Wrap even long, unbroken strings at the available width.
+	autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
+	# Never draw glyphs outside the viewport-sized text rectangle.
+	clip_contents = true
 	horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	text_direction = Control.TEXT_DIRECTION_LTR

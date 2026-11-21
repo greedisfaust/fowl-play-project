@@ -14,6 +14,8 @@ func _run() -> void:
 	await process_frame
 	_check(terminal.horizontal_alignment == HORIZONTAL_ALIGNMENT_LEFT, "Terminal text must stay left-aligned")
 	_check(terminal.text_direction == Control.TEXT_DIRECTION_LTR, "Terminal text must read left-to-right")
+	_check(terminal.autowrap_mode == TextServer.AUTOWRAP_ARBITRARY, "Long unbroken text must wrap within the screen width")
+	_check(terminal.clip_contents, "Screen text must be clipped to the viewport rectangle")
 	_check(terminal.bbcode_enabled, "Terminal must support per-line header/body colors")
 	_check(terminal.background_color == ScreenText.DEFAULT_BACKGROUND, "Terminal should use the dark blue-black backing by default")
 	_check(terminal.header_color == ScreenText.DEFAULT_HEADER, "Terminal should use gold headers by default")
