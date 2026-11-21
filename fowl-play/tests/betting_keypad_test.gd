@@ -37,6 +37,21 @@ func _run() -> void:
 	_check_result(controller.call("handle_button_input", &"CONFIRM", 1), false, "Below-minimum amount cannot be confirmed")
 	_check(int(wallet.call("get_snapshot")["available_balance"]) == 1000, "Rejected confirmation does not reserve funds")
 
+	_check_result(controller.call("handle_button_input", &"CLEAR", 1), true, "Clear invalid amount before maximum test")
+	for digit: String in ["6", "0", "0"]:
+		controller.call("handle_button_input", StringName(digit), 1)
+	_check_result(controller.call("handle_button_input", &"CONFIRM", 1), false, "Above-maximum amount cannot be confirmed")
+	_check(int(wallet.call("get_snapshot")["available_balance"]) == 1000, "Above-maximum rejection does not reserve funds")
+
+	profile.set("maximum_wager", 2000)
+	controller.call("handle_button_input", &"CLEAR", 1)
+	for digit: String in ["1", "0", "0", "1"]:
+		controller.call("handle_button_input", StringName(digit), 1)
+	_check_result(controller.call("handle_button_input", &"CONFIRM", 1), false, "Insufficient shared funds cannot be confirmed")
+	_check(int(wallet.call("get_snapshot")["available_balance"]) == 1000, "Insufficient-funds rejection does not reserve funds")
+	profile.set("maximum_wager", 500)
+
+	_check_result(controller.call("handle_button_input", &"CLEAR", 1), true, "Clear pending amount before backspace test")
 	_check_result(controller.call("handle_button_input", &"BACKSPACE", 1), true, "Backspace removes the last digit")
 	_check(int(controller.call("get_pending_wager_amount")) == 1, "Backspace updates the pending amount")
 	_check_result(controller.call("handle_button_input", &"CLEAR", 1), true, "Clear resets the shared amount")
