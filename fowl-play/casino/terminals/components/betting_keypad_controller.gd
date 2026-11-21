@@ -207,7 +207,10 @@ func _publish_snapshot() -> void:
 		return
 	var participants: Array[Dictionary] = table.get_participants() if is_instance_valid(table) else []
 	var wagers: Array[Dictionary] = table.get_round_wagers() if is_instance_valid(table) else []
-	var available_balance: int = int(_wallet.call("get_snapshot").get("available_balance", 0)) if is_instance_valid(_wallet) else 0
+	var available_balance: int = 0
+	if is_instance_valid(_wallet):
+		var wallet_snapshot: Dictionary = _wallet.call("get_snapshot")
+		available_balance = int(wallet_snapshot.get("available_balance", 0))
 	_sync_snapshot.rpc(get_pending_wager_amount(), _snapshot_revision, participants, wagers, available_balance)
 
 func _apply_pending_amount() -> void:
@@ -234,12 +237,15 @@ func _sync_snapshot(amount: int, revision: int, participants: Array[Dictionary],
 
 @rpc("any_peer", "call_remote", "reliable", 0)
 func _request_snapshot() -> void:
-	if not multiplayer.is_server() or not is_instance_valid(_network) or not bool(_network.call("validate_rpc", 1)):
+	if not multiplayer.is_server() or not is_instance_valid(_network) or not bool(_network.call("validate_rpc")):
 		return
 	var sender_id: int = multiplayer.get_remote_sender_id()
 	var participants: Array[Dictionary] = table.get_participants() if is_instance_valid(table) else []
 	var wagers: Array[Dictionary] = table.get_round_wagers() if is_instance_valid(table) else []
-	var available_balance: int = int(_wallet.call("get_snapshot").get("available_balance", 0)) if is_instance_valid(_wallet) else 0
+	var available_balance: int = 0
+	if is_instance_valid(_wallet):
+		var wallet_snapshot: Dictionary = _wallet.call("get_snapshot")
+		available_balance = int(wallet_snapshot.get("available_balance", 0))
 	_sync_snapshot.rpc_id(sender_id, get_pending_wager_amount(), _snapshot_revision, participants, wagers, available_balance)
 
 func _success(data: Dictionary = {}) -> Dictionary:
