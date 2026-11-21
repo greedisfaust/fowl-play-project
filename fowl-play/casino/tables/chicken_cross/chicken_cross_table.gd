@@ -135,7 +135,13 @@ func _handle_interacted_button(actor: Node, advance_chicken: bool) -> void:
 func _peer_id_for_actor(actor: Node) -> int:
 	if not is_instance_valid(actor):
 		return 0
-	return int(actor.get("input_peer_id"))
+	var peer_id: int = int(actor.get("input_peer_id"))
+	# Offline test-arena players may not receive a network owner ID. Treat the
+	# local offline player as the offline multiplayer peer so table proximity
+	# and keypad confirmation use the same identity.
+	if peer_id <= 0 and _network != null and _network.get("peer") == null:
+		peer_id = multiplayer.get_unique_id()
+	return peer_id
 
 func _submit_player_action(advance_chicken: bool) -> Dictionary:
 	if multiplayer.is_server():
