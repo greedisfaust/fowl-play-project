@@ -243,7 +243,9 @@ func _get_player_color(peer_id: int) -> Color:
 			if identity_value is Object:
 				var identity: Object = identity_value
 				if identity.has_method("get_color"):
-					return identity.call("get_color") as Color
+					var color_value: Variant = identity.call("get_color")
+					if typeof(color_value) == TYPE_COLOR:
+						return color_value
 	return profile.body_color
 
 func _get_available_balance() -> int:
@@ -274,7 +276,7 @@ func _format_compact_money(amount: int) -> String:
 	var digits: String = str(-amount if negative else amount)
 	var compact_value: String = digits
 	var suffixes: Array[String] = ["", "K", "M", "B", "T", "Qa", "Qi"]
-	var group_index: int = maxi((digits.length() - 1) / 3, 0)
+	var group_index: int = maxi(floori(float(digits.length() - 1) / 3.0), 0)
 	if group_index > 0:
 		group_index = mini(group_index, suffixes.size() - 1)
 		var leading_length: int = digits.length() - group_index * 3
