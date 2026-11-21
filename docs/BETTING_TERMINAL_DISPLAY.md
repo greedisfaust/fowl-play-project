@@ -27,6 +27,120 @@ The reusable betting display is a presentation-only layer for the casino termina
 - The total reserved amount includes only reserved/locked wagers in this table's current round.
 - Names are resolved from `Network.player_identities` when available, with a peer-number fallback.
 - The two columns are rendered as paired rows with fixed character budgets from the profile. Long labels, player names, and messages are shortened within their own column instead of pushing the other column off-screen.
+- The pending wager amount is centered in the left column and rendered at 1.45× the authored terminal font size. Its validity color remains green/red.
+- Pending amount, minimum, and maximum use compact currency notation (`1K# Betting Terminal Display
+
+The reusable betting display is a presentation-only layer for the casino terminal. It uses the existing `BaseTable`, `CasinoWallet`, and `ScreenText` systems; it does not create a second wager ledger or mutate wallet funds.
+
+## Files
+
+- `fowl-play/casino/terminals/resources/betting_terminal_profile.gd`: Inspector-editable terminal identity, copy, wager limits, colors, and text layout.
+- `fowl-play/casino/terminals/display/betting_terminal_display.gd`: renders the two-column display and listens for table/wallet changes.
+
+## Setup (editor-authored terminal scene)
+
+1. Add a Node named `BettingTerminalDisplay` under the terminal root (or another suitable controller node).
+2. Attach `betting_terminal_display.gd`.
+3. Assign the table's `BaseTable` node to **Table**.
+4. Assign the existing screen's `ScreenText` node to **Screen Text**. Do not replace the WorldScreen or its SubViewport.
+5. Create a new resource of type `BettingTerminalProfile` and assign it to **Profile**.
+6. Adjust the profile's game title, description, wording, minimum/maximum wager, currency symbol, colors, and layout values in the Inspector.
+7. The shared keypad controller should call `set_pending_wager_amount(amount)` whenever the shared pending amount changes.
+
+## Behavior
+
+- The pending amount is shown in green only when it is positive, at least the configured minimum, no greater than the configured maximum, and no greater than the current available shared-wallet balance. Otherwise it is red; insufficient funds use the profile's dedicated message.
+- The configured table maximum is always displayed as the table's maximum, independently of the current wallet balance.
+- Confirmed wagers are read from `BaseTable.get_round_wagers()`; only reserved and locked wagers appear.
+- Wagers are grouped by peer and summed for the display. This keeps the display to one `[PLAYER] — [CONFIRMED WAGER]` row per bettor.
+- Player count uses `BaseTable.get_participants()` and the table's configured capacity.
+- The total reserved amount includes only reserved/locked wagers in this table's current round.
+- Names are resolved from `Network.player_identities` when available, with a peer-number fallback.
+, `10K# Betting Terminal Display
+
+The reusable betting display is a presentation-only layer for the casino terminal. It uses the existing `BaseTable`, `CasinoWallet`, and `ScreenText` systems; it does not create a second wager ledger or mutate wallet funds.
+
+## Files
+
+- `fowl-play/casino/terminals/resources/betting_terminal_profile.gd`: Inspector-editable terminal identity, copy, wager limits, colors, and text layout.
+- `fowl-play/casino/terminals/display/betting_terminal_display.gd`: renders the two-column display and listens for table/wallet changes.
+
+## Setup (editor-authored terminal scene)
+
+1. Add a Node named `BettingTerminalDisplay` under the terminal root (or another suitable controller node).
+2. Attach `betting_terminal_display.gd`.
+3. Assign the table's `BaseTable` node to **Table**.
+4. Assign the existing screen's `ScreenText` node to **Screen Text**. Do not replace the WorldScreen or its SubViewport.
+5. Create a new resource of type `BettingTerminalProfile` and assign it to **Profile**.
+6. Adjust the profile's game title, description, wording, minimum/maximum wager, currency symbol, colors, and layout values in the Inspector.
+7. The shared keypad controller should call `set_pending_wager_amount(amount)` whenever the shared pending amount changes.
+
+## Behavior
+
+- The pending amount is shown in green only when it is positive, at least the configured minimum, no greater than the configured maximum, and no greater than the current available shared-wallet balance. Otherwise it is red; insufficient funds use the profile's dedicated message.
+- The configured table maximum is always displayed as the table's maximum, independently of the current wallet balance.
+- Confirmed wagers are read from `BaseTable.get_round_wagers()`; only reserved and locked wagers appear.
+- Wagers are grouped by peer and summed for the display. This keeps the display to one `[PLAYER] — [CONFIRMED WAGER]` row per bettor.
+- Player count uses `BaseTable.get_participants()` and the table's configured capacity.
+- The total reserved amount includes only reserved/locked wagers in this table's current round.
+- Names are resolved from `Network.player_identities` when available, with a peer-number fallback.
+, `1.02M# Betting Terminal Display
+
+The reusable betting display is a presentation-only layer for the casino terminal. It uses the existing `BaseTable`, `CasinoWallet`, and `ScreenText` systems; it does not create a second wager ledger or mutate wallet funds.
+
+## Files
+
+- `fowl-play/casino/terminals/resources/betting_terminal_profile.gd`: Inspector-editable terminal identity, copy, wager limits, colors, and text layout.
+- `fowl-play/casino/terminals/display/betting_terminal_display.gd`: renders the two-column display and listens for table/wallet changes.
+
+## Setup (editor-authored terminal scene)
+
+1. Add a Node named `BettingTerminalDisplay` under the terminal root (or another suitable controller node).
+2. Attach `betting_terminal_display.gd`.
+3. Assign the table's `BaseTable` node to **Table**.
+4. Assign the existing screen's `ScreenText` node to **Screen Text**. Do not replace the WorldScreen or its SubViewport.
+5. Create a new resource of type `BettingTerminalProfile` and assign it to **Profile**.
+6. Adjust the profile's game title, description, wording, minimum/maximum wager, currency symbol, colors, and layout values in the Inspector.
+7. The shared keypad controller should call `set_pending_wager_amount(amount)` whenever the shared pending amount changes.
+
+## Behavior
+
+- The pending amount is shown in green only when it is positive, at least the configured minimum, no greater than the configured maximum, and no greater than the current available shared-wallet balance. Otherwise it is red; insufficient funds use the profile's dedicated message.
+- The configured table maximum is always displayed as the table's maximum, independently of the current wallet balance.
+- Confirmed wagers are read from `BaseTable.get_round_wagers()`; only reserved and locked wagers appear.
+- Wagers are grouped by peer and summed for the display. This keeps the display to one `[PLAYER] — [CONFIRMED WAGER]` row per bettor.
+- Player count uses `BaseTable.get_participants()` and the table's configured capacity.
+- The total reserved amount includes only reserved/locked wagers in this table's current round.
+- Names are resolved from `Network.player_identities` when available, with a peer-number fallback.
+, `1B# Betting Terminal Display
+
+The reusable betting display is a presentation-only layer for the casino terminal. It uses the existing `BaseTable`, `CasinoWallet`, and `ScreenText` systems; it does not create a second wager ledger or mutate wallet funds.
+
+## Files
+
+- `fowl-play/casino/terminals/resources/betting_terminal_profile.gd`: Inspector-editable terminal identity, copy, wager limits, colors, and text layout.
+- `fowl-play/casino/terminals/display/betting_terminal_display.gd`: renders the two-column display and listens for table/wallet changes.
+
+## Setup (editor-authored terminal scene)
+
+1. Add a Node named `BettingTerminalDisplay` under the terminal root (or another suitable controller node).
+2. Attach `betting_terminal_display.gd`.
+3. Assign the table's `BaseTable` node to **Table**.
+4. Assign the existing screen's `ScreenText` node to **Screen Text**. Do not replace the WorldScreen or its SubViewport.
+5. Create a new resource of type `BettingTerminalProfile` and assign it to **Profile**.
+6. Adjust the profile's game title, description, wording, minimum/maximum wager, currency symbol, colors, and layout values in the Inspector.
+7. The shared keypad controller should call `set_pending_wager_amount(amount)` whenever the shared pending amount changes.
+
+## Behavior
+
+- The pending amount is shown in green only when it is positive, at least the configured minimum, no greater than the configured maximum, and no greater than the current available shared-wallet balance. Otherwise it is red; insufficient funds use the profile's dedicated message.
+- The configured table maximum is always displayed as the table's maximum, independently of the current wallet balance.
+- Confirmed wagers are read from `BaseTable.get_round_wagers()`; only reserved and locked wagers appear.
+- Wagers are grouped by peer and summed for the display. This keeps the display to one `[PLAYER] — [CONFIRMED WAGER]` row per bettor.
+- Player count uses `BaseTable.get_participants()` and the table's configured capacity.
+- The total reserved amount includes only reserved/locked wagers in this table's current round.
+- Names are resolved from `Network.player_identities` when available, with a peer-number fallback.
+); the minimum and maximum lines are centered at the bottom of the left column. The right-hand confirmed wager list keeps its existing full-value formatting.
 - The game title is large, bold, and left-aligned in a dedicated full-width header area. The game description sits directly beneath it and is wrapped to at most two lines; longer descriptions are shortened with an ellipsis. A full-width divider separates this header from the betting columns, so description length cannot push into or overlap them.
 - The controller defers its first render until the scene's ScreenText has completed `_ready()`; this matters when the controller node appears before the nested WorldScreen in sibling order, because BBCode and font setup must be initialized before text is appended.
 - The renderer does not use blank rows to position one column independently of the other. The longer column determines the number of displayed rows.
