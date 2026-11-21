@@ -6,6 +6,8 @@ extends Node
 signal wager_confirmation_result(peer_id: int, result: Dictionary)
 
 const MAX_WAGER_DIGITS: int = 10
+const TABLE_STATE_IDLE: int = 0
+const TABLE_STATE_OPEN: int = 1
 
 @export var table: BaseTable
 @export var display: Node
@@ -135,11 +137,11 @@ func _confirm_pending_wager(peer_id: int) -> Dictionary:
 				return _failure("You already have a confirmed wager in this round.")
 
 	var table_state: int = int(table.get("state"))
-	if table_state == int(BaseTable.TableState.IDLE):
+	if table_state == TABLE_STATE_IDLE:
 		var open_result: Dictionary = table.open_round(peer_id)
 		if not bool(open_result.get("ok", false)):
 			return open_result
-	elif table_state != int(BaseTable.TableState.OPEN):
+	elif table_state != TABLE_STATE_OPEN:
 		return _failure("This table is not accepting wagers right now.")
 
 	var join_result: Dictionary = table.join_table(peer_id)
