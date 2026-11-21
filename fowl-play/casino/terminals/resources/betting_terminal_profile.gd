@@ -22,8 +22,8 @@ extends Resource
 @export var empty_amount_text: String = "0"
 
 @export_group("Wager Limits")
-@export_range(1, 9223372036854775807, 1) var minimum_wager: int = 100
-@export_range(1, 9223372036854775807, 1) var maximum_wager: int = 5000
+@export var minimum_wager: int = 100
+@export var maximum_wager: int = 5000
 
 @export_group("Terminal Display Colors")
 @export var valid_color: Color = Color(0.28, 0.88, 0.48, 1.0)
