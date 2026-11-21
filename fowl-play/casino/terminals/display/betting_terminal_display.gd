@@ -92,21 +92,26 @@ func refresh_display() -> void:
 	var left_rows: Array[String] = _build_pending_rows()
 	var right_rows: Array[String] = _build_player_rows()
 	var row_count: int = maxi(left_rows.size(), right_rows.size())
+	var available_balance: int = _get_available_balance()
+	var minimum_value: int = profile.get_effective_minimum()
+	var maximum_value: int = profile.get_effective_maximum()
+	var valid: bool = _pending_wager_amount >= minimum_value and _pending_wager_amount <= maximum_value and _pending_wager_amount <= available_balance
+	var amount_color: Color = profile.valid_color if valid else profile.invalid_color
+	var amount_font_size: int = roundi(float(screen_text.terminal_font_size) * 1.45)
 	for row_index: int in range(row_count):
 		var left_value: String = left_rows[row_index] if row_index < left_rows.size() else ""
 		var right_value: String = right_rows[row_index] if row_index < right_rows.size() else ""
-		var row_text: String = _two_columns(left_value, right_value)
-		if row_index == 1 and not left_rows.is_empty():
-			var minimum_value: int = profile.get_effective_minimum()
-			var maximum_value: int = profile.get_effective_maximum()
-			var available_balance: int = _get_available_balance()
-			var valid: bool = _pending_wager_amount >= minimum_value and _pending_wager_amount <= maximum_value and _pending_wager_amount <= available_balance
-			screen_text.body_color = profile.valid_color if valid else profile.invalid_color
+		var left_color: Color = profile.body_color
+		var left_size: int = 0
+		var center_left: bool = true
+		if row_index == 0:
+			left_color = amount_color
+			left_size = amount_font_size
+		elif row_index == 1:
+			left_color = profile.valid_color if valid else profile.invalid_color
 			if _pending_wager_amount > available_balance and _pending_wager_amount > 0:
-				screen_text.body_color = profile.invalid_color
-		else:
-			screen_text.body_color = profile.body_color
-		screen_text.append_paragraph(row_text)
+				left_color = profile.invalid_color
+		screen_text.append_text(_format_split_row(left_value, right_value, left_width, right_width, center_left, left_color, left_size))
 
 	screen_text.body_color = profile.body_color
 	screen_text.fit_font_size_to_columns(total_width)
@@ -121,10 +126,10 @@ func _build_pending_rows() -> Array[String]:
 	var status_text: String = profile.valid_message if valid else profile.invalid_message
 	if _pending_wager_amount > available_balance and _pending_wager_amount > 0:
 		status_text = profile.insufficient_funds_message
-	rows.append(_format_money(_pending_wager_amount))
+	rows.append(_format_compact_money(_pending_wager_amount))
 	rows.append(status_text)
-	rows.append("%s: %s" % [profile.minimum_label, _format_money(minimum_value)])
-	rows.append("%s: %s" % [profile.maximum_label, _format_money(maximum_value)])
+	rows.append("%s: %s" % [profile.minimum_label, _format_compact_money(minimum_value)])
+	rows.append("%s: %s" % [profile.maximum_label, _format_compact_money(maximum_value)])
 	return rows
 
 func _build_player_rows() -> Array[String]:
@@ -184,6 +189,52 @@ func _get_player_label(peer_id: int) -> String:
 				if nickname_value != null and not str(nickname_value).is_empty():
 					return str(nickname_value).to_upper()
 	return "PLAYER %d" % peer_id
+
+func _format_compact_money(amount: int) -> String:
+	var absolute_amount: float = absf(float(amount))
+	var compact_value: String = str(amount)
+	if absolute_amount >= 1000000000.0:
+		compact_value = _trim_decimal(absolute_amount / 1000000000.0) + "B"
+	elif absolute_amount >= 1000000.0:
+		compact_value = _trim_decimal(absolute_amount / 1000000.0) + "M"
+	elif absolute_amount >= 1000.0:
+		compact_value = _trim_decimal(absolute_amount / 1000.0) + "K"
+	if amount < 0:
+		compact_value = "-" + compact_value.trim_prefix("-")
+	return compact_value + profile.currency_symbol
+
+
+func _trim_decimal(value: float) -> String:
+	var rounded_value: float = snappedf(value, 0.01)
+	var result: String = "%.2f" % rounded_value
+	while result.contains(".") and result.ends_with("0"):
+		result = result.left(result.length() - 1)
+	if result.ends_with("."):
+		result = result.left(result.length() - 1)
+	return result
+
+
+func _format_split_row(left_text: String, right_text: String, left_width: int, right_width: int, center_left: bool, left_color: Color, left_font_size: int) -> String:
+	var safe_left: String = _fit_text(left_text, left_width)
+	if center_left:
+		var left_padding: int = maxi((left_width - safe_left.length()) / 2, 0)
+		safe_left = " ".repeat(left_padding) + safe_left
+	var right_value: String = _fit_text(right_text, right_width)
+	var right_padding: String = " ".repeat(maxi(right_width - right_value.length(), 0))
+	var color_hex: String = left_color.to_html(false)
+	var left_markup: String = "[color=#%s]" % color_hex
+	if left_font_size > 0:
+		left_markup += "[font_size=%d]" % left_font_size
+	left_markup += _escape_display_markup(safe_left)
+	if left_font_size > 0:
+		left_markup += "[/font_size]"
+	left_markup += "[/color]"
+	return left_markup + " ".repeat(left_width - safe_left.length()) + " | " + right_padding + _escape_display_markup(right_value) + "\n"
+
+
+func _escape_display_markup(value: String) -> String:
+	return value.replace("[", "[lb]").replace("]", "[rb]")
+
 
 func _format_money(amount: int) -> String:
 	var absolute_digits: String = str(absi(amount))
