@@ -79,13 +79,11 @@ func _set_doors_open(open: bool) -> void:
 		var target_x: float = closed_x
 		if open:
 			target_x += float(OPEN_OFFSETS[panel.name])
-		var delay: float = float(index) * stagger_seconds
+		var delay: float = 0.0
+		if panel.name == "LeftInnerPanel" or panel.name == "RightInnerPanel":
+			delay = stagger_seconds
 		var duration: float = travel_seconds * travel_multiplier
-		if delay > 0.0:
-			tween.tween_interval(delay)
-			tween.tween_property(panel, "position:x", target_x, duration)
-		else:
-			tween.tween_property(panel, "position:x", target_x, duration)
+		tween.tween_property(panel, "position:x", target_x, duration).set_delay(delay)
 
 	tween.set_parallel(false)
 	tween.tween_callback(_finish_motion.bind(open))
