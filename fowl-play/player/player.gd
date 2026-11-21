@@ -189,6 +189,18 @@ func _ready() -> void:
 	network.call("apply_pending_ragdoll_start", input_peer_id, self)
 	network.call("apply_pending_player_state", input_peer_id, self)
 
+## Move a standing player to the active world's authored spawn marker.
+## Ragdoll/carry cleanup belongs to the elevator transition before this is called.
+func place_at_world_spawn(at: Transform3D) -> bool:
+	if not at.is_finite() or is_limp or is_recovering or is_carried or is_carrying():
+		return false
+	global_transform = at
+	velocity = Vector3.ZERO
+	accepted_position = global_position
+	_movement.reset(global_position, Time.get_ticks_msec() / 1000.0)
+	_send_elapsed = 0.0
+	return true
+
 func _exit_tree() -> void:
 	_combat_controller.call("abandon")
 	end_parry_presentation(false)
