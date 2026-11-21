@@ -30,16 +30,33 @@ The controller creates a unique round ID for each round opened on that table.
 - `begin_resolution()` / `settle_round(payouts)`: game implementation reports the authoritative outcome and gross returns.
 - `cancel_open_round()`: host-side lifecycle operation; cancels only an unstarted round and refunds its reserved wagers. It is not a player-facing cancel permission.
 
+## Inactivity timeout
+
+- `open_round_inactivity_seconds` defaults to 45 seconds.
+- The countdown starts when a round opens.
+- Joining, confirming/editing/withdrawing a wager, or a participant leaving proximity resets it.
+- Merely remaining nearby does not reset it.
+- Expiry cancels the unstarted round and refunds every still-reserved wager.
+- Starting the round disables the countdown.
+
+## Day-end cleanup
+
+- `request_day_end_cleanup(reason)` is a host-only coordinator hook for early departure and hard timer expiry.
+- If the round is `OPEN`, it cancels the round and refunds reserved wagers.
+- If the round is `RUNNING` or `RESOLVING`, it preserves locked wagers and emits `round_auto_resolution_requested`; the game adapter must finish automatic resolution and call `settle_round`.
+- On timer expiry, the casino/day manager MUST snapshot the authoritative wallet and evaluate quota before calling cleanup. Later settlements cannot change that deadline result.
+- Early departure uses the same cleanup hook after the team qualifies to leave; started rounds are resolved, not refunded.
+
 ## Departure behavior
 
 - Leaving proximity during `OPEN` refunds that player's reserved wagers and removes their participant record.
 - Leaving during `RUNNING` or `RESOLVING` preserves the locked wager, marks the participant as `left_after_start`, and emits `participant_left_after_start`. The game-specific controller must respond with its agreed auto-play/auto-resolution behavior.
-- This does not decide timer-expiry behavior or early-departure refunds for already-started rounds.
+- Post-start departures keep wagers locked and rely on game-specific automatic resolution.
 
 ## Deliberately deferred
 
-- The 45-second inactivity timeout's activity definition and cancellation policy remain open.
-- Day-end force-refund scope for already-started rounds remains open.
+- Casino/day manager orchestration and immutable quota snapshot ordering are not implemented yet.
+- Game-specific automatic resolution is signaled but must be implemented by each game adapter.
 - Network RPC wrappers and client replication are not added yet. Future RPCs must validate sender identity, table proximity, and game state on the host before calling this API.
 - Physical Area3D wiring, nameplate visuals, and game-specific presentation remain editor/game implementation work.
 

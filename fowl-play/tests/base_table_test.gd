@@ -72,6 +72,35 @@ func _run() -> void:
 	_check(int(table.get("state")) == 1, "Rejected start leaves the round open")
 	_check_result(table.call("cancel_open_round"), true, "Empty open round can be cancelled")
 
+	table.set("open_round_inactivity_seconds", 0.05)
+	_check_result(table.call("open_round", 2), true, "Table opens a round for inactivity timeout")
+	_check_result(table.call("join_table", 2), true, "Participant joins timeout round")
+	var timeout_wager: Dictionary = table.call("place_wager", 2, 75, {})
+	var timeout_wager_id: String = str(timeout_wager.get("wager_id", ""))
+	_check_result(timeout_wager, true, "Timeout round reserves a wager")
+	await create_timer(0.15).timeout
+	_check(int(table.get("state")) == 0, "Inactive open round automatically returns to idle")
+	_check(str(wallet.call("get_wager", timeout_wager_id)["status"]) == "refunded", "Inactivity timeout refunds reserved wagers")
+
+	var auto_resolution_requests: Array[Dictionary] = []
+	table.round_auto_resolution_requested.connect(func(request_table_id: String, request_round_id: String, reason: String) -> void:
+		auto_resolution_requests.append({"table_id": request_table_id, "round_id": request_round_id, "reason": reason})
+	)
+	_check_result(table.call("open_round", 2), true, "Table opens a round for deadline cleanup")
+	_check_result(table.call("join_table", 2), true, "Participant joins deadline round")
+	var deadline_wager: Dictionary = table.call("place_wager", 2, 80, {})
+	var deadline_wager_id: String = str(deadline_wager.get("wager_id", ""))
+	_check_result(deadline_wager, true, "Deadline round reserves a wager")
+	_check_result(table.call("start_round", 2), true, "Deadline round starts and locks wager")
+	var deadline_cleanup: Dictionary = table.call("request_day_end_cleanup", "casino_timer_expired")
+	_check_result(deadline_cleanup, true, "Day deadline requests active game cleanup")
+	_check(str(deadline_cleanup.get("action", "")) == "auto_resolution_requested", "Started round requests game auto-resolution")
+	_check(str(wallet.call("get_wager", deadline_wager_id)["status"]) == "locked", "Deadline cleanup does not refund locked wagers")
+	_check(auto_resolution_requests.size() == 1, "Game adapter receives one automatic resolution request")
+	_check(str(auto_resolution_requests[0].get("reason", "")) == "casino_timer_expired", "Automatic resolution receives the cleanup reason")
+	_check_result(table.call("settle_round", {deadline_wager_id: 0}), true, "Automatically resolved deadline round can settle")
+	_check(int(wallet.call("get_snapshot")["available_balance"]) == 970, "Deadline loss remains charged after settlement")
+
 	table.queue_free()
 	if _failed:
 		quit(1)

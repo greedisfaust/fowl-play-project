@@ -1,6 +1,6 @@
 # Casino Foundation Design
 
-Status: APPROVED FOUNDATION CONTRACT — shared wallet and first BaseTable lifecycle controller implemented; Godot test execution pending.
+Status: APPROVED FOUNDATION CONTRACT — shared wallet and BaseTable controller implemented; the initial wallet/BaseTable checks were user-verified PASS before the latest policy additions.
 Branch: `environment/world-building-and-gameplay-loop`
 Last updated: 2026-11-21
 Base commit: `75675cc31456c3b0d7b5bb365ec82fd81ced9a72`
@@ -185,7 +185,7 @@ User decision:
 - Money committed to an unresolved wager can therefore leave the team below quota and cause failure, even if the wager might otherwise have won.
 - The House may comment on this greed-driven failure in its announcement/report.
 
-Open implementation detail: whether the table's visual round is allowed to finish after the day has already failed, or is force-closed as a loss. The no-refund and deadline quota check are fixed; post-deadline presentation/cleanup is not. The wallet ledger leaves locked wagers reserved until the game/run manager explicitly settles or finalizes them.
+DECIDED: the day manager snapshots wallet/quota at the hard deadline first, then requests cleanup. Open rounds are refunded; started rounds keep locked stakes and auto-resolve/settle for clean shutdown. Post-deadline settlement cannot change the recorded quota result.
 
 ### Early departure
 
@@ -193,7 +193,7 @@ User decision:
 - Once quota is reached (green), the team may end the day early.
 - When leaving for the elevator, unresolved table wagers are force-refunded rather than allowed to strand a round.
 
-Open scope detail: confirm whether the forced refund applies to wagers in already-started rounds as well as open/unstarted rounds. The user indicated a force refund; implementation should encode the agreed scope explicitly.
+DECIDED: only unstarted rounds are refunded. Started rounds are automatically resolved without refund before transition.
 
 ## 8. Daily roster and progression rules
 
