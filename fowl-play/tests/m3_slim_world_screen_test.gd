@@ -17,7 +17,15 @@ func _run() -> void:
 		_fail("SLIM scene root should use SlimWorldScreen")
 		quit(1)
 		return
-	root.add_child(instance)
+	var first_parent: Node3D = Node3D.new()
+	first_parent.name = "FirstInstanceParent"
+	root.add_child(first_parent)
+	first_parent.add_child(instance)
+	await process_frame
+	var second_parent: Node3D = Node3D.new()
+	second_parent.name = "SecondInstanceParent"
+	root.add_child(second_parent)
+	instance.reparent(second_parent, true)
 	await process_frame
 
 	var screen: WorldScreen = instance.get_node_or_null("WorldScreen") as WorldScreen
