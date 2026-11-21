@@ -13,6 +13,7 @@ enum TableState {
 
 signal state_changed(previous_state: int, new_state: int)
 signal participants_changed(participants: Array[Dictionary])
+signal proximity_changed(nearby_peer_ids: Array[int])
 signal round_opened(table_id: String, round_id: String)
 signal round_started(table_id: String, round_id: String)
 signal participant_left_after_start(peer_id: int, table_id: String, round_id: String)
@@ -70,6 +71,7 @@ func enter_proximity(peer_id: int) -> Dictionary:
 	if not _is_valid_peer(peer_id):
 		return _failure("Unknown or invalid player peer ID.")
 	_inside_proximity[peer_id] = true
+	_emit_proximity_changed()
 	return _success({"peer_id": peer_id})
 
 ## Leaving before round start refunds that player's reserved wagers.
@@ -81,12 +83,14 @@ func exit_proximity(peer_id: int) -> Dictionary:
 		return _failure("Player is not registered in this table's proximity.")
 	if not _participants.has(peer_id):
 		_inside_proximity.erase(peer_id)
+		_emit_proximity_changed()
 		return _success({"peer_id": peer_id, "participant_removed": false})
 	if state == TableState.OPEN:
 		var refund_result: Dictionary = _refund_peer_open_wagers(peer_id)
 		if not bool(refund_result.get("ok", false)):
 			return refund_result
 		_inside_proximity.erase(peer_id)
+		_emit_proximity_changed()
 		_participants.erase(peer_id)
 		_emit_participants_changed()
 		_reset_open_round_inactivity()
@@ -97,6 +101,7 @@ func exit_proximity(peer_id: int) -> Dictionary:
 			"refunded_total": int(refund_result.get("refunded_total", 0)),
 		})
 	_inside_proximity.erase(peer_id)
+	_emit_proximity_changed()
 	if state == TableState.RUNNING or state == TableState.RESOLVING:
 		var participant: Dictionary = _participants[peer_id]
 		participant["status"] = "left_after_start"
@@ -293,6 +298,16 @@ func request_day_end_cleanup(reason: String) -> Dictionary:
 func _reset_open_round_inactivity() -> void:
 	if state == TableState.OPEN:
 		_open_round_inactivity_remaining = maxf(open_round_inactivity_seconds, 0.01)
+
+func get_nearby_peer_ids() -> Array[int]:
+	var result: Array[int] = []
+	for peer_value: Variant in _inside_proximity.keys():
+		result.append(int(peer_value))
+	result.sort()
+	return result
+
+func _emit_proximity_changed() -> void:
+	proximity_changed.emit(get_nearby_peer_ids())
 
 func get_participants() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
