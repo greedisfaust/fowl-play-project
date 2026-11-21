@@ -27,7 +27,7 @@ The reusable betting display is a presentation-only layer for the casino termina
 - The total reserved amount includes only reserved/locked wagers in this table's current round.
 - Names are resolved from `Network.player_identities` when available, with a peer-number fallback.
 - The two columns are rendered as paired rows with fixed character budgets from the profile. Long labels, player names, and messages are shortened within their own column instead of pushing the other column off-screen.
-- The game title uses native centered RichTextLabel alignment across the full text surface, rather than leading spaces.
+- The game title is large, bold, and left-aligned in a dedicated full-width header area. The game description sits directly beneath it and is wrapped to at most two lines; longer descriptions are shortened with an ellipsis. A full-width divider separates this header from the betting columns, so description length cannot push into or overlap them.
 - The controller defers its first render until the scene's ScreenText has completed `_ready()`; this matters when the controller node appears before the nested WorldScreen in sibling order, because BBCode and font setup must be initialized before text is appended.
 - The renderer does not use blank rows to position one column independently of the other. The longer column determines the number of displayed rows.
 - Automatic scrolling is disabled for this fixed readout so newly appended rows cannot scroll the title and headings out of view.
