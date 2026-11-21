@@ -72,8 +72,8 @@ func _build_shell(parent: Node3D) -> void:
 
 	# Front portal leaves the full 2.4 m door opening clear.
 	var side_width: float = (3.52 - DOOR_WIDTH) * 0.5
-	_add_box(parent, "FrontLeftPier", Vector3(side_width, 2.8, 0.16), Vector3(-1.6 + side_width * 0.5, 1.4, -1.58), lacquer)
-	_add_box(parent, "FrontRightPier", Vector3(side_width, 2.8, 0.16), Vector3(1.6 - side_width * 0.5, 1.4, -1.58), lacquer)
+	_add_box(parent, "FrontLeftPier", Vector3(side_width, 2.8, 0.16), Vector3(-1.76 + side_width * 0.5, 1.4, -1.58), lacquer)
+	_add_box(parent, "FrontRightPier", Vector3(side_width, 2.8, 0.16), Vector3(1.76 - side_width * 0.5, 1.4, -1.58), lacquer)
 	_add_box(parent, "FrontHeader", Vector3(DOOR_WIDTH, 0.6, 0.18), Vector3(0.0, 2.5, -1.58), lacquer)
 
 	# Brass portal trim and restrained smoked-glass side accents.
