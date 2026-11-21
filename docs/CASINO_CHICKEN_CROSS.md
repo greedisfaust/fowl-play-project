@@ -1,6 +1,6 @@
 # Chicken Cross — Rules and Round-State Contract
 
-Status: Initial rules/model slice implemented; Godot execution pending.
+Status: Rules/model checks user-verified PASS. Host-authoritative table adapter implemented; local Godot verification pending.
 
 ## Approved game rules
 
@@ -11,7 +11,7 @@ Status: Initial rules/model slice implemented; Godot execution pending.
 - The host rolls a fresh independent random value for each player's tile attempt.
 - The tile's failure chance is checked on entry. A failed chicken is finished and its wager returns zero.
 - A player may cash out after reaching tile 1 or later. Cash Out affects only that player's chicken.
-- The round completes when every participant is either cashed_out or failed.
+- The round completes when every wagered participant is cashed out or failed.
 - Surviving tile 12 automatically cashes out at the final 90x multiplier.
 - Payouts are gross returns (stake included), matching CasinoWallet.settle_round.
 - Integer wallet returns round down when a multiplier produces a fractional amount.
@@ -33,33 +33,31 @@ Status: Initial rules/model slice implemented; Godot execution pending.
 | 11 | 72% | 61x |
 | 12 | 85% | 90x |
 
-These values are approved by the user as the initial balancing curve. Keep them in chicken_cross_rules.gd, not duplicated in scene scripts.
+These values are approved as the initial balancing curve. Keep them in chicken_cross_rules.gd, not duplicated in scene scripts.
 
-## Folder layout
+## Host-authoritative table adapter
 
-- `fowl-play/casino/` contains shared casino infrastructure such as `base_table.gd` and `shared_wallet.gd`.
-- `fowl-play/casino/tables/chicken_cross/` contains Chicken Cross-specific rules, round state, future table adapter/configuration, and its local README.
-- `fowl-play/tests/` contains automated tests, including the Chicken Cross rules test.
+- chicken_cross_table.gd inherits BaseTable; it does not duplicate wallet/table lifecycle logic.
+- start_round validates one reserved wager per bettor, delegates locking to BaseTable, then initializes one model chicken per locked wager.
+- request_cross() and request_cash_out() are the intended shared-button entry points.
+- Client requests contain no peer ID, tile, roll, or payout. The host derives the sender with multiplayer.get_remote_sender_id().
+- The host validates running state and proximity before processing each action. It generates the random roll itself after validation.
+- player_state_changed publishes authoritative per-player state for presentation listeners; clients accept host state only.
+- round_finished reports the final payout map and wallet settlement result.
+- The adapter settles only when every wagered participant has finished, using one gross return per locked wager ID.
 
-## Code responsibilities
+## Departure and day-end policy
 
-- casino/tables/chicken_cross/chicken_cross_rules.gd: pure tuning lookup, failure evaluation and gross-return calculation.
-- casino/tables/chicken_cross/chicken_cross_round.gd: scene/network-independent per-player progress and outcome state.
-- tests/chicken_cross_rules_test.gd: deterministic tests using supplied rolls; production host code must generate a new random roll for every accepted player action.
+- A player leaving proximity after start is automatically resolved by the adapter.
+- A disconnected player is detected from the host's updated Network roster and automatically resolved.
+- If the player has reached Tile 1 or beyond, automatic resolution cashes out at their current tile multiplier.
+- If the player has not reached Tile 1, their return is zero.
+- Already failed or cashed-out players retain their existing result.
+- Day-end cleanup uses the same automatic-resolution policy for every still-active chicken.
+- The day coordinator must snapshot/check wallet quota before requesting timer-expiry cleanup.
 
-The model accepts a roll as an argument so tests can be deterministic. It does not generate randomness itself and does not trust client-supplied rolls.
+## Physical presentation and remaining integration
 
-## Integration constraints
-
-- The future table adapter must inherit/use the existing BaseTable lifecycle rather than duplicate it.
-- Cross and Cash Out RPCs must derive the acting peer from multiplayer.get_remote_sender_id(); never accept a client-provided peer ID as authority.
-- The host generates the random roll after validating the action and participant state.
-- The adapter calls BaseTable.settle_round only after every participant is finished, passing one gross return per locked wager ID.
 - The physical lane, chicken visuals, button nodes and spawn markers remain editor-authored by the user.
-
-## Still to implement
-
-- Networked Chicken Cross table adapter and per-player chicken presentation.
-- Physical Cross/Cash Out button integration through the existing interaction framework.
-- Departure/disconnect auto-resolution policy for a started Chicken Cross participant.
-- Host/client multiplayer tests and in-game visual verification.
+- Wire the shared Cross button to request_cross() and shared Cash Out button to request_cash_out() through the existing Interactable/Focus framework.
+- Client/server RPC behavior, replicated chicken transforms/animations, physical button wiring, and in-game visual verification remain follow-up work. This adapter currently replicates authoritative player-state data, not scene presentation.
