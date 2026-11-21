@@ -70,7 +70,7 @@ func _run() -> void:
 	_check_result(table.call("open_round", 2), true, "Table opens a round for the no-wager start check")
 	_check_result(table.call("start_round", 2), false, "Round without active wagers cannot start")
 	_check(int(table.get("state")) == 1, "Rejected start leaves the round open")
-	_check_result(table.call("cancel_open_round", 2), true, "Empty open round can be cancelled")
+	_check_result(table.call("cancel_open_round"), true, "Empty open round can be cancelled")
 
 	table.queue_free()
 	if _failed:
