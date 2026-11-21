@@ -284,9 +284,10 @@ func request_day_end_cleanup(reason: String) -> Dictionary:
 			return cancel_result
 		return _success({"round_id": cancelled_round_id, "action": "cancelled_and_refunded", "refunded_total": int(cancel_result.get("refunded_total", 0))})
 	if state == TableState.RUNNING or state == TableState.RESOLVING:
-		round_auto_resolution_requested.emit(table_id, current_round_id, reason)
-		_log("Day-end cleanup requested automatic resolution for %s (%s)." % [current_round_id, reason])
-		return _success({"round_id": current_round_id, "action": "auto_resolution_requested"})
+		var requested_round_id: String = current_round_id
+		round_auto_resolution_requested.emit(table_id, requested_round_id, reason)
+		_log("Day-end cleanup requested automatic resolution for %s (%s)." % [requested_round_id, reason])
+		return _success({"round_id": requested_round_id, "action": "auto_resolution_requested"})
 	return _failure("Table cannot be cleaned up from its current state.")
 
 func _reset_open_round_inactivity() -> void:
