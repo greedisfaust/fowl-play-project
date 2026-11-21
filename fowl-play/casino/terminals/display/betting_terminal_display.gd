@@ -16,6 +16,8 @@ var _network_snapshot_active: bool = false
 var _network_participants: Array[Dictionary] = []
 var _network_wagers: Array[Dictionary] = []
 var _network_available_balance: int = 0
+var _network_nearby_peer_ids: Array[int] = []
+var _player_row_colors: Dictionary = {}
 
 func _ready() -> void:
 	_wallet = get_node_or_null("/root/CasinoWallet")
@@ -59,11 +61,12 @@ func get_pending_wager_amount() -> int:
 	return _pending_wager_amount
 
 ## Applies host-published table/wallet data on non-authority peers.
-func set_network_snapshot(participants: Array[Dictionary], wagers: Array[Dictionary], available_balance: int) -> void:
+func set_network_snapshot(participants: Array[Dictionary], wagers: Array[Dictionary], available_balance: int, nearby_peer_ids: Array[int] = []) -> void:
 	_network_snapshot_active = true
 	_network_participants = participants.duplicate(true)
 	_network_wagers = wagers.duplicate(true)
 	_network_available_balance = maxi(available_balance, 0)
+	_network_nearby_peer_ids = nearby_peer_ids.duplicate()
 	refresh_display()
 
 func clear_network_snapshot() -> void:
@@ -71,6 +74,7 @@ func clear_network_snapshot() -> void:
 	_network_participants.clear()
 	_network_wagers.clear()
 	_network_available_balance = 0
+	_network_nearby_peer_ids.clear()
 	refresh_display()
 
 ## Call after profile/context changes made at runtime.
@@ -111,7 +115,7 @@ func refresh_display() -> void:
 	var available_balance: int = _get_available_balance()
 	var minimum_value: int = profile.get_effective_minimum()
 	var maximum_value: int = profile.get_effective_maximum()
-	var valid: bool = _pending_wager_amount >= minimum_value and _pending_wager_amount <= maximum_value and _pending_wager_amount <= available_balance
+	var valid: bool = _is_pending_wager_valid(minimum_value, maximum_value, available_balance)
 	var amount_color: Color = profile.valid_color if valid else profile.invalid_color
 	var amount_font_size: int = roundi(float(screen_text.terminal_font_size) * 1.45)
 	var columns_markup: String = _build_columns_table(left_rows, right_rows, row_count, left_width, right_width, amount_color, amount_font_size, valid)
@@ -153,7 +157,11 @@ func _build_columns_table(left_rows: Array[String], right_rows: Array[String], r
 		left_markup += "[/color][/center]"
 		output += "[cell=%d]%s[/cell]" % [left_ratio, left_markup]
 		output += "[cell=1][color=#%s]|[/color][/cell]" % divider_color_hex
-		output += "[cell=%d]%s[/cell]" % [right_ratio, _escape_display_markup(_fit_text(right_value, right_width))]
+		var right_markup: String = _escape_display_markup(_fit_text(right_value, right_width))
+		if _player_row_colors.has(right_index):
+			var player_color: Color = _player_row_colors[right_index]
+			right_markup = "[color=#%s]%s[/color]" % [player_color.to_html(false), right_markup]
+		output += "[cell=%d]%s[/cell]" % [right_ratio, right_markup]
 	output += "[/table]\n"
 	return output
 
@@ -175,6 +183,7 @@ func _build_pending_rows() -> Array[String]:
 
 func _build_player_rows() -> Array[String]:
 	var rows: Array[String] = []
+	_player_row_colors.clear()
 	var participants: Array[Dictionary] = []
 	var wagers: Array[Dictionary] = []
 	if _network_snapshot_active:
@@ -184,7 +193,8 @@ func _build_player_rows() -> Array[String]:
 		participants = table.get_participants()
 		wagers = table.get_round_wagers()
 	var capacity: int = table.max_participants if is_instance_valid(table) else 0
-	rows.append(profile.player_count_format % [participants.size(), capacity])
+	var nearby_peer_ids: Array[int] = _get_nearby_peer_ids()
+	rows.append(profile.player_count_format % [nearby_peer_ids.size(), capacity])
 
 	var totals_by_peer: Dictionary = {}
 	var total_reserved: int = 0
@@ -207,11 +217,34 @@ func _build_player_rows() -> Array[String]:
 		var visible_count: int = mini(peer_ids.size(), profile.list_rows)
 		for index: int in range(visible_count):
 			var peer_id: int = int(peer_ids[index])
+			_player_row_colors[rows.size()] = _get_player_color(peer_id)
 			rows.append("%s — %s" % [_get_player_label(peer_id), _format_money(int(totals_by_peer[peer_id]))])
 		if peer_ids.size() > visible_count:
 			rows.append("+ %d MORE" % (peer_ids.size() - visible_count))
 	rows.append("%s: %s" % [profile.total_reserved_label, _format_money(total_reserved)])
 	return rows
+
+func _is_pending_wager_valid(minimum_value: int, maximum_value: int, available_balance: int) -> bool:
+	return _pending_wager_amount > 0 and _pending_wager_amount >= minimum_value and _pending_wager_amount <= maximum_value and _pending_wager_amount <= available_balance
+
+func _get_nearby_peer_ids() -> Array[int]:
+	if _network_snapshot_active:
+		return _network_nearby_peer_ids.duplicate()
+	if is_instance_valid(table):
+		return table.get_nearby_peer_ids()
+	return []
+
+func _get_player_color(peer_id: int) -> Color:
+	if is_instance_valid(_network):
+		var identities_value: Variant = _network.get("player_identities")
+		if typeof(identities_value) == TYPE_DICTIONARY:
+			var identities: Dictionary = identities_value
+			var identity_value: Variant = identities.get(peer_id)
+			if identity_value is Object:
+				var identity: Object = identity_value
+				if identity.has_method("get_color"):
+					return identity.call("get_color") as Color
+	return profile.body_color
 
 func _get_available_balance() -> int:
 	if _network_snapshot_active:
@@ -237,16 +270,26 @@ func _get_player_label(peer_id: int) -> String:
 	return "PLAYER %d" % peer_id
 
 func _format_compact_money(amount: int) -> String:
-	var absolute_amount: float = absf(float(amount))
-	var compact_value: String = str(amount)
-	if absolute_amount >= 1000000000.0:
-		compact_value = _trim_decimal(absolute_amount / 1000000000.0) + "B"
-	elif absolute_amount >= 1000000.0:
-		compact_value = _trim_decimal(absolute_amount / 1000000.0) + "M"
-	elif absolute_amount >= 1000.0:
-		compact_value = _trim_decimal(absolute_amount / 1000.0) + "K"
-	if amount < 0:
-		compact_value = "-" + compact_value.trim_prefix("-")
+	var negative: bool = amount < 0
+	var digits: String = str(-amount if negative else amount)
+	var compact_value: String = digits
+	var suffixes: Array[String] = ["", "K", "M", "B", "T", "Qa", "Qi"]
+	var group_index: int = maxi((digits.length() - 1) / 3, 0)
+	if group_index > 0:
+		group_index = mini(group_index, suffixes.size() - 1)
+		var leading_length: int = digits.length() - group_index * 3
+		var whole: String = digits.left(leading_length)
+		var decimal_digits: String = digits.substr(leading_length, 2)
+		while decimal_digits.length() < 2:
+			decimal_digits += "0"
+		while decimal_digits.ends_with("0") and not decimal_digits.is_empty():
+			decimal_digits = decimal_digits.left(decimal_digits.length() - 1)
+		compact_value = whole
+		if not decimal_digits.is_empty():
+			compact_value += "." + decimal_digits
+		compact_value += suffixes[group_index]
+	if negative:
+		compact_value = "-" + compact_value
 	return compact_value + profile.currency_symbol
 
 
