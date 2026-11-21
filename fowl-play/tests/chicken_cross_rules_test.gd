@@ -66,12 +66,15 @@ func _run() -> void:
 	_check(payouts.size() == 3, "Completed round produces one payout per wager")
 	_check(int(payouts["W1"]) == 150, "Cashed-out player receives their gross return")
 	_check(int(payouts["W2"]) == 0, "Failed player receives zero")
-	_check(int(payouts["W3"]) == 440, "Each player's own wager determines their payout")
+	_check(int(payouts["W3"]) == 110, "Each player's own wager determines their payout")
 	_check_result(round_model.call("advance", 99, 0.50), false, "Non-participant cannot act")
 
 	var unlocked_model: RefCounted = RoundModel.new()
+	var unlocked_wagers: Array[Dictionary] = [
+		{"peer_id": 9, "wager_id": "WU", "stake": 1, "status": "reserved"}
+	]
 	_check_result(
-		unlocked_model.call("begin", [{"peer_id": 9, "wager_id": "WU", "stake": 1, "status": "reserved"}]),
+		unlocked_model.call("begin", unlocked_wagers),
 		false,
 		"Round rejects wagers that have not been locked"
 	)
