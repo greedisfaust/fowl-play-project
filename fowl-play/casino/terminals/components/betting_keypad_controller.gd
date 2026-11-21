@@ -104,7 +104,7 @@ func get_pending_digits() -> String:
 
 func _normalize_button_id(raw_id: String) -> String:
 	var normalized: String = raw_id.strip_edges().to_upper().replace(" ", "_").replace("-", "_")
-	for prefix: String in ["KEYPAD_", "DIGIT_", "NUM_", "KEY_"]:
+	for prefix: String in ["KEYPAD_", "NUMPAD_", "NUMBER_", "DIGIT_", "NUM_", "KEY_"]:
 		if normalized.begins_with(prefix):
 			normalized = normalized.trim_prefix(prefix)
 			break
