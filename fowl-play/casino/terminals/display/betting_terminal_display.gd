@@ -12,6 +12,10 @@ signal display_refreshed
 var _pending_wager_amount: int = 0
 var _wallet: Node = null
 var _network: Node = null
+var _network_snapshot_active: bool = false
+var _network_participants: Array[Dictionary] = []
+var _network_wagers: Array[Dictionary] = []
+var _network_available_balance: int = 0
 
 func _ready() -> void:
 	_wallet = get_node_or_null("/root/CasinoWallet")
@@ -53,6 +57,21 @@ func set_pending_wager_amount(amount: int) -> void:
 
 func get_pending_wager_amount() -> int:
 	return _pending_wager_amount
+
+## Applies host-published table/wallet data on non-authority peers.
+func set_network_snapshot(participants: Array[Dictionary], wagers: Array[Dictionary], available_balance: int) -> void:
+	_network_snapshot_active = true
+	_network_participants = participants.duplicate(true)
+	_network_wagers = wagers.duplicate(true)
+	_network_available_balance = maxi(available_balance, 0)
+	refresh_display()
+
+func clear_network_snapshot() -> void:
+	_network_snapshot_active = false
+	_network_participants.clear()
+	_network_wagers.clear()
+	_network_available_balance = 0
+	refresh_display()
 
 ## Call after profile/context changes made at runtime.
 func set_profile(next_profile: BettingTerminalProfile) -> void:
@@ -158,7 +177,10 @@ func _build_player_rows() -> Array[String]:
 	var rows: Array[String] = []
 	var participants: Array[Dictionary] = []
 	var wagers: Array[Dictionary] = []
-	if is_instance_valid(table):
+	if _network_snapshot_active:
+		participants = _network_participants.duplicate(true)
+		wagers = _network_wagers.duplicate(true)
+	elif is_instance_valid(table):
 		participants = table.get_participants()
 		wagers = table.get_round_wagers()
 	var capacity: int = table.max_participants if is_instance_valid(table) else 0
@@ -192,6 +214,8 @@ func _build_player_rows() -> Array[String]:
 	return rows
 
 func _get_available_balance() -> int:
+	if _network_snapshot_active:
+		return _network_available_balance
 	if not is_instance_valid(_wallet) or not _wallet.has_method("get_snapshot"):
 		return 0
 	var snapshot: Dictionary = _wallet.call("get_snapshot")
