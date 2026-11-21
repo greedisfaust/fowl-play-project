@@ -28,6 +28,7 @@ The reusable betting display is a presentation-only layer for the casino termina
 - Names are resolved from `Network.player_identities` when available, with a peer-number fallback.
 - The two columns are rendered as paired rows with fixed character budgets from the profile. Long labels, player names, and messages are shortened within their own column instead of pushing the other column off-screen.
 - The renderer does not use blank rows to position one column independently of the other. The longer column determines the number of displayed rows.
+- Automatic scrolling is disabled for this fixed readout so newly appended rows cannot scroll the title and headings out of view.
 - `ScreenText` fits the rendered font against both the configured line width and the actual text-surface height. The Inspector font size remains the design size, so refreshes do not progressively shrink the text.
 
 ## Important integration boundary
