@@ -77,10 +77,15 @@ func refresh_display() -> void:
 	screen_text.header_color = profile.accent_color
 	screen_text.body_color = profile.body_color
 	screen_text.prompt_color = profile.accent_color
-	screen_text.append_centered_header(profile.game_title)
-	if not profile.game_description.is_empty():
-		screen_text.append_paragraph(profile.game_description)
+	# Keep the game identity in a dedicated, full-width header area.
+	# The title stays large/bold and left-aligned; the description is capped at
+	# two wrapped lines so it can never consume the betting columns' space.
+	screen_text.append_header(_fit_text(profile.game_title, total_width))
+	for description_line: String in _build_description_lines(profile.game_description, total_width, 2):
+		screen_text.append_paragraph(description_line)
+	screen_text.append_paragraph("-".repeat(mini(total_width, 64)))
 
+	# The two betting columns begin only after the complete header block.
 	screen_text.append_header(_two_columns(profile.pending_heading, profile.player_list_heading))
 	screen_text.append_paragraph(_two_columns("-".repeat(mini(left_width, 24)), "-".repeat(mini(right_width, 32))))
 
@@ -196,6 +201,37 @@ func _two_columns(left_text: String, right_text: String) -> String:
 	var left_value: String = _fit_text(left_text, left_width)
 	var right_value: String = _fit_text(right_text, right_width)
 	return left_value + " ".repeat(left_width - left_value.length()) + " | " + right_value
+
+func _build_description_lines(value: String, width: int, maximum_lines: int) -> Array[String]:
+	var lines: Array[String] = []
+	if value.strip_edges().is_empty() or width <= 0 or maximum_lines <= 0:
+		return lines
+
+	var words: PackedStringArray = value.strip_edges().split(" ", false)
+	var current_line: String = ""
+	var word_index: int = 0
+	while word_index < words.size():
+		var word: String = words[word_index]
+		if current_line.is_empty():
+			current_line = word
+		elif current_line.length() + word.length() + 1 <= width:
+			current_line += " " + word
+		else:
+			lines.append(current_line)
+			current_line = word
+			if lines.size() >= maximum_lines:
+				break
+		word_index += 1
+
+	if lines.size() < maximum_lines and not current_line.is_empty():
+		lines.append(current_line)
+
+	var all_words_consumed: bool = word_index >= words.size()
+	if not all_words_consumed and not lines.is_empty():
+		var last_line: String = lines[lines.size() - 1]
+		lines[lines.size() - 1] = _fit_text(last_line, maxi(width - 1, 1)) + "…"
+	return lines
+
 
 func _fit_text(value: String, width: int) -> String:
 	if width <= 0 or value.is_empty():
