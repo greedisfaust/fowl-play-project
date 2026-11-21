@@ -288,7 +288,6 @@ func _request_snapshot() -> void:
 	if not multiplayer.is_server() or not is_instance_valid(_network) or not bool(_network.call("validate_rpc")):
 		return
 	var sender_id: int = multiplayer.get_remote_sender_id()
-	var participants: Array[Dictionary] = table.get_participants() if is_instance_valid(table) else []
 	var wagers: Array[Dictionary] = table.get_round_wagers() if is_instance_valid(table) else []
 	var available_balance: int = 0
 	if is_instance_valid(_wallet):
