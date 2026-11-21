@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://cvivaojdxc1yn"]
+
+[ext_resource type="Script" uid="uid://c87t4r001otjo" path="res://casino/tables/chicken_cross/chicken_cross_table.gd" id="1_qj6gr"]
+
+[node name="ChickenCrossTable" type="Node3D" unique_id=1850824241]
+script = ExtResource("1_qj6gr")
