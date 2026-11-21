@@ -45,8 +45,33 @@ roughness = 0.85
 material = SubResource("StandardMaterial3D_u8m3w")
 size = Vector3(3.12, 0.035, 1.92)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_h37pg"]
+albedo_color = Color(0.25882354, 0.2784314, 0.2901961, 1)
+roughness = 0.95
+
 [sub_resource type="BoxMesh" id="BoxMesh_57qmd"]
+material = SubResource("StandardMaterial3D_h37pg")
 size = Vector3(0.205, 0.01, 0.7)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3gngh"]
+albedo_color = Color(0.9490196, 0.9411765, 0.9098039, 1)
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_d0u6y"]
+material = SubResource("StandardMaterial3D_3gngh")
+size = Vector3(0.025, 0.006, 0.555)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kfe3w"]
+albedo_color = Color(0.9490196, 0.9411765, 0.9098039, 1)
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_3gngh"]
+material = SubResource("StandardMaterial3D_kfe3w")
+size = Vector3(0.007, 0.002, 0.85)
+
+[sub_resource type="BoxMesh" id="BoxMesh_j2b8q"]
+material = SubResource("StandardMaterial3D_kfe3w")
+size = Vector3(0.007, 0.002, 0.85)
 
 [node name="ChickenCrossTable" type="Node3D" unique_id=1850824241]
 script = ExtResource("1_qj6gr")
@@ -83,46 +108,190 @@ mesh = SubResource("BoxMesh_yf5fn")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.38, 1.08, 0)
 mesh = SubResource("BoxMesh_57qmd")
 
+[node name="RoadMarking" type="MeshInstance3D" parent="Visuals/TileLane/Tile_01" unique_id=1060367320]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.009, 0)
+mesh = SubResource("BoxMesh_d0u6y")
+
+[node name="RoadEdge_Left" type="MeshInstance3D" parent="Visuals/TileLane/Tile_01" unique_id=331496720]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08500004, 0.0070061684, 0)
+mesh = SubResource("BoxMesh_3gngh")
+
+[node name="RoadEdge_Right" type="MeshInstance3D" parent="Visuals/TileLane/Tile_01" unique_id=438786677]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.007, 0)
+mesh = SubResource("BoxMesh_j2b8q")
+
 [node name="Tile_02" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=1505357518]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.13, 1.08, 0)
 mesh = SubResource("BoxMesh_57qmd")
+
+[node name="RoadMarking" type="MeshInstance3D" parent="Visuals/TileLane/Tile_02" unique_id=1222283747]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.009, 0)
+mesh = SubResource("BoxMesh_d0u6y")
+
+[node name="RoadEdge_Left" type="MeshInstance3D" parent="Visuals/TileLane/Tile_02" unique_id=165707844]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08500004, 0.0070061684, 0)
+mesh = SubResource("BoxMesh_3gngh")
+
+[node name="RoadEdge_Right" type="MeshInstance3D" parent="Visuals/TileLane/Tile_02" unique_id=317266269]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.007, 0)
+mesh = SubResource("BoxMesh_j2b8q")
 
 [node name="Tile_03" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=1113328987]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.88, 1.08, 0)
 mesh = SubResource("BoxMesh_57qmd")
 
+[node name="RoadMarking" type="MeshInstance3D" parent="Visuals/TileLane/Tile_03" unique_id=1812862584]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.009, 0)
+mesh = SubResource("BoxMesh_d0u6y")
+
+[node name="RoadEdge_Left" type="MeshInstance3D" parent="Visuals/TileLane/Tile_03" unique_id=1950494073]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08500004, 0.0070061684, 0)
+mesh = SubResource("BoxMesh_3gngh")
+
+[node name="RoadEdge_Right" type="MeshInstance3D" parent="Visuals/TileLane/Tile_03" unique_id=961963540]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.007, 0)
+mesh = SubResource("BoxMesh_j2b8q")
+
 [node name="Tile_04" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=474754693]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.63, 1.08, 0)
 mesh = SubResource("BoxMesh_57qmd")
+
+[node name="RoadMarking" type="MeshInstance3D" parent="Visuals/TileLane/Tile_04" unique_id=1727662523]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.009, 0)
+mesh = SubResource("BoxMesh_d0u6y")
+
+[node name="RoadEdge_Left" type="MeshInstance3D" parent="Visuals/TileLane/Tile_04" unique_id=1955599774]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08500004, 0.0070061684, 0)
+mesh = SubResource("BoxMesh_3gngh")
+
+[node name="RoadEdge_Right" type="MeshInstance3D" parent="Visuals/TileLane/Tile_04" unique_id=1804633739]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.007, 0)
+mesh = SubResource("BoxMesh_j2b8q")
 
 [node name="Tile_05" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=467229850]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.38, 1.08, 0)
 mesh = SubResource("BoxMesh_57qmd")
 
+[node name="RoadMarking" type="MeshInstance3D" parent="Visuals/TileLane/Tile_05" unique_id=2047089439]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.009, 0)
+mesh = SubResource("BoxMesh_d0u6y")
+
+[node name="RoadEdge_Left" type="MeshInstance3D" parent="Visuals/TileLane/Tile_05" unique_id=883613920]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08500004, 0.0070061684, 0)
+mesh = SubResource("BoxMesh_3gngh")
+
+[node name="RoadEdge_Right" type="MeshInstance3D" parent="Visuals/TileLane/Tile_05" unique_id=1112226340]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.007, 0)
+mesh = SubResource("BoxMesh_j2b8q")
+
 [node name="Tile_06" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=214893932]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.13, 1.08, 0)
 mesh = SubResource("BoxMesh_57qmd")
+
+[node name="RoadMarking" type="MeshInstance3D" parent="Visuals/TileLane/Tile_06" unique_id=2064978044]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.009, 0)
+mesh = SubResource("BoxMesh_d0u6y")
+
+[node name="RoadEdge_Left" type="MeshInstance3D" parent="Visuals/TileLane/Tile_06" unique_id=1377361903]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08500004, 0.0070061684, 0)
+mesh = SubResource("BoxMesh_3gngh")
+
+[node name="RoadEdge_Right" type="MeshInstance3D" parent="Visuals/TileLane/Tile_06" unique_id=515642548]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.007, 0)
+mesh = SubResource("BoxMesh_j2b8q")
 
 [node name="Tile_07" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=939049867]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.12, 1.08, 0)
 mesh = SubResource("BoxMesh_57qmd")
 
+[node name="RoadMarking" type="MeshInstance3D" parent="Visuals/TileLane/Tile_07" unique_id=2132806453]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.009, 0)
+mesh = SubResource("BoxMesh_d0u6y")
+
+[node name="RoadEdge_Left" type="MeshInstance3D" parent="Visuals/TileLane/Tile_07" unique_id=927259691]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08500004, 0.0070061684, 0)
+mesh = SubResource("BoxMesh_3gngh")
+
+[node name="RoadEdge_Right" type="MeshInstance3D" parent="Visuals/TileLane/Tile_07" unique_id=126600724]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.007, 0)
+mesh = SubResource("BoxMesh_j2b8q")
+
 [node name="Tile_08" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=411359710]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.37, 1.08, 0)
 mesh = SubResource("BoxMesh_57qmd")
+
+[node name="RoadMarking" type="MeshInstance3D" parent="Visuals/TileLane/Tile_08" unique_id=1593973440]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.009, 0)
+mesh = SubResource("BoxMesh_d0u6y")
+
+[node name="RoadEdge_Left" type="MeshInstance3D" parent="Visuals/TileLane/Tile_08" unique_id=843176617]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08500004, 0.0070061684, 0)
+mesh = SubResource("BoxMesh_3gngh")
+
+[node name="RoadEdge_Right" type="MeshInstance3D" parent="Visuals/TileLane/Tile_08" unique_id=659561157]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.007, 0)
+mesh = SubResource("BoxMesh_j2b8q")
 
 [node name="Tile_09" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=1359833630]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.62, 1.08, 0)
 mesh = SubResource("BoxMesh_57qmd")
 
+[node name="RoadMarking" type="MeshInstance3D" parent="Visuals/TileLane/Tile_09" unique_id=2047048630]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.009, 0)
+mesh = SubResource("BoxMesh_d0u6y")
+
+[node name="RoadEdge_Left" type="MeshInstance3D" parent="Visuals/TileLane/Tile_09" unique_id=884231812]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08500004, 0.0070061684, 0)
+mesh = SubResource("BoxMesh_3gngh")
+
+[node name="RoadEdge_Right" type="MeshInstance3D" parent="Visuals/TileLane/Tile_09" unique_id=1721046669]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.007, 0)
+mesh = SubResource("BoxMesh_j2b8q")
+
 [node name="Tile_10" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=106725934]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.87, 1.08, 0)
 mesh = SubResource("BoxMesh_57qmd")
+
+[node name="RoadMarking" type="MeshInstance3D" parent="Visuals/TileLane/Tile_10" unique_id=1485441864]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.009, 0)
+mesh = SubResource("BoxMesh_d0u6y")
+
+[node name="RoadEdge_Left" type="MeshInstance3D" parent="Visuals/TileLane/Tile_10" unique_id=1157527004]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08500004, 0.0070061684, 0)
+mesh = SubResource("BoxMesh_3gngh")
+
+[node name="RoadEdge_Right" type="MeshInstance3D" parent="Visuals/TileLane/Tile_10" unique_id=1384720375]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.007, 0)
+mesh = SubResource("BoxMesh_j2b8q")
 
 [node name="Tile_11" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=777564088]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.12, 1.08, 0)
 mesh = SubResource("BoxMesh_57qmd")
 
+[node name="RoadMarking" type="MeshInstance3D" parent="Visuals/TileLane/Tile_11" unique_id=2034402526]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.009, 0)
+mesh = SubResource("BoxMesh_d0u6y")
+
+[node name="RoadEdge_Left" type="MeshInstance3D" parent="Visuals/TileLane/Tile_11" unique_id=1491375660]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08500004, 0.0070061684, 0)
+mesh = SubResource("BoxMesh_3gngh")
+
+[node name="RoadEdge_Right" type="MeshInstance3D" parent="Visuals/TileLane/Tile_11" unique_id=219998433]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.007, 0)
+mesh = SubResource("BoxMesh_j2b8q")
+
 [node name="Tile_12" type="MeshInstance3D" parent="Visuals/TileLane" unique_id=2088261246]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.37, 1.08, 0)
 mesh = SubResource("BoxMesh_57qmd")
+
+[node name="RoadMarking" type="MeshInstance3D" parent="Visuals/TileLane/Tile_12" unique_id=1918387885]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.009, 0)
+mesh = SubResource("BoxMesh_d0u6y")
+
+[node name="RoadEdge_Left" type="MeshInstance3D" parent="Visuals/TileLane/Tile_12" unique_id=1323598029]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08500004, 0.0070061684, 0)
+mesh = SubResource("BoxMesh_3gngh")
+
+[node name="RoadEdge_Right" type="MeshInstance3D" parent="Visuals/TileLane/Tile_12" unique_id=1489740985]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.007, 0)
+mesh = SubResource("BoxMesh_j2b8q")
