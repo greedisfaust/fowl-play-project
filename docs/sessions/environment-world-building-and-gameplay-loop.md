@@ -3,13 +3,13 @@
 Branch: `environment/world-building-and-gameplay-loop`
 Goal: Establish the casino/world gameplay foundation and a reusable table framework, beginning with Chicken Cross as the reference game.
 Status: IN PROGRESS
-Last updated: 2026-11-22 by GPT-6 (session 3)
+Last updated: 2026-11-22 by GPT-6 (session 4)
 Base: merged main commit `75675cc31456c3b0d7b5bb365ec82fd81ced9a72`
 Base docs: `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `docs/PROJECT_STATE.md`
 
 ## Current state (rewrite every session)
 
-- Branch `environment/world-building-and-gameplay-loop` is active; W1 architecture work is being added on top of `cd5c501b7b9f401832a25497b5e75307c3dac399`.
+- Branch `environment/world-building-and-gameplay-loop` is active; W1 architecture and persistent player spawning are being added on top of the user scene commit `ddc186113aab03c95be087c7c30bcee79a201e94`.
 - Shared wallet and generic script-only `BaseTable` controller are implemented. Both casino headless test suites have been USER VERIFIED passing in Godot 4.7.2.
 - The project is Godot 4.7, typed GDScript, Jolt, ENet, max four players; `fowl-play/` is the Godot project.
 - Existing reusable foundations include `Interactable` / `Focus`, `Network`, `PlayerIdentity`, `DebugHub`, and the current player/nameplate presentation.
@@ -35,7 +35,7 @@ Base docs: `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `
 
 ## Exact next step
 
-Continue W1 world architecture: user creates the editor-authored Main hierarchy and world scene roots using `docs/WORLD_SCENE_ARCHITECTURE.md`. Then implement the persistent player-spawn controller so player instances survive world swaps. Do not change the project startup scene until that migration and an initial Apartment scene are ready.
+User pulls the persistent player-spawning commit and runs `tests/run_checks.ps1 -OnlyStage main-controller`, then reports the result. Do not change the project startup scene until an initial Apartment scene exists and has at least four authored `SpawnPoints/Marker3D` children.
 
 ## Waiting on the user
 
@@ -134,6 +134,15 @@ Continue W1 world architecture: user creates the editor-authored Main hierarchy 
 > Read `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `docs/PROJECT_STATE.md`, and this session file. Verify the branch and files against GitHub and the local checkout. Recap in at most eight lines and wait for the user's go before implementing.
 
 ## Session log
+
+### Session 4 — 2026-11-22 — persistent Main player spawning
+- Confirmed the user's Main hierarchy on GitHub: `WorldRoot`, `Players`, `MultiplayerSpawner`, and `DebugConsole` are present. The spawner is named `MultiplayerSpawner`; MainController configures its `spawn_path` to `../Players` at runtime.
+- Migrated player creation, stable spawn-slot assignment, peer disconnect cleanup, session cleanup, and player-count diagnostics into `MainController`. Existing Network autoload registration remains unchanged.
+- Added a player world-placement helper that resets standing movement interpolation. Ragdolled, recovering, carried, or carrying players are intentionally skipped until the elevator reset flow exists.
+- Added `tests/main_controller_test.gd` and the `main-controller` stage. The test builds temporary in-memory worlds and checks offline spawn, Network registration, player persistence, and destination spawn placement.
+- `TestArena`, `project.godot`, and all `.tscn` files were left unchanged. Godot is unavailable in the assistant environment; the new test has not been executed here.
+- Next: user pulls and runs `tests/run_checks.ps1 -OnlyStage main-controller`; then report results. Do not switch the project startup scene until an Apartment scene with four spawn markers exists.
+
 
 ### Session 1 update — 2026-11-21 — GPT-6
 - User approved commits directly to the feature branch; no push is authorized or performed.
