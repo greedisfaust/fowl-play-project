@@ -1,3 +1,4 @@
+@tool
 ## Casino keypad button presentation.
 ## Attach to the TerminalButton root and assign ButtonKey + Interactable.
 extends Node3D
@@ -9,7 +10,11 @@ signal button_pressed(button_id: StringName)
 @export var button_id: StringName = &"1"
 
 ## Text shown on the physical key. Each instance gets its own TextMesh copy.
-@export var display_text: String = ""
+@export var display_text: String = "":
+	set(value):
+		display_text = value
+		if is_inside_tree():
+			_apply_display_text()
 @export var button_key: Node3D
 @export var interactable: Interactable
 @export_range(0.001, 0.03, 0.001, "suffix:m") var press_depth: float = 0.008
@@ -24,6 +29,8 @@ var _click_player: AudioStreamPlayer3D = null
 func _ready() -> void:
 	# Visual presentation must not depend on interaction setup.
 	_apply_display_text()
+	if Engine.is_editor_hint():
+		return
 	if not is_instance_valid(button_key):
 		push_warning("TerminalButton requires its ButtonKey reference.")
 		set_process(false)
