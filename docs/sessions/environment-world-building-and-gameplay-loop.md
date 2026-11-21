@@ -111,6 +111,10 @@ User pulls the persistent player-spawning commit and runs `tests/run_checks.ps1 
 - `docs/CASINO_CHICKEN_CROSS.md` — rules, tuning, and integration contract.
 - `fowl-play/project.godot` — `CasinoWallet` autoload registration.
 - `fowl-play/core/debug_hub.gd` — wallet diagnostics category.
+- `fowl-play/world/main_controller.gd` — persistent Main world transitions, player spawn/despawn, and stable world spawn-slot handling.
+- `fowl-play/player/player.gd` — safe standing-player placement helper for world transitions.
+- `fowl-play/tests/main_controller_test.gd` — offline Main integration regression test.
+- `docs/WORLD_SCENE_ARCHITECTURE.md` — persistent Main/player-spawn contract and editor-authored world requirements.
 
 ## How to verify
 
