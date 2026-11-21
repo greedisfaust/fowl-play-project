@@ -74,7 +74,7 @@ func refresh_display() -> void:
 	screen_text.header_color = profile.accent_color
 	screen_text.body_color = profile.body_color
 	screen_text.prompt_color = profile.accent_color
-	screen_text.append_header(_center_text(profile.game_title, total_width))
+	screen_text.append_centered_header(profile.game_title)
 	if not profile.game_description.is_empty():
 		screen_text.append_paragraph(profile.game_description)
 
@@ -203,10 +203,6 @@ func _fit_text(value: String, width: int) -> String:
 		return value.left(width)
 	return value.left(width - 1) + "…"
 
-func _center_text(value: String, width: int) -> String:
-	var fitted_value: String = _fit_text(value, width)
-	var left_padding: int = maxi((width - fitted_value.length()) / 2, 0)
-	return " ".repeat(left_padding) + fitted_value
 
 func _connect_table_signals() -> void:
 	var callbacks: Array[Dictionary] = [
