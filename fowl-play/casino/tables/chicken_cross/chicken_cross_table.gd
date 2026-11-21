@@ -8,10 +8,27 @@ signal round_finished(payouts: Dictionary, settlement: Dictionary)
 var _round_model: RefCounted = null
 var _network: Node = null
 
+@export var proximity_area: Area3D
+@export var cross_interactable: Interactable
+@export var cash_out_interactable: Interactable
+
 func _ready() -> void:
 	super._ready()
 	participant_left_after_start.connect(_on_participant_left_after_start)
 	round_auto_resolution_requested.connect(_on_round_auto_resolution_requested)
+	if is_instance_valid(proximity_area):
+		proximity_area.body_entered.connect(_on_proximity_body_entered)
+		proximity_area.body_exited.connect(_on_proximity_body_exited)
+	else:
+		push_warning("ChickenCrossTable has no Proximity Area assigned; table range will not update automatically.")
+	if is_instance_valid(cross_interactable):
+		cross_interactable.interacted.connect(_on_cross_button_interacted)
+	else:
+		push_warning("ChickenCrossTable has no Cross Interactable assigned.")
+	if is_instance_valid(cash_out_interactable):
+		cash_out_interactable.interacted.connect(_on_cash_out_button_interacted)
+	else:
+		push_warning("ChickenCrossTable has no Cash Out Interactable assigned.")
 	_network = get_node_or_null("/root/Network")
 	if is_instance_valid(_network) and _network.has_signal("roster_changed"):
 		var roster_callback: Callable = Callable(self, "_on_network_roster_changed")
@@ -65,6 +82,41 @@ func request_cross() -> Dictionary:
 
 func request_cash_out() -> Dictionary:
 	return _submit_player_action(false)
+
+func _on_proximity_body_entered(body: Node3D) -> void:
+	if not _is_authority():
+		return
+	var peer_id: int = _peer_id_for_actor(body)
+	if peer_id > 0:
+		enter_proximity(peer_id)
+
+func _on_proximity_body_exited(body: Node3D) -> void:
+	if not _is_authority():
+		return
+	var peer_id: int = _peer_id_for_actor(body)
+	if peer_id > 0 and _is_near_table(peer_id):
+		exit_proximity(peer_id)
+
+func _on_cross_button_interacted(actor: Node, action: StringName) -> void:
+	if action == &"use":
+		_handle_interacted_button(actor, true)
+
+func _on_cash_out_button_interacted(actor: Node, action: StringName) -> void:
+	if action == &"use":
+		_handle_interacted_button(actor, false)
+
+func _handle_interacted_button(actor: Node, advance_chicken: bool) -> void:
+	if not _is_authority() or not is_instance_valid(actor):
+		return
+	var peer_id: int = _peer_id_for_actor(actor)
+	if peer_id <= 0:
+		return
+	_handle_player_action(peer_id, advance_chicken)
+
+func _peer_id_for_actor(actor: Node) -> int:
+	if not is_instance_valid(actor):
+		return 0
+	return int(actor.get("input_peer_id"))
 
 func _submit_player_action(advance_chicken: bool) -> Dictionary:
 	if multiplayer.is_server():
