@@ -63,14 +63,40 @@ var _layout_initialized: bool = false
 ## Cache authored local positions by node identity, not absolute scene path.
 ## Absolute paths change when this scene is instanced under a different parent
 ## or the instance is reparented; node references remain stable for this instance.
+## Capture canonical positions from the original housing scene, not from this
+## instance. Parent scenes serialize @tool-edited child transforms as overrides;
+## using those values as a fresh baseline applies the resize offset twice.
 func _capture_authored_positions(node: Node) -> void:
-	if node == self:
-		_authored_positions.clear()
+	_authored_positions.clear()
+	var scene_path: String = "res://environment/kit/fat_world_screen.tscn"
+	var packed_scene: PackedScene = load(scene_path) as PackedScene
+	if packed_scene == null:
+		push_warning("Could not load canonical screen scene for resize baselines: %s" % scene_path)
+		_capture_current_positions(node)
+		return
+	var baseline_root: Node = packed_scene.instantiate()
+	_capture_positions_from_baseline(node, baseline_root)
+	baseline_root.free()
+
+func _capture_positions_from_baseline(current_node: Node, baseline_node: Node) -> void:
+	if current_node is Node3D and baseline_node is Node3D:
+		var current_spatial: Node3D = current_node as Node3D
+		var baseline_spatial: Node3D = baseline_node as Node3D
+		_authored_positions[current_spatial] = baseline_spatial.position
+	for child: Node in current_node.get_children():
+		var relative_path: NodePath = current_node.get_path_to(child)
+		var baseline_child: Node = baseline_node.get_node_or_null(relative_path)
+		if baseline_child != null:
+			_capture_positions_from_baseline(child, baseline_child)
+		else:
+			_capture_current_positions(child)
+
+func _capture_current_positions(node: Node) -> void:
 	if node is Node3D:
 		var spatial: Node3D = node as Node3D
 		_authored_positions[spatial] = spatial.position
 	for child: Node in node.get_children():
-		_capture_authored_positions(child)
+		_capture_current_positions(child)
 
 func _authored_position(node: Node3D) -> Vector3:
 	if _authored_positions.has(node):
