@@ -9,7 +9,7 @@ signal button_pressed(button_id: StringName)
 signal button_activated(button_id: StringName, peer_id: int)
 
 ## Unique action identifier consumed by the parent keypad/terminal.
-@export var button_id: StringName = &"1"
+@export var button_id: StringName = &""
 
 ## Text shown on the physical key. Each instance gets its own TextMesh copy.
 @export var display_text: String = "":
@@ -78,8 +78,11 @@ func _on_interacted(_actor: Node, action: StringName) -> void:
 	var actor_peer_id: int = int(_actor.get("input_peer_id")) if _actor_has_peer_id(_actor) else 0
 	if actor_peer_id <= 0:
 		actor_peer_id = multiplayer.get_unique_id()
-	button_pressed.emit(button_id)
-	button_activated.emit(button_id, actor_peer_id)
+	var effective_button_id: StringName = button_id
+	if effective_button_id.is_empty():
+		effective_button_id = StringName(display_text.strip_edges().to_upper())
+	button_pressed.emit(effective_button_id)
+	button_activated.emit(effective_button_id, actor_peer_id)
 	_play_press_local()
 	if network_peer != null:
 		_receive_press_presentation.rpc()
