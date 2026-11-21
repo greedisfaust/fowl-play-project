@@ -5,6 +5,8 @@ extends Node3D
 
 ## Emitted by the authority when this physical key is pressed.
 signal button_pressed(button_id: StringName)
+## Host-side action signal with the authoritative actor peer ID.
+signal button_activated(button_id: StringName, peer_id: int)
 
 ## Unique action identifier consumed by the parent keypad/terminal.
 @export var button_id: StringName = &"1"
@@ -73,7 +75,11 @@ func _on_interacted(_actor: Node, action: StringName) -> void:
 	# still owns the local interaction.
 	if network_peer != null and not bool(network.get("is_host")):
 		return
+	var actor_peer_id: int = int(_actor.get("input_peer_id")) if _actor_has_peer_id(_actor) else 0
+	if actor_peer_id <= 0:
+		actor_peer_id = multiplayer.get_unique_id()
 	button_pressed.emit(button_id)
+	button_activated.emit(button_id, actor_peer_id)
 	_play_press_local()
 	if network_peer != null:
 		_receive_press_presentation.rpc()
@@ -84,6 +90,14 @@ func _receive_press_presentation() -> void:
 	if not is_instance_valid(network) or not bool(network.call("validate_rpc", 1)):
 		return
 	_play_press_local()
+
+func _actor_has_peer_id(actor: Node) -> bool:
+	if not is_instance_valid(actor):
+		return false
+	for property: Dictionary in actor.get_property_list():
+		if str(property.get("name", "")) == "input_peer_id":
+			return true
+	return false
 
 func _play_press_local() -> void:
 	if not is_instance_valid(button_key):
