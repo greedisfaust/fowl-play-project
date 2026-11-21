@@ -13,7 +13,6 @@ var _pending_wager_amount: int = 0
 var _wallet: Node = null
 var _network: Node = null
 var _network_snapshot_active: bool = false
-var _network_participants: Array[Dictionary] = []
 var _network_wagers: Array[Dictionary] = []
 var _network_available_balance: int = 0
 var _network_nearby_peer_ids: Array[int] = []
@@ -61,9 +60,8 @@ func get_pending_wager_amount() -> int:
 	return _pending_wager_amount
 
 ## Applies host-published table/wallet data on non-authority peers.
-func set_network_snapshot(participants: Array[Dictionary], wagers: Array[Dictionary], available_balance: int, nearby_peer_ids: Array[int] = []) -> void:
+func set_network_snapshot(wagers: Array[Dictionary], available_balance: int, nearby_peer_ids: Array[int] = []) -> void:
 	_network_snapshot_active = true
-	_network_participants = participants.duplicate(true)
 	_network_wagers = wagers.duplicate(true)
 	_network_available_balance = maxi(available_balance, 0)
 	_network_nearby_peer_ids = nearby_peer_ids.duplicate()
@@ -71,7 +69,6 @@ func set_network_snapshot(participants: Array[Dictionary], wagers: Array[Diction
 
 func clear_network_snapshot() -> void:
 	_network_snapshot_active = false
-	_network_participants.clear()
 	_network_wagers.clear()
 	_network_available_balance = 0
 	_network_nearby_peer_ids.clear()
@@ -184,13 +181,10 @@ func _build_pending_rows() -> Array[String]:
 func _build_player_rows() -> Array[String]:
 	var rows: Array[String] = []
 	_player_row_colors.clear()
-	var participants: Array[Dictionary] = []
 	var wagers: Array[Dictionary] = []
 	if _network_snapshot_active:
-		participants = _network_participants.duplicate(true)
 		wagers = _network_wagers.duplicate(true)
 	elif is_instance_valid(table):
-		participants = table.get_participants()
 		wagers = table.get_round_wagers()
 	var capacity: int = table.max_participants if is_instance_valid(table) else 0
 	var nearby_peer_ids: Array[int] = _get_nearby_peer_ids()
