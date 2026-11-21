@@ -11,15 +11,6 @@ roughness = 0.28
 material = SubResource("StandardMaterial3D_uuisg")
 size = Vector3(0.155, 0.025, 0.155)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yf5fn"]
-albedo_color = Color(0.8156863, 0.6784314, 0.4392157, 1)
-metallic = 0.9
-roughness = 0.22
-
-[sub_resource type="BoxMesh" id="BoxMesh_g4v7s"]
-material = SubResource("StandardMaterial3D_yf5fn")
-size = Vector3(0.145, 0.018, 0.145)
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_to3h0"]
 albedo_color = Color(0.09803922, 0.101960786, 0.11372549, 1)
 metallic = 0.25
@@ -30,18 +21,56 @@ material = SubResource("StandardMaterial3D_to3h0")
 size = Vector3(0.12, 0.045, 0.12)
 
 [sub_resource type="TextMesh" id="TextMesh_to3h0"]
+text = "1
+"
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_57qmd"]
+[sub_resource type="BoxMesh" id="BoxMesh_57qmd"]
+size = Vector3(0.144, 0.012, 0.012)
+
+[sub_resource type="BoxMesh" id="BoxMesh_b0q1i"]
+size = Vector3(0.144, 0.012, 0.012)
+
+[sub_resource type="BoxMesh" id="BoxMesh_gdpjg"]
+size = Vector3(0.012, 0.012, 0.121)
+
+[sub_resource type="BoxMesh" id="BoxMesh_txhor"]
+size = Vector3(0.012, 0.012, 0.121)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_b0q1i"]
 albedo_color = Color(1, 0.70980394, 0.18039216, 1)
-metallic = 0.15
-roughness = 0.35
+metallic = 0.1
+roughness = 0.3
 emission_enabled = true
 emission = Color(1, 0.6156863, 0.14117648, 1)
-emission_energy_multiplier = 1.2
+emission_energy_multiplier = 1.9
 
-[sub_resource type="BoxMesh" id="BoxMesh_yf5fn"]
-material = SubResource("StandardMaterial3D_57qmd")
-size = Vector3(0.132, 0.004, 0.132)
+[sub_resource type="BoxMesh" id="BoxMesh_d0u6y"]
+material = SubResource("StandardMaterial3D_b0q1i")
+size = Vector3(0.144, 0.002, 0.002)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gdpjg"]
+albedo_color = Color(1, 0.70980394, 0.18039216, 1)
+metallic = 0.1
+roughness = 0.3
+emission_enabled = true
+emission = Color(1, 0.6156863, 0.14117648, 1)
+emission_energy_multiplier = 1.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_f6vwd"]
+material = SubResource("StandardMaterial3D_gdpjg")
+size = Vector3(0.002, 0.002, 0.144)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_txhor"]
+albedo_color = Color(1, 0.70980394, 0.18039216, 1)
+metallic = 0.1
+roughness = 0.3
+emission_enabled = true
+emission = Color(1, 0.6156863, 0.14117648, 1)
+emission_energy_multiplier = 1.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_ffe4t"]
+material = SubResource("StandardMaterial3D_txhor")
+size = Vector3(0.002, 0.002, 0.144)
 
 [node name="TerminalButton" type="Node3D" unique_id=354275653]
 
@@ -50,12 +79,8 @@ size = Vector3(0.132, 0.004, 0.132)
 [node name="ButtonHousing" type="MeshInstance3D" parent="Visuals" unique_id=2064425087]
 mesh = SubResource("BoxMesh_to3h0")
 
-[node name="Bezel" type="MeshInstance3D" parent="Visuals" unique_id=1581973703]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
-mesh = SubResource("BoxMesh_g4v7s")
-
 [node name="ButtonKey" type="Node3D" parent="Visuals" unique_id=1669914177]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.047, 0)
 
 [node name="KeyMesh" type="MeshInstance3D" parent="Visuals/ButtonKey" unique_id=1470809806]
 mesh = SubResource("BoxMesh_uuisg")
@@ -63,9 +88,37 @@ mesh = SubResource("BoxMesh_uuisg")
 [node name="ButtonLabel" type="MeshInstance3D" parent="Visuals/ButtonKey" unique_id=654358772]
 mesh = SubResource("TextMesh_to3h0")
 
-[node name="AccentRing" type="MeshInstance3D" parent="Visuals" unique_id=1672891594]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.019448476, 0)
-mesh = SubResource("BoxMesh_yf5fn")
+[node name="Bezel_Front" type="MeshInstance3D" parent="Visuals" unique_id=1931341464]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.019, 0.066)
+mesh = SubResource("BoxMesh_57qmd")
+
+[node name="Bezel_Back" type="MeshInstance3D" parent="Visuals" unique_id=1266332494]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.019, -0.066)
+mesh = SubResource("BoxMesh_b0q1i")
+
+[node name="Bezel_Left" type="MeshInstance3D" parent="Visuals" unique_id=589860217]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.066, 0.019, 0)
+mesh = SubResource("BoxMesh_gdpjg")
+
+[node name="Bezel_Right" type="MeshInstance3D" parent="Visuals" unique_id=1856735942]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.066, 0.019, 0)
+mesh = SubResource("BoxMesh_txhor")
+
+[node name="Glow_Front" type="MeshInstance3D" parent="Visuals" unique_id=1537403367]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.026, 0.069)
+mesh = SubResource("BoxMesh_d0u6y")
+
+[node name="Glow_Back" type="MeshInstance3D" parent="Visuals" unique_id=1126601145]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.026, -0.069)
+mesh = SubResource("BoxMesh_d0u6y")
+
+[node name="Glow_Left" type="MeshInstance3D" parent="Visuals" unique_id=1847731930]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.068, 0.026, 0)
+mesh = SubResource("BoxMesh_f6vwd")
+
+[node name="Glow_Right" type="MeshInstance3D" parent="Visuals" unique_id=1289922162]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.068, 0.026, 0)
+mesh = SubResource("BoxMesh_ffe4t")
 
 [node name="Interactable" type="Node" parent="." unique_id=1168464]
 script = ExtResource("1_to3h0")
