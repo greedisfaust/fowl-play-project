@@ -4,6 +4,7 @@ extends SceneTree
 const BaseTableScript = preload("res://casino/base_table.gd")
 const KeypadControllerScript = preload("res://casino/terminals/components/betting_keypad_controller.gd")
 const BettingProfileScript = preload("res://casino/terminals/resources/betting_terminal_profile.gd")
+const BettingDisplayScript = preload("res://casino/terminals/display/betting_terminal_display.gd")
 
 var _failed: bool = false
 
@@ -30,6 +31,10 @@ func _run() -> void:
 	controller.set("profile", profile)
 	controller.set("one_wager_per_player", true)
 	root.add_child(controller)
+
+	var display: Node = BettingDisplayScript.new()
+	display.set("table", table)
+	display.set("profile", profile)
 
 	_check_result(controller.call("handle_button_input", &"1", 1), true, "First digit is accepted")
 	_check_result(controller.call("handle_button_input", &"0", 1), true, "Second digit is accepted")
@@ -85,6 +90,28 @@ func _run() -> void:
 	_check(int(wallet.call("get_snapshot")["available_balance"]) == 850, "Rejected duplicate confirmation does not reserve funds")
 	_check(int(controller.call("get_pending_wager_amount")) == 75, "Rejected confirmation preserves the pending amount for correction")
 
+	controller.call("handle_button_input", &"CLEAR", 1)
+	for digit: String in ["1", "0", "0", "0", "0", "0", "0", "0", "0", "1"]:
+		_check_result(controller.call("handle_button_input", StringName(digit), 1), true, "Large wager digit %s is accepted" % digit)
+	_check(int(controller.call("get_pending_wager_amount")) == 1000000001, "Keypad accepts wager amounts greater than one billion")
+	_check_result(controller.call("handle_button_input", &"CONFIRM", 1), false, "Large wager still respects configured table maximum")
+
+	controller.call("handle_button_input", &"CLEAR", 1)
+	for digit: String in ["9", "2", "2", "3", "3", "7", "2", "0", "3", "6", "8", "5", "4", "7", "7", "5", "8", "0", "7"]:
+		_check_result(controller.call("handle_button_input", StringName(digit), 1), true, "64-bit maximum digit %s is accepted" % digit)
+	_check(int(controller.call("get_pending_wager_amount")) == 9223372036854775807, "Keypad supports the signed 64-bit maximum")
+	_check_result(controller.call("handle_button_input", &"8", 1), false, "Keypad rejects an amount above the signed 64-bit maximum")
+
+	var formatted_billion: String = str(display.call("_format_compact_money", 1000000000))
+	var formatted_trillion: String = str(display.call("_format_compact_money", 1000000000000))
+	var formatted_quintillion: String = str(display.call("_format_compact_money", 1230000000000000000))
+	_check(formatted_billion == "1B$", "Billion denomination remains readable")
+	_check(formatted_trillion == "1T$", "Trillion denomination is supported")
+	_check(formatted_quintillion == "1.23Qi$", "Quintillion denomination is supported")
+
+	var occupancy_rows: Array[String] = display.call("_build_player_rows")
+	_check(not occupancy_rows.is_empty() and occupancy_rows[0] == "2 / 2 PLAYERS", "Terminal occupancy counts players currently inside its proximity")
+	display.free()
 	controller.queue_free()
 	table.queue_free()
 	if _failed:
