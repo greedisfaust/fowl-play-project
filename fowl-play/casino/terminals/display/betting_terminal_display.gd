@@ -61,6 +61,9 @@ func refresh_display() -> void:
 	if not is_instance_valid(screen_text) or profile == null:
 		return
 	screen_text.clear_screen()
+	# The two-column format is a fixed-width line. Fit its font to the actual
+	# ScreenText width before appending content (30 + 42 columns + separator).
+	screen_text.fit_font_size_to_columns(maxi(profile.left_column_width, 12) + maxi(profile.right_column_width, 12) + 3)
 	var previous_body_color: Color = screen_text.body_color
 	screen_text.header_color = profile.accent_color
 	screen_text.body_color = profile.body_color

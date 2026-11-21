@@ -86,6 +86,26 @@ func set_terminal_font(value: Font) -> void:
 func set_terminal_font_size(value: int) -> void:
 	terminal_font_size = value
 
+## Fits a fixed-width terminal layout to the actual text surface.
+## The configured terminal_font_size remains the design/base size; each refresh
+## recalculates from that value so repeated updates never progressively shrink.
+func fit_font_size_to_columns(character_count: int, minimum_size: int = 8) -> void:
+	if character_count <= 0 or size.x <= 0.0:
+		return
+	var base_size: int = terminal_font_size
+	var font: Font = terminal_font
+	if font == null:
+		font = get_theme_font("normal_font")
+	if font == null:
+		return
+	var sample_width: float = font.get_string_size("M", HORIZONTAL_ALIGNMENT_LEFT, -1, base_size).x
+	if sample_width <= 0.0:
+		return
+	var padding: float = float(base_size) * content_padding_ratio * 2.0
+	var available_width: float = maxf(size.x - padding, 1.0)
+	var fitted_size: int = floori(float(base_size) * available_width / (sample_width * float(character_count)))
+	terminal_font_size = clampi(fitted_size, minimum_size, base_size)
+
 func clear_screen() -> void:
 	clear()
 	_menu_option_character_starts.clear()

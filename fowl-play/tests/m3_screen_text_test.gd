@@ -16,6 +16,14 @@ func _run() -> void:
 	_check(terminal.text_direction == Control.TEXT_DIRECTION_LTR, "Terminal text must read left-to-right")
 	_check(terminal.autowrap_mode == TextServer.AUTOWRAP_ARBITRARY, "Long unbroken text must wrap within the screen width")
 	_check(terminal.clip_contents, "Screen text must be clipped to the viewport rectangle")
+	terminal.terminal_font_size = 106
+	terminal.content_padding_ratio = 0.7
+	terminal.size = Vector2(3226.0, 1382.0)
+	terminal.fit_font_size_to_columns(75)
+	_check(terminal.terminal_font_size < 106, "Wide two-column layouts should reduce font size to fit the actual screen width")
+	_check(terminal.terminal_font_size >= 8, "Auto-fit font size should respect its minimum")
+	terminal.terminal_font_size = 106
+
 	_check(terminal.bbcode_enabled, "Terminal must support per-line header/body colors")
 	_check(terminal.background_color == ScreenText.DEFAULT_BACKGROUND, "Terminal should use the dark blue-black backing by default")
 	_check(terminal.header_color == ScreenText.DEFAULT_HEADER, "Terminal should use gold headers by default")
