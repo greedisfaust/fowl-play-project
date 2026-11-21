@@ -1,6 +1,8 @@
 [gd_scene format=3 uid="uid://bdeoylmurx7ov"]
 
+[ext_resource type="Script" uid="uid://ck80le6r0a8mf" path="res://casino/terminals/components/terminal_button.gd" id="1_b0q1i"]
 [ext_resource type="Script" uid="uid://dd5c04repreo1" path="res://interaction/interactable.gd" id="1_to3h0"]
+[ext_resource type="Script" uid="uid://bftcbeclx4l8l" path="res://casino/terminals/components/rounded_keycap_mesh.gd" id="1_uuisg"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_uuisg"]
 albedo_color = Color(0.72156864, 0.58431375, 0.34509805, 1)
@@ -20,20 +22,55 @@ roughness = 0.32
 material = SubResource("StandardMaterial3D_to3h0")
 size = Vector3(0.12, 0.045, 0.12)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1ca6i"]
+albedo_color = Color(1, 0.94509804, 0.8156863, 1)
+metallic = 0.15
+roughness = 0.35
+emission_enabled = true
+emission = Color(1, 0.8352941, 0.5411765, 1)
+
 [sub_resource type="TextMesh" id="TextMesh_to3h0"]
+material = SubResource("StandardMaterial3D_1ca6i")
 text = "1
 "
+font_size = 64
+pixel_size = 0.001
+depth = 0.001
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_f6vwd"]
+albedo_color = Color(0.72156864, 0.58431375, 0.34509805, 1)
+metallic = 0.85
+roughness = 0.28
 
 [sub_resource type="BoxMesh" id="BoxMesh_57qmd"]
+material = SubResource("StandardMaterial3D_f6vwd")
 size = Vector3(0.144, 0.012, 0.012)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ffe4t"]
+albedo_color = Color(0.72156864, 0.58431375, 0.34509805, 1)
+metallic = 0.85
+roughness = 0.28
 
 [sub_resource type="BoxMesh" id="BoxMesh_b0q1i"]
+material = SubResource("StandardMaterial3D_ffe4t")
 size = Vector3(0.144, 0.012, 0.012)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jomx4"]
+albedo_color = Color(0.72156864, 0.58431375, 0.34509805, 1)
+metallic = 0.85
+roughness = 0.28
+
 [sub_resource type="BoxMesh" id="BoxMesh_gdpjg"]
+material = SubResource("StandardMaterial3D_jomx4")
 size = Vector3(0.012, 0.012, 0.121)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_n1jda"]
+albedo_color = Color(0.72156864, 0.58431375, 0.34509805, 1)
+metallic = 0.85
+roughness = 0.28
+
 [sub_resource type="BoxMesh" id="BoxMesh_txhor"]
+material = SubResource("StandardMaterial3D_n1jda")
 size = Vector3(0.012, 0.012, 0.121)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_b0q1i"]
@@ -46,7 +83,7 @@ emission_energy_multiplier = 1.9
 
 [sub_resource type="BoxMesh" id="BoxMesh_d0u6y"]
 material = SubResource("StandardMaterial3D_b0q1i")
-size = Vector3(0.144, 0.002, 0.002)
+size = Vector3(0.135, 0.002, 0.002)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gdpjg"]
 albedo_color = Color(1, 0.70980394, 0.18039216, 1)
@@ -58,7 +95,7 @@ emission_energy_multiplier = 1.9
 
 [sub_resource type="BoxMesh" id="BoxMesh_f6vwd"]
 material = SubResource("StandardMaterial3D_gdpjg")
-size = Vector3(0.002, 0.002, 0.144)
+size = Vector3(0.002, 0.002, 0.14)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_txhor"]
 albedo_color = Color(1, 0.70980394, 0.18039216, 1)
@@ -70,9 +107,12 @@ emission_energy_multiplier = 1.9
 
 [sub_resource type="BoxMesh" id="BoxMesh_ffe4t"]
 material = SubResource("StandardMaterial3D_txhor")
-size = Vector3(0.002, 0.002, 0.144)
+size = Vector3(0.002, 0.002, 0.14)
 
-[node name="TerminalButton" type="Node3D" unique_id=354275653]
+[node name="TerminalButton" type="Node3D" unique_id=354275653 node_paths=PackedStringArray("button_key", "interactable")]
+script = ExtResource("1_b0q1i")
+button_key = NodePath("Visuals/ButtonKey")
+interactable = NodePath("Interactable")
 
 [node name="Visuals" type="Node3D" parent="." unique_id=3246193]
 
@@ -84,8 +124,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.047, 0)
 
 [node name="KeyMesh" type="MeshInstance3D" parent="Visuals/ButtonKey" unique_id=1470809806]
 mesh = SubResource("BoxMesh_uuisg")
+script = ExtResource("1_uuisg")
 
 [node name="ButtonLabel" type="MeshInstance3D" parent="Visuals/ButtonKey" unique_id=654358772]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0.033, 0)
 mesh = SubResource("TextMesh_to3h0")
 
 [node name="Bezel_Front" type="MeshInstance3D" parent="Visuals" unique_id=1931341464]
