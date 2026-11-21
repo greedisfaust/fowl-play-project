@@ -22,6 +22,8 @@ var _press_tween: Tween = null
 var _click_player: AudioStreamPlayer3D = null
 
 func _ready() -> void:
+	# Visual presentation must not depend on interaction setup.
+	_apply_display_text()
 	if not is_instance_valid(button_key):
 		push_warning("TerminalButton requires its ButtonKey reference.")
 		set_process(false)
@@ -30,17 +32,20 @@ func _ready() -> void:
 		push_warning("TerminalButton requires its Interactable reference.")
 		set_process(false)
 		return
-	_apply_display_text()
 	_rest_position = button_key.position
 	_setup_click_audio()
 	interactable.interacted.connect(_on_interacted)
 
 func _apply_display_text() -> void:
-	var label: MeshInstance3D = get_node_or_null("Visuals/ButtonKey/ButtonLabel") as MeshInstance3D
+	var label: MeshInstance3D = null
+	if is_instance_valid(button_key):
+		label = button_key.get_node_or_null("ButtonLabel") as MeshInstance3D
 	if not is_instance_valid(label):
+		push_warning("TerminalButton could not find ButtonLabel under ButtonKey.")
 		return
 	var source_text_mesh: TextMesh = label.mesh as TextMesh
 	if source_text_mesh == null:
+		push_warning("TerminalButton ButtonLabel must use a TextMesh.")
 		return
 	var unique_text_mesh: TextMesh = source_text_mesh.duplicate() as TextMesh
 	unique_text_mesh.text = display_text
