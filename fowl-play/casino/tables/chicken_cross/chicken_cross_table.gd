@@ -14,13 +14,15 @@ func _ready() -> void:
 	round_auto_resolution_requested.connect(_on_round_auto_resolution_requested)
 	_network = get_node_or_null("/root/Network")
 	if is_instance_valid(_network) and _network.has_signal("roster_changed"):
-		if not _network.roster_changed.is_connected(_on_network_roster_changed):
-			_network.roster_changed.connect(_on_network_roster_changed)
+		var roster_callback: Callable = Callable(self, "_on_network_roster_changed")
+		if not _network.is_connected("roster_changed", roster_callback):
+			_network.connect("roster_changed", roster_callback)
 
 func _exit_tree() -> void:
 	if is_instance_valid(_network) and _network.has_signal("roster_changed"):
-		if _network.roster_changed.is_connected(_on_network_roster_changed):
-			_network.roster_changed.disconnect(_on_network_roster_changed)
+		var roster_callback: Callable = Callable(self, "_on_network_roster_changed")
+		if _network.is_connected("roster_changed", roster_callback):
+			_network.disconnect("roster_changed", roster_callback)
 	super._exit_tree()
 
 func start_round(peer_id: int) -> Dictionary:
