@@ -16,13 +16,13 @@ Create this hierarchy in the Godot editor:
 Main (Node3D)                          [attach res://world/main_controller.gd]
 ├── WorldRoot (Node3D)                 [controller's replaceable world container]
 ├── Players (Node3D)                   [persistent multiplayer player container]
-├── PlayerSpawner (MultiplayerSpawner) [persistent; spawn_path = ../Players]
+├── MultiplayerSpawner                  [persistent; spawn_path is configured by MainController]
 └── DebugConsole                       [instance existing ui/debug/debug_console.tscn]
 ```
 
 The transition overlay is created by MainController at runtime; do not add a second fade overlay.
 
-The persistent `Players` and `PlayerSpawner` nodes are part of the intended architecture, but player spawning has not yet been migrated out of TestArena. Until the dedicated spawn-controller slice is complete, leave the current TestArena spawning script and scene unchanged. Do not try to run the new Main scene as the project's startup scene before the player-spawning migration and an initial world scene are ready.
+The persistent `Players` and `MultiplayerSpawner` nodes are part of the intended architecture. MainController configures the spawner's path and spawn function at runtime. Player creation, peer cleanup, spawn-slot assignment, and world-to-world repositioning now belong to Main. Leave the current TestArena spawning script and scene unchanged. Do not switch the project's startup scene until an initial Apartment scene is ready.
 
 ## World scene contract
 
@@ -34,7 +34,7 @@ Recommended world roots and responsibilities:
 - **Casino** — The House gameplay floor, casino tables, and casino-specific props.
 - **RestArea** — optional social/recreation space and Daily Report destination.
 
-Each world will expose a `SpawnPoints` Node3D containing editor-authored Marker3D children. The persistent spawn controller will use the active world's markers when spawning/repositioning players. Marker names and count will be standardized in the player-spawning migration slice.
+Each world will expose a `SpawnPoints` Node3D containing editor-authored Marker3D children. MainController uses the active world's Marker3D children in order as spawn slots. Every world must provide at least four Marker3D children (the current maximum player count). Keep marker order consistent between worlds so a player's slot remains stable.
 
 ## MainController API
 
@@ -62,18 +62,22 @@ MainController currently supplies a simple fade-to-black / fade-from-black scene
 - `Network` remains the only owner of ENet session creation/shutdown.
 - `CasinoWallet` remains an autoload and survives world changes.
 - `DebugHub` remains an autoload; the production DebugConsole belongs to persistent Main.
-- The player container and MultiplayerSpawner must survive world changes.
+- The player container and MultiplayerSpawner must survive world changes. Main owns spawn/despawn and the Network autoload continues to own player movement registration and replication.
 - World scenes must not create a second Network, wallet, or player-spawning authority.
 - Do not replace or repurpose `test_arena.tscn` as the production Main scene.
 - The user's scene hierarchy, meshes, collision shapes, spawn markers, and environment art are editor-authored.
 
-## W1 completion boundary
+## W1 player-spawn migration boundary
 
-This slice adds the MainController script and this architecture contract only. It does not:
+MainController now owns persistent player creation/removal and uses the active world's `SpawnPoints` markers. Players are children of `Main/Players`, not the replaceable world. The spawn function is installed on every peer; only the offline instance or host creates players, while MultiplayerSpawner constructs the replicated copies on clients. Disconnects remove the departing host-owned player, and session shutdown clears the persistent container.
+
+A world swap repositions standing, uncarried players to the same numbered spawn slot in the destination world. Ragdolled, recovering, carried, or carrying players are deliberately not teleported by this generic method; the future elevator transition must normalize those states first.
+
+This slice still does not:
 - create or modify any `.tscn` files;
 - change `project.godot`'s `run/main_scene`;
-- migrate player spawning out of TestArena;
+- modify or replace `test_arena.tscn` or its spawn script;
 - create the Apartment, Casino, or Rest Area scenes;
 - implement the elevator or the run/day state machine.
 
-Those are intentional follow-up slices, not missing test claims.
+The Main scene should be tested with an authored world containing at least four Marker3D children under `SpawnPoints` before it becomes the startup scene.
