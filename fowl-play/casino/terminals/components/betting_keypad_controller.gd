@@ -87,11 +87,11 @@ func handle_button_input(button_id: StringName, peer_id: int) -> Dictionary:
 		_publish_snapshot()
 		return _success({"pending_amount": get_pending_wager_amount()})
 	match action:
-		"CLEAR", "CLR", "RESET":
+		"CLEAR", "CLR", "RESET", "C":
 			_pending_digits = "0"
 			_publish_snapshot()
 			return _success({"pending_amount": 0})
-		"BACKSPACE", "BACK", "DELETE", "DEL", "BKSP":
+		"BACKSPACE", "BACK", "DELETE", "DEL", "BKSP", "←", "⌫":
 			_pending_digits = _pending_digits.left(_pending_digits.length() - 1) if _pending_digits.length() > 1 else "0"
 			_publish_snapshot()
 			return _success({"pending_amount": get_pending_wager_amount()})
