@@ -50,12 +50,15 @@ func _rebuild_mesh() -> void:
 				var p10: Vector3 = _rounded_surface_point(normal, axis_u, axis_v, extent_u, extent_v, x1, y0, half_size)
 				var p11: Vector3 = _rounded_surface_point(normal, axis_u, axis_v, extent_u, extent_v, x1, y1, half_size)
 				var p01: Vector3 = _rounded_surface_point(normal, axis_u, axis_v, extent_u, extent_v, x0, y1, half_size)
+				# Godot treats clockwise triangles as front-facing. Keep the generated
+				# surface winding aligned with the outward vertex normals so the
+				# Interactable cull_front outline only draws the expanded silhouette.
 				_add_vertex(surface_tool, p00, inner_half, radius, normal)
+				_add_vertex(surface_tool, p11, inner_half, radius, normal)
 				_add_vertex(surface_tool, p10, inner_half, radius, normal)
-				_add_vertex(surface_tool, p11, inner_half, radius, normal)
 				_add_vertex(surface_tool, p00, inner_half, radius, normal)
-				_add_vertex(surface_tool, p11, inner_half, radius, normal)
 				_add_vertex(surface_tool, p01, inner_half, radius, normal)
+				_add_vertex(surface_tool, p11, inner_half, radius, normal)
 
 	var existing_material: Material = null
 	if mesh != null and mesh.get_surface_count() > 0:
