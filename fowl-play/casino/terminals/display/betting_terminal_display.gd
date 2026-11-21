@@ -31,7 +31,10 @@ func _ready() -> void:
 			_wallet.wager_changed.connect(_on_wager_changed)
 	if is_instance_valid(_network) and _network.has_signal("identity_roster_changed"):
 		_network.identity_roster_changed.connect(refresh_display)
-	refresh_display()
+	# This controller is an earlier sibling than the nested WorldScreen in some
+	# terminal scenes. Defer the first render until every ScreenText child has
+	# completed _ready() and its BBCode/font setup.
+	call_deferred("refresh_display")
 
 func _exit_tree() -> void:
 	_disconnect_table_signals()
