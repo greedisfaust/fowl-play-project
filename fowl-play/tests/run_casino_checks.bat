@@ -35,6 +35,10 @@ echo Running BaseTable checks...
 if errorlevel 1 goto failed
 
 echo.
+echo Running Chicken Cross rules checks...
+"%GODOT%" --headless --path "%PROJECT%" --script res://tests/chicken_cross_rules_test.gd
+if errorlevel 1 goto failed
+
 echo ALL CASINO CHECKS PASSED
 pause
 exit /b 0
