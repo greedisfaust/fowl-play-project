@@ -14,6 +14,9 @@ const MAX_WAGER_DIGITS: int = 10
 
 var _wallet: Node = null
 var _network: Node = null
+var _debug_hub: Node = null
+var _debug_watch_prefix: String = ""
+var _last_confirmation_status: String = "No wager confirmed yet."
 var _pending_digits: String = "0"
 var _snapshot_revision: int = 0
 var _connected_buttons: Array[Node] = []
@@ -21,6 +24,14 @@ var _connected_buttons: Array[Node] = []
 func _ready() -> void:
 	_wallet = get_node_or_null("/root/CasinoWallet")
 	_network = get_node_or_null("/root/Network")
+	_debug_hub = get_node_or_null("/root/DebugHub")
+	if is_instance_valid(_debug_hub):
+		var table_key: String = table.table_id if is_instance_valid(table) else name
+		_debug_watch_prefix = "casino_keypad/%s/" % table_key
+		_debug_hub.call("watch", StringName(_debug_watch_prefix + "pending_amount"), func() -> int: return get_pending_wager_amount())
+		_debug_hub.call("watch", StringName(_debug_watch_prefix + "snapshot_revision"), func() -> int: return _snapshot_revision)
+		_debug_hub.call("watch", StringName(_debug_watch_prefix + "connected_buttons"), func() -> int: return _connected_buttons.size())
+		_debug_hub.call("watch", StringName(_debug_watch_prefix + "last_confirmation"), func() -> String: return _last_confirmation_status)
 	if profile == null and is_instance_valid(display):
 		profile = display.get("profile") as BettingTerminalProfile
 	if not is_instance_valid(table):
@@ -38,6 +49,11 @@ func _exit_tree() -> void:
 		if is_instance_valid(button) and button.is_connected("button_activated", _on_button_activated):
 			button.disconnect("button_activated", _on_button_activated)
 	_connected_buttons.clear()
+	if is_instance_valid(_debug_hub) and not _debug_watch_prefix.is_empty():
+		_debug_hub.call("unwatch", StringName(_debug_watch_prefix + "pending_amount"))
+		_debug_hub.call("unwatch", StringName(_debug_watch_prefix + "snapshot_revision"))
+		_debug_hub.call("unwatch", StringName(_debug_watch_prefix + "connected_buttons"))
+		_debug_hub.call("unwatch", StringName(_debug_watch_prefix + "last_confirmation"))
 	if is_instance_valid(table):
 		_disconnect_table_signal(&"participants_changed", _on_participants_changed)
 		_disconnect_table_signal(&"state_changed", _on_state_changed)
@@ -129,8 +145,10 @@ func _confirm_pending_wager(peer_id: int) -> Dictionary:
 		return join_result
 	var wager_result: Dictionary = table.place_wager(peer_id, amount, {"source": "betting_keypad"})
 	if not bool(wager_result.get("ok", false)):
+		_last_confirmation_status = "Rejected: %s" % str(wager_result.get("reason", "unknown error"))
 		return wager_result
 
+	_last_confirmation_status = "Peer %d confirmed %d." % [peer_id, amount]
 	_pending_digits = "0"
 	_publish_snapshot()
 	wager_confirmation_result.emit(peer_id, wager_result.duplicate(true))
