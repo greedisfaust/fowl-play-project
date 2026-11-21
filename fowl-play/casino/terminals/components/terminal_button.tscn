@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://bdeoylmurx7ov"]
+
+[ext_resource type="Script" uid="uid://dd5c04repreo1" path="res://interaction/interactable.gd" id="1_to3h0"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_uuisg"]
+size = Vector3(0.12, 0.045, 0.12)
+
+[node name="TerminalButton" type="Node3D" unique_id=354275653]
+
+[node name="Visuals" type="Node3D" parent="." unique_id=3246193]
+
+[node name="ButtonHousing" type="MeshInstance3D" parent="Visuals" unique_id=2064425087]
+
+[node name="ButtonKey" type="Node3D" parent="Visuals" unique_id=1669914177]
+
+[node name="KeyMesh" type="MeshInstance3D" parent="Visuals/ButtonKey" unique_id=1470809806]
+mesh = SubResource("BoxMesh_uuisg")
+
+[node name="ButtonLabel" type="MeshInstance3D" parent="Visuals/ButtonKey" unique_id=654358772]
+
+[node name="Interactable" type="Node" parent="." unique_id=1168464]
+script = ExtResource("1_to3h0")
+metadata/_custom_type_script = "uid://dd5c04repreo1"
+
+[node name="Audio" type="Node3D" parent="." unique_id=1938475819]
