@@ -7,6 +7,8 @@ signal wager_confirmation_result(peer_id: int, result: Dictionary)
 
 const MAX_WAGER_DIGITS: int = 19
 const MAX_WAGER_AMOUNT: int = 9223372036854775807
+const MAX_WAGER_PREFIX: int = 922337203685477580
+const MAX_WAGER_LAST_DIGIT: int = 7
 const TABLE_STATE_IDLE: int = 0
 const TABLE_STATE_OPEN: int = 1
 
@@ -84,7 +86,7 @@ func handle_button_input(button_id: StringName, peer_id: int) -> Dictionary:
 			return _failure("The wager amount has reached the maximum supported digits.")
 		var current_amount: int = int(_pending_digits)
 		var next_digit: int = int(action)
-		if current_amount > floori(float(MAX_WAGER_AMOUNT - next_digit) / 10.0):
+		if current_amount > MAX_WAGER_PREFIX or (current_amount == MAX_WAGER_PREFIX and next_digit > MAX_WAGER_LAST_DIGIT):
 			return _failure("The wager amount exceeds the supported 64-bit wallet limit.")
 		var next_amount: int = current_amount * 10 + next_digit
 		if _pending_digits == "0":
