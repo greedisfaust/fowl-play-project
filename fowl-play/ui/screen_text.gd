@@ -80,7 +80,7 @@ func append_header(value: String) -> void:
 func append_centered_header(value: String) -> void:
 	var escaped: String = _escape_bbcode(value)
 	var color_hex: String = header_color.to_html(false)
-	append_text("[center][color=#%s][b]%s[/b][/color][/center]\\n" % [color_hex, escaped])
+	append_text("[center][color=#%s][b]%s[/b][/color][/center]\n" % [color_hex, escaped])
 
 func append_paragraph(value: String) -> void:
 	_append_styled_line(value, body_color, false)
