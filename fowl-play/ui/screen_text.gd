@@ -24,6 +24,7 @@ const LAYOUT_CONFIRMATION: StringName = &"confirmation"
 @export_range(8, 512, 1) var terminal_font_size: int = 22:
 	set(value):
 		terminal_font_size = clampi(value, 8, 512)
+		_effective_font_size = terminal_font_size
 		_apply_appearance()
 
 @export_range(0.0, 1.5, 0.05) var content_padding_ratio: float = 0.45:
@@ -40,6 +41,7 @@ const LAYOUT_CONFIRMATION: StringName = &"confirmation"
 @export var body_color: Color = DEFAULT_BODY
 @export var prompt_color: Color = DEFAULT_HEADER
 
+var _effective_font_size: int = 0
 var _debug_watch_name: StringName = &""
 var _menu_option_character_starts: Array[int] = []
 var _menu_option_end_character: int = -1
@@ -86,11 +88,11 @@ func set_terminal_font(value: Font) -> void:
 func set_terminal_font_size(value: int) -> void:
 	terminal_font_size = value
 
-## Fits a fixed-width terminal layout to the actual text surface.
-## The configured terminal_font_size remains the design/base size; each refresh
-## recalculates from that value so repeated updates never progressively shrink.
+## Fits terminal content to both the available width and height.
+## The exported terminal_font_size remains the design size; fitting never
+## changes it, so repeated refreshes cannot progressively shrink the display.
 func fit_font_size_to_columns(character_count: int, minimum_size: int = 8) -> void:
-	if character_count <= 0 or size.x <= 0.0:
+	if character_count <= 0 or size.x <= 0.0 or size.y <= 0.0:
 		return
 	var base_size: int = terminal_font_size
 	var font: Font = terminal_font
@@ -101,10 +103,20 @@ func fit_font_size_to_columns(character_count: int, minimum_size: int = 8) -> vo
 	var sample_width: float = font.get_string_size("M", HORIZONTAL_ALIGNMENT_LEFT, -1, base_size).x
 	if sample_width <= 0.0:
 		return
-	var padding: float = float(base_size) * content_padding_ratio * 2.0
-	var available_width: float = maxf(size.x - padding, 1.0)
-	var fitted_size: int = floori(float(base_size) * available_width / (sample_width * float(character_count)))
-	terminal_font_size = clampi(fitted_size, minimum_size, base_size)
+	var horizontal_padding: float = float(base_size) * content_padding_ratio * 2.0
+	var vertical_padding: float = float(base_size) * content_padding_ratio * 1.5
+	var available_width: float = maxf(size.x - horizontal_padding, 1.0)
+	var available_height: float = maxf(size.y - vertical_padding, 1.0)
+	var width_size: int = floori(float(base_size) * available_width / (sample_width * float(character_count)))
+	var content_height: float = get_content_height()
+	var height_size: int = base_size
+	if content_height > 0.0:
+		height_size = floori(float(base_size) * available_height / content_height)
+	_effective_font_size = clampi(mini(width_size, height_size), minimum_size, base_size)
+	_apply_appearance()
+
+func get_effective_font_size() -> int:
+	return _effective_font_size if _effective_font_size > 0 else terminal_font_size
 
 func clear_screen() -> void:
 	clear()
@@ -210,11 +222,12 @@ func _apply_appearance() -> void:
 		return
 
 	add_theme_color_override("default_color", body_color)
-	add_theme_font_size_override("normal_font_size", terminal_font_size)
-	add_theme_font_size_override("bold_font_size", terminal_font_size)
-	add_theme_font_size_override("italics_font_size", terminal_font_size)
-	add_theme_font_size_override("bold_italics_font_size", terminal_font_size)
-	add_theme_font_size_override("mono_font_size", terminal_font_size)
+	var display_font_size: int = get_effective_font_size()
+	add_theme_font_size_override("normal_font_size", display_font_size)
+	add_theme_font_size_override("bold_font_size", display_font_size)
+	add_theme_font_size_override("italics_font_size", display_font_size)
+	add_theme_font_size_override("bold_italics_font_size", display_font_size)
+	add_theme_font_size_override("mono_font_size", display_font_size)
 
 	if terminal_font != null:
 		add_theme_font_override("normal_font", terminal_font)
@@ -231,7 +244,7 @@ func _apply_appearance() -> void:
 
 	var backing: StyleBoxFlat = StyleBoxFlat.new()
 	backing.bg_color = Color(0.0, 0.0, 0.0, 0.0)
-	var content_padding: float = float(terminal_font_size) * content_padding_ratio
+	var content_padding: float = float(get_effective_font_size()) * content_padding_ratio
 	backing.content_margin_left = content_padding
 	backing.content_margin_top = content_padding * 0.75
 	backing.content_margin_right = content_padding
