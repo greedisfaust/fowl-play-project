@@ -1,6 +1,6 @@
 # Betting Keypad Workflow
 
-The physical keypad now drives the shared pending wager and submits confirmed bets through the existing host-authoritative `BaseTable` and `CasinoWallet` workflow.
+The physical keypad now drives the shared pending wager and submits confirmed bets through the existing host-authoritative `BaseTable` and `CasinoWallet` workflow. The display also reports live terminal proximity occupancy, colors confirmed player rows using each player's identity color, and supports 64-bit wager amounts.
 
 ## Implementation
 
@@ -37,7 +37,9 @@ The keypad does not call `CasinoWallet.reserve_wager()` directly. It does not st
 
 - The host is the only peer that processes physical button actions and changes the pending amount.
 - The actor's peer ID is captured from the server-side interaction actor. A client cannot submit a wager on behalf of another peer.
-- The host broadcasts a revisioned snapshot containing the pending amount, table participants, current-round wagers, and available shared-wallet balance.
+- The host broadcasts a revisioned snapshot containing the pending amount, table participants, current-round wagers, available shared-wallet balance, and the peer IDs currently inside terminal proximity.
+- The terminal occupancy line reports `nearby players / terminal capacity` and updates as players enter or leave the terminal's proximity. This is distinct from the participant list, which tracks players who have joined the active round.
+- Each confirmed player's wager row uses that player's `PlayerIdentity` color from the network identity roster.
 - Clients render that snapshot through `BettingTerminalDisplay.set_network_snapshot()`; clients do not mutate their local wallet or table ledger.
 - A newly initialized client requests the current snapshot from the host.
 - The existing table proximity check still applies. A player must be registered inside the table's proximity area to open/join/confirm.
@@ -65,7 +67,7 @@ Headless test:
 godot --headless --path fowl-play --script res://tests/betting_keypad_test.gd
 ```
 
-The test covers digit composition, backspace, clear, below-minimum rejection, automatic round opening, bettor attribution, successful reservation/reset, a second player's confirmation, and Chicken Cross duplicate-wager rejection.
+The test covers digit composition, backspace, clear, below-minimum/above-maximum/insufficient-funds rejection, automatic round opening, bettor attribution, successful reservation/reset, a second player's confirmation, duplicate-wager rejection, live proximity occupancy, and values through the signed 64-bit limit. Display formatting includes B (billion), T (trillion), Qa (quadrillion), and Qi (quintillion).
 
 ### Two-instance multiplayer checklist
 
