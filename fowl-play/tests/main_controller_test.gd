@@ -80,6 +80,10 @@ func _run() -> void:
 	# is about to replicate the real peer-owned player nodes.
 	network.set("_switching_session", true)
 	network.call("shutdown")
+	if players.get_child_count() != 0:
+		main.queue_free()
+		_finish(false, "Session shutdown must detach the offline player immediately before a replicated spawn can arrive.")
+		return
 	await process_frame
 	await process_frame
 	if players.get_child_count() != 0:
