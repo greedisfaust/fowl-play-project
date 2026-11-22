@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bgddtkb0amegv" path="res://world/main_controller.gd" id="1_gjxf3"]
 [ext_resource type="PackedScene" uid="uid://p4yueflmbgmy" path="res://ui/debug/debug_console.tscn" id="2_hyim0"]
+[ext_resource type="PackedScene" uid="uid://dckbpatdy1odv" path="res://ui/hud/casino_hud.tscn" id="3_4f7fj"]
 
 [node name="Main" type="Node3D" unique_id=644163272]
 script = ExtResource("1_gjxf3")
@@ -13,3 +14,5 @@ script = ExtResource("1_gjxf3")
 [node name="MultiplayerSpawner" type="MultiplayerSpawner" parent="." unique_id=1534361150]
 
 [node name="DebugConsole" parent="." unique_id=1236782275 instance=ExtResource("2_hyim0")]
+
+[node name="CasinoHUD" parent="." unique_id=753540955 instance=ExtResource("3_4f7fj")]

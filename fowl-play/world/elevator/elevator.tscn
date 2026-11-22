@@ -4,12 +4,13 @@
 [ext_resource type="Script" uid="uid://chqfaqmv6jbro" path="res://world/elevator/elevator_door_controller.gd" id="2_lt4qx"]
 [ext_resource type="PackedScene" uid="uid://bdeoylmurx7ov" path="res://casino/terminals/components/terminal_button.tscn" id="2_olmxj"]
 [ext_resource type="Script" uid="uid://ip5e5uh62u73" path="res://world/elevator/elevator_occupancy.gd" id="3_dthjg"]
-[ext_resource type="Script" uid="uid://cvtrcwscdf0a6" path="res://world/elevator/elevator_door_test.gd" id="3_g2dy1"]
 [ext_resource type="Shader" uid="uid://dden4d0b0xrr7" path="res://environment/kit/world_screen_text.gdshader" id="3_nrb4d"]
 [ext_resource type="FontFile" uid="uid://ws0yv8acsgcw" path="res://assets/fonts/JetBrainsMonoNL-Regular.ttf" id="3_wg3ab"]
 [ext_resource type="Shader" uid="uid://c4kdaasjbi04y" path="res://environment/kit/world_screen_glass.gdshader" id="4_4hgic"]
 [ext_resource type="PackedScene" uid="uid://bohm84tw787n0" path="res://environment/kit/slim_world_screen.tscn" id="7_yitlv"]
 [ext_resource type="Script" uid="uid://fk35dh72v4rs" path="res://world/elevator/elevator_status_display.gd" id="9_g2fi5"]
+[ext_resource type="Script" uid="uid://djns6wwxthclb" path="res://world/elevator/elevator_door_proximity.gd" id="9_nrb4d"]
+[ext_resource type="Script" uid="uid://cmdxc5a4r13ni" path="res://world/elevator/elevator_departure_controller.gd" id="11_e4efw"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dig3d"]
 albedo_color = Color(0.14117648, 0.13725491, 0.14901961, 1)
@@ -1228,12 +1229,16 @@ script = ExtResource("3_dthjg")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ElevatorArea" unique_id=1042689505]
 shape = SubResource("BoxShape3D_g4v7s")
 
-[node name="DoorTest" type="Node3D" parent="." unique_id=1917216994]
-script = ExtResource("3_g2dy1")
+[node name="DoorProximityController" type="Node3D" parent="." unique_id=1917216994]
+script = ExtResource("9_nrb4d")
+open_distance = 5.2
 
 [node name="StatusController" type="Node" parent="." unique_id=1180205933]
 script = ExtResource("9_g2fi5")
 world_screen_path = NodePath("../InteriorDetails/SlimWorldScreen/WorldScreen/SubViewport/ScreenText")
+
+[node name="DepartureController" type="Node" parent="." unique_id=1191785469]
+script = ExtResource("11_e4efw")
 
 [editable path="InteriorDetails/SlimWorldScreen"]
 [editable path="InteriorDetails/SlimWorldScreen/WorldScreen"]
