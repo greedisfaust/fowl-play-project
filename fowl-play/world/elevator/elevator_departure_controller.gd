@@ -9,18 +9,28 @@ signal departure_requested(actor_peer_id: int)
 @export_group("Scene References")
 @export var button_path: NodePath = ^"../InteriorDetails/TerminalButton"
 @export var occupancy_path: NodePath = ^"../ElevatorArea"
+@export var door_controller_path: NodePath = ^"../DoorAnimation"
+@export var main_controller_path: NodePath = ^"/root/Main"
+
+@export_group("Departure Sequence")
+@export_range(1.0, 15.0, 0.5) var recovery_timeout_seconds: float = 8.0
+@export_range(1.0, 8.0, 0.5) var door_timeout_seconds: float = 4.0
 
 var _button: Node
 var _interactable: Interactable
 var _occupancy: ElevatorOccupancy
+var _door_controller: ElevatorDoorController
+var _main_controller: MainController
 var _network: Node
 var _request_pending: bool = false
+var _departure_in_progress: bool = false
 var _debug_hub: Node
 
 
 func _ready() -> void:
 	_button = get_node_or_null(button_path)
 	_occupancy = get_node_or_null(occupancy_path) as ElevatorOccupancy
+	_door_controller = get_node_or_null(door_controller_path) as ElevatorDoorController
 	_network = get_node_or_null("/root/Network")
 
 	if not is_instance_valid(_button):
@@ -53,6 +63,7 @@ func _ready() -> void:
 	if is_instance_valid(_debug_hub):
 		_debug_hub.call("watch", &"elevator/departure_ready", Callable(self, "are_all_players_inside"))
 		_debug_hub.call("watch", &"elevator/departure_request_pending", func() -> bool: return _request_pending)
+		_debug_hub.call("watch", &"elevator/departure_in_progress", func() -> bool: return _departure_in_progress)
 
 
 func _exit_tree() -> void:
@@ -64,6 +75,7 @@ func _exit_tree() -> void:
 	if is_instance_valid(_debug_hub):
 		_debug_hub.call("unwatch", &"elevator/departure_ready")
 		_debug_hub.call("unwatch", &"elevator/departure_request_pending")
+		_debug_hub.call("unwatch", &"elevator/departure_in_progress")
 
 
 ## Returns true only when every connected player is inside the elevator.
@@ -89,14 +101,14 @@ static func can_peer_request_departure(actor_peer_id: int, expected_peer_ids: Ar
 
 
 func _can_interact(actor: Node, action: StringName) -> bool:
-	if action != &"use" or _request_pending or not is_instance_valid(actor):
+	if action != &"use" or _request_pending or _departure_in_progress or not is_instance_valid(actor):
 		return false
 	var actor_peer_id: int = int(actor.get("input_peer_id"))
 	return can_peer_request_departure(actor_peer_id, _get_expected_peer_ids(), _occupancy.get_occupant_peer_ids())
 
 
 func _on_button_activated(_button_id: StringName, actor_peer_id: int) -> void:
-	if not _is_network_authority() or _request_pending:
+	if not _is_network_authority() or _request_pending or _departure_in_progress:
 		return
 	if not can_peer_request_departure(actor_peer_id, _get_expected_peer_ids(), _occupancy.get_occupant_peer_ids()):
 		_log_rejection("DEPART rejected: every connected player must be inside the elevator.")
@@ -108,9 +120,107 @@ func _on_button_activated(_button_id: StringName, actor_peer_id: int) -> void:
 	departure_requested.emit(actor_peer_id)
 
 
+## Called by the outer-loop progression coordinator after it approves the request.
+## Destination IDs match MainController.World. The elevator never decides quota/day rules.
+func accept_departure_request(destination_world: int) -> bool:
+	if not _is_network_authority() or not _request_pending or _departure_in_progress:
+		return false
+	if destination_world < MainController.World.APARTMENT or destination_world > MainController.World.REST_AREA:
+		reject_departure_request("invalid destination world")
+		return false
+	_main_controller = get_node_or_null(main_controller_path) as MainController
+	if _main_controller == null or not _main_controller.can_transition_to(destination_world):
+		reject_departure_request("destination world is unavailable")
+		return false
+	if _door_controller == null:
+		reject_departure_request("elevator door controller is unavailable")
+		return false
+	_departure_in_progress = true
+	_execute_departure_sequence.call_deferred(destination_world)
+	return true
+
+
+func _execute_departure_sequence(destination_world: int) -> void:
+	if not await _close_doors_for_departure():
+		_abort_departure("elevator doors did not finish closing")
+		return
+	if not await _prepare_players_for_transition():
+		_abort_departure("could not safely prepare every player for transport")
+		return
+	if not await _wait_for_all_players_recovered():
+		_abort_departure("a player did not finish recovering before the departure timeout")
+		return
+	_request_pending = false
+	if is_instance_valid(_debug_hub):
+		_debug_hub.call("log", &"net", "Elevator departure approved; transitioning to world %d." % destination_world)
+	_main_controller.transition_to(destination_world)
+
+
+func _close_doors_for_departure() -> bool:
+	var deadline: int = Time.get_ticks_msec() + int(door_timeout_seconds * 1000.0)
+	while _door_controller.are_doors_moving() and Time.get_ticks_msec() < deadline:
+		await get_tree().process_frame
+	if _door_controller.are_doors_moving():
+		return false
+	if _door_controller.are_doors_open():
+		_door_controller.close_doors()
+	while (_door_controller.are_doors_open() or _door_controller.are_doors_moving()) and Time.get_ticks_msec() < deadline:
+		await get_tree().process_frame
+	return not _door_controller.are_doors_open() and not _door_controller.are_doors_moving()
+
+
+func _prepare_players_for_transition() -> bool:
+	if not is_instance_valid(_network):
+		return false
+	var players: Dictionary = _network.get("movement_players")
+	var peer_ids: Array[int] = []
+	for peer_value: Variant in players.keys():
+		peer_ids.append(int(peer_value))
+	peer_ids.sort()
+	for peer_id: int in peer_ids:
+		var player: Node = players.get(peer_id) as Node
+		if not is_instance_valid(player):
+			return false
+		if bool(player.call("is_carrying")):
+			_network.call("force_drop_carry", peer_id, "elevator departure")
+	await get_tree().process_frame
+	for peer_id: int in peer_ids:
+		var player: Node = players.get(peer_id) as Node
+		if not is_instance_valid(player) or bool(player.call("is_carried")):
+			return false
+		if bool(player.get("is_limp")):
+			if not bool(_network.call("stop_ragdoll_spike", peer_id, "elevator departure")):
+				return false
+	return true
+
+
+func _wait_for_all_players_recovered() -> bool:
+	var deadline: int = Time.get_ticks_msec() + int(recovery_timeout_seconds * 1000.0)
+	while Time.get_ticks_msec() < deadline:
+		var players: Dictionary = _network.get("movement_players")
+		var all_ready: bool = true
+		for player_value: Variant in players.values():
+			var player: Node = player_value as Node
+			if not is_instance_valid(player) or bool(player.get("is_limp")) or bool(player.get("is_recovering")) or bool(player.call("is_carried")) or bool(player.call("is_carrying")):
+				all_ready = false
+				break
+		if all_ready:
+			return true
+		await get_tree().process_frame
+	return false
+
+
+func _abort_departure(reason: String) -> void:
+	_request_pending = false
+	_departure_in_progress = false
+	if is_instance_valid(_door_controller) and not _door_controller.are_doors_open() and not _door_controller.are_doors_moving():
+		_door_controller.open_doors()
+	_log_rejection("DEPART sequence aborted: %s" % reason)
+
+
 ## Called by the future progression coordinator when its quota/day-state checks reject the request.
 func reject_departure_request(reason: String = "") -> void:
-	if not _request_pending:
+	if not _request_pending or _departure_in_progress:
 		return
 	_request_pending = false
 	if not reason.is_empty():
@@ -120,10 +230,15 @@ func reject_departure_request(reason: String = "") -> void:
 ## Called by the future transition sequence after the group has arrived at its destination.
 func finish_departure_request() -> void:
 	_request_pending = false
+	_departure_in_progress = false
 
 
 func is_departure_request_pending() -> bool:
 	return _request_pending
+
+
+func is_departure_in_progress() -> bool:
+	return _departure_in_progress
 
 
 func _get_expected_peer_ids() -> Array[int]:
