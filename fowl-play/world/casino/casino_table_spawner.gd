@@ -10,10 +10,21 @@ class_name CasinoTableSpawner
 @export var spawn_on_ready: bool = true
 
 var _spawned_slot_ids: Dictionary = {}
+var _debug_hub: Node = null
 
 func _ready() -> void:
+	_debug_hub = get_node_or_null("/root/DebugHub")
+	if is_instance_valid(_debug_hub):
+		_debug_hub.call("watch", &"casino/table_spawner/active_tables", func() -> int: return _spawned_slot_ids.size())
 	if spawn_on_ready:
 		call_deferred("spawn_tables")
+
+func _exit_tree() -> void:
+	if is_instance_valid(_debug_hub):
+		_debug_hub.call("unwatch", &"casino/table_spawner/active_tables")
+
+func get_spawned_table_count() -> int:
+	return _spawned_slot_ids.size()
 
 func spawn_tables() -> Dictionary:
 	var spawn_points: Node3D = get_node_or_null(spawn_points_path) as Node3D
