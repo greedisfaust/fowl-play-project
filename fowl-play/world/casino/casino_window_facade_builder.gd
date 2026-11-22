@@ -23,6 +23,8 @@ class_name CasinoWindowFacadeBuilder
 @export_range(0.025, 0.2, 0.005) var mullion_width: float = 0.075
 @export_range(0.025, 0.2, 0.005) var frame_depth: float = 0.12
 @export_range(0.025, 0.2, 0.005) var rail_height: float = 0.09
+@export_range(0.0, 1.0, 0.01) var pillar_clearance: float = 0.50
+
 @export_group("Upper Transom")
 @export var generate_upper_transom: bool = true
 @export_range(3.8, 4.5, 0.01) var ceiling_underside_y: float = 4.02
@@ -107,13 +109,19 @@ func _build_facade_segment(
 	scene_root: Node,
 	segment_index: int
 ) -> void:
-	var start: Vector3 = Vector3(start_2d.x, 0.0, start_2d.y)
-	var end: Vector3 = Vector3(end_2d.x, 0.0, end_2d.y)
-	var edge: Vector3 = end - start
-	var edge_length: float = edge.length()
-	if edge_length <= 0.05:
+	var original_start: Vector3 = Vector3(start_2d.x, 0.0, start_2d.y)
+	var original_end: Vector3 = Vector3(end_2d.x, 0.0, end_2d.y)
+	var original_edge: Vector3 = original_end - original_start
+	var original_length: float = original_edge.length()
+	if original_length <= pillar_clearance * 2.0 + 0.05:
 		return
 
+	# Stop all façade components before the corner pillars instead of running glazing through them.
+	var original_tangent: Vector3 = original_edge / original_length
+	var start: Vector3 = original_start + original_tangent * pillar_clearance
+	var end: Vector3 = original_end - original_tangent * pillar_clearance
+	var edge: Vector3 = end - start
+	var edge_length: float = edge.length()
 	var tangent: Vector3 = edge / edge_length
 	var normal: Vector3 = tangent.cross(Vector3.UP).normalized()
 	var segment_basis: Basis = Basis(tangent, Vector3.UP, normal)
