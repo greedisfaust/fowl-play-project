@@ -33,6 +33,8 @@ func _run() -> void:
 	controller.set("one_wager_per_player", true)
 	root.add_child(controller)
 
+	_check_result(controller.call("handle_button_input", &"MIN", 0), true, "Offline peer zero is normalized for local keypad input")
+	_check_result(controller.call("handle_button_input", &"CLEAR", 0), true, "Offline local keypad input can clear its pending amount")
 	_check_result(controller.call("handle_button_input", &"MIN", 1), true, "MIN preset selects the profile minimum")
 	_check(int(controller.call("get_pending_wager_amount")) == 50, "MIN preset selects 50")
 	_check_result(controller.call("handle_button_input", &"1/4", 1), true, "Quarter preset is accepted")
