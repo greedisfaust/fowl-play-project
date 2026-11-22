@@ -23,13 +23,13 @@ enum WallSet {
 
 @export_group("Main Room Window")
 @export var generate_main_room_window: bool = true
-@export_range(2.0, 18.0, 0.25) var main_window_width: float = 12.0
+@export_range(2.0, 18.0, 0.25) var main_window_width: float = 14.0
 @export_range(0.5, 2.0, 0.05) var main_window_sill_height: float = 0.85
 @export_range(2.0, 3.8, 0.05) var main_window_top: float = 3.15
 
 @export_group("Hallway Window")
 @export var generate_hallway_window: bool = true
-@export_range(1.0, 8.0, 0.25) var hallway_window_width: float = 4.5
+@export_range(1.0, 30.0, 0.25) var hallway_window_width: float = 26.0
 @export_range(0.5, 2.0, 0.05) var hallway_window_sill_height: float = 0.9
 @export_range(2.0, 3.8, 0.05) var hallway_window_top: float = 2.7
 
@@ -99,7 +99,7 @@ func _build_perimeter(parent: Node3D, material: Material, thickness: float, scen
 	# East wall has the panoramic city window.
 	_build_segment(parent, "MainRoom_East", Vector2(11.0, -9.5), Vector2(11.0, 9.5),
 		material, thickness, scene_root,
-		generate_main_room_window, 0.0, main_window_width, main_window_sill_height, main_window_top)
+		generate_main_room_window, 9.5, main_window_width, main_window_sill_height, main_window_top)
 	_build_segment(parent, "MainRoom_North", Vector2(-11.0, -9.5), Vector2(11.0, -9.5),
 		material, thickness, scene_root)
 	_build_segment(parent, "MainRoom_South", Vector2(-11.0, 9.5), Vector2(11.0, 9.5),
@@ -108,7 +108,7 @@ func _build_perimeter(parent: Node3D, material: Material, thickness: float, scen
 	# Hallway west wall, with a separate street-facing window.
 	_build_segment(parent, "Hallway_West", Vector2(-14.5, -17.0), Vector2(-14.5, 17.0),
 		material, thickness, scene_root,
-		generate_hallway_window, 0.0, hallway_window_width, hallway_window_sill_height, hallway_window_top)
+		generate_hallway_window, 19.5, hallway_window_width, hallway_window_sill_height, hallway_window_top)
 	_build_segment(parent, "Hallway_South", Vector2(-14.5, 17.0), Vector2(-11.0, 17.0),
 		material, thickness, scene_root)
 
@@ -130,7 +130,7 @@ func _build_interior(parent: Node3D, material: Material, thickness: float, scene
 	_build_segment(parent, "Hallway_MainRoom_Divider",
 		Vector2(-11.0, -9.5), Vector2(-11.0, 9.5),
 		material, thickness, scene_root,
-		generate_main_room_doorway, doorway_center_z, doorway_width, 0.0, doorway_height)
+		generate_main_room_doorway, doorway_center_z + 9.5, doorway_width, 0.0, doorway_height)
 
 func _build_segment(
 	parent: Node3D,
