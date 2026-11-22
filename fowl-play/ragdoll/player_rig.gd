@@ -939,11 +939,12 @@ func get_chest_world_position() -> Vector3:
 	return get_hips_world_position()
 
 func get_chest_world_basis() -> Basis:
-	# The host's live PhysicalBone transform must stay paired with the live
-	# PhysicalBone position used by carry-hand placement. The replicated
-	# Skeleton3D pose is the correct fallback when this rig is not simulating.
+	# Keep the live PhysicalBone rotation for host ragdoll motion, but remove
+	# the Chest bone's authored bind-space axis offset. Hand grip orientation
+	# expects character-aligned axes (especially +Y for the chest top), whereas
+	# PhysicalBone3D.global_basis includes the bone's local rest orientation.
 	if simulator.is_simulating_physics() and _chest_physical_bone != null:
-		return _chest_physical_bone.global_basis.orthonormalized()
+		return (_chest_physical_bone.global_basis * _chest_rest_basis_offset.inverse()).orthonormalized()
 	if _chest_bone_index >= 0:
 		return (skeleton.global_basis * skeleton.get_bone_global_pose(_chest_bone_index).basis).orthonormalized()
 	return global_basis.orthonormalized()
