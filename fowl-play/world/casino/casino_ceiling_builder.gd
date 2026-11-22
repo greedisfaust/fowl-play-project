@@ -41,13 +41,17 @@ class_name CasinoCeilingBuilder
 			call_deferred("_rebuild_geometry")
 
 const GENERATED_ROOT_NAME: String = "_GeneratedCeiling"
-const CEILING_FOOTPRINT: PackedVector2Array = PackedVector2Array([
-	Vector2(-24.0, -18.665),
-	Vector2(-14.0, -28.665),
-	Vector2(11.0, -28.665),
-	Vector2(11.0, -1.665),
-	Vector2(-24.0, -1.665)
-])
+
+func _get_ceiling_footprint() -> PackedVector2Array:
+	# PackedVector2Array construction is not permitted in a GDScript const.
+	# Build this small, fixed footprint when geometry is generated instead.
+	return PackedVector2Array([
+		Vector2(-24.0, -18.665),
+		Vector2(-14.0, -28.665),
+		Vector2(11.0, -28.665),
+		Vector2(11.0, -1.665),
+		Vector2(-24.0, -1.665)
+	])
 
 func _ready() -> void:
 	if Engine.is_editor_hint():
@@ -99,7 +103,7 @@ func _build_ceiling_slab(parent: Node3D, material: Material, scene_root: Node) -
 	)
 	var slab: CSGPolygon3D = CSGPolygon3D.new()
 	slab.name = "Ceiling_SculptedFootprint"
-	slab.polygon = CEILING_FOOTPRINT
+	slab.polygon = _get_ceiling_footprint()
 	slab.depth = ceiling_thickness
 	slab.use_collision = false
 	slab.material = material
@@ -113,10 +117,11 @@ func _build_perimeter_cove(
 	light_material: Material,
 	scene_root: Node
 ) -> void:
+	var footprint: PackedVector2Array = _get_ceiling_footprint()
 	var visual_center: Vector2 = Vector2(-8.0, -17.0)
-	for index: int in range(CEILING_FOOTPRINT.size()):
-		var start_2d: Vector2 = CEILING_FOOTPRINT[index]
-		var end_2d: Vector2 = CEILING_FOOTPRINT[(index + 1) % CEILING_FOOTPRINT.size()]
+	for index: int in range(footprint.size()):
+		var start_2d: Vector2 = footprint[index]
+		var end_2d: Vector2 = footprint[(index + 1) % footprint.size()]
 		var midpoint: Vector2 = (start_2d + end_2d) * 0.5
 		var inward_2d: Vector2 = (visual_center - midpoint).normalized()
 		var bronze_start: Vector2 = start_2d + inward_2d * cove_inset
