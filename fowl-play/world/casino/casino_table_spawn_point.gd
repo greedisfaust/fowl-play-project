@@ -2,13 +2,11 @@
 extends Marker3D
 class_name CasinoTableSpawnPoint
 
-## Editor-visible footprint marker for one casino table location.
+## Editor-visible footprint marker for one reusable casino table location.
 ## Attach to a Marker3D under Casino/Architecture/TableSpawners/SpawnPoints.
 
-@export_group("Table Assignment")
-@export var table_id: String = ""
-@export var game_id: String = ""
-@export var table_scene: PackedScene
+@export_group("Slot")
+@export var slot_id: String = ""
 @export var enabled: bool = true
 
 @export_group("Preview")
@@ -21,6 +19,8 @@ const PREVIEW_ROOT_NAME: String = "_TableSpawnPreview"
 var _last_footprint_size: Vector2 = Vector2.ZERO
 var _last_show_indicator: bool = true
 var _last_enabled: bool = true
+var _last_indicator_color: Color = Color.TRANSPARENT
+var _last_outline_color: Color = Color.TRANSPARENT
 
 func _ready() -> void:
 	set_process(Engine.is_editor_hint())
@@ -32,7 +32,7 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if not Engine.is_editor_hint():
 		return
-	if footprint_size != _last_footprint_size or show_indicator != _last_show_indicator or enabled != _last_enabled:
+	if footprint_size != _last_footprint_size or show_indicator != _last_show_indicator or enabled != _last_enabled or indicator_color != _last_indicator_color or outline_color != _last_outline_color:
 		_rebuild_preview()
 
 func _rebuild_preview() -> void:
@@ -56,6 +56,7 @@ func _rebuild_preview() -> void:
 	if not enabled:
 		fill_material.albedo_color = Color(0.35, 0.35, 0.35, 0.10)
 		line_material.albedo_color = Color(0.45, 0.45, 0.45, 0.65)
+		line_material.emission = Color(0.45, 0.45, 0.45, 0.65)
 
 	var floor_mesh: PlaneMesh = PlaneMesh.new()
 	floor_mesh.size = footprint
@@ -126,3 +127,5 @@ func _cache_preview_settings() -> void:
 	_last_footprint_size = footprint_size
 	_last_show_indicator = show_indicator
 	_last_enabled = enabled
+	_last_indicator_color = indicator_color
+	_last_outline_color = outline_color
