@@ -7,6 +7,7 @@ CasinoDayManager is an Autoload at /root/CasinoDayManager. It persists across wo
 - RunManager: starts a run, tracks the day/phase, and gates the Casino → Rest Area departure.
 - CasinoWallet: authoritative shared wallet and wager ledger.
 - CasinoDayManager: starting-wallet snapshot, dynamic quota, five-minute timer, early quota unlock, deadline result snapshot, and table cleanup request.
+- CasinoManager: game-definition catalog, six-of-twelve daily draw, and host-to-client selection synchronization.
 - BaseTable: owns each table's open/started round lifecycle and responds to day-end cleanup.
 - ElevatorDepartureController: asks the day manager to complete an early casino departure after the physical elevator preparation sequence.
 
@@ -75,9 +76,16 @@ BaseTable adds itself to the casino_tables group. The day manager uses that grou
 
 Run tests/run_casino_day_checks.bat. It checks the Day 1 and Day 2 examples, schedule bounds, early quota unlock without automatic day end, early departure result capture, and deadline failure at one unit below quota.
 
+## Daily game selection
+
+CasinoManager is a separate Autoload. It registers game definitions, selects exactly six unique game types from a complete twelve-game catalog, and synchronizes the host's selection to clients. Selection uses a partial Fisher-Yates shuffle, so every game has equal inclusion probability. A game's selection does not exclude it from the following day, and a day cannot be rerolled once selected.
+
+The selector infrastructure is implemented, but the production catalog currently contains only Chicken Cross. The other eleven game names/IDs have not been finalized, so the manager deliberately refuses to select from an incomplete roster rather than inventing game entries. Once the remaining definitions are registered, the selection happens automatically on Casino arrival. See CASINO_GAME_SELECTION.md.
+
 ## Not included yet
 
-- The six-of-twelve game selector. The repository currently implements Chicken Cross only; the full twelve-game catalog and its exact IDs must be registered before a real daily selection can be made.
+- The other eleven production game definitions and their finalized names/IDs.
+- Casino screen/status UI displaying timer, wallet, quota, and selected games.
 - One-time House continuation/loan and terminal run outcomes.
 - Casino screen/status UI displaying timer, wallet, quota, and selected games.
 - End-to-end multiplayer verification of wallet replication and full casino-day gameplay.

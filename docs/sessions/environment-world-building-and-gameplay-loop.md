@@ -10,7 +10,8 @@ Base docs: `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `
 ## Current state (rewrite every session)
 
 - Branch `environment/world-building-and-gameplay-loop` is active; W1 architecture and persistent player spawning are being added on top of the user scene commit `ddc186113aab03c95be087c7c30bcee79a201e94`.
-- Shared wallet and generic script-only `BaseTable` controller are implemented. Both casino headless test suites have been USER VERIFIED passing in Godot 4.7.2.
+- Shared wallet and generic script-only `BaseTable` controller are implemented. Casino wallet/BaseTable, RunManager, and CasinoDayManager checks have been USER VERIFIED passing in Godot 4.7.2.
+- CasinoManager selector foundation is implemented: typed game definitions, Chicken Cross production registration, incomplete-roster gate, host-authoritative six-of-twelve draw, stable daily selection, and reliable peer synchronization. Its test runner is awaiting user execution.
 - The project is Godot 4.7, typed GDScript, Jolt, ENet, max four players; `fowl-play/` is the Godot project.
 - Existing reusable foundations include `Interactable` / `Focus`, `Network`, `PlayerIdentity`, `DebugHub`, and the current player/nameplate presentation.
 - The user's editor-authored scenes remain user-owned. Do not generate scene trees, meshes, collision shapes, or physical table art in code.
@@ -35,7 +36,7 @@ Base docs: `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `
 
 ## Exact next step
 
-User pulls the persistent player-spawning commit and runs `tests/run_checks.ps1 -OnlyStage main-controller`, then reports the result. Do not change the project startup scene until an initial Apartment scene exists and has at least four authored `SpawnPoints/Marker3D` children.
+User pulls the CasinoManager selector commit and runs `tests/run_casino_manager_checks.bat`. The production roster currently has Chicken Cross only; the other eleven game names/IDs have not been finalized. Do not invent them. Once the user and team define those games, register their CasinoGameDefinition resources so the automatic daily selection can activate.
 
 ## Waiting on the user
 
@@ -84,7 +85,7 @@ User pulls the persistent player-spawning commit and runs `tests/run_checks.ps1 
 - AFK: rare 30-minute timeout followed by comedic explosion/kick is an idea, not yet a technical contract.
 - Day 10 failure if continuation remains: repeat Day 10 with the one-time loan. If already consumed: run ends. Confirm the precise end-screen presentation later.
 - The dynamic quota formula is approved and documented in Casino Foundation Design. The Day 1–10 additional multipliers are the initial tuning curve and remain provisional for balance review. Historical GDD quota tables are superseded.
-- Exact game roster names/rules and game-specific participation limits remain to be designed one by one.
+- Exact game roster names/rules and game-specific participation limits remain to be designed one by one. Only Chicken Cross is currently registered in CasinoManager; the remaining eleven IDs/names are intentionally not fabricated.
 - Daily report screen layout, announcement count, and detailed stat schema remain open.
 
 ## Known bugs and gotchas
@@ -109,7 +110,11 @@ User pulls the persistent player-spawning commit and runs `tests/run_checks.ps1 
 - `fowl-play/casino/tables/chicken_cross/README.md` — table folder responsibilities and boundaries.
 - `fowl-play/tests/chicken_cross_rules_test.gd` — deterministic Chicken Cross regression test.
 - `docs/CASINO_CHICKEN_CROSS.md` — rules, tuning, and integration contract.
-- `fowl-play/project.godot` — `CasinoWallet` autoload registration.
+- `fowl-play/project.godot` — CasinoWallet, RunManager, CasinoDayManager, and CasinoManager autoload registrations.
+- `fowl-play/casino/casino_game_definition.gd` — selectable game definition Resource contract.
+- `fowl-play/casino/casino_manager.gd` — twelve-game catalog and daily six-game selector.
+- `fowl-play/tests/casino_manager_test.gd` and `fowl-play/tests/run_casino_manager_checks.bat` — selector regression test and Steam-friendly runner.
+- `fowl-play/docs/CASINO_GAME_SELECTION.md` — game catalog registration and daily selection contract.
 - `fowl-play/core/debug_hub.gd` — wallet diagnostics category.
 - `fowl-play/world/main_controller.gd` — persistent Main world transitions, player spawn/despawn, and stable world spawn-slot handling.
 - `fowl-play/player/player.gd` — safe standing-player placement helper for world transitions.

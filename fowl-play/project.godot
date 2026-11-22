@@ -24,6 +24,7 @@ DebugHub="*uid://y1b2pggxhllw"
 CasinoWallet="*res://casino/shared_wallet.gd"
 RunManager="*res://core/run_manager.gd"
 CasinoDayManager="*res://casino/casino_day_manager.gd"
+CasinoManager="*res://casino/casino_manager.gd"
 
 [display]
 

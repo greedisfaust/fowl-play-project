@@ -9,6 +9,7 @@
 - `RunManager`: active run, current day, current progression phase, and departure destination rules.
 - `CasinoWallet`: shared funds and wager ledger.
 - `CasinoDayManager`: per-day starting-wallet snapshot, dynamic quota, five-minute timer, and day-end result.
+- `CasinoManager`: registers selectable game definitions and synchronizes the six-game daily draw.
 
 ## State model
 
@@ -86,7 +87,7 @@ RunManager.begin_new_run() asks CasinoWallet to initialize the shared wallet led
 4. Once unlocked, Casino departure: Rest Area.
 5. Rest Area departure: next Casino day; the day number increments on arrival.
 
-The existing ElevatorDepartureController now asks RunManager for the permitted destination. On the first valid Apartment departure, it starts a new run automatically. It then calls the existing accepted-departure sequence. MainController notifies RunManager through its persistent `world_changed` signal, so progression is committed after arrival even though the source elevator scene is unloaded during the transition. Day 10 terminal outcomes, quota calculation, timer behavior, loan handling, and game selection remain for subsequent slices.
+The existing ElevatorDepartureController now asks RunManager for the permitted destination. On the first valid Apartment departure, it starts a new run automatically. It then calls the existing accepted-departure sequence. MainController notifies RunManager through its persistent `world_changed` signal, so progression is committed after arrival even though the source elevator scene is unloaded during the transition. Day 10 terminal outcomes and loan handling remain for subsequent slices. CasinoDayManager owns quota/timer behavior; CasinoManager owns daily game selection (the production catalog remains incomplete until the other eleven games are defined).
 
 ## DebugHub watches
 

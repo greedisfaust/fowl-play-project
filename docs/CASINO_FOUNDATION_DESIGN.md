@@ -41,16 +41,18 @@ Verified in the current branch tree and source:
 
 ## 4. Proposed system boundaries
 
-### CasinoManager (later phase)
+### CasinoManager (implemented selector foundation)
 
 Responsibilities:
-- Hold the registered game definitions/resources.
-- Validate game IDs and registration.
-- Select exactly six unique game types from the twelve-game roster each casino day.
-- Give every registered game equal selection probability.
-- Permit the same game to appear on consecutive days.
-- Ensure no game type is selected twice on the same day.
-- Keep all twelve games eligible from Day 1.
+- Hold registered CasinoGameDefinition resources with stable IDs, display names, and table scenes.
+- Validate IDs, scenes, and duplicate registration.
+- Select exactly six unique game types from the complete twelve-game roster each casino day.
+- Use a partial Fisher-Yates shuffle so each game has equal inclusion probability.
+- Permit the same game to appear on consecutive days; never duplicate a type within one day.
+- Synchronize the host's selected IDs to all peers and keep a day's selection stable.
+- Reset the selection when a fresh run starts.
+
+The selector foundation is implemented in fowl-play/casino/casino_manager.gd and registered as the CasinoManager Autoload. The catalog currently registers Chicken Cross only. The other eleven game IDs/names are not finalized, so selection is intentionally blocked until all twelve production definitions exist. See fowl-play/docs/CASINO_GAME_SELECTION.md.
 
 CasinoManager does not own wager settlement or individual game rules.
 
