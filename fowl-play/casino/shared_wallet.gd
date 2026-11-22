@@ -395,8 +395,10 @@ func _rpc_apply_network_state(snapshot: Dictionary) -> void:
 	var rounds_value: Variant = snapshot.get("rounds", {})
 	if typeof(wagers_value) != TYPE_DICTIONARY or typeof(rounds_value) != TYPE_DICTIONARY:
 		return
-	_wagers = (wagers_value as Dictionary).duplicate(true)
-	_rounds = (rounds_value as Dictionary).duplicate(true)
+	var incoming_wagers: Dictionary = wagers_value
+	var incoming_rounds: Dictionary = rounds_value
+	_wagers = incoming_wagers.duplicate(true)
+	_rounds = incoming_rounds.duplicate(true)
 	for wager_id_value: Variant in _wagers.keys():
 		var wager_id: String = str(wager_id_value)
 		var wager: Dictionary = _wagers[wager_id]
