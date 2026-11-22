@@ -145,6 +145,10 @@ func _on_option_confirmed(option_id: StringName, _option_label: String) -> void:
 			_begin_address_entry()
 		&"leave":
 			_request_leave()
+		&"confirm_leave":
+			_leave_network_session()
+		&"cancel_leave":
+			_show_main_menu()
 
 func _start_host() -> void:
 	if not is_instance_valid(_network):
