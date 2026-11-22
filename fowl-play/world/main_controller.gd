@@ -63,6 +63,9 @@ func _ready() -> void:
 
 	_player_spawner.spawn_path = _player_spawner.get_path_to(_players)
 	_player_spawner.spawn_limit = TUNING.MAX_PLAYERS
+	# Player instances are created only by the server. Make this explicit instead
+	# of relying on inherited scene-tree authority when sessions are switched.
+	_player_spawner.set_multiplayer_authority(TUNING.PEER_ID_HOST, true)
 	_player_spawner.spawn_function = _create_player
 	multiplayer.peer_connected.connect(_on_peer_connected)
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
@@ -363,9 +366,17 @@ func _on_peer_disconnected(peer_id: int) -> void:
 
 
 func _spawn_player(peer_id: int, spawn_points: Node3D) -> void:
-	if peer_id <= 0 or _players.has_node(str(peer_id)):
+	if peer_id <= 0 or not is_instance_valid(_players) or not is_instance_valid(_player_spawner):
+		return
+	# Reserve a peer's spawn slot before asking MultiplayerSpawner to create it.
+	# This makes the initial roster refresh and peer_connected callback idempotent.
+	if _players.has_node(str(peer_id)) or _spawn_slots.has(peer_id):
 		return
 	if spawn_points == null:
+		return
+	if not _player_spawner.is_multiplayer_authority():
+		if _debug_hub != null:
+			_debug_hub.call("warn", &"net", "Rejected player spawn on non-authoritative peer %d." % multiplayer.get_unique_id())
 		return
 	var slot: int = _find_available_spawn_slot(_count_spawn_markers(spawn_points))
 	if slot < 0:
