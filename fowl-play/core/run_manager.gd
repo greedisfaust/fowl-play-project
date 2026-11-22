@@ -193,6 +193,13 @@ func complete_world_transition(previous_world: int, destination_world: int) -> b
 			next_casino_departure_allowed = false
 		Phase.REST:
 			if repeat_day_after_rest:
+				var day_manager: Node = get_node_or_null("/root/CasinoDayManager")
+				if not is_instance_valid(day_manager):
+					return false
+				var replay_result: Dictionary = day_manager.call("prepare_day_replay")
+				if not bool(replay_result.get("ok", false)):
+					_log("Could not prepare Day %d replay: %s" % [current_day, str(replay_result.get("reason", ""))])
+					return false
 				repeat_day_after_rest = false
 			else:
 				next_day += 1
