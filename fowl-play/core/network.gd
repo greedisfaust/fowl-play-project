@@ -65,6 +65,7 @@ var ragdoll_settled_sent: int = 0
 var ragdoll_settled_received: int = 0
 
 func _ready() -> void:
+	set_process_unhandled_key_input(true)
 	multiplayer.peer_connected.connect(_on_peer_connected)
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 	multiplayer.connected_to_server.connect(_on_connected_to_server)
