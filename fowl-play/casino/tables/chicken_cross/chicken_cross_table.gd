@@ -188,10 +188,16 @@ func _rpc_request_cash_out() -> void:
 func _handle_player_action(peer_id: int, advance_chicken: bool) -> Dictionary:
 	if not _is_authority():
 		return _failure("Only the host can resolve Chicken Cross actions.")
-	if state != TableState.RUNNING or _round_model == null:
-		return _failure("Chicken Cross is not currently running.")
 	if not _is_near_table(peer_id):
 		return _failure("The player must remain within table proximity.")
+	# The first CROSS after a confirmed wager starts the round, locks all stakes,
+	# initializes the chicken states, and then advances onto the first tile.
+	if state == TableState.OPEN:
+		var start_result: Dictionary = start_round(peer_id)
+		if not bool(start_result.get("ok", false)):
+			return start_result
+	if state != TableState.RUNNING or _round_model == null:
+		return _failure("Chicken Cross is not currently running.")
 	var result: Dictionary
 	if advance_chicken:
 		result = _round_model.call("advance", peer_id, randf())
