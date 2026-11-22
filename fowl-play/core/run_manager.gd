@@ -23,6 +23,12 @@ var run_active: bool = false
 var current_day: int = 0
 var phase: int = Phase.IDLE
 var casino_departure_allowed: bool = false
+var continuation_used: bool = false
+var continuation_loan_amount: int = 0
+var repeat_day_after_rest: bool = false
+var last_day_success: bool = false
+var last_day_final_wallet: int = 0
+var last_day_quota: int = 0
 
 var _debug_hub: Node
 var _casino_wallet: Node
@@ -91,6 +97,12 @@ func begin_new_run() -> Dictionary:
 	var wallet_result: Dictionary = _casino_wallet.call("begin_run", INITIAL_RUN_WALLET)
 	if not bool(wallet_result.get("ok", false)):
 		return _failure("Could not initialize the run wallet: %s" % str(wallet_result.get("reason", "unknown wallet error")))
+	continuation_used = false
+	continuation_loan_amount = 0
+	repeat_day_after_rest = false
+	last_day_success = false
+	last_day_final_wallet = 0
+	last_day_quota = 0
 	_publish_state(true, 1, Phase.APARTMENT, false)
 	_log("New run started. Day 1 begins in the Apartment.")
 	return _success(get_snapshot())
@@ -102,7 +114,24 @@ func reset_for_session_end() -> bool:
 	var active_peer: MultiplayerPeer = multiplayer.multiplayer_peer
 	if not active_peer is OfflineMultiplayerPeer:
 		return false
-	_apply_state(false, 0, Phase.IDLE, false)
+	continuation_used = false
+	continuation_loan_amount = 0
+	repeat_day_after_rest = false
+	last_day_success = false
+	last_day_final_wallet = 0
+	last_day_quota = 0
+	_apply_state({
+		"run_active": false,
+		"current_day": 0,
+		"phase": Phase.IDLE,
+		"casino_departure_allowed": false,
+		"continuation_used": false,
+		"continuation_loan_amount": 0,
+		"repeat_day_after_rest": false,
+		"last_day_success": false,
+		"last_day_final_wallet": 0,
+		"last_day_quota": 0,
+	})
 	if is_instance_valid(_casino_wallet) and _casino_wallet.has_method("reset_for_session_end"):
 		_casino_wallet.call("reset_for_session_end")
 	_log("Run state reset after network session ended.")
@@ -135,7 +164,7 @@ func get_departure_destination(current_world: int) -> int:
 			if current_world == WORLD_CASINO and casino_departure_allowed:
 				return WORLD_APARTMENT
 		Phase.REST:
-			if current_world == WORLD_APARTMENT and current_day < MAX_DAYS:
+			if current_world == WORLD_APARTMENT and (current_day < MAX_DAYS or repeat_day_after_rest):
 				return WORLD_CASINO
 	return -1
 
@@ -155,10 +184,18 @@ func complete_world_transition(previous_world: int, destination_world: int) -> b
 		Phase.APARTMENT:
 			next_phase = Phase.CASINO
 		Phase.CASINO:
-			next_phase = Phase.REST
+			var day_result: Dictionary = _resolve_completed_casino_day()
+			if not bool(day_result.get("ok", false)):
+				_log("Casino-to-Apartment transition rejected: %s" % str(day_result.get("reason", "")))
+				return false
+			next_day = int(day_result.get("day", current_day))
+			next_phase = int(day_result.get("phase", Phase.REST))
 			next_casino_departure_allowed = false
 		Phase.REST:
-			next_day += 1
+			if repeat_day_after_rest:
+				repeat_day_after_rest = false
+			else:
+				next_day += 1
 			next_phase = Phase.CASINO
 			next_casino_departure_allowed = false
 		_:
@@ -167,6 +204,46 @@ func complete_world_transition(previous_world: int, destination_world: int) -> b
 	_publish_state(true, next_day, next_phase, next_casino_departure_allowed)
 	_log("Progression advanced to Day %d (%s)." % [current_day, _phase_name(phase)])
 	return true
+
+
+## Applies the approved success/failure policy only after the day manager has frozen its result.
+func _resolve_completed_casino_day() -> Dictionary:
+	var day_manager: Node = get_node_or_null("/root/CasinoDayManager")
+	if not is_instance_valid(day_manager):
+		return _failure("CasinoDayManager is unavailable.")
+	var day_snapshot: Dictionary = day_manager.call("get_snapshot")
+	if not bool(day_snapshot.get("day_result_recorded", false)):
+		return _failure("The casino day has no recorded deadline or early-departure result.")
+	if int(day_snapshot.get("day_number", 0)) != current_day:
+		return _failure("The recorded casino result does not match the current run day.")
+
+	last_day_success = bool(day_snapshot.get("day_success", false))
+	last_day_final_wallet = int(day_snapshot.get("final_wallet_snapshot", 0))
+	last_day_quota = int(day_snapshot.get("daily_quota", 0))
+
+	if last_day_success:
+		if current_day == MAX_DAYS:
+			return _success({"day": current_day, "phase": Phase.CONTRACT_FULFILLED})
+		return _success({"day": current_day, "phase": Phase.REST})
+
+	if continuation_used:
+		return _success({"day": current_day, "phase": Phase.RUN_FAILED})
+
+	var starting_wallet: int = int(day_snapshot.get("starting_wallet", 0))
+	var loan_amount: int = floori(float(starting_wallet) * 0.5)
+	if loan_amount <= 0:
+		return _failure("The House continuation loan is not valid for this starting wallet.")
+	if not is_instance_valid(_casino_wallet):
+		return _failure("CasinoWallet is unavailable; cannot apply the House continuation.")
+	var loan_result: Dictionary = _casino_wallet.call("credit_house_continuation_loan", loan_amount, current_day)
+	if not bool(loan_result.get("ok", false)):
+		return _failure("Could not apply the House continuation: %s" % str(loan_result.get("reason", "")))
+
+	continuation_used = true
+	continuation_loan_amount = loan_amount
+	repeat_day_after_rest = current_day == MAX_DAYS
+	_log("House continuation used after Day %d: +%d (50%% of starting wallet)." % [current_day, loan_amount])
+	return _success({"day": current_day, "phase": Phase.REST, "loan_amount": loan_amount, "repeat_day": repeat_day_after_rest})
 
 
 ## Quota/deadline systems will unlock this after their authoritative result is known.
@@ -185,29 +262,49 @@ func get_snapshot() -> Dictionary:
 		"phase_name": _phase_name(phase),
 		"casino_departure_allowed": casino_departure_allowed,
 		"max_days": MAX_DAYS,
+		"continuation_used": continuation_used,
+		"continuation_loan_amount": continuation_loan_amount,
+		"repeat_day_after_rest": repeat_day_after_rest,
+		"last_day_success": last_day_success,
+		"last_day_final_wallet": last_day_final_wallet,
+		"last_day_quota": last_day_quota,
 	}
 
 
 func _publish_state(active: bool, day: int, next_phase: Phase, departure_allowed: bool) -> void:
+	var snapshot: Dictionary = get_snapshot()
+	snapshot["run_active"] = active
+	snapshot["current_day"] = day
+	snapshot["phase"] = next_phase
+	snapshot["phase_name"] = _phase_name(next_phase)
+	snapshot["casino_departure_allowed"] = departure_allowed
 	var network_peer: MultiplayerPeer = multiplayer.multiplayer_peer
 	if network_peer is OfflineMultiplayerPeer:
-		_apply_state(active, day, next_phase, departure_allowed)
+		_apply_state(snapshot)
 	else:
-		rpc("_rpc_apply_state", active, day, next_phase, departure_allowed)
+		rpc("_rpc_apply_state", snapshot)
 
 
 @rpc("authority", "call_local", "reliable")
-func _rpc_apply_state(active: bool, day: int, next_phase: int, departure_allowed: bool) -> void:
+func _rpc_apply_state(snapshot: Dictionary) -> void:
+	var day: int = int(snapshot.get("current_day", -1))
+	var next_phase: int = int(snapshot.get("phase", -1))
 	if day < 0 or day > MAX_DAYS or next_phase < Phase.IDLE or next_phase > Phase.RUN_FAILED:
 		return
-	_apply_state(active, day, next_phase, departure_allowed)
+	_apply_state(snapshot)
 
 
-func _apply_state(active: bool, day: int, next_phase: int, departure_allowed: bool) -> void:
-	run_active = active
-	current_day = day
-	phase = next_phase
-	casino_departure_allowed = departure_allowed
+func _apply_state(snapshot: Dictionary) -> void:
+	run_active = bool(snapshot.get("run_active", false))
+	current_day = int(snapshot.get("current_day", 0))
+	phase = int(snapshot.get("phase", Phase.IDLE)) as Phase
+	casino_departure_allowed = bool(snapshot.get("casino_departure_allowed", false))
+	continuation_used = bool(snapshot.get("continuation_used", false))
+	continuation_loan_amount = int(snapshot.get("continuation_loan_amount", 0))
+	repeat_day_after_rest = bool(snapshot.get("repeat_day_after_rest", false))
+	last_day_success = bool(snapshot.get("last_day_success", false))
+	last_day_final_wallet = int(snapshot.get("last_day_final_wallet", 0))
+	last_day_quota = int(snapshot.get("last_day_quota", 0))
 	run_state_changed.emit(get_snapshot())
 
 
