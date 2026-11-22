@@ -29,53 +29,65 @@ func _run_checks() -> void:
 		_fail("Could not pack the test table scene.")
 		return
 
-	var active_slot: Marker3D = _make_slot("Slot_A", "test_table_a", "chicken_cross", packed_table, true)
+	var definition: CasinoGameDefinition = CasinoGameDefinition.new()
+	definition.game_id = &"test_game"
+	definition.display_name = "Spawner Test Game"
+	definition.table_scene = packed_table
+	var definitions: Array[CasinoGameDefinition] = [definition]
+
+	var active_slot: Marker3D = _make_slot("Slot_A", "slot_a", true)
 	active_slot.position = Vector3(-6.0, 0.15, -12.0)
 	spawn_points.add_child(active_slot)
 
-	var disabled_slot: Marker3D = _make_slot("Slot_B", "test_table_b", "chicken_cross", packed_table, false)
+	var disabled_slot: Marker3D = _make_slot("Slot_B", "slot_b", false)
 	spawn_points.add_child(disabled_slot)
 
-	var result: Dictionary = spawner.call("spawn_tables")
+	var result: Dictionary = spawner.call("spawn_tables_for_definitions", 1, definitions)
 	if not bool(result.get("ok", false)):
 		_fail("Spawner returned an error: %s" % str(result.get("reason", "")))
 		return
 	if int(result.get("spawned_count", 0)) != 1:
 		_fail("Expected exactly one enabled configured table to spawn.")
 		return
-	if int(result.get("skipped_count", 0)) != 1:
-		_fail("Expected the disabled table slot to be skipped.")
+	if int(result.get("skipped_count", 0)) != 0:
+		_fail("Disabled slots should not count as selected-game omissions.")
 		return
 	if spawned_tables.get_child_count() != 1:
 		_fail("SpawnedTables should contain exactly one instance.")
 		return
 
 	var spawned_table: Node3D = spawned_tables.get_child(0) as Node3D
-	if spawned_table == null or spawned_table.name != "Slot_A_Table":
+	if spawned_table == null or spawned_table.name != "slot_a_Table":
 		_fail("Spawned table has an unexpected instance name.")
 		return
-	if spawned_table.get_meta("casino_table_id", "") != "test_table_a":
-		_fail("Spawned table is missing its table ID metadata.")
+	if spawned_table.get_meta("casino_game_id", "") != "test_game":
+		_fail("Spawned table is missing its game ID metadata.")
+		return
+	if spawned_table.get_meta("casino_table_id", "") != "day_01_test_game_01":
+		_fail("Spawned table is missing its generated table ID.")
 		return
 	if not spawned_table.global_position.is_equal_approx(active_slot.global_position):
 		_fail("Spawned table did not inherit the spawn marker's world position.")
 		return
 
-	var second_result: Dictionary = spawner.call("spawn_tables")
+	var second_result: Dictionary = spawner.call("spawn_tables_for_definitions", 1, definitions)
 	if int(second_result.get("spawned_count", -1)) != 0 or spawned_tables.get_child_count() != 1:
-		_fail("Calling spawn_tables twice created a duplicate table.")
+		_fail("Calling the daily spawner twice created a duplicate table.")
 		return
 
-	print("CASINO TABLE SPAWNER PASS: enabled slots, disabled slots, scene instantiation, transform placement, metadata, and duplicate prevention")
+	var mismatch: Dictionary = spawner.call("spawn_tables_for_definitions", 2, [definition, definition])
+	if bool(mismatch.get("ok", true)):
+		_fail("Spawner should reject a slot count that does not match the daily selection.")
+		return
+
+	print("CASINO TABLE SPAWNER PASS: daily game definitions, enabled slots, disabled slots, scene instantiation, transform placement, metadata, slot-count validation, and duplicate prevention")
 	quit(0)
 
-func _make_slot(slot_name: String, table_id: String, game_id: String, scene: PackedScene, is_enabled: bool) -> Marker3D:
+func _make_slot(slot_name: String, slot_id: String, is_enabled: bool) -> Marker3D:
 	var slot: Marker3D = Marker3D.new()
 	slot.name = slot_name
 	slot.set_script(SPAWN_POINT_SCRIPT)
-	slot.set("table_id", table_id)
-	slot.set("game_id", game_id)
-	slot.set("table_scene", scene)
+	slot.set("slot_id", slot_id)
 	slot.set("enabled", is_enabled)
 	return slot
 
