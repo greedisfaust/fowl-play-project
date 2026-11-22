@@ -87,14 +87,14 @@ func _rebuild_geometry() -> void:
 	bronze_material.roughness = 0.24
 
 	var header_material: StandardMaterial3D = StandardMaterial3D.new()
-	header_material.albedo_color = header_color
+	header_material.albedo_color = Color(0.035, 0.041, 0.049, 1.0)
 	header_material.metallic = 0.10
 	header_material.roughness = 0.38
 
 	var header_light_material: StandardMaterial3D = StandardMaterial3D.new()
-	header_light_material.albedo_color = header_recess_light_color
+	header_light_material.albedo_color = Color(1.0, 0.48, 0.19, 1.0)
 	header_light_material.emission_enabled = true
-	header_light_material.emission = header_recess_light_color
+	header_light_material.emission = Color(1.0, 0.48, 0.19, 1.0)
 	header_light_material.emission_energy_multiplier = 1.35
 
 	var sill_material: StandardMaterial3D = StandardMaterial3D.new()
