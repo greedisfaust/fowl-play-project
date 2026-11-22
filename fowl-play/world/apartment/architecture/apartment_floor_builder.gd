@@ -158,11 +158,11 @@ func _build_hallway_walnut(parent: Node3D, scene_root: Node) -> void:
 	_add_box(section, "Dark_Wood_Joint_Bed", Vector3(3.5, BACKING_THICKNESS, 34.0),
 		Vector3(-12.75, BACKING_TOP_Y - BACKING_THICKNESS * 0.5, 0.0), _wood_joint_material, scene_root)
 
-	var plank_rows: int = int(floor(3.5 / plank_width))
-	var used_width: float = float(plank_rows) * plank_width
-	var x_start: float = -12.75 - used_width * 0.5
+	var plank_rows: int = int(ceil(3.5 / plank_width))
+	var row_pitch: float = 3.5 / float(plank_rows)
+	var x_start: float = -14.5
 	for row_index: int in range(plank_rows):
-		var plank_x: float = x_start + float(row_index) * plank_width + plank_width * 0.5
+		var plank_x: float = x_start + float(row_index) * row_pitch + row_pitch * 0.5
 		var stagger: float = plank_length * 0.5 if row_index % 2 == 1 else 0.0
 		var segment_index: int = 0
 		var z_cursor: float = -17.0 - stagger
@@ -174,7 +174,7 @@ func _build_hallway_walnut(parent: Node3D, scene_root: Node) -> void:
 				var material_index: int = posmod(row_index * 2 + segment_index * 3, _wood_materials.size())
 				var plank_name: String = "Walnut_Plank_R%02d_S%02d" % [row_index, segment_index]
 				_add_box(section, plank_name,
-					Vector3(maxf(0.05, plank_width - plank_gap), SURFACE_THICKNESS, segment_depth - plank_gap),
+					Vector3(maxf(0.05, row_pitch - plank_gap), SURFACE_THICKNESS, segment_depth - plank_gap),
 					Vector3(plank_x, FLOOR_TOP_Y - SURFACE_THICKNESS * 0.5,
 						(segment_start + segment_end) * 0.5), _wood_materials[material_index], scene_root)
 			z_cursor += plank_length
