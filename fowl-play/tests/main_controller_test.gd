@@ -63,6 +63,27 @@ func _run() -> void:
 		_finish(false, "Standing player was not moved to the destination world's matching spawn slot.")
 		return
 
+	# Starting a new host/client session also calls Network.shutdown(), but
+	# must NOT restore the temporary offline player while MultiplayerSpawner
+	# is about to replicate the real peer-owned player nodes.
+	network.set("_switching_session", true)
+	network.call("shutdown")
+	await process_frame
+	await process_frame
+	if players.get_child_count() != 0:
+		main.queue_free()
+		_finish(false, "Session startup must not recreate Players/1 as an offline player.")
+		return
+	network.set("_switching_session", false)
+	main.call("_restore_local_player_after_session_end")
+	await process_frame
+	await process_frame
+	if players.get_child_count() != 1 or players.get_node_or_null("1") == null:
+		main.queue_free()
+		_finish(false, "Offline player recovery should still work after session startup is cancelled.")
+		return
+	player = players.get_node("1")
+
 	# Leaving a multiplayer session replaces the transport with OfflineMultiplayerPeer.
 	# The persistent Main controller must still be able to create a fresh local player.
 	var run_manager: Node = root.get_node_or_null("RunManager")
