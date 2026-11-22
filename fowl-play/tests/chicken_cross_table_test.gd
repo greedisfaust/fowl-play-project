@@ -9,9 +9,9 @@ func _initialize() -> void:
 func _run() -> void:
 	var wallet: Node = root.get_node("CasinoWallet")
 	_check_result(wallet.call("begin_run", 1000), true, "Initialize wallet for Chicken Cross table")
-	await _test_single_player_round(wallet)
-	await _test_multi_player_round(wallet)
-	await _test_duplicate_bettor_rejection(wallet)
+	_test_single_player_round(wallet)
+	_test_multi_player_round(wallet)
+	_test_duplicate_bettor_rejection(wallet)
 	if _failed:
 		quit(1)
 		return
