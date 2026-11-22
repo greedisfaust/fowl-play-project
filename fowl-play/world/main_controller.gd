@@ -329,8 +329,14 @@ func _on_session_ended() -> void:
 ## Network shutdown clears replicated players on every peer. Once queued deletion has
 ## completed, restore this instance's local player for offline Apartment play.
 func _restore_local_player_after_session_end() -> void:
+	# shutdown() is also used internally while starting a host/client session.
+	# In that case MultiplayerSpawner must own the incoming player instances;
+	# restoring the temporary offline peer here can create a duplicate child
+	# (usually Players/1) before the host's replicated spawn arrives.
+	if not is_instance_valid(_network) or bool(_network.get("_switching_session")):
+		return
 	await get_tree().process_frame
-	if not is_instance_valid(_network):
+	if not is_instance_valid(_network) or bool(_network.get("_switching_session")):
 		return
 	var active_peer: MultiplayerPeer = multiplayer.multiplayer_peer
 	if not active_peer is OfflineMultiplayerPeer:
