@@ -317,10 +317,7 @@ func _build_runtime_hud_sections() -> void:
 		top_left.add_child(wallet_panel)
 		wallet_stack.reparent(wallet_panel)
 		wallet_stack.add_theme_constant_override("separation", 2)
-		wallet_stack.add_theme_constant_override("margin_left", 0)
-		wallet_stack.add_theme_constant_override("margin_right", 0)
-		wallet_stack.add_theme_constant_override("margin_top", 0)
-		wallet_stack.add_theme_constant_override("margin_bottom", 0)
+		wallet_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	var timer_panel: PanelContainer = _make_panel()
 	timer_panel.name = "TimerPanel"
@@ -541,10 +538,12 @@ func _refresh_action_prompt() -> void:
 	_action_prompt.add_child(heading)
 
 	var carrying: bool = is_instance_valid(_local_player) and _local_player.has_method("is_carrying") and bool(_local_player.call("is_carrying"))
+	var carried: bool = is_instance_valid(_local_player) and _local_player.has_method("is_carried") and bool(_local_player.call("is_carried"))
+	var incapacitated: bool = is_instance_valid(_local_player) and (bool(_local_player.get("is_limp")) or bool(_local_player.get("is_recovering")) or carried)
 	if carrying:
 		_add_action_row("Q", "TAP TO DROP")
 		_add_action_row("HOLD Q", "CHARGE & AUTO-THROW")
-	else:
+	elif not incapacitated:
 		_add_action_row("Q", "JAB")
 		_add_action_row("HOLD Q", "CHARGED PUNCH")
 		_add_action_row("F", "PARRY")
