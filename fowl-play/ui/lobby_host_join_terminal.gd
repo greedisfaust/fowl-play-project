@@ -26,6 +26,14 @@ var _was_client: bool = false
 var _returning_to_apartment: bool = false
 
 func _ready() -> void:
+	# Resolve the terminal's own sibling references as a fallback when a nested
+	# PackedScene instance does not restore its exported Node references.
+	if not is_instance_valid(screen):
+		screen = get_node_or_null("../SlimWorldScreen/WorldScreen") as WorldScreen
+	if not is_instance_valid(screen_interactable):
+		screen_interactable = get_node_or_null("../SlimWorldScreen/WorldScreen/ScreenHit/Interactable") as Interactable
+	if not is_instance_valid(proximity_area):
+		proximity_area = get_node_or_null("../ProximityArea") as Area3D
 	super._ready()
 	if not is_instance_valid(screen) or not is_instance_valid(proximity_area) or not is_instance_valid(screen_interactable):
 		set_process_input(false)
