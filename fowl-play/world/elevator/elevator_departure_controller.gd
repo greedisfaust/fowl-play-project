@@ -23,6 +23,7 @@ var _occupancy: ElevatorOccupancy
 var _door_controller: ElevatorDoorController
 var _door_proximity: Node
 var _main_controller: MainController
+var _run_manager: Node
 var _network: Node
 var _request_pending: bool = false
 var _departure_in_progress: bool = false
@@ -35,7 +36,17 @@ func _ready() -> void:
 	_door_controller = get_node_or_null(door_controller_path) as ElevatorDoorController
 	_door_proximity = get_node_or_null(door_proximity_path)
 	_network = get_node_or_null("/root/Network")
+	_run_manager = get_node_or_null("/root/RunManager")
+	_main_controller = get_node_or_null(main_controller_path) as MainController
 
+	if not is_instance_valid(_run_manager):
+		push_error("ElevatorDepartureController requires the RunManager autoload.")
+		set_process(false)
+		return
+	if _main_controller == null:
+		push_error("ElevatorDepartureController could not find MainController at %s." % main_controller_path)
+		set_process(false)
+		return
 	if not is_instance_valid(_button):
 		push_error("ElevatorDepartureController could not find the DEPART button at %s." % button_path)
 		set_process(false)
@@ -62,6 +73,11 @@ func _ready() -> void:
 		set_process(false)
 		return
 
+	if not is_connected("departure_requested", _on_departure_requested):
+		departure_requested.connect(_on_departure_requested)
+	if not _main_controller.world_changed.is_connected(_on_world_changed):
+		_main_controller.world_changed.connect(_on_world_changed)
+
 	_debug_hub = get_node_or_null("/root/DebugHub")
 	if is_instance_valid(_debug_hub):
 		_debug_hub.call("watch", &"elevator/departure_ready", Callable(self, "are_all_players_inside"))
@@ -72,6 +88,8 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	if is_instance_valid(_interactable) and _interactable.availability_check == Callable(self, "_can_interact"):
 		_interactable.availability_check = Callable()
+	if is_instance_valid(_main_controller) and _main_controller.world_changed.is_connected(_on_world_changed):
+		_main_controller.world_changed.disconnect(_on_world_changed)
 	if is_instance_valid(_button) and _button.has_signal("button_activated"):
 		if _button.is_connected("button_activated", _on_button_activated):
 			_button.disconnect("button_activated", _on_button_activated)
@@ -121,6 +139,40 @@ func _on_button_activated(_button_id: StringName, actor_peer_id: int) -> void:
 	if is_instance_valid(_debug_hub):
 		_debug_hub.call("log", &"net", "Elevator departure requested by peer %d." % actor_peer_id)
 	departure_requested.emit(actor_peer_id)
+
+
+## Resolves a valid button request through RunManager, then starts the existing elevator sequence.
+## A fresh session starts its run on the first Apartment departure.
+func _on_departure_requested(_actor_peer_id: int) -> void:
+	if not _is_network_authority() or not is_instance_valid(_run_manager) or not is_instance_valid(_main_controller):
+		return
+
+	var current_world: int = _main_controller.active_world
+	if not bool(_run_manager.get("run_active")):
+		if current_world != MainController.World.APARTMENT or not _main_controller.can_transition_to(MainController.World.CASINO):
+			reject_departure_request("a new run can only begin from the Apartment")
+			return
+		var start_result: Dictionary = _run_manager.call("begin_new_run")
+		if not bool(start_result.get("ok", false)):
+			reject_departure_request(str(start_result.get("reason", "could not start a new run")))
+			return
+
+	var destination_world: int = int(_run_manager.call("get_departure_destination", current_world))
+	if destination_world < 0:
+		reject_departure_request("departure is not allowed during the current run phase")
+		return
+	if not accept_departure_request(destination_world):
+		reject_departure_request("the approved destination could not be started")
+
+
+## RunManager commits progression only after MainController installs the destination world.
+func _on_world_changed(previous_world: int, current_world: int) -> void:
+	if previous_world < 0 or not _is_network_authority() or not is_instance_valid(_run_manager):
+		return
+	if not bool(_run_manager.call("complete_world_transition", previous_world, current_world)):
+		return
+	if is_instance_valid(_debug_hub):
+		_debug_hub.call("log", &"run", "Elevator arrival committed: world %d -> %d." % [previous_world, current_world])
 
 
 ## Called by the outer-loop progression coordinator after it approves the request.
