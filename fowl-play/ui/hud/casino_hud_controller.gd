@@ -38,6 +38,7 @@ var _last_day_snapshot: Dictionary = {}
 var _network: Node
 var _players_root: Node
 var _local_player: Node
+var _focused_interactable: Interactable
 var _contributions: Dictionary = {}
 var _counted_wagers: Dictionary = {}
 var _current_contribution_day: int = 0
@@ -438,21 +439,22 @@ func _connect_focus_sources() -> void:
 
 
 func _on_focus_target_changed(target: Interactable) -> void:
-	_refresh_action_prompt(target)
+	_focused_interactable = target
+	_refresh_action_prompt()
 
 
-func _refresh_action_prompt(target: Interactable = null) -> void:
+func _refresh_action_prompt() -> void:
 	if not is_instance_valid(_action_prompt):
 		return
 	var prompt_parts: PackedStringArray = PackedStringArray()
-	if is_instance_valid(target) and target.enabled:
+	if is_instance_valid(_focused_interactable) and _focused_interactable.enabled:
 		var controls: PackedStringArray = PackedStringArray()
-		if target.action_for_input(&"primary") != &"":
+		if _focused_interactable.action_for_input(&"primary") != &"":
 			controls.append("M1")
-		if target.action_for_input(&"interact") != &"":
+		if _focused_interactable.action_for_input(&"interact") != &"":
 			controls.append("E")
 		if not controls.is_empty():
-			prompt_parts.append("%s — %s" % [" / ".join(controls), target.prompt_text])
+			prompt_parts.append("%s — %s" % [" / ".join(controls), _focused_interactable.prompt_text])
 	if is_instance_valid(_local_player) and _local_player.has_method("is_carrying") and bool(_local_player.call("is_carrying")):
 		prompt_parts.append("Q — DROP  |  HOLD Q — THROW")
 	else:
