@@ -10,9 +10,9 @@ const COLOR_TIMER_NORMAL: Color = Color(0.96, 0.94, 0.88, 1.0)
 const COLOR_TIMER_URGENT: Color = Color(0.91, 0.34, 0.31, 1.0)
 
 @export_group("Display Nodes")
-@export var day_label_path: NodePath = ^"MarginContainer/TopLeft/DayLabel"
-@export var wallet_label_path: NodePath = ^"MarginContainer/TopLeft/WalletLabel"
-@export var quota_label_path: NodePath = ^"MarginContainer/TopLeft/QuotaLabel"
+@export var day_label_path: NodePath = ^"MarginContainer/TopLeft/WalletStack/DayLabel"
+@export var wallet_label_path: NodePath = ^"MarginContainer/TopLeft/WalletStack/WalletLabel"
+@export var quota_label_path: NodePath = ^"MarginContainer/TopLeft/WalletStack/QuotaLabel"
 @export var timer_label_path: NodePath = ^"MarginContainer/TopCenter/TimerLabel"
 
 @export_group("Terminal Typography")
