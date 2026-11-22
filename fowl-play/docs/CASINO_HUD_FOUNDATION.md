@@ -42,9 +42,9 @@ Suggested initial sizing at 1920x1080:
 - TimerLabel: 36 px.
 
 The controller exposes NodePaths for the four Labels. Defaults expect:
-- `MarginContainer/TopLeft/DayLabel`
-- `MarginContainer/TopLeft/WalletLabel`
-- `MarginContainer/TopLeft/QuotaLabel`
+- `MarginContainer/TopLeft/WalletStack/DayLabel`
+- `MarginContainer/TopLeft/WalletStack/WalletLabel`
+- `MarginContainer/TopLeft/WalletStack/QuotaLabel`
 - `MarginContainer/TopCenter/TimerLabel`
 
 If you choose different node names or nesting, update the exported paths in the Inspector.
