@@ -204,6 +204,7 @@ func _perform_transition(destination: int, packed_scene: PackedScene) -> void:
 		active_world_instance = null
 
 	next_world.name = _world_name(destination)
+	_install_lobby_device_controllers(next_world)
 	_world_root.add_child(next_world)
 
 	var previous_world: int = active_world if _has_active_world else -1
