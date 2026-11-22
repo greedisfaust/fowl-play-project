@@ -14,9 +14,8 @@ const COLOR_TEXT: String = "#F5F5F5"
 @export var occupancy_path: NodePath = ^"../ElevatorArea"
 
 @export_group("Typography")
-@export_range(1.0, 2.5, 0.05) var main_text_scale: float = 1.75
 @export_range(0.6, 1.5, 0.05) var header_text_scale: float = 0.9
-@export_range(0.6, 1.5, 0.05) var status_text_scale: float = 0.85
+@export_range(1.0, 2.5, 0.05) var status_text_scale: float = 1.75
 
 var _world_screen: Node
 var _screen_text: ScreenText
@@ -151,7 +150,7 @@ func _refresh_display() -> void:
 
 	var base_size: int = maxi(_screen_text.get_effective_font_size(), 8)
 	var header_size: int = maxi(roundi(float(base_size) * header_text_scale), 8)
-	var main_size: int = maxi(roundi(float(base_size) * main_text_scale), 8)
+	var count_size: int = base_size
 	var status_size: int = maxi(roundi(float(base_size) * status_text_scale), 8)
 
 	var left_header: String = "ELEVATOR STATUS"
@@ -167,7 +166,7 @@ func _refresh_display() -> void:
 		COLOR_HEADER, header_size, left_header, " ".repeat(header_gap), right_header
 	]
 	var count_line: String = "[font_size=%d][b]INSIDE [color=%s]%d[/color] / %d[/b][/font_size]" % [
-		main_size, count_color, players_inside, total_players
+		count_size, count_color, players_inside, total_players
 	]
 	var status_line: String = "[center][color=%s][font_size=%d][b]%s[/b][/font_size][/color][/center]" % [
 		status_color, status_size, departure_status
