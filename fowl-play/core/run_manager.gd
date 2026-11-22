@@ -21,7 +21,7 @@ signal run_state_changed(snapshot: Dictionary)
 
 var run_active: bool = false
 var current_day: int = 0
-var phase: Phase = Phase.IDLE
+var phase: int = Phase.IDLE
 var casino_departure_allowed: bool = false
 
 var _debug_hub: Node
@@ -83,7 +83,7 @@ func complete_world_transition(previous_world: int, destination_world: int) -> b
 		return false
 
 	var next_day: int = current_day
-	var next_phase: Phase = phase
+	var next_phase: int = phase
 	var next_casino_departure_allowed: bool = casino_departure_allowed
 	match phase:
 		Phase.APARTMENT:
@@ -137,7 +137,7 @@ func _rpc_apply_state(active: bool, day: int, next_phase: int, departure_allowed
 	_apply_state(active, day, next_phase, departure_allowed)
 
 
-func _apply_state(active: bool, day: int, next_phase: Phase, departure_allowed: bool) -> void:
+func _apply_state(active: bool, day: int, next_phase: int, departure_allowed: bool) -> void:
 	run_active = active
 	current_day = day
 	phase = next_phase
@@ -149,7 +149,7 @@ func _is_authority() -> bool:
 	return multiplayer.is_server()
 
 
-func _phase_name(value: Phase) -> String:
+func _phase_name(value: int) -> String:
 	match value:
 		Phase.IDLE:
 			return "IDLE"
