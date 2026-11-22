@@ -11,10 +11,11 @@ This is a manual, real-ENet smoke test using separate game processes on one comp
 5. In the first game window, use the Apartment's Lobby Host / Join terminal and choose **HOST**.
 6. In the other window(s), choose **JOIN** and enter `127.0.0.1`.
 
-The project starts at the Main scene and the Apartment has four MainController spawn markers. The host listens on UDP port `7777`.
+The project starts at the Main scene. Apartment player markers are under `LobbySpawnPoints`; Casino player markers are under `PlayerSpawnPoints`. The host listens on UDP port `7777`. MainController now selects the populated player-marker container and ignores empty placeholder nodes named `SpawnPoints`.
 
 ## Test A — host and one client
 
+- [ ] No `World Apartment has no populated player spawn container` warning appears.
 - [ ] Host remains in Apartment and sees one player before a client joins.
 - [ ] Client joins successfully.
 - [ ] Host sees two players.
