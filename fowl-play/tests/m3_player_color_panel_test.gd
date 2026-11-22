@@ -16,7 +16,8 @@ func _run() -> void:
 	var network: Node = root.get_node("Network")
 	network.call("shutdown")
 	network.set("is_host", true)
-	network.set("connected_peers", [1, 2])
+	var initial_peers: Array[int] = [1, 2]
+	network.set("connected_peers", initial_peers)
 	network.set("player_identities", {})
 	_check(bool(network.call("_assign_player_identity", 1, "Host", 0)), "Host receives the first requested color")
 	_check(bool(network.call("_assign_player_identity", 2, "Client", 1)), "Client receives a distinct initial color")
@@ -42,7 +43,8 @@ func _run() -> void:
 	var blue_interactable: Interactable = panel.get_node("ColorButtons/BlueButton/Interactable") as Interactable
 	_check(not blue_interactable.enabled, "The newly selected color becomes unavailable to other players")
 
-	network.set("connected_peers", [1, 2, 3])
+	var late_peers: Array[int] = [1, 2, 3]
+	network.set("connected_peers", late_peers)
 	_check(bool(network.call("_assign_player_identity", 3, "Late", 0)), "Late joiner receives an automatically selected free color")
 	var late_identity: PlayerIdentity = network.call("get_player_identity", 3) as PlayerIdentity
 	_check(late_identity != null and late_identity.color_index == 1, "Late joiner is moved to the next available color")
