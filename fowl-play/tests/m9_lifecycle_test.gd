@@ -86,7 +86,6 @@ func _run() -> void:
 	var pending_ragdoll_starts: Dictionary = network.get("_pending_ragdoll_starts")
 	var jab_ready_times: Dictionary = network.get("_combat_jab_ready_times")
 	var charged_ready_times: Dictionary = network.get("_charged_punch_ready_times")
-	var lunge_ready_times: Dictionary = network.get("_combat_lunge_ready_times")
 	var pending_player_states_for_cleanup: Dictionary = network.get("_pending_player_states")
 	var combat_press_times: Dictionary = network.get("_combat_press_times")
 	var charged_presses_for_cleanup: Dictionary = network.get("_combat_charged_presses")
@@ -99,7 +98,6 @@ func _run() -> void:
 	pending_player_states_for_cleanup[5] = {"sequence": 2}
 	jab_ready_times[5] = 10.0
 	charged_ready_times[5] = 10.0
-	lunge_ready_times[5] = 10.0
 	parry_ready_times[5] = 10.0
 	combat_press_times[5] = 1.0
 	charged_presses_for_cleanup[5] = true
@@ -113,7 +111,7 @@ func _run() -> void:
 	check(not ragdoll_epochs.has(5) and not pending_ragdoll_starts.has(5), "unregister clears ragdoll epochs and pending ragdoll starts")
 	check(not pending_player_states_for_cleanup.has(5), "unregister clears pending player snapshots")
 	check(
-		not jab_ready_times.has(5) and not charged_ready_times.has(5) and not lunge_ready_times.has(5)
+		not jab_ready_times.has(5) and not charged_ready_times.has(5)
 		and not parry_ready_times.has(5) and not combat_press_times.has(5)
 		and not charged_presses_for_cleanup.has(5) and not action_locks_for_cleanup.has(5),
 		"unregister clears every combat cooldown and held-input entry"
