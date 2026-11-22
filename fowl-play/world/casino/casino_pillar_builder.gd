@@ -15,6 +15,8 @@ class_name CasinoPillarBuilder
 ])
 
 @export_group("Dimensions")
+@export_range(0.0, 1.0, 0.05) var window_pillar_inset: float = 0.42
+@export var window_facade_corner_count: int = 3
 @export_range(3.5, 4.5, 0.05) var pillar_height: float = 4.02
 @export_range(0.45, 1.2, 0.05) var shaft_width: float = 0.68
 @export_range(0.05, 0.3, 0.01) var base_height: float = 0.18
@@ -86,7 +88,11 @@ func _build_pillar(
 	light_material: Material,
 	scene_root: Node
 ) -> void:
-	var center: Vector3 = Vector3(ground_position.x, 0.0, ground_position.y)
+	var adjusted_position: Vector2 = ground_position
+	if index < window_facade_corner_count and window_pillar_inset > 0.0:
+		var inward_direction: Vector2 = (Vector2(-8.0, -17.0) - ground_position).normalized()
+		adjusted_position += inward_direction * window_pillar_inset
+	var center: Vector3 = Vector3(adjusted_position.x, 0.0, adjusted_position.y)
 	var shaft_height: float = pillar_height - base_height - capital_height
 	var shaft_center_y: float = base_height + shaft_height * 0.5
 	var prefix: String = "StonePier_%02d_" % index
@@ -136,7 +142,7 @@ func _build_pillar(
 	)
 
 	# Four narrow bronze inlays add vertical definition without busy paneling.
-	var face_offset: float = shaft_width * 0.5 + 0.012
+	var face_offset: float = shaft_width * 0.5 + 0.022
 	var inlay_height: float = maxf(0.2, shaft_height - 0.34)
 	var inlay_center_y: float = base_height + shaft_height * 0.5
 	var inlay_positions: Array[Vector3] = [
