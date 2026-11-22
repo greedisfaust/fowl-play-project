@@ -35,14 +35,17 @@ func _ready() -> void:
 
 	for button_node: Node in buttons_root.get_children():
 		var button: Node = button_node
-		var color_id: StringName = StringName(str(button.get("button_id")))
+		var color_id: StringName = _get_button_color_id(button)
 		if not COLOR_BUTTONS.has(color_id):
 			continue
 		var color_index: int = int(COLOR_BUTTONS[color_id])
 		_buttons[color_index] = button
+		var interactable: Interactable = button.get_node_or_null("Interactable") as Interactable
 		if button.has_signal("button_activated"):
 			button.connect("button_activated", _on_button_activated.bind(color_index))
-		var interactable: Interactable = button.get_node_or_null("Interactable") as Interactable
+		elif is_instance_valid(interactable):
+			# Plain authored button roots use the host-approved Interactable signal.
+			interactable.interacted.connect(_on_interactable_activated.bind(color_id, color_index))
 		if is_instance_valid(interactable):
 			interactable.availability_check = Callable(self, "_can_select_color").bind(color_index)
 		_cache_button_materials(color_index, button)
@@ -63,8 +66,14 @@ func _cache_button_materials(color_index: int, button: Node) -> void:
 	if not is_instance_valid(key):
 		return
 	var key_mesh: MeshInstance3D = key.get_node_or_null("KeyMesh") as MeshInstance3D
-	if is_instance_valid(key_mesh) and key_mesh.material_override is StandardMaterial3D:
-		_key_materials[color_index] = (key_mesh.material_override as StandardMaterial3D).duplicate() as StandardMaterial3D
+	if is_instance_valid(key_mesh):
+		# Authored meshes may store their color on the surface rather than in
+		# material_override. Cache the effective material so both layouts dim.
+		var source_material: Material = key_mesh.material_override
+		if source_material == null:
+			source_material = key_mesh.get_active_material(0)
+		if source_material is StandardMaterial3D:
+			_key_materials[color_index] = (source_material as StandardMaterial3D).duplicate() as StandardMaterial3D
 
 	var label: MeshInstance3D = key.get_node_or_null("ButtonLabel") as MeshInstance3D
 	if is_instance_valid(label):
@@ -90,6 +99,26 @@ func _can_select_color(actor: Node, action: StringName, color_index: int) -> boo
 		if identity != null and identity.color_index == color_index:
 			return false
 	return true
+
+
+func _get_button_color_id(button: Node) -> StringName:
+	if not is_instance_valid(button):
+		return &""
+	for property: Dictionary in button.get_property_list():
+		if str(property.get("name", "")) == "button_id":
+			var configured_id: StringName = StringName(str(button.get("button_id")).to_lower())
+			if COLOR_BUTTONS.has(configured_id):
+				return configured_id
+	var fallback_id: String = str(button.name).to_lower()
+	if fallback_id.ends_with("button"):
+		fallback_id = fallback_id.trim_suffix("button")
+	return StringName(fallback_id)
+
+
+func _on_interactable_activated(actor: Node, action: StringName, button_id: StringName, color_index: int) -> void:
+	if action != &"use":
+		return
+	_on_button_activated(button_id, _actor_peer_id(actor), color_index)
 
 
 func _on_button_activated(button_id: StringName, peer_id: int, color_index: int) -> void:
