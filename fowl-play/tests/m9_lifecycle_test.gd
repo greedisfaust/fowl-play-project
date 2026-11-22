@@ -103,6 +103,7 @@ func _run() -> void:
 	charged_presses_for_cleanup[5] = true
 	active_jabs[5] = {"elapsed": 0.01, "hit": false}
 	active_lunges_for_cleanup[5] = {"elapsed": 0.01}
+	active_parries[5] = {"expires_at": 10.0}
 	action_locks_for_cleanup[5] = 10.0
 	tracked_player.queue_free()
 	await process_frame
@@ -113,7 +114,8 @@ func _run() -> void:
 	check(
 		not jab_ready_times.has(5) and not charged_ready_times.has(5)
 		and not parry_ready_times.has(5) and not combat_press_times.has(5)
-		and not charged_presses_for_cleanup.has(5) and not action_locks_for_cleanup.has(5),
+		and not charged_presses_for_cleanup.has(5) and not action_locks_for_cleanup.has(5)
+		and not active_parries.has(5),
 		"unregister clears every combat cooldown and held-input entry"
 	)
 	check(not active_jabs.has(5) and not active_lunges_for_cleanup.has(5), "unregister clears active combat actions")
