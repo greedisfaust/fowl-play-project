@@ -29,7 +29,7 @@ enum WallSet {
 
 @export_group("Hallway Window")
 @export var generate_hallway_window: bool = true
-@export_range(1.0, 32.0, 0.25) var hallway_window_width: float = 30.0
+@export_range(1.0, 34.0, 0.25) var hallway_window_width: float = 32.6
 @export_range(0.5, 2.0, 0.05) var hallway_window_sill_height: float = 0.9
 @export_range(2.0, 3.8, 0.05) var hallway_window_top: float = 2.7
 
@@ -108,7 +108,7 @@ func _build_perimeter(parent: Node3D, material: Material, thickness: float, scen
 	# Hallway west wall, with a separate street-facing window.
 	_build_segment(parent, "Hallway_West", Vector2(-14.5, -17.0), Vector2(-14.5, 17.0),
 		material, thickness, scene_root,
-		generate_hallway_window, 19.5, hallway_window_width, hallway_window_sill_height, hallway_window_top)
+		generate_hallway_window, 17.0, hallway_window_width, 0.0, 3.8)
 	_build_segment(parent, "Hallway_South", Vector2(-14.5, 17.0), Vector2(-11.0, 17.0),
 		material, thickness, scene_root)
 
