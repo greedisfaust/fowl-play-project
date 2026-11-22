@@ -26,10 +26,12 @@ var phase: int = Phase.IDLE
 var casino_departure_allowed: bool = false
 
 var _debug_hub: Node
+var _casino_wallet: Node
 
 
 func _ready() -> void:
 	_debug_hub = get_node_or_null("/root/DebugHub")
+	_casino_wallet = get_node_or_null("/root/CasinoWallet")
 	if not is_instance_valid(_debug_hub):
 		return
 	_debug_hub.call("watch", &"run/active", func() -> bool: return run_active)
@@ -62,12 +64,18 @@ func _on_main_world_changed(previous_world: int, current_world: int) -> void:
 	complete_world_transition(previous_world, current_world)
 
 
-## Starts a new run in the Apartment on Day 1. Wallet initialization remains owned by CasinoWallet.
+## Starts a new run in the Apartment on Day 1.
+## CasinoWallet owns the actual balance reset; RunManager coordinates when it occurs.
 func begin_new_run() -> Dictionary:
 	if not _is_authority():
 		return _failure("Only the host can begin a run.")
 	if run_active:
 		return _failure("A run is already active.")
+	if not is_instance_valid(_casino_wallet):
+		return _failure("CasinoWallet is unavailable; cannot initialize a new run.")
+	var wallet_result: Dictionary = _casino_wallet.call("begin_run", INITIAL_RUN_WALLET)
+	if not bool(wallet_result.get("ok", false)):
+		return _failure("Could not initialize the run wallet: %s" % str(wallet_result.get("reason", "unknown wallet error")))
 	_publish_state(true, 1, Phase.APARTMENT, false)
 	_log("New run started. Day 1 begins in the Apartment.")
 	return _success(get_snapshot())

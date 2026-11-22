@@ -76,7 +76,7 @@ This formula and carry-forward behavior are the intended progression rules.
 
 ## Casino day initialization
 
-RunManager.begin_new_run() initializes the shared wallet to 1,000 once for a fresh run. On arrival in the Casino, CasinoDayManager snapshots the actual carried-forward wallet, calculates the dynamic quota, and starts the five-minute timer. Reaching quota unlocks early departure but does not stop the timer or prevent further play. At deadline, wallet/quota success is recorded before table cleanup. See CASINO_DAY_MANAGER.md for the formula, multiplier schedule, deadline order, and implementation details.
+RunManager.begin_new_run() asks CasinoWallet to initialize the shared wallet ledger to 1,000 once for a fresh run. RunManager only commits the run as active if CasinoWallet confirms initialization succeeded; CasinoWallet remains the sole owner of balance mutations. On arrival in the Casino, CasinoDayManager snapshots the actual carried-forward wallet, calculates the dynamic quota, and starts the five-minute timer. Reaching quota unlocks early departure but does not stop the timer or prevent further play. At deadline, wallet/quota success is recorded before table cleanup. See CASINO_DAY_MANAGER.md for the formula, multiplier schedule, deadline order, and implementation details.
 
 ## Day flow implemented in this slice
 

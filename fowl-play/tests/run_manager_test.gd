@@ -23,8 +23,12 @@ func _run() -> void:
 		_finish(false, "A new run should begin successfully: %s" % str(start_result.get("reason", "")))
 		return
 	var wallet: Node = root.get_node_or_null("CasinoWallet")
-	if not is_instance_valid(wallet) or int(wallet.call("get_snapshot").get("available_balance", -1)) != 1000:
-		_finish(false, "A fresh run should initialize the shared wallet to 1,000.")
+	if not is_instance_valid(wallet):
+		_finish(false, "CasinoWallet autoload should be available.")
+		return
+	var wallet_snapshot: Dictionary = wallet.call("get_snapshot")
+	if not bool(wallet_snapshot.get("run_active", false)) or int(wallet_snapshot.get("initial_balance", -1)) != 1000 or int(wallet_snapshot.get("available_balance", -1)) != 1000:
+		_finish(false, "A fresh run should initialize the wallet ledger and available balance to 1,000.")
 		return
 	var snapshot: Dictionary = manager.call("get_snapshot")
 	if not bool(snapshot.get("run_active", false)) or int(snapshot.get("current_day", 0)) != 1 or int(snapshot.get("phase", -1)) != 1:
