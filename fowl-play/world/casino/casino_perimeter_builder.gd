@@ -35,8 +35,6 @@ const ELEVATOR_WALL_SEGMENT_INDEX: int = 1
 @export var generate_elevator_portal: bool = true
 @export_range(0.02, 0.18, 0.01) var elevator_portal_trim_width: float = 0.08
 @export_range(0.02, 0.12, 0.01) var elevator_portal_trim_depth: float = 0.055
-@export var elevator_portal_trim_color: Color = Color(0.36, 0.22, 0.105, 1.0)
-@export var elevator_portal_return_color: Color = Color(0.035, 0.041, 0.049, 1.0)
 
 @export_group("Collision")
 @export var generate_collision: bool = true
@@ -142,8 +140,8 @@ func _build_wall_segment(
 
 		if generate_elevator_portal:
 			_build_elevator_portal(
-				parent, start, tangent, inward, edge_length, segment_basis,
-				molding_material, scene_root
+				parent, start, tangent, inward, segment_basis,
+				scene_root
 			)
 
 		# Solid stone header above the opening; the space below remains clear.
@@ -199,15 +197,13 @@ func _build_elevator_portal(
 	wall_start: Vector3,
 	tangent: Vector3,
 	inward: Vector3,
-	edge_length: float,
 	segment_basis: Basis,
-	bronze_material: Material,
 	scene_root: Node
 ) -> void:
 	var center: Vector3 = wall_start + tangent * elevator_opening_center_distance
 	var wall_face_offset: float = wall_thickness * 0.5 + 0.025
-	var return_material: StandardMaterial3D = _make_material(elevator_portal_return_color, 0.08, 0.42)
-	var trim_material: StandardMaterial3D = _make_material(elevator_portal_trim_color, 0.62, 0.28)
+	var return_material: StandardMaterial3D = _make_material(Color(0.035, 0.041, 0.049, 1.0), 0.08, 0.42)
+	var trim_material: StandardMaterial3D = _make_material(Color(0.36, 0.22, 0.105, 1.0), 0.62, 0.28)
 	var half_width: float = elevator_opening_width * 0.5
 	var trim_width: float = elevator_portal_trim_width
 
