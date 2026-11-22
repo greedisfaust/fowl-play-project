@@ -6,7 +6,7 @@ enum Phase {
 	IDLE,
 	APARTMENT,
 	CASINO,
-	REST_AREA,
+	REST,
 	CONTRACT_FULFILLED,
 	CONTRACT_EXTENDED,
 	RUN_FAILED,
@@ -16,7 +16,6 @@ const MAX_DAYS: int = 10
 const INITIAL_RUN_WALLET: int = 1000
 const WORLD_APARTMENT: int = 0
 const WORLD_CASINO: int = 1
-const WORLD_REST_AREA: int = 2
 
 signal run_state_changed(snapshot: Dictionary)
 
@@ -121,15 +120,15 @@ func get_departure_destination(current_world: int) -> int:
 			return WORLD_CASINO if current_world == WORLD_APARTMENT else -1
 		Phase.CASINO:
 			if current_world == WORLD_CASINO and casino_departure_allowed:
-				return WORLD_REST_AREA
-		Phase.REST_AREA:
-			if current_world == WORLD_REST_AREA and current_day < MAX_DAYS:
+				return WORLD_APARTMENT
+		Phase.REST:
+			if current_world == WORLD_APARTMENT and current_day < MAX_DAYS:
 				return WORLD_CASINO
 	return -1
 
 
 ## Called only after MainController has completed the approved world transition.
-## Entering the Casino from the Rest Area advances the day.
+## Returning from the Apartment Rest phase to the Casino advances the day.
 func complete_world_transition(previous_world: int, destination_world: int) -> bool:
 	if not _is_authority():
 		return false
@@ -143,9 +142,9 @@ func complete_world_transition(previous_world: int, destination_world: int) -> b
 		Phase.APARTMENT:
 			next_phase = Phase.CASINO
 		Phase.CASINO:
-			next_phase = Phase.REST_AREA
+			next_phase = Phase.REST
 			next_casino_departure_allowed = false
-		Phase.REST_AREA:
+		Phase.REST:
 			next_day += 1
 			next_phase = Phase.CASINO
 			next_casino_departure_allowed = false
@@ -211,8 +210,8 @@ func _phase_name(value: int) -> String:
 			return "APARTMENT"
 		Phase.CASINO:
 			return "CASINO"
-		Phase.REST_AREA:
-			return "REST_AREA"
+		Phase.REST:
+			return "REST"
 		Phase.CONTRACT_FULFILLED:
 			return "CONTRACT_FULFILLED"
 		Phase.CONTRACT_EXTENDED:

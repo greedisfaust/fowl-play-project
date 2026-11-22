@@ -39,7 +39,7 @@ func _run() -> void:
 		_finish(false, "Apartment departure should lead to the Casino.")
 		return
 	if int(manager.call("get_departure_destination", 2)) != -1:
-		_finish(false, "The Apartment phase should reject a departure from the Rest Area.")
+		_finish(false, "The Apartment phase should reject a departure from an invalid world ID.")
 		return
 	transition_source.emit_signal("world_changed", 0, 1)
 	if int(manager.call("get_snapshot").get("phase", -1)) != 2:
@@ -56,24 +56,24 @@ func _run() -> void:
 	if not bool(manager.call("set_casino_departure_allowed", true)):
 		_finish(false, "The host should be able to unlock Casino departure during the Casino phase.")
 		return
-	if int(manager.call("get_departure_destination", 1)) != 2:
-		_finish(false, "An unlocked Casino departure should lead to the Rest Area.")
+	if int(manager.call("get_departure_destination", 1)) != 0:
+		_finish(false, "An unlocked Casino departure should return to the Apartment for the Rest phase.")
 		return
-	transition_source.emit_signal("world_changed", 1, 2)
+	transition_source.emit_signal("world_changed", 1, 0)
 	if int(manager.call("get_snapshot").get("phase", -1)) != 3:
-		_finish(false, "Completing Casino to Rest Area should advance the phase.")
+		_finish(false, "Completing Casino to Apartment should advance into the Rest phase.")
 		return
-	if int(manager.call("get_departure_destination", 2)) != 1:
-		_finish(false, "Rest Area departure should lead to the next Casino day.")
+	if int(manager.call("get_departure_destination", 0)) != 1:
+		_finish(false, "Apartment Rest-phase departure should lead to the next Casino day.")
 		return
-	transition_source.emit_signal("world_changed", 2, 1)
+	transition_source.emit_signal("world_changed", 0, 1)
 	if int(manager.call("get_snapshot").get("current_day", 0)) != 2:
-		_finish(false, "Completing Rest Area to Casino should advance the day.")
+		_finish(false, "Completing Apartment Rest phase to Casino should advance the day.")
 		return
 
 	snapshot = manager.call("get_snapshot")
 	if int(snapshot.get("current_day", 0)) != 2 or int(snapshot.get("phase", -1)) != 2:
-		_finish(false, "Returning from the Rest Area should begin Day 2 in the Casino.")
+		_finish(false, "Returning from the Apartment Rest phase should begin Day 2 in the Casino.")
 		return
 	var repeated_start: Dictionary = manager.call("begin_new_run")
 	if bool(repeated_start.get("ok", false)):
@@ -81,7 +81,7 @@ func _run() -> void:
 		return
 
 	transition_source.free()
-	_finish(true, "Day 1 initialization, MainController arrival signal, Apartment/Casino/Rest Area flow, quota gate, and day increment")
+	_finish(true, "Day 1 initialization, MainController arrival signal, Apartment/Casino/Rest-phase flow, quota gate, and day increment")
 
 
 func _finish(passed: bool, message: String) -> void:

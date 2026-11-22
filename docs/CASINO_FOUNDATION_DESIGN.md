@@ -287,7 +287,7 @@ Do not implement every service at once. Build and test a vertical slice, then ex
 - No implementation of all twelve games.
 - No import of historical GDD quota tables; the current dynamic quota schedule is documented above and remains available for future balance tuning.
 - No full casino environment scene.
-- No Rest Area, apartment, elevator, or Day 10 cinematic implementation.
+- No separate Rest Area world; the between-day Rest phase reuses the Apartment. Apartment/elevator and Day 10 cinematic implementation remain separate work.
 - No forced common betting terminal.
 - No hidden manipulation of game odds.
 - No groupmate template distribution until Chicken Cross validates the contract.

@@ -4,7 +4,7 @@ CasinoDayManager is an Autoload at /root/CasinoDayManager. It persists across wo
 
 ## Ownership
 
-- RunManager: starts a run, tracks the day/phase, and gates the Casino → Rest Area departure.
+- RunManager: starts a run, tracks the day/phase, and gates the Casino → Apartment (Rest phase) departure.
 - CasinoWallet: authoritative shared wallet and wager ledger.
 - CasinoDayManager: starting-wallet snapshot, dynamic quota, five-minute timer, early quota unlock, deadline result snapshot, and table cleanup request.
 - CasinoManager: game-definition catalog, six-of-twelve daily draw, and host-to-client selection synchronization.
@@ -56,7 +56,7 @@ The quota is a threshold, not a cap. Reaching it unlocks early departure, but do
 - After the snapshot, BaseTable.request_day_end_cleanup("casino_deadline") cancels/refunds unstarted rounds and asks started rounds to auto-resolve. Later settlements cannot change the already-recorded result.
 - Early departure is accepted only after quota was reached. The elevator sequence calls finish_early_departure() once players are prepared; it requests table cleanup, snapshots the final wallet, records the result, and stops the timer.
 
-A failed day still unlocks departure to the Rest Area so the next progression slice can apply the one-time House continuation/loan rules. The loan and run-ending policy are not implemented by this slice.
+A failed day still unlocks departure to the Apartment for the Rest phase so the next progression slice can apply the one-time House continuation/loan rules. The loan and run-ending policy are not implemented by this slice.
 
 ## BaseTable integration
 

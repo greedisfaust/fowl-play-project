@@ -6,7 +6,7 @@ Status: W1 foundation — controller and scene contract added. The editor-author
 
 The current project main scene is `res://arena/test_arena.tscn`. That is a development/test arena, not the production application root. It currently owns its player container, MultiplayerSpawner, spawn points, DebugConsole, and test props. Keep it intact as a test scene.
 
-The production architecture introduces a persistent `Main` root. Network session state and shared services remain in autoloads. Apartment, Casino, and Rest Area are replaceable world scenes under a persistent `WorldRoot`.
+The production architecture introduces a persistent `Main` root. Network session state and shared services remain in autoloads. Apartment and Casino are the only replaceable world scenes under a persistent `WorldRoot`. The between-day Rest phase reuses the Apartment scene.
 
 ## Main scene hierarchy contract
 
@@ -32,7 +32,7 @@ Recommended world roots and responsibilities:
 
 - **Apartment** — starting lobby, player gathering, introduction, and Day 10 return destination.
 - **Casino** — The House gameplay floor, casino tables, and casino-specific props.
-- **RestArea** — optional social/recreation space and Daily Report destination.
+- **Apartment during the Rest phase** — between-day downtime and Daily Report destination; no separate world scene is loaded.
 
 Each world will expose a `SpawnPoints` Node3D containing editor-authored Marker3D children. MainController uses the active world's Marker3D children in order as spawn slots. Every world must provide at least four Marker3D children (the current maximum player count). Keep marker order consistent between worlds so a player's slot remains stable.
 
@@ -42,7 +42,7 @@ File: `fowl-play/world/main_controller.gd`
 
 Inspector assignments:
 - `Initial World`: choose the first world scene once it exists.
-- `Apartment Scene`, `Casino Scene`, `Rest Area Scene`: assign the corresponding PackedScenes.
+- `Apartment Scene` and `Casino Scene`: assign the corresponding PackedScenes. The Rest phase selects the Apartment world.
 - `World Root Path`: leave as `WorldRoot` unless the hierarchy changes.
 - `Players Path`: leave as `Players`.
 - `Player Spawner Path`: leave as `MultiplayerSpawner`; MainController sets its spawn path to the persistent Players node.
@@ -79,7 +79,7 @@ This slice still does not:
 - create or modify any `.tscn` files;
 - change `project.godot`'s `run/main_scene`;
 - modify or replace `test_arena.tscn` or its spawn script;
-- create the Apartment, Casino, or Rest Area scenes;
+- create the Apartment or Casino scenes;
 - implement the elevator or the run/day state machine.
 
 The Main scene should be tested with an authored world containing at least four Marker3D children under `SpawnPoints` before it becomes the startup scene.

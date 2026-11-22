@@ -18,7 +18,7 @@ Phases currently defined:
 - `IDLE`: no run has started.
 - `APARTMENT`: new run, Day 1.
 - `CASINO`: active casino day.
-- `REST_AREA`: between casino days.
+- `REST`: between casino days, reusing the Apartment world.
 - `CONTRACT_FULFILLED`, `CONTRACT_EXTENDED`, `RUN_FAILED`: reserved terminal outcomes for later progression slices.
 
 The maximum run length is ten days.
@@ -32,7 +32,7 @@ The maximum run length is ten days.
 - `set_casino_departure_allowed(allowed: bool) -> bool`: host-only quota/deadline integration point. Casino departure is locked until this is enabled.
 - `get_snapshot() -> Dictionary`: returns a read-only copy of the current state.
 
-World IDs match `MainController.World`: Apartment=0, Casino=1, Rest Area=2.
+World IDs match `MainController.World`: Apartment=0, Casino=1. The Rest phase uses the Apartment world ID.
 
 State changes are broadcast by a reliable authority RPC. Offline sessions apply the state locally. The `run_state_changed(snapshot)` signal is emitted on every peer after state application.
 
@@ -84,8 +84,8 @@ RunManager.begin_new_run() asks CasinoWallet to initialize the shared wallet led
 1. Begin a run: Day 1, Apartment.
 2. Apartment departure: Casino, still Day 1.
 3. Casino departure: blocked until quota/deadline logic unlocks it.
-4. Once unlocked, Casino departure: Rest Area.
-5. Rest Area departure: next Casino day; the day number increments on arrival.
+4. Once unlocked, Casino departure: Apartment (Rest phase).
+5. Apartment Rest-phase departure: next Casino day; the day number increments on arrival.
 
 The existing ElevatorDepartureController now asks RunManager for the permitted destination. On the first valid Apartment departure, it starts a new run automatically. It then calls the existing accepted-departure sequence. MainController notifies RunManager through its persistent `world_changed` signal, so progression is committed after arrival even though the source elevator scene is unloaded during the transition. Day 10 terminal outcomes and loan handling remain for subsequent slices. CasinoDayManager owns quota/timer behavior; CasinoManager owns daily game selection (the production catalog remains incomplete until the other eleven games are defined).
 

@@ -43,8 +43,8 @@ is required.
 
 - First valid departure from the Apartment starts a new run on Day 1 and targets the Casino.
 - Casino departure is rejected until RunManager's quota/deadline gate is unlocked.
-- An unlocked Casino departure targets the Rest Area.
-- Rest Area departure targets the Casino and increments the day on arrival.
+- An unlocked Casino departure returns to the Apartment for the Rest phase.
+- Apartment departure during the Rest phase targets the Casino and increments the day on arrival.
 - MainController's persistent `world_changed` signal is bound to RunManager, so the progression
   state commits after the destination world is installed, even though the old elevator scene unloads.
 
@@ -72,7 +72,7 @@ The outer-loop progression coordinator approves a request with an explicit desti
 departure_controller.accept_departure_request(MainController.World.CASINO)
 ```
 
-Destination IDs are Apartment=0, Casino=1, Rest Area=2. The elevator does not decide quota/day rules. The sequence locks the proximity opener so it cannot reopen the doors while the team is preparing to leave.
+Destination IDs are Apartment=0 and Casino=1. The Rest phase reuses Apartment=0. The elevator does not decide quota/day rules. The sequence locks the proximity opener so it cannot reopen the doors while the team is preparing to leave.
 
 After approval, the controller closes the existing four-panel doors, force-drops carried props/players
 through Network, starts the existing synchronized ragdoll recovery for limp players, and waits for

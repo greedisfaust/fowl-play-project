@@ -9,16 +9,14 @@ const TUNING = preload("res://core/tuning.gd")
 enum World {
 	APARTMENT,
 	CASINO,
-	REST_AREA,
 }
 
 signal world_changed(previous_world: int, current_world: int)
 
 @export_group("World Scenes")
-@export_enum("Apartment", "Casino", "Rest Area") var initial_world: int = World.APARTMENT
+@export_enum("Apartment", "Casino") var initial_world: int = World.APARTMENT
 @export var apartment_scene: PackedScene
 @export var casino_scene: PackedScene
-@export var rest_area_scene: PackedScene
 
 @export_group("Scene References")
 @export var world_root_path: NodePath = ^"WorldRoot"
@@ -92,7 +90,7 @@ func _exit_tree() -> void:
 
 ## Validates a destination before a departure sequence starts.
 func can_transition_to(destination: int) -> bool:
-	if destination < World.APARTMENT or destination > World.REST_AREA:
+	if destination < World.APARTMENT or destination > World.CASINO:
 		return false
 	if _transition_in_progress or (_has_active_world and active_world == destination):
 		return false
@@ -102,7 +100,7 @@ func can_transition_to(destination: int) -> bool:
 ## Called by the host when the team moves to another world.
 ## Every peer receives the same world ID and loads its local copy of that scene.
 func transition_to(destination: int) -> void:
-	if destination < World.APARTMENT or destination > World.REST_AREA:
+	if destination < World.APARTMENT or destination > World.CASINO:
 		push_warning("Rejected invalid world transition ID: %d" % destination)
 		return
 	if _transition_in_progress:
@@ -129,7 +127,7 @@ func transition_to(destination: int) -> void:
 
 @rpc("authority", "call_local", "reliable")
 func _rpc_transition_to(destination: int) -> void:
-	if destination < World.APARTMENT or destination > World.REST_AREA:
+	if destination < World.APARTMENT or destination > World.CASINO:
 		push_warning("Rejected invalid world transition ID: %d" % destination)
 		return
 
@@ -151,8 +149,6 @@ func _get_scene_for_world(world: int) -> PackedScene:
 			return apartment_scene
 		World.CASINO:
 			return casino_scene
-		World.REST_AREA:
-			return rest_area_scene
 	return null
 
 
@@ -378,6 +374,4 @@ func _world_name(world: int) -> String:
 			return "Apartment"
 		World.CASINO:
 			return "Casino"
-		World.REST_AREA:
-			return "RestArea"
 	return "UnknownWorld"

@@ -165,7 +165,7 @@ func _on_departure_requested(_actor_peer_id: int) -> void:
 func accept_departure_request(destination_world: int) -> bool:
 	if not _is_network_authority() or not _request_pending or _departure_in_progress:
 		return false
-	if destination_world < MainController.World.APARTMENT or destination_world > MainController.World.REST_AREA:
+	if destination_world < MainController.World.APARTMENT or destination_world > MainController.World.CASINO:
 		reject_departure_request("invalid destination world")
 		return false
 	_main_controller = get_node_or_null(main_controller_path) as MainController
@@ -193,7 +193,7 @@ func _execute_departure_sequence(destination_world: int) -> void:
 	if not players_recovered:
 		_abort_departure("a player did not finish recovering before the departure timeout")
 		return
-	if _main_controller.active_world == MainController.World.CASINO and destination_world == MainController.World.REST_AREA:
+	if _main_controller.active_world == MainController.World.CASINO and destination_world == MainController.World.APARTMENT:
 		var casino_day_manager: Node = get_node_or_null("/root/CasinoDayManager")
 		if not is_instance_valid(casino_day_manager):
 			_abort_departure("CasinoDayManager is unavailable")
