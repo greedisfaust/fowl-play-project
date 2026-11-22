@@ -163,7 +163,7 @@ func _build_facade_segment(
 		parent, prefix + "Glass",
 		Vector3(maxf(0.05, edge_length - mullion_width), glass_height, glass_thickness),
 		Transform3D(segment_basis, midpoint + Vector3.UP * (glass_bottom + glass_height * 0.5)),
-		glass_material, scene_root
+		glass_material, scene_root, true
 	)
 
 	# Slim bronze sill accent and top rail.
@@ -227,7 +227,8 @@ func _add_box(
 	box_size: Vector3,
 	box_transform: Transform3D,
 	material: Material,
-	scene_root: Node
+	scene_root: Node,
+	with_collision: bool = false
 ) -> void:
 	var mesh_instance: MeshInstance3D = MeshInstance3D.new()
 	mesh_instance.name = node_name
@@ -238,3 +239,15 @@ func _add_box(
 	mesh_instance.transform = box_transform
 	parent.add_child(mesh_instance)
 	mesh_instance.owner = scene_root
+	if with_collision:
+		var body: StaticBody3D = StaticBody3D.new()
+		body.name = node_name + "_Collision"
+		parent.add_child(body)
+		body.owner = scene_root
+		var collision: CollisionShape3D = CollisionShape3D.new()
+		var shape: BoxShape3D = BoxShape3D.new()
+		shape.size = box_size
+		collision.shape = shape
+		collision.transform = box_transform
+		body.add_child(collision)
+		collision.owner = scene_root
