@@ -33,6 +33,16 @@ func _run() -> void:
 	controller.set("one_wager_per_player", true)
 	root.add_child(controller)
 
+	_check_result(controller.call("handle_button_input", &"MIN", 1), true, "MIN preset selects the profile minimum")
+	_check(int(controller.call("get_pending_wager_amount")) == 50, "MIN preset selects 50")
+	_check_result(controller.call("handle_button_input", &"1/4", 1), true, "Quarter preset is accepted")
+	_check(int(controller.call("get_pending_wager_amount")) == 250, "Quarter preset selects one quarter of available funds")
+	_check_result(controller.call("handle_button_input", &"1/2", 1), true, "Half preset is accepted")
+	_check(int(controller.call("get_pending_wager_amount")) == 500, "Half preset selects one half of available funds")
+	_check_result(controller.call("handle_button_input", &"MAX", 1), true, "MAX preset is accepted")
+	_check(int(controller.call("get_pending_wager_amount")) == 500, "MAX preset respects the configured table maximum")
+	controller.call("handle_button_input", &"CLEAR", 1)
+
 	var display: Node = BettingDisplayScript.new()
 	display.set("table", table)
 	display.set("profile", profile)
