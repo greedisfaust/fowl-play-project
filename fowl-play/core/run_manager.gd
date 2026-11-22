@@ -297,7 +297,7 @@ func _rpc_apply_state(snapshot: Dictionary) -> void:
 func _apply_state(snapshot: Dictionary) -> void:
 	run_active = bool(snapshot.get("run_active", false))
 	current_day = int(snapshot.get("current_day", 0))
-	phase = int(snapshot.get("phase", Phase.IDLE)) as Phase
+	phase = int(snapshot.get("phase", Phase.IDLE))
 	casino_departure_allowed = bool(snapshot.get("casino_departure_allowed", false))
 	continuation_used = bool(snapshot.get("continuation_used", false))
 	continuation_loan_amount = int(snapshot.get("continuation_loan_amount", 0))
