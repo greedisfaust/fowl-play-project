@@ -34,6 +34,56 @@ World IDs match `MainController.World`: Apartment=0, Casino=1, Rest Area=2.
 
 State changes are broadcast by a reliable authority RPC. Offline sessions apply the state locally. The `run_state_changed(snapshot)` signal is emitted on every peer after state application.
 
+## Dynamic daily quota formula
+
+The quota is recalculated at the beginning of every casino day from the **actual shared wallet carried into that day**. It is not a fixed amount and it is not based on the original Day 1 wallet after Day 1.
+
+\`\`\`text
+daily_quota = starting_wallet
+            + (starting_wallet * 0.50)
+            + (starting_wallet * day_multiplier)
+\`\`\`
+
+Equivalent form:
+
+\`\`\`text
+daily_quota = starting_wallet * (1.50 + day_multiplier)
+\`\`\`
+
+- `starting_wallet` is the shared wallet at the beginning of the current day.
+- The 0.50 term adds half of that day's starting wallet.
+- `day_multiplier` is the additional multiplier for the current day.
+- The quota is a threshold, not a cap. The team may continue earning after reaching it; the full final wallet carries forward.
+- On a successful day, the wallet at departure becomes the next day's `starting_wallet`. The next day's quota is then recalculated from that new amount.
+- Do not reset the wallet to the original starting amount after a successful day.
+
+### Initial day multiplier schedule
+
+These are the current initial tuning values and can be rebalanced later:
+
+| Day | Additional multiplier |
+|---:|---:|
+| 1 | 0.25 |
+| 2 | 0.28 |
+| 3 | 0.32 |
+| 4 | 0.36 |
+| 5 | 0.40 |
+| 6 | 0.45 |
+| 7 | 0.50 |
+| 8 | 0.55 |
+| 9 | 0.62 |
+| 10 | 0.70 |
+
+### Worked example
+
+- Day 1 starts with a shared wallet of 1,000.
+- Day 1 multiplier is 0.25, so the quota is 1,000 + 500 + 250 = **1,750**.
+- The team earns up to 2,000. Since 2,000 is above 1,750, the quota is met. The team is allowed to keep playing and may finish with even more than 2,000.
+- If the team departs with 2,000, Day 2 starts with 2,000.
+- Day 2 multiplier is 0.28, so the quota is 2,000 + 1,000 + 560 = **3,560**.
+
+This formula and carry-forward behavior are the intended progression rules. The quota calculation and timer are not yet implemented by the current RunManager slice; they belong to the upcoming casino-day initialization/progression implementation.
+
 ## Day flow implemented in this slice
 
 1. Begin a run: Day 1, Apartment.
