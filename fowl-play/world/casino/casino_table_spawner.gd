@@ -41,20 +41,23 @@ func spawn_tables() -> Dictionary:
 			continue
 
 		var table_instance: Node = slot.table_scene.instantiate()
-		if table_instance == null:
-			push_warning("Could not instantiate table scene for spawn point '%s'." % slot.name)
+		if table_instance == null or not table_instance is Node3D:
+			push_warning("Table scene for spawn point '%s' must have a Node3D root." % slot.name)
+			if is_instance_valid(table_instance):
+				table_instance.free()
 			skipped_count += 1
 			continue
-		table_instance.name = "%s_Table" % slot.name
-		table_instance.set_meta("casino_table_id", slot.table_id)
-		table_instance.set_meta("casino_game_id", slot.game_id)
-		if table_instance is BaseTable:
-			var base_table: BaseTable = table_instance as BaseTable
+		var table_node: Node3D = table_instance as Node3D
+		table_node.name = "%s_Table" % slot.name
+		table_node.set_meta("casino_table_id", slot.table_id)
+		table_node.set_meta("casino_game_id", slot.game_id)
+		if table_node is BaseTable:
+			var base_table: BaseTable = table_node as BaseTable
 			base_table.table_id = slot.table_id
 			base_table.game_id = slot.game_id
-		spawned_tables.add_child(table_instance)
-		table_instance.global_transform = slot.global_transform
-		_spawned_slot_ids[slot.table_id] = table_instance
+		spawned_tables.add_child(table_node)
+		table_node.global_transform = slot.global_transform
+		_spawned_slot_ids[slot.table_id] = table_node
 		spawned_count += 1
 
 	return {
