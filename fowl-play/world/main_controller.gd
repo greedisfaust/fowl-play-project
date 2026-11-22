@@ -256,7 +256,11 @@ func _spawn_connected_players(spawn_points: Node3D) -> void:
 func _can_spawn_players() -> bool:
 	if _network == null:
 		return false
-	return str(_network.get("status")) == "offline" or bool(_network.get("is_host"))
+	# A disconnected session still uses OfflineMultiplayerPeer. Allow the local
+	# player to respawn after leaving a host/client session instead of requiring
+	# the Network status string to be the initial "offline" value.
+	var active_peer: MultiplayerPeer = multiplayer.multiplayer_peer
+	return active_peer is OfflineMultiplayerPeer or bool(_network.get("is_host"))
 
 
 func _on_session_started() -> void:
