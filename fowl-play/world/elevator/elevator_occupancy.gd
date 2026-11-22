@@ -167,6 +167,10 @@ func _register_carried_player(carrier_peer_id: int, carrier_player: Node, item: 
 	if carried_peer_id <= 0 or carried_peer_id == carrier_peer_id:
 		return
 
+	var existing_link: Dictionary = _carried_peer_by_carrier.get(carrier_peer_id, {})
+	if int(existing_link.get("peer_id", 0)) == carried_peer_id:
+		return
+
 	_remove_carried_link(carrier_peer_id)
 	var token: int = -carrier_player.get_instance_id()
 	_add_occupant_body(carried_peer_id, item, token)
