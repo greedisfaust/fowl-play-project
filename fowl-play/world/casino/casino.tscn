@@ -9,27 +9,39 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -9.665)
 
 [node name="CasinoFloor" type="CSGPolygon3D" parent="Environment" unique_id=1390993797]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
+use_collision = true
 polygon = PackedVector2Array(-24, -9, -14, -19, 11, -19, 11, 8, -24, 8)
 depth = 0.2
 
 [node name="GamingFloor" type="CSGPolygon3D" parent="Environment" unique_id=494775207]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0.15, 0)
+use_collision = true
 polygon = PackedVector2Array(-24, -9, -14, -19, 1.5, -19, 1.5, 8, -24, 8)
 depth = 0.3
 
-[node name="Spawnpoints" type="Node3D" parent="." unique_id=429364050]
+[node name="Architecture" type="Node3D" parent="." unique_id=1189615441]
+
+[node name="Perimeter" type="Node3D" parent="Architecture" unique_id=960054329]
+
+[node name="Divider" type="Node3D" parent="Architecture" unique_id=1135937379]
+
+[node name="Pillars" type="Node3D" parent="Architecture" unique_id=2051966154]
+
+[node name="WindowFrames" type="Node3D" parent="Architecture" unique_id=1672542633]
+
+[node name="SpawnPoints" type="Node3D" parent="." unique_id=429364050]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.2, 0.21, 0)
 
-[node name="Marker3D" type="Marker3D" parent="Spawnpoints" unique_id=1960423279]
+[node name="Marker3D" type="Marker3D" parent="SpawnPoints" unique_id=1960423279]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.65, 0, -0.45)
 
-[node name="Marker3D2" type="Marker3D" parent="Spawnpoints" unique_id=1188016049]
+[node name="Marker3D2" type="Marker3D" parent="SpawnPoints" unique_id=1188016049]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.65, 0, -0.45)
 
-[node name="Marker3D3" type="Marker3D" parent="Spawnpoints" unique_id=143147635]
+[node name="Marker3D3" type="Marker3D" parent="SpawnPoints" unique_id=143147635]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.65, 0, 0.45)
 
-[node name="Marker3D4" type="Marker3D" parent="Spawnpoints" unique_id=1000331674]
+[node name="Marker3D4" type="Marker3D" parent="SpawnPoints" unique_id=1000331674]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.65, 0, 0.45)
 
 [node name="Elevator" parent="." unique_id=1588872627 instance=ExtResource("1_78rjl")]
