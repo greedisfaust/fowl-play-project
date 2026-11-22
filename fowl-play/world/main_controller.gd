@@ -178,11 +178,23 @@ func _install_world(world: int, packed_scene: PackedScene) -> bool:
 ## The Apartment scene already authors a dedicated ColorPanelController node.
 ## Attach its behavior here so the authored button hierarchy remains untouched.
 func _install_lobby_device_controllers(world_instance: Node3D) -> void:
-	if world_instance == null:
+	if world_instance == null or world_instance.name != "Apartment":
 		return
-	var color_panel_controller: Node = world_instance.get_node_or_null("LobbyDevices/PlayerColorPanel/ColorPanelController")
-	if is_instance_valid(color_panel_controller):
-		color_panel_controller.set_script(PLAYER_COLOR_PANEL_CONTROLLER)
+	var lobby_devices: Node = world_instance.get_node_or_null("LobbyDevices")
+	if not is_instance_valid(lobby_devices):
+		push_warning("Apartment is missing LobbyDevices; lobby color selection will not be installed.")
+		return
+	var player_color_panel: Node = lobby_devices.get_node_or_null("PlayerColorPanel")
+	if not is_instance_valid(player_color_panel):
+		push_warning("Apartment LobbyDevices is missing PlayerColorPanel.")
+		return
+	var color_panel_controller: Node = player_color_panel.get_node_or_null("ColorPanelController")
+	if not is_instance_valid(color_panel_controller):
+		push_warning("PlayerColorPanel is missing its ColorPanelController node.")
+		return
+	color_panel_controller.set_script(PLAYER_COLOR_PANEL_CONTROLLER)
+	if is_instance_valid(_debug_hub):
+		_debug_hub.call("log", &"net", "Installed host-authoritative PlayerColorPanel controller.")
 
 func _perform_transition(destination: int, packed_scene: PackedScene) -> void:
 	if _transition_in_progress:
