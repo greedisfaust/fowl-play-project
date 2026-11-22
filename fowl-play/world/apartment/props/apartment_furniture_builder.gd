@@ -113,6 +113,7 @@ func _build_living_room(parent: Node3D, scene_root: Node) -> void:
 	_box(sofa, "Chaise_Walnut_Base", Vector3(1.62, 0.32, 1.4), Vector3(-4.15, 0.34, 0.98), _walnut_dark, scene_root)
 	_box(sofa, "Sofa_Throw_Pillow_Left", Vector3(0.48, 0.48, 0.2), Vector3(-3.8, 1.25, 2.42), _upholstery_light, scene_root)
 	_box(sofa, "Sofa_Throw_Pillow_Right", Vector3(0.48, 0.48, 0.2), Vector3(-0.95, 1.25, 2.42), _upholstery_light, scene_root)
+	_static_box_collision(room, "SectionalSofaCollision", Vector3(5.3, 1.55, 2.55), Vector3(-2.4, 0.78, 1.55), scene_root)
 
 	# Layered rug and inset border.
 	var rug: Node3D = _group(room, "Large_Woven_Area_Rug", scene_root)
@@ -131,6 +132,7 @@ func _build_living_room(parent: Node3D, scene_root: Node) -> void:
 	_box(coffee, "Pedestal_Left", Vector3(0.72, 0.43, 0.78), Vector3(-3.05, 0.25, -0.1), _walnut_dark, scene_root)
 	_box(coffee, "Pedestal_Right", Vector3(0.72, 0.43, 0.78), Vector3(-1.55, 0.25, -0.1), _walnut_dark, scene_root)
 	_box(coffee, "Bronze_Inlay", Vector3(2.3, 0.018, 0.025), Vector3(-2.3, 0.69, -0.1), _bronze, scene_root)
+	_static_box_collision(room, "CoffeeTableCollision", Vector3(2.72, 0.72, 1.28), Vector3(-2.3, 0.36, -0.1), scene_root)
 
 	# Low media wall console and a large slim television.
 	var media: Node3D = _group(room, "Walnut_Media_Console", scene_root)
@@ -145,6 +147,7 @@ func _build_living_room(parent: Node3D, scene_root: Node) -> void:
 	_box(media, "Television_Bezel", Vector3(3.55, 2.02, 0.055), Vector3(-2.5, 2.08, -8.29), _metal, scene_root)
 	_box(media, "TV_Stand_Left", Vector3(0.42, 0.12, 0.25), Vector3(-3.6, 1.08, -8.12), _metal, scene_root)
 	_box(media, "TV_Stand_Right", Vector3(0.42, 0.12, 0.25), Vector3(-1.4, 1.08, -8.12), _metal, scene_root)
+	_static_box_collision(room, "MediaConsoleCollision", Vector3(4.95, 0.82, 0.58), Vector3(-2.5, 0.42, -7.85), scene_root)
 
 	_build_side_table(room, "Window_Side_Table", Vector3(2.0, 0.0, 2.05), scene_root)
 	_build_side_table(room, "Sofa_Side_Table", Vector3(-5.55, 0.0, 2.15), scene_root)
@@ -156,6 +159,7 @@ func _build_side_table(parent: Node3D, table_name: String, origin: Vector3, scen
 	_box(table, "Bronze_Shadow_Line", Vector3(0.76, 0.018, 0.66), origin + Vector3(0.0, 0.51, 0.0), _bronze, scene_root)
 	_box(table, "Pedestal", Vector3(0.36, 0.47, 0.34), origin + Vector3(0.0, 0.27, 0.0), _walnut_dark, scene_root)
 	_box(table, "Stone_Foot", Vector3(0.64, 0.08, 0.58), origin + Vector3(0.0, 0.06, 0.0), _stone, scene_root)
+	_static_box_collision(parent, table_name + "Collision", Vector3(0.86, 0.72, 0.76), origin + Vector3(0.0, 0.36, 0.0), scene_root)
 
 func _build_floor_lamp(parent: Node3D, lamp_name: String, origin: Vector3, scene_root: Node) -> void:
 	var lamp: Node3D = _group(parent, lamp_name, scene_root)
@@ -163,6 +167,7 @@ func _build_floor_lamp(parent: Node3D, lamp_name: String, origin: Vector3, scene
 	_cylinder(lamp, "Stem", 0.035, 1.72, origin + Vector3(0.0, 0.94, 0.0), _bronze, scene_root)
 	_box(lamp, "Crossbar", Vector3(0.9, 0.035, 0.035), origin + Vector3(0.38, 1.78, 0.0), _bronze, scene_root)
 	_cylinder(lamp, "Shade", 0.24, 0.28, origin + Vector3(0.76, 1.68, 0.0), _ceramic, scene_root)
+	_static_box_collision(parent, lamp_name + "Collision", Vector3(0.5, 1.9, 0.5), origin + Vector3(0.38, 0.95, 0.0), scene_root)
 
 func _build_dining_area(parent: Node3D, scene_root: Node) -> void:
 	var dining: Node3D = _group(parent, "DiningArea", scene_root)
@@ -174,6 +179,7 @@ func _build_dining_area(parent: Node3D, scene_root: Node) -> void:
 	for x_offset: float in [-1.18, 1.18]:
 		for z_offset: float in [-0.48, 0.48]:
 			_box(table, "Tapered_Leg_%s_%s" % [str(x_offset), str(z_offset)], Vector3(0.16, 0.72, 0.16), Vector3(6.35 + x_offset, 0.36, 5.65 + z_offset), _walnut_dark, scene_root)
+	_static_box_collision(dining, "DiningTableCollision", Vector3(3.2, 0.95, 1.5), Vector3(6.35, 0.48, 5.65), scene_root)
 	for index: int in range(4):
 		var chair_x: float = 6.35 + (1.0 if index % 2 == 0 else -1.0) * 2.0
 		var chair_z: float = 5.65 + (-0.48 if index < 2 else 0.48)
@@ -186,6 +192,7 @@ func _build_dining_area(parent: Node3D, scene_root: Node) -> void:
 		var x: float = 7.55 + float(index) * 0.85
 		_box(sideboard, "Cabinet_Door_%02d" % (index + 1), Vector3(0.78, 0.68, 0.035), Vector3(x, 0.53, 1.545), _walnut_dark, scene_root)
 		_box(sideboard, "Bronze_Pull_%02d" % (index + 1), Vector3(0.045, 0.22, 0.035), Vector3(x + 0.27, 0.55, 1.51), _bronze, scene_root)
+	_static_box_collision(dining, "DiningSideboardCollision", Vector3(2.7, 1.08, 0.56), Vector3(8.4, 0.54, 1.8), scene_root)
 
 func _build_dining_chair(parent: Node3D, chair_name: String, origin: Vector3, faces_right: bool, scene_root: Node) -> void:
 	var chair: Node3D = _group(parent, chair_name, scene_root)
@@ -199,6 +206,7 @@ func _build_dining_chair(parent: Node3D, chair_name: String, origin: Vector3, fa
 	for x_offset: float in [-0.27, 0.27]:
 		for z_offset: float in [-0.27, 0.27]:
 			_box(chair, "Leg_%s_%s" % [str(x_offset), str(z_offset)], Vector3(0.075, 0.45, 0.075), Vector3(x_offset, 0.23, z_offset), _walnut_dark, scene_root)
+	_static_box_collision(chair, "DiningChairCollision", Vector3(0.78, 1.55, 0.82), Vector3(0.0, 0.78, 0.0), scene_root)
 
 func _build_storage_and_decor(parent: Node3D, scene_root: Node) -> void:
 	var decor: Node3D = _group(parent, "StorageAndDecor", scene_root)
@@ -208,6 +216,7 @@ func _build_storage_and_decor(parent: Node3D, scene_root: Node) -> void:
 	for x_pos: float in [7.42, 9.88]:
 		_box(shelf, "Vertical_Support_%s" % str(x_pos), Vector3(0.09, 3.25, 0.32), Vector3(x_pos, 1.7, -5.8), _walnut_dark, scene_root)
 	_box(shelf, "Bronze_Back_Accent", Vector3(2.45, 2.95, 0.025), Vector3(8.65, 1.8, -5.59), _bronze, scene_root)
+	_static_box_collision(decor, "DisplayShelfCollision", Vector3(2.75, 3.35, 0.42), Vector3(8.65, 1.68, -5.8), scene_root)
 
 	_build_planter(decor, "Large_Indoor_Planter", Vector3(8.6, 0.0, -1.0), 0.42, scene_root)
 	_build_planter(decor, "Corner_Indoor_Planter", Vector3(8.7, 0.0, 8.0), 0.34, scene_root)
@@ -232,6 +241,7 @@ func _build_planter(parent: Node3D, planter_name: String, origin: Vector3, radiu
 		var leaf_instance: MeshInstance3D = _sphere(planter, "Leaf_%02d" % (index + 1), Vector3(radius * 0.34, 0.72, radius * 0.12), leaf_position, _leaf, scene_root)
 		leaf_instance.rotation.z = -0.38 if index % 2 == 0 else 0.38
 	_cylinder(planter, "Central_Stem", 0.035, 0.95, origin + Vector3(0.0, 1.15, 0.0), _leaf, scene_root)
+	_static_box_collision(parent, planter_name + "Collision", Vector3(radius * 2.1, 0.82, radius * 2.1), origin + Vector3(0.0, 0.41, 0.0), scene_root)
 
 func _build_carryable_props(parent: Node3D, scene_root: Node) -> void:
 	var carryables: Node3D = _group(parent, "CarryableProps", scene_root)
@@ -276,6 +286,20 @@ func _add_physical_prop(
 	var interactable: Interactable = prop.get_node("Interactable") as Interactable
 	interactable.prompt_text = prompt
 	interactable.outline_width_multiplier = 1.1
+
+func _static_box_collision(parent: Node, node_name: String, size: Vector3, position: Vector3, scene_root: Node) -> void:
+	var body: StaticBody3D = StaticBody3D.new()
+	body.name = node_name
+	body.position = position
+	parent.add_child(body)
+	body.owner = scene_root
+	var collision: CollisionShape3D = CollisionShape3D.new()
+	collision.name = "CollisionShape3D"
+	var shape: BoxShape3D = BoxShape3D.new()
+	shape.size = size
+	collision.shape = shape
+	body.add_child(collision)
+	collision.owner = scene_root
 
 func _group(parent: Node, node_name: String, scene_root: Node) -> Node3D:
 	var group: Node3D = Node3D.new()
