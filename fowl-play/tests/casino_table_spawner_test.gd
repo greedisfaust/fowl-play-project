@@ -75,7 +75,8 @@ func _run_checks() -> void:
 		_fail("Calling the daily spawner twice created a duplicate table.")
 		return
 
-	var mismatch: Dictionary = spawner.call("spawn_tables_for_definitions", 2, [definition, definition])
+	var duplicate_definitions: Array[CasinoGameDefinition] = [definition, definition]
+	var mismatch: Dictionary = spawner.call("spawn_tables_for_definitions", 2, duplicate_definitions)
 	if bool(mismatch.get("ok", true)):
 		_fail("Spawner should reject a slot count that does not match the daily selection.")
 		return
