@@ -3,15 +3,15 @@
 Branch: `environment/world-building-and-gameplay-loop`
 Goal: Establish the casino/world gameplay foundation and a reusable table framework, beginning with Chicken Cross as the reference game.
 Status: IN PROGRESS
-Last updated: 2026-11-22 by GPT-6 (session 4)
+Last updated: 2026-11-22 by GPT-6 (session 6)
 Base: merged main commit `75675cc31456c3b0d7b5bb365ec82fd81ced9a72`
 Base docs: `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `docs/PROJECT_STATE.md`
 
 ## Current state (rewrite every session)
 
-- Branch `environment/world-building-and-gameplay-loop` is active; latest verified head before this slice is `e03fa2582af3bf8544c5c105671472134349ca94`.
+- Branch `environment/world-building-and-gameplay-loop` is active; latest verified head before this slice is `353fbb5b1bf971f1c06fa94f0cbcd73203af3d9e`.
 - Persistent Main owns player spawning across Apartment/Casino world swaps. Lobby HOST/JOIN/LEAVE and Registration terminals use the existing Network, PlayerIdentity, Interactable, and InteractiveTerminal systems.
-- Session cleanup is implemented: Network shutdown clears local run progression, wallet/day state, and daily game selection. This slice closes a failed-connection recovery gap so an unreachable host does not leave the local instance without an Apartment player.
+- Session cleanup is implemented: Network shutdown clears local run progression, wallet/day state, and daily game selection. Failed connection recovery is user-verified; this slice extends local-player restoration to every offline session shutdown, including host departure and intentional leave.
 - Shared wallet and generic script-only `BaseTable` controller are implemented. Casino wallet/BaseTable, RunManager, and CasinoDayManager checks were USER VERIFIED passing in Godot 4.7.2.
 - CasinoManager selector foundation is implemented: typed game definitions, Chicken Cross production registration, incomplete-roster gate, host-authoritative six-of-twelve draw, stable daily selection, and reliable peer synchronization. Its test runner is awaiting user execution.
 - The project is Godot 4.7, typed GDScript, Jolt, ENet, max four players; `fowl-play/` is the Godot project.
@@ -38,7 +38,7 @@ Base docs: `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `
 
 ## Exact next step
 
-Continue multiplayer reliability verification before synchronized run startup: validate host/client spawn, late join, disconnect/rejoin, host shutdown, failed connection recovery, and four-player capacity in separate Godot instances. The current automated terminal/MainController checks cover UI contracts and local failure recovery, not the complete two-peer ENet lifecycle. The production game roster currently has Chicken Cross only; the other eleven game names/IDs have not been finalized. Do not invent them.
+Run the MainController and lobby terminal checks after pulling the session-end recovery update. Then perform separate-instance ENet verification: host/client spawn, late join, disconnect/rejoin, host shutdown, and four-player capacity. The current automated checks cover local lifecycle recovery, not the complete multi-process ENet lifecycle. The production game roster currently has Chicken Cross only; the other eleven game names/IDs have not been finalized. Do not invent them.
 
 ## Waiting on the user
 
@@ -145,6 +145,13 @@ Continue multiplayer reliability verification before synchronized run startup: v
 > Read `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `docs/PROJECT_STATE.md`, and this session file. Verify the branch and files against GitHub and the local checkout. Recap in at most eight lines and wait for the user's go before implementing.
 
 ## Session log
+
+### Session 6 — 2026-11-22 — restore local player after every session shutdown
+- Continued the multiplayer lifecycle audit after the user verified the lobby and MainController checks passing in Godot 4.7.2.
+- Found that MainController restored the local player only when Network status was `failed`; intentional host/client leave and server-disconnected paths also clear all player nodes and need the same offline recovery.
+- Generalized the deferred recovery to any session end that leaves an `OfflineMultiplayerPeer`, and expanded the MainController regression test to assert local Apartment recovery after intentional shutdown as well as failed connection.
+- No scene files changed. Godot tests are awaiting user execution.
+- Next: separate-instance ENet verification for join, late join, disconnect/rejoin, host departure, and four-player capacity.
 
 ### Session 5 — 2026-11-22 — failed connection recovery
 - Audited the actual Network, MainController, and LobbyHostJoinTerminal lifecycle after the user approved direct repository commits.

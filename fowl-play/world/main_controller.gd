@@ -271,14 +271,14 @@ func _on_session_ended() -> void:
 	var run_manager: Node = get_node_or_null("/root/RunManager")
 	if is_instance_valid(run_manager) and run_manager.has_method("reset_for_session_end"):
 		run_manager.call("reset_for_session_end")
-	_restore_local_player_after_failed_connection.call_deferred()
+	_restore_local_player_after_session_end.call_deferred()
 
 
-## Connection failure shuts down Network and clears players just like an intentional leave.
-## Once the failed attempt has fully torn down its queued player nodes, restore local Apartment play.
-func _restore_local_player_after_failed_connection() -> void:
+## Network shutdown clears replicated players on every peer. Once queued deletion has
+## completed, restore this instance's local player for offline Apartment play.
+func _restore_local_player_after_session_end() -> void:
 	await get_tree().process_frame
-	if not is_instance_valid(_network) or str(_network.get("status")) != "failed":
+	if not is_instance_valid(_network):
 		return
 	var active_peer: MultiplayerPeer = multiplayer.multiplayer_peer
 	if not active_peer is OfflineMultiplayerPeer:
