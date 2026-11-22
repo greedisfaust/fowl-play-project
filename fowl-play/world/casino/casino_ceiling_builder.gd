@@ -126,12 +126,12 @@ func _build_perimeter_cove(
 		_add_line(
 			parent, "Perimeter_Bronze_Cove_%02d" % index,
 			bronze_start, bronze_end, 0.035, 0.055,
-			ceiling_height - 0.035, bronze_material, scene_root
+			ceiling_height - ceiling_thickness - 0.035, bronze_material, scene_root
 		)
 		_add_line(
 			parent, "Perimeter_Warm_Cove_%02d" % index,
 			light_start, light_end, 0.018, cove_light_width,
-			ceiling_height - 0.045, light_material, scene_root
+			ceiling_height - ceiling_thickness - 0.05, light_material, scene_root
 		)
 
 func _build_gaming_rails(
@@ -157,12 +157,12 @@ func _build_gaming_rails(
 			_add_line(
 				parent, "Gaming_Rail_%d_%d" % [rail_index, segment_index],
 				bronze_start, bronze_end, 0.045, gaming_rail_width,
-				ceiling_height - 0.035, bronze_material, scene_root
+				ceiling_height - ceiling_thickness - 0.035, bronze_material, scene_root
 			)
 			_add_line(
 				parent, "Gaming_Rail_Light_%d_%d" % [rail_index, segment_index],
 				light_start, light_end, 0.018, 0.022,
-				ceiling_height - 0.048, light_material, scene_root
+				ceiling_height - ceiling_thickness - 0.05, light_material, scene_root
 			)
 
 func _build_bar_feature(
@@ -185,14 +185,14 @@ func _build_bar_feature(
 		_add_line(
 			parent, "Bar_Sculpted_Frame_%d" % index,
 			start_2d, end_2d, 0.065, 0.075,
-			ceiling_height - 0.04, bronze_material, scene_root
+			ceiling_height - ceiling_thickness - 0.04, bronze_material, scene_root
 		)
 		var inset_start: Vector2 = start_2d.lerp((start_2d + end_2d) * 0.5, 0.025)
 		var inset_end: Vector2 = end_2d.lerp((start_2d + end_2d) * 0.5, 0.025)
 		_add_line(
 			parent, "Bar_Warm_Frame_Light_%d" % index,
 			inset_start, inset_end, 0.018, 0.028,
-			ceiling_height - 0.085, light_material, scene_root
+			ceiling_height - ceiling_thickness - 0.085, light_material, scene_root
 		)
 
 	# Two crosspieces give the bar canopy a deliberate, designed rhythm.
@@ -201,7 +201,7 @@ func _build_bar_feature(
 		_add_line(
 			parent, "Bar_Crossbeam_%d" % cross_index,
 			Vector2(min_x + 0.25, cross_z), Vector2(max_x - 0.25, cross_z),
-			0.045, 0.055, ceiling_height - 0.04, bronze_material, scene_root
+			0.045, 0.055, ceiling_height - ceiling_thickness - 0.04, bronze_material, scene_root
 		)
 
 func _build_downlights(
