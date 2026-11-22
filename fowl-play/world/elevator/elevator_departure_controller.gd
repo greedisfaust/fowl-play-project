@@ -10,6 +10,7 @@ signal departure_requested(actor_peer_id: int)
 @export var button_path: NodePath = ^"../InteriorDetails/TerminalButton"
 @export var occupancy_path: NodePath = ^"../ElevatorArea"
 @export var door_controller_path: NodePath = ^"../DoorAnimation"
+@export var door_proximity_path: NodePath = ^"../DoorProximityController"
 @export var main_controller_path: NodePath = ^"/root/Main"
 
 @export_group("Departure Sequence")
@@ -20,6 +21,7 @@ var _button: Node
 var _interactable: Interactable
 var _occupancy: ElevatorOccupancy
 var _door_controller: ElevatorDoorController
+var _door_proximity: Node
 var _main_controller: MainController
 var _network: Node
 var _request_pending: bool = false
@@ -31,6 +33,7 @@ func _ready() -> void:
 	_button = get_node_or_null(button_path)
 	_occupancy = get_node_or_null(occupancy_path) as ElevatorOccupancy
 	_door_controller = get_node_or_null(door_controller_path) as ElevatorDoorController
+	_door_proximity = get_node_or_null(door_proximity_path)
 	_network = get_node_or_null("/root/Network")
 
 	if not is_instance_valid(_button):
@@ -132,8 +135,8 @@ func accept_departure_request(destination_world: int) -> bool:
 	if _main_controller == null or not _main_controller.can_transition_to(destination_world):
 		reject_departure_request("destination world is unavailable")
 		return false
-	if _door_controller == null:
-		reject_departure_request("elevator door controller is unavailable")
+	if _door_controller == null or not is_instance_valid(_door_proximity) or not _door_proximity.has_method("begin_departure_closure"):
+		reject_departure_request("elevator door/proximity controller is unavailable")
 		return false
 	_departure_in_progress = true
 	_execute_departure_sequence.call_deferred(destination_world)
@@ -160,6 +163,8 @@ func _execute_departure_sequence(destination_world: int) -> void:
 
 
 func _close_doors_for_departure() -> bool:
+	if not bool(_door_proximity.call("begin_departure_closure")):
+		return false
 	var deadline: int = Time.get_ticks_msec() + int(door_timeout_seconds * 1000.0)
 	while _door_controller.are_doors_moving() and Time.get_ticks_msec() < deadline:
 		await get_tree().process_frame
@@ -217,7 +222,9 @@ func _wait_for_all_players_recovered() -> bool:
 func _abort_departure(reason: String) -> void:
 	_request_pending = false
 	_departure_in_progress = false
-	if is_instance_valid(_door_controller) and not _door_controller.are_doors_open() and not _door_controller.are_doors_moving():
+	if is_instance_valid(_door_proximity) and _door_proximity.has_method("cancel_departure_closure"):
+		_door_proximity.call("cancel_departure_closure")
+	elif is_instance_valid(_door_controller) and not _door_controller.are_doors_open() and not _door_controller.are_doors_moving():
 		_door_controller.open_doors()
 	_log_rejection("DEPART sequence aborted: %s" % reason)
 
