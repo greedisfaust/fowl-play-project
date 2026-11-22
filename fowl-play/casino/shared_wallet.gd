@@ -78,6 +78,19 @@ func reset_for_session_end() -> bool:
 	_emit_wallet_changed()
 	return true
 
+## Credits the one-time House continuation without bypassing the shared wallet ledger.
+func credit_house_continuation_loan(amount: int, day_number: int) -> Dictionary:
+	if not _is_authority():
+		return _failure("Only the host can credit the House continuation.")
+	if not _run_active:
+		return _failure("There is no active run to continue.")
+	if amount <= 0 or day_number < 1 or day_number > 10:
+		return _failure("The continuation loan amount and day must be valid.")
+	_available_balance += amount
+	_log_wallet("House continuation credited %d after the Day %d quota failure." % [amount, day_number])
+	_emit_wallet_changed()
+	return _success({"loan_amount": amount, "available_balance": _available_balance})
+
 ## Opens a betting round. Round IDs must be unique within their table for the current run.
 func open_round(table_id: String, round_id: String) -> Dictionary:
 	if not _is_authority():
@@ -92,6 +105,7 @@ func open_round(table_id: String, round_id: String) -> Dictionary:
 	_rounds[key] = {"table_id": table_id, "round_id": round_id, "state": ROUND_OPEN, "wager_ids": []}
 	round_changed.emit(table_id, round_id, ROUND_OPEN)
 	_log_wallet("Opened round %s/%s." % [table_id, round_id])
+	_publish_network_state()
 	return _success({"table_id": table_id, "round_id": round_id, "state": ROUND_OPEN})
 
 ## Reserves stake immediately and creates a uniquely attributed wager record.
@@ -205,6 +219,7 @@ func lock_round(table_id: String, round_id: String) -> Dictionary:
 	_rounds[key] = round_data
 	round_changed.emit(table_id, round_id, ROUND_LOCKED)
 	_log_wallet("Locked %d wagers in %s/%s." % [locked_count, table_id, round_id])
+	_publish_network_state()
 	return _success({"locked_count": locked_count})
 
 ## Cancels an unstarted round and refunds every still-reserved wager in it.
@@ -349,6 +364,51 @@ func _sum_payouts(payouts: Dictionary) -> int:
 	return total
 
 func _emit_wallet_changed() -> void:
+	wallet_changed.emit(_available_balance, _get_reserved_total())
+	_publish_network_state()
+
+
+## The host mirrors the complete wager ledger to clients so every HUD and table display
+## reads the same shared wallet. Clients receive state only; all mutations stay host-side.
+func _publish_network_state() -> void:
+	if multiplayer.multiplayer_peer is OfflineMultiplayerPeer or not multiplayer.is_server():
+		return
+	rpc("_rpc_apply_network_state", {
+		"run_active": _run_active,
+		"initial_balance": _initial_balance,
+		"available_balance": _available_balance,
+		"next_wager_sequence": _next_wager_sequence,
+		"wagers": _wagers.duplicate(true),
+		"rounds": _rounds.duplicate(true),
+	})
+
+
+@rpc("authority", "call_remote", "reliable")
+func _rpc_apply_network_state(snapshot: Dictionary) -> void:
+	var previous_wagers: Dictionary = _wagers.duplicate(true)
+	var previous_rounds: Dictionary = _rounds.duplicate(true)
+	_run_active = bool(snapshot.get("run_active", false))
+	_initial_balance = int(snapshot.get("initial_balance", 0))
+	_available_balance = int(snapshot.get("available_balance", 0))
+	_next_wager_sequence = int(snapshot.get("next_wager_sequence", 1))
+	var wagers_value: Variant = snapshot.get("wagers", {})
+	var rounds_value: Variant = snapshot.get("rounds", {})
+	if typeof(wagers_value) != TYPE_DICTIONARY or typeof(rounds_value) != TYPE_DICTIONARY:
+		return
+	_wagers = (wagers_value as Dictionary).duplicate(true)
+	_rounds = (rounds_value as Dictionary).duplicate(true)
+	for wager_id_value: Variant in _wagers.keys():
+		var wager_id: String = str(wager_id_value)
+		var wager: Dictionary = _wagers[wager_id]
+		var previous: Dictionary = previous_wagers.get(wager_id, {})
+		if str(previous.get("status", "")) != str(wager.get("status", "")):
+			wager_changed.emit(wager_id, str(wager.get("status", "")))
+	for round_key_value: Variant in _rounds.keys():
+		var round_key: String = str(round_key_value)
+		var round_data: Dictionary = _rounds[round_key]
+		var previous_round: Dictionary = previous_rounds.get(round_key, {})
+		if str(previous_round.get("state", "")) != str(round_data.get("state", "")):
+			round_changed.emit(str(round_data.get("table_id", "")), str(round_data.get("round_id", "")), str(round_data.get("state", "")))
 	wallet_changed.emit(_available_balance, _get_reserved_total())
 
 func _success(data: Dictionary = {}) -> Dictionary:
