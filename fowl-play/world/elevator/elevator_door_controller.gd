@@ -107,3 +107,4 @@ func _finish_motion(open: bool) -> void:
 	_is_moving = false
 	door_state_changed.emit(_is_open)
 	door_motion_finished.emit(_is_open)
+	
