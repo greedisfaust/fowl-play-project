@@ -180,6 +180,7 @@ func complete_world_transition(previous_world: int, destination_world: int) -> b
 	var next_day: int = current_day
 	var next_phase: int = phase
 	var next_casino_departure_allowed: bool = casino_departure_allowed
+	var next_run_active: bool = true
 	match phase:
 		Phase.APARTMENT:
 			next_phase = Phase.CASINO
@@ -208,7 +209,9 @@ func complete_world_transition(previous_world: int, destination_world: int) -> b
 		_:
 			return false
 
-	_publish_state(true, next_day, next_phase, next_casino_departure_allowed)
+	if next_phase == Phase.CONTRACT_FULFILLED or next_phase == Phase.RUN_FAILED:
+		next_run_active = false
+	_publish_state(next_run_active, next_day, next_phase, next_casino_departure_allowed)
 	_log("Progression advanced to Day %d (%s)." % [current_day, _phase_name(phase)])
 	return true
 
