@@ -1,6 +1,675 @@
 [gd_scene format=3 uid="uid://sd1d0ywaupf1"]
 
 [ext_resource type="PackedScene" uid="uid://cyebu5h2uxu7" path="res://world/elevator/elevator.tscn" id="1_78rjl"]
+[ext_resource type="Script" uid="uid://dcrgkr656nigb" path="res://world/casino/casino_perimeter_builder.gd" id="1_g23vi"]
+[ext_resource type="Script" uid="uid://nes3ciyfc0wd" path="res://world/casino/casino_window_facade_builder.gd" id="1_ojnio"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_g23vi"]
+albedo_color = Color(0.055, 0.062, 0.072, 1)
+metallic = 0.08
+roughness = 0.38
+
+[sub_resource type="BoxMesh" id="BoxMesh_7k2yl"]
+size = Vector3(27.08, 4.2, 0.38)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_o148f"]
+size = Vector3(27.08, 4.2, 0.38)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_367ry"]
+albedo_color = Color(0.075, 0.083, 0.094, 1)
+metallic = 0.1
+roughness = 0.34
+
+[sub_resource type="BoxMesh" id="BoxMesh_86qhs"]
+size = Vector3(27, 1.12, 0.035)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_c68pi"]
+albedo_color = Color(0.2, 0.15, 0.105, 1)
+metallic = 0.55
+roughness = 0.3
+
+[sub_resource type="BoxMesh" id="BoxMesh_u8g00"]
+size = Vector3(27, 0.07, 0.075)
+
+[sub_resource type="BoxMesh" id="BoxMesh_503al"]
+size = Vector3(27, 0.11, 0.11)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fxmh2"]
+albedo_color = Color(0.095, 0.105, 0.118, 1)
+metallic = 0.08
+roughness = 0.3
+
+[sub_resource type="BoxMesh" id="BoxMesh_r0vgo"]
+size = Vector3(1.9, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_fdmt8"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_df4pr"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_tpl3a"]
+size = Vector3(2.05, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_0tcha"]
+size = Vector3(2.05, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_nt505"]
+size = Vector3(1.9, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_08h8u"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_8fl5t"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_y2mxa"]
+size = Vector3(2.05, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_sh5yq"]
+size = Vector3(2.05, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_patrv"]
+size = Vector3(1.9, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_2fm0i"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_plcgs"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_4op7f"]
+size = Vector3(2.05, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_du708"]
+size = Vector3(2.05, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ishft"]
+size = Vector3(1.9, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_i50i2"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_yeam3"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_f1h4m"]
+size = Vector3(2.05, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_3428g"]
+size = Vector3(2.05, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_xksl2"]
+size = Vector3(1.9, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_r3d4e"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ea8up"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_0eedt"]
+size = Vector3(2.05, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_fto17"]
+size = Vector3(2.05, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_5ovjb"]
+size = Vector3(1.9, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_1yqt8"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_tllxp"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_d8qjo"]
+size = Vector3(2.05, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_0auw6"]
+size = Vector3(2.05, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_4mxae"]
+size = Vector3(1.9, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_igi3t"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_s07e4"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_rjc58"]
+size = Vector3(2.05, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_h87t0"]
+size = Vector3(2.05, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_avy6c"]
+size = Vector3(1.9, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_a1mlc"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_3u648"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ld7xr"]
+size = Vector3(2.05, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_84vux"]
+size = Vector3(2.05, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_rg1cr"]
+size = Vector3(1.9, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_uov7e"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_robwc"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_fbb28"]
+size = Vector3(2.05, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_6jj1g"]
+size = Vector3(2.05, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_y6083"]
+size = Vector3(1.9, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_7jbuy"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_d3be7"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_6k16b"]
+size = Vector3(2.05, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_dcn78"]
+size = Vector3(2.05, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_u088m"]
+size = Vector3(1.9, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_f3sht"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_0df3l"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_mjbha"]
+size = Vector3(2.05, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_qhkr4"]
+size = Vector3(2.05, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_chq1c"]
+size = Vector3(1.9, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_8agjg"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ik64k"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_qkvno"]
+size = Vector3(2.05, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_e0wfw"]
+size = Vector3(2.05, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_qpxrx"]
+size = Vector3(35.08, 4.2, 0.38)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_una2j"]
+size = Vector3(35.08, 4.2, 0.38)
+
+[sub_resource type="BoxMesh" id="BoxMesh_t6k6m"]
+size = Vector3(35, 1.12, 0.035)
+
+[sub_resource type="BoxMesh" id="BoxMesh_2g8n0"]
+size = Vector3(35, 0.07, 0.075)
+
+[sub_resource type="BoxMesh" id="BoxMesh_6hjho"]
+size = Vector3(35, 0.11, 0.11)
+
+[sub_resource type="BoxMesh" id="BoxMesh_b1gpf"]
+size = Vector3(1.9833333, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_bp7fw"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_kk2r5"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_l3j31"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_emy1p"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_i6tmc"]
+size = Vector3(1.9833333, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_hh0fo"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_s4a5y"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_5tsk6"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_40hlu"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_w8kwg"]
+size = Vector3(1.9833333, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wxul1"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wta60"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_nrt4u"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_popwb"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ayr3g"]
+size = Vector3(1.9833333, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_iuu3l"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_lf6cm"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_qn4x7"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_021lo"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_d0xv7"]
+size = Vector3(1.9833333, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_v1f1j"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_w8up4"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_v1bm1"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_q81as"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_dlu4i"]
+size = Vector3(1.9833333, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ncu21"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_8olgl"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_bmtcc"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_i1ho0"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_x36cn"]
+size = Vector3(1.9833333, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_okk5p"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_nlui1"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_q0863"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_bpg6g"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_laky4"]
+size = Vector3(1.9833333, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_qhtvq"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ucro3"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_xxp4q"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_rjh5a"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_xgfpd"]
+size = Vector3(1.9833333, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_c77kv"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_0hjiv"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_kpdxe"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_g1v26"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_4sust"]
+size = Vector3(1.9833333, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_uwhbn"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_keht7"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_qmyh6"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ngj7i"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_r47l0"]
+size = Vector3(1.9833333, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_0ilr1"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_h51bq"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_u4vuo"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_qyvjk"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_lp71y"]
+size = Vector3(1.9833333, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_qr837"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_eul0u"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_k1poi"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_o3kpb"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_sfvgd"]
+size = Vector3(1.9833333, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ypo5o"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_fthr4"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_0u608"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_3jupn"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_twcvh"]
+size = Vector3(1.9833333, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_uuglw"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_26e1p"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_k6kha"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_381rv"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_drj2f"]
+size = Vector3(1.9833333, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_s3jm1"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_r6e37"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_5s2re"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ha58f"]
+size = Vector3(2.1333334, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_5hnpr"]
+size = Vector3(17.08, 4.2, 0.38)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_b6ofx"]
+size = Vector3(17.08, 4.2, 0.38)
+
+[sub_resource type="BoxMesh" id="BoxMesh_4o2cd"]
+size = Vector3(17, 1.12, 0.035)
+
+[sub_resource type="BoxMesh" id="BoxMesh_eyckj"]
+size = Vector3(17, 0.07, 0.075)
+
+[sub_resource type="BoxMesh" id="BoxMesh_g52p6"]
+size = Vector3(17, 0.11, 0.11)
+
+[sub_resource type="BoxMesh" id="BoxMesh_oyd7d"]
+size = Vector3(2.0785713, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_clw6n"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_nhwav"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_t6ebs"]
+size = Vector3(2.2285714, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_3uxq3"]
+size = Vector3(2.2285714, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_2rwwj"]
+size = Vector3(2.0785713, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ju5yl"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_oaqmu"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_20x4b"]
+size = Vector3(2.2285714, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_fu7v1"]
+size = Vector3(2.2285714, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_jgtnm"]
+size = Vector3(2.0785713, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wibgn"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_g2ahm"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_e3s2l"]
+size = Vector3(2.2285714, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_j6dk0"]
+size = Vector3(2.2285714, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ga2no"]
+size = Vector3(2.0785713, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_tdlu2"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_mvokl"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_8y6o6"]
+size = Vector3(2.2285714, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_44qty"]
+size = Vector3(2.2285714, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_e2neu"]
+size = Vector3(2.0785713, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_j3dps"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_jkwt6"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_xx1fg"]
+size = Vector3(2.2285714, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_xyw4x"]
+size = Vector3(2.2285714, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_km236"]
+size = Vector3(2.0785713, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_3k5wo"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_enf3q"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ra3gj"]
+size = Vector3(2.2285714, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ift2y"]
+size = Vector3(2.2285714, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_rxse7"]
+size = Vector3(2.0785713, 0.63, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_d3xj3"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_3fmcb"]
+size = Vector3(0.075, 0.78, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_axc48"]
+size = Vector3(2.2285714, 0.075, 0.055)
+
+[sub_resource type="BoxMesh" id="BoxMesh_7o564"]
+size = Vector3(2.2285714, 0.075, 0.055)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ojnio"]
+albedo_color = Color(0.075, 0.082, 0.09, 1)
+metallic = 0.12
+roughness = 0.32
+
+[sub_resource type="BoxMesh" id="BoxMesh_g23vi"]
+size = Vector3(14.142136, 0.45, 0.32)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7k2yl"]
+transparency = 1
+cull_mode = 2
+albedo_color = Color(0.72, 0.86, 0.94, 0.2)
+metallic = 0.28
+roughness = 0.1
+
+[sub_resource type="BoxMesh" id="BoxMesh_o148f"]
+size = Vector3(14.067136, 3.26, 0.035)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_v4s1y"]
+albedo_color = Color(0.36, 0.22, 0.105, 1)
+metallic = 0.78
+roughness = 0.24
+
+[sub_resource type="BoxMesh" id="BoxMesh_367ry"]
+size = Vector3(14.142136, 0.035, 0.335)
+
+[sub_resource type="BoxMesh" id="BoxMesh_b6e8q"]
+size = Vector3(14.142136, 0.09, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_rix1d"]
+size = Vector3(0.075, 3.26, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_r5tfs"]
+size = Vector3(0.075, 3.26, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_leiba"]
+size = Vector3(0.075, 3.26, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_4yis7"]
+size = Vector3(0.075, 3.26, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_4u8m7"]
+size = Vector3(0.075, 3.26, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_8xkkx"]
+size = Vector3(0.075, 3.26, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_yyfnm"]
+size = Vector3(25, 0.45, 0.32)
+
+[sub_resource type="BoxMesh" id="BoxMesh_vu7m7"]
+size = Vector3(24.925, 3.26, 0.035)
+
+[sub_resource type="BoxMesh" id="BoxMesh_tgxj5"]
+size = Vector3(25, 0.035, 0.335)
+
+[sub_resource type="BoxMesh" id="BoxMesh_uwn2a"]
+size = Vector3(25, 0.09, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ykpfq"]
+size = Vector3(0.075, 3.26, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_feb43"]
+size = Vector3(0.075, 3.26, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ff5vl"]
+size = Vector3(0.075, 3.26, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_5oagg"]
+size = Vector3(0.075, 3.26, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_s3ud5"]
+size = Vector3(0.075, 3.26, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_i6pti"]
+size = Vector3(0.075, 3.26, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_qts34"]
+size = Vector3(0.075, 3.26, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ywip6"]
+size = Vector3(0.075, 3.26, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_t7e4x"]
+size = Vector3(0.075, 3.26, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_7qvvu"]
+size = Vector3(0.075, 3.26, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_pe6qn"]
+size = Vector3(0.075, 3.26, 0.12)
 
 [node name="Casino" type="Node3D" unique_id=1271131405]
 
@@ -22,12 +691,1072 @@ depth = 0.3
 [node name="Architecture" type="Node3D" parent="." unique_id=1189615441]
 
 [node name="Perimeter" type="Node3D" parent="Architecture" unique_id=960054329]
+script = ExtResource("1_g23vi")
+
+[node name="_GeneratedPerimeter" type="Node3D" parent="Architecture/Perimeter" unique_id=1791710310]
+
+[node name="Wall_00_Stone" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1219426294]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 11, 2.1, -15.165001)
+material_override = SubResource("StandardMaterial3D_g23vi")
+mesh = SubResource("BoxMesh_7k2yl")
+
+[node name="Wall_00_Stone_Collision" type="StaticBody3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1706499452]
+
+[node name="@CollisionShape3D@328382" type="CollisionShape3D" parent="Architecture/Perimeter/_GeneratedPerimeter/Wall_00_Stone_Collision" unique_id=1377658982]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 11, 2.1, -15.165001)
+shape = SubResource("BoxShape3D_o148f")
+
+[node name="Wall_00_Wainscot_Backboard" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=115158804]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.792, 0.74, -15.165001)
+material_override = SubResource("StandardMaterial3D_367ry")
+mesh = SubResource("BoxMesh_86qhs")
+
+[node name="Wall_00_Wainscot_Baseboard" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1215997837]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.7475, 0.09, -15.165001)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_u8g00")
+
+[node name="Wall_00_Wainscot_ChairRail" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=934574815]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.73, 1.245, -15.165001)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_503al")
+
+[node name="Wall_00_Panel_00_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1184793784]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.765, 0.7, -27.54)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_r0vgo")
+
+[node name="Wall_00_Panel_00_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=619880067]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.7, -28.5275)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_fdmt8")
+
+[node name="Wall_00_Panel_00_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=759460776]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.7, -26.552502)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_df4pr")
+
+[node name="Wall_00_Panel_00_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=514445431]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.3475, -27.54)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_tpl3a")
+
+[node name="Wall_00_Panel_00_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1512049654]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 1.0525, -27.54)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_0tcha")
+
+[node name="Wall_00_Panel_01_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=865068892]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.765, 0.7, -25.29)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_nt505")
+
+[node name="Wall_00_Panel_01_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=831811435]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.7, -26.2775)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_08h8u")
+
+[node name="Wall_00_Panel_01_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=145591771]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.7, -24.302502)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_8fl5t")
+
+[node name="Wall_00_Panel_01_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1848081369]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.3475, -25.29)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_y2mxa")
+
+[node name="Wall_00_Panel_01_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1131250879]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 1.0525, -25.29)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_sh5yq")
+
+[node name="Wall_00_Panel_02_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=191580118]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.765, 0.7, -23.04)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_patrv")
+
+[node name="Wall_00_Panel_02_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1607004987]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.7, -24.0275)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_2fm0i")
+
+[node name="Wall_00_Panel_02_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=937365030]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.7, -22.052502)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_plcgs")
+
+[node name="Wall_00_Panel_02_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=38057221]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.3475, -23.04)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_4op7f")
+
+[node name="Wall_00_Panel_02_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=2102605278]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 1.0525, -23.04)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_du708")
+
+[node name="Wall_00_Panel_03_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1270718046]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.765, 0.7, -20.79)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_ishft")
+
+[node name="Wall_00_Panel_03_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=618458693]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.7, -21.7775)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_i50i2")
+
+[node name="Wall_00_Panel_03_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=751342399]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.7, -19.802502)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_yeam3")
+
+[node name="Wall_00_Panel_03_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1879990861]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.3475, -20.79)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_f1h4m")
+
+[node name="Wall_00_Panel_03_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1966012757]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 1.0525, -20.79)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_3428g")
+
+[node name="Wall_00_Panel_04_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=511584707]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.765, 0.7, -18.54)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_xksl2")
+
+[node name="Wall_00_Panel_04_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1247206069]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.7, -19.5275)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_r3d4e")
+
+[node name="Wall_00_Panel_04_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1167469427]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.7, -17.552502)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_ea8up")
+
+[node name="Wall_00_Panel_04_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=985349313]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.3475, -18.54)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_0eedt")
+
+[node name="Wall_00_Panel_04_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1128857102]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 1.0525, -18.54)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_fto17")
+
+[node name="Wall_00_Panel_05_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=388602737]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.765, 0.7, -16.29)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_5ovjb")
+
+[node name="Wall_00_Panel_05_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=2130397766]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.7, -17.2775)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_1yqt8")
+
+[node name="Wall_00_Panel_05_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=2122812580]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.7, -15.302501)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_tllxp")
+
+[node name="Wall_00_Panel_05_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1649333169]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.3475, -16.29)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_d8qjo")
+
+[node name="Wall_00_Panel_05_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=933533782]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 1.0525, -16.29)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_0auw6")
+
+[node name="Wall_00_Panel_06_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1513124002]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.765, 0.7, -14.040001)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_4mxae")
+
+[node name="Wall_00_Panel_06_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=692072569]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.7, -15.027501)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_igi3t")
+
+[node name="Wall_00_Panel_06_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=663631887]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.7, -13.052501)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_s07e4")
+
+[node name="Wall_00_Panel_06_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1199366277]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.3475, -14.040001)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_rjc58")
+
+[node name="Wall_00_Panel_06_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=299345885]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 1.0525, -14.040001)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_h87t0")
+
+[node name="Wall_00_Panel_07_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1141213303]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.765, 0.7, -11.790001)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_avy6c")
+
+[node name="Wall_00_Panel_07_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=662304959]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.7, -12.777501)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_a1mlc")
+
+[node name="Wall_00_Panel_07_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=175949968]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.7, -10.802501)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_3u648")
+
+[node name="Wall_00_Panel_07_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=617177057]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.3475, -11.790001)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_ld7xr")
+
+[node name="Wall_00_Panel_07_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1275328621]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 1.0525, -11.790001)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_84vux")
+
+[node name="Wall_00_Panel_08_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=824664627]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.765, 0.7, -9.540001)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_rg1cr")
+
+[node name="Wall_00_Panel_08_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=172359167]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.7, -10.527501)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_uov7e")
+
+[node name="Wall_00_Panel_08_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1726610510]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.7, -8.552501)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_robwc")
+
+[node name="Wall_00_Panel_08_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=2087234282]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.3475, -9.540001)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_fbb28")
+
+[node name="Wall_00_Panel_08_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=411949498]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 1.0525, -9.540001)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_6jj1g")
+
+[node name="Wall_00_Panel_09_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=686723675]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.765, 0.7, -7.290001)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_y6083")
+
+[node name="Wall_00_Panel_09_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=876766896]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.7, -8.277501)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_7jbuy")
+
+[node name="Wall_00_Panel_09_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1566338488]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.7, -6.3025007)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_d3be7")
+
+[node name="Wall_00_Panel_09_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=2100437723]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.3475, -7.290001)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_6k16b")
+
+[node name="Wall_00_Panel_09_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=739732662]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 1.0525, -7.290001)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_dcn78")
+
+[node name="Wall_00_Panel_10_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1886646115]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.765, 0.7, -5.040001)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_u088m")
+
+[node name="Wall_00_Panel_10_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1340603211]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.7, -6.027501)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_f3sht")
+
+[node name="Wall_00_Panel_10_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1874135878]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.7, -4.0525007)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_0df3l")
+
+[node name="Wall_00_Panel_10_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=702418590]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.3475, -5.040001)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_mjbha")
+
+[node name="Wall_00_Panel_10_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1552110464]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 1.0525, -5.040001)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_qhkr4")
+
+[node name="Wall_00_Panel_11_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1745069635]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.765, 0.7, -2.790001)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_chq1c")
+
+[node name="Wall_00_Panel_11_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1464449745]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.7, -3.7775009)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_8agjg")
+
+[node name="Wall_00_Panel_11_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1476364636]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.7, -1.802501)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_ik64k")
+
+[node name="Wall_00_Panel_11_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=597065723]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 0.3475, -2.790001)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_qkvno")
+
+[node name="Wall_00_Panel_11_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1474670408]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.735, 1.0525, -2.790001)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_e0wfw")
+
+[node name="Wall_01_Stone" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=148255169]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -6.5, 2.1, -1.665)
+material_override = SubResource("StandardMaterial3D_g23vi")
+mesh = SubResource("BoxMesh_qpxrx")
+
+[node name="Wall_01_Stone_Collision" type="StaticBody3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=698332046]
+
+[node name="@CollisionShape3D@328383" type="CollisionShape3D" parent="Architecture/Perimeter/_GeneratedPerimeter/Wall_01_Stone_Collision" unique_id=1370929838]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -6.5, 2.1, -1.665)
+shape = SubResource("BoxShape3D_una2j")
+
+[node name="Wall_01_Wainscot_Backboard" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=2098778748]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -6.5, 0.74, -1.8729999)
+material_override = SubResource("StandardMaterial3D_367ry")
+mesh = SubResource("BoxMesh_t6k6m")
+
+[node name="Wall_01_Wainscot_Baseboard" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1135603100]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -6.5, 0.09, -1.9175)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_2g8n0")
+
+[node name="Wall_01_Wainscot_ChairRail" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=2014213364]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -6.5, 1.245, -1.935)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_6hjho")
+
+[node name="Wall_01_Panel_00_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=238600448]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 9.833333, 0.7, -1.9)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_b1gpf")
+
+[node name="Wall_01_Panel_00_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=275046038]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 10.862499, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_bp7fw")
+
+[node name="Wall_01_Panel_00_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1440745698]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 8.804167, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_kk2r5")
+
+[node name="Wall_01_Panel_00_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=2101861607]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 9.833333, 0.3475, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_l3j31")
+
+[node name="Wall_01_Panel_00_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=2004778912]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 9.833333, 1.0525, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_emy1p")
+
+[node name="Wall_01_Panel_01_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1322517659]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 7.5, 0.7, -1.9)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_i6tmc")
+
+[node name="Wall_01_Panel_01_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1978043252]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 8.529167, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_hh0fo")
+
+[node name="Wall_01_Panel_01_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1508758317]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 6.4708333, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_s4a5y")
+
+[node name="Wall_01_Panel_01_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1012113576]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 7.5, 0.3475, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_5tsk6")
+
+[node name="Wall_01_Panel_01_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1004701896]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 7.5, 1.0525, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_40hlu")
+
+[node name="Wall_01_Panel_02_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1732375028]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 5.1666665, 0.7, -1.9)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_w8kwg")
+
+[node name="Wall_01_Panel_02_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=454335149]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 6.195833, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_wxul1")
+
+[node name="Wall_01_Panel_02_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1066118108]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 4.1375, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_wta60")
+
+[node name="Wall_01_Panel_02_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=744536528]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 5.1666665, 0.3475, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_nrt4u")
+
+[node name="Wall_01_Panel_02_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1837718747]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 5.1666665, 1.0525, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_popwb")
+
+[node name="Wall_01_Panel_03_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=187977483]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2.833333, 0.7, -1.9)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_ayr3g")
+
+[node name="Wall_01_Panel_03_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=706972157]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 3.8624997, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_iuu3l")
+
+[node name="Wall_01_Panel_03_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=702067767]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 1.8041663, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_lf6cm")
+
+[node name="Wall_01_Panel_03_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=2036701614]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2.833333, 0.3475, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_qn4x7")
+
+[node name="Wall_01_Panel_03_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=2138862535]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2.833333, 1.0525, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_021lo")
+
+[node name="Wall_01_Panel_04_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1244312663]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0.5, 0.7, -1.9)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_d0xv7")
+
+[node name="Wall_01_Panel_04_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1987287745]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 1.5291667, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_v1f1j")
+
+[node name="Wall_01_Panel_04_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=26837465]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -0.5291667, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_w8up4")
+
+[node name="Wall_01_Panel_04_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1696757615]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0.5, 0.3475, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_v1bm1")
+
+[node name="Wall_01_Panel_04_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1422396879]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0.5, 1.0525, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_q81as")
+
+[node name="Wall_01_Panel_05_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=909765948]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -1.833333, 0.7, -1.9)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_dlu4i")
+
+[node name="Wall_01_Panel_05_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=250832965]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -0.8041663, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_ncu21")
+
+[node name="Wall_01_Panel_05_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=2097536979]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -2.8624997, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_8olgl")
+
+[node name="Wall_01_Panel_05_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=414349983]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -1.833333, 0.3475, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_bmtcc")
+
+[node name="Wall_01_Panel_05_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1181278383]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -1.833333, 1.0525, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_i1ho0")
+
+[node name="Wall_01_Panel_06_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1986589886]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -4.166667, 0.7, -1.9)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_x36cn")
+
+[node name="Wall_01_Panel_06_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=359428097]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -3.1375003, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_okk5p")
+
+[node name="Wall_01_Panel_06_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=511759560]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -5.1958337, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_nlui1")
+
+[node name="Wall_01_Panel_06_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=203897346]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -4.166667, 0.3475, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_q0863")
+
+[node name="Wall_01_Panel_06_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=619351931]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -4.166667, 1.0525, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_bpg6g")
+
+[node name="Wall_01_Panel_07_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1067341680]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -6.5, 0.7, -1.9)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_laky4")
+
+[node name="Wall_01_Panel_07_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=425035074]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -5.4708333, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_qhtvq")
+
+[node name="Wall_01_Panel_07_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1510244714]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -7.5291667, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_ucro3")
+
+[node name="Wall_01_Panel_07_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1467845646]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -6.5, 0.3475, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_xxp4q")
+
+[node name="Wall_01_Panel_07_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=829291328]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -6.5, 1.0525, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_rjh5a")
+
+[node name="Wall_01_Panel_08_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=89952079]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -8.833334, 0.7, -1.9)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_xgfpd")
+
+[node name="Wall_01_Panel_08_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1643002362]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -7.8041673, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_c77kv")
+
+[node name="Wall_01_Panel_08_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1353490168]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -9.862501, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_0hjiv")
+
+[node name="Wall_01_Panel_08_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=375724119]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -8.833334, 0.3475, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_kpdxe")
+
+[node name="Wall_01_Panel_08_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=975654041]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -8.833334, 1.0525, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_g1v26")
+
+[node name="Wall_01_Panel_09_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=368996136]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -11.166666, 0.7, -1.9)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_4sust")
+
+[node name="Wall_01_Panel_09_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1287770024]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -10.137499, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_uwhbn")
+
+[node name="Wall_01_Panel_09_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=133093078]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -12.195833, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_keht7")
+
+[node name="Wall_01_Panel_09_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1074207767]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -11.166666, 0.3475, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_qmyh6")
+
+[node name="Wall_01_Panel_09_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1022225336]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -11.166666, 1.0525, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_ngj7i")
+
+[node name="Wall_01_Panel_10_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=763470807]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -13.5, 0.7, -1.9)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_r47l0")
+
+[node name="Wall_01_Panel_10_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1439696039]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -12.470833, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_0ilr1")
+
+[node name="Wall_01_Panel_10_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1354706839]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -14.529167, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_h51bq")
+
+[node name="Wall_01_Panel_10_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=112669055]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -13.5, 0.3475, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_u4vuo")
+
+[node name="Wall_01_Panel_10_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=2078529106]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -13.5, 1.0525, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_qyvjk")
+
+[node name="Wall_01_Panel_11_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1606317840]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -15.833334, 0.7, -1.9)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_lp71y")
+
+[node name="Wall_01_Panel_11_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1412183409]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -14.804167, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_qr837")
+
+[node name="Wall_01_Panel_11_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1909056891]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -16.862501, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_eul0u")
+
+[node name="Wall_01_Panel_11_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1853005955]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -15.833334, 0.3475, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_k1poi")
+
+[node name="Wall_01_Panel_11_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1392091653]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -15.833334, 1.0525, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_o3kpb")
+
+[node name="Wall_01_Panel_12_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1737625556]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -18.166666, 0.7, -1.9)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_sfvgd")
+
+[node name="Wall_01_Panel_12_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=2045862474]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -17.137499, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_ypo5o")
+
+[node name="Wall_01_Panel_12_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=505425815]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -19.195833, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_fthr4")
+
+[node name="Wall_01_Panel_12_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=832213578]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -18.166666, 0.3475, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_0u608")
+
+[node name="Wall_01_Panel_12_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1578144647]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -18.166666, 1.0525, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_3jupn")
+
+[node name="Wall_01_Panel_13_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=926693774]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -20.5, 0.7, -1.9)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_twcvh")
+
+[node name="Wall_01_Panel_13_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1575178569]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -19.470833, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_uuglw")
+
+[node name="Wall_01_Panel_13_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=609720890]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -21.529167, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_26e1p")
+
+[node name="Wall_01_Panel_13_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=79147971]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -20.5, 0.3475, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_k6kha")
+
+[node name="Wall_01_Panel_13_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1310995111]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -20.5, 1.0525, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_381rv")
+
+[node name="Wall_01_Panel_14_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=790404605]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -22.833332, 0.7, -1.9)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_drj2f")
+
+[node name="Wall_01_Panel_14_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1470427609]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -21.804165, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_s3jm1")
+
+[node name="Wall_01_Panel_14_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=2123821010]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -23.8625, 0.7, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_r6e37")
+
+[node name="Wall_01_Panel_14_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1093577229]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -22.833332, 0.3475, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_5s2re")
+
+[node name="Wall_01_Panel_14_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1762143632]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -22.833332, 1.0525, -1.93)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_ha58f")
+
+[node name="Wall_02_Stone" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1895896206]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -24, 2.1, -10.165001)
+material_override = SubResource("StandardMaterial3D_g23vi")
+mesh = SubResource("BoxMesh_5hnpr")
+
+[node name="Wall_02_Stone_Collision" type="StaticBody3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=414488598]
+
+[node name="@CollisionShape3D@328384" type="CollisionShape3D" parent="Architecture/Perimeter/_GeneratedPerimeter/Wall_02_Stone_Collision" unique_id=1558900469]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -24, 2.1, -10.165001)
+shape = SubResource("BoxShape3D_b6ofx")
+
+[node name="Wall_02_Wainscot_Backboard" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1688013578]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.792, 0.74, -10.165)
+material_override = SubResource("StandardMaterial3D_367ry")
+mesh = SubResource("BoxMesh_4o2cd")
+
+[node name="Wall_02_Wainscot_Baseboard" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=204880323]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.7475, 0.09, -10.165)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_eyckj")
+
+[node name="Wall_02_Wainscot_ChairRail" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1287159915]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.73, 1.245, -10.165)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_g52p6")
+
+[node name="Wall_02_Panel_00_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1484263988]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.765, 0.7, -2.8792858)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_oyd7d")
+
+[node name="Wall_02_Panel_00_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=419340097]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 0.7, -1.8025001)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_clw6n")
+
+[node name="Wall_02_Panel_00_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1190110009]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 0.7, -3.9560714)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_nhwav")
+
+[node name="Wall_02_Panel_00_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1611009735]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 0.3475, -2.8792858)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_t6ebs")
+
+[node name="Wall_02_Panel_00_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1531876830]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 1.0525, -2.8792858)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_3uxq3")
+
+[node name="Wall_02_Panel_01_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1978737119]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.765, 0.7, -5.307857)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_2rwwj")
+
+[node name="Wall_02_Panel_01_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=112872901]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 0.7, -4.2310715)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_ju5yl")
+
+[node name="Wall_02_Panel_01_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1110432764]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 0.7, -6.3846426)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_oaqmu")
+
+[node name="Wall_02_Panel_01_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=659515939]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 0.3475, -5.307857)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_20x4b")
+
+[node name="Wall_02_Panel_01_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=922386081]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 1.0525, -5.307857)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_fu7v1")
+
+[node name="Wall_02_Panel_02_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1980888306]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.765, 0.7, -7.7364287)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_jgtnm")
+
+[node name="Wall_02_Panel_02_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1570469104]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 0.7, -6.659643)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_wibgn")
+
+[node name="Wall_02_Panel_02_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=642372268]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 0.7, -8.813214)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_g2ahm")
+
+[node name="Wall_02_Panel_02_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=2146876124]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 0.3475, -7.7364287)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_e3s2l")
+
+[node name="Wall_02_Panel_02_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=508507425]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 1.0525, -7.7364287)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_j6dk0")
+
+[node name="Wall_02_Panel_03_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=673019979]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.765, 0.7, -10.165)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_ga2no")
+
+[node name="Wall_02_Panel_03_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=698867146]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 0.7, -9.088214)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_tdlu2")
+
+[node name="Wall_02_Panel_03_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=949529968]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 0.7, -11.241786)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_mvokl")
+
+[node name="Wall_02_Panel_03_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=253506302]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 0.3475, -10.165)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_8y6o6")
+
+[node name="Wall_02_Panel_03_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1237441609]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 1.0525, -10.165)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_44qty")
+
+[node name="Wall_02_Panel_04_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=653473576]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.765, 0.7, -12.593572)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_e2neu")
+
+[node name="Wall_02_Panel_04_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1003739350]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 0.7, -11.516786)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_j3dps")
+
+[node name="Wall_02_Panel_04_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1846641861]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 0.7, -13.670358)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_jkwt6")
+
+[node name="Wall_02_Panel_04_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1953664691]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 0.3475, -12.593572)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_xx1fg")
+
+[node name="Wall_02_Panel_04_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=282818401]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 1.0525, -12.593572)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_xyw4x")
+
+[node name="Wall_02_Panel_05_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=2017534017]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.765, 0.7, -15.022142)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_km236")
+
+[node name="Wall_02_Panel_05_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1781976550]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 0.7, -13.945356)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_3k5wo")
+
+[node name="Wall_02_Panel_05_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=94338427]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 0.7, -16.098928)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_enf3q")
+
+[node name="Wall_02_Panel_05_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=888445358]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 0.3475, -15.022142)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_ra3gj")
+
+[node name="Wall_02_Panel_05_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=551472960]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 1.0525, -15.022142)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_ift2y")
+
+[node name="Wall_02_Panel_06_Face" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1702690944]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.765, 0.7, -17.450714)
+material_override = SubResource("StandardMaterial3D_fxmh2")
+mesh = SubResource("BoxMesh_rxse7")
+
+[node name="Wall_02_Panel_06_Stile_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1509236417]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 0.7, -16.373928)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_d3xj3")
+
+[node name="Wall_02_Panel_06_Stile_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=536920064]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 0.7, -18.5275)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_3fmcb")
+
+[node name="Wall_02_Panel_06_Rail_0" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1304725276]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 0.3475, -17.450714)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_axc48")
+
+[node name="Wall_02_Panel_06_Rail_1" type="MeshInstance3D" parent="Architecture/Perimeter/_GeneratedPerimeter" unique_id=1630880164]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -23.735, 1.0525, -17.450714)
+material_override = SubResource("StandardMaterial3D_c68pi")
+mesh = SubResource("BoxMesh_7o564")
 
 [node name="Divider" type="Node3D" parent="Architecture" unique_id=1135937379]
 
 [node name="Pillars" type="Node3D" parent="Architecture" unique_id=2051966154]
 
 [node name="WindowFrames" type="Node3D" parent="Architecture" unique_id=1672542633]
+script = ExtResource("1_ojnio")
+facade_points = PackedVector2Array(-24, -18.665, -14, -28.665, 11, -28.665)
+
+[node name="_GeneratedPanoramicFacade" type="Node3D" parent="Architecture/WindowFrames" unique_id=288662378]
+
+[node name="Segment_00_StoneSill" type="MeshInstance3D" parent="Architecture/WindowFrames/_GeneratedPanoramicFacade" unique_id=1435899087]
+transform = Transform3D(0.70710677, 0, 0.7071068, 0, 1, 0, -0.70710677, 0, 0.7071068, -19, 0.225, -23.665)
+material_override = SubResource("StandardMaterial3D_ojnio")
+mesh = SubResource("BoxMesh_g23vi")
+
+[node name="Segment_00_Glass" type="MeshInstance3D" parent="Architecture/WindowFrames/_GeneratedPanoramicFacade" unique_id=1286145620]
+transform = Transform3D(0.70710677, 0, 0.7071068, 0, 1, 0, -0.70710677, 0, 0.7071068, -19, 2.08, -23.665)
+material_override = SubResource("StandardMaterial3D_7k2yl")
+mesh = SubResource("BoxMesh_o148f")
+
+[node name="Segment_00_SillBronzeAccent" type="MeshInstance3D" parent="Architecture/WindowFrames/_GeneratedPanoramicFacade" unique_id=1340160603]
+transform = Transform3D(0.70710677, 0, 0.7071068, 0, 1, 0, -0.70710677, 0, 0.7071068, -19, 0.475, -23.665)
+material_override = SubResource("StandardMaterial3D_v4s1y")
+mesh = SubResource("BoxMesh_367ry")
+
+[node name="Segment_00_TopRail" type="MeshInstance3D" parent="Architecture/WindowFrames/_GeneratedPanoramicFacade" unique_id=1036482060]
+transform = Transform3D(0.70710677, 0, 0.7071068, 0, 1, 0, -0.70710677, 0, 0.7071068, -19, 3.755, -23.665)
+material_override = SubResource("StandardMaterial3D_v4s1y")
+mesh = SubResource("BoxMesh_b6e8q")
+
+[node name="Segment_00_Mullion_00" type="MeshInstance3D" parent="Architecture/WindowFrames/_GeneratedPanoramicFacade" unique_id=2009410036]
+transform = Transform3D(0.70710677, 0, 0.7071068, 0, 1, 0, -0.70710677, 0, 0.7071068, -24, 2.08, -18.665)
+material_override = SubResource("StandardMaterial3D_v4s1y")
+mesh = SubResource("BoxMesh_rix1d")
+
+[node name="Segment_00_Mullion_01" type="MeshInstance3D" parent="Architecture/WindowFrames/_GeneratedPanoramicFacade" unique_id=1900269439]
+transform = Transform3D(0.70710677, 0, 0.7071068, 0, 1, 0, -0.70710677, 0, 0.7071068, -22.302944, 2.08, -20.362057)
+material_override = SubResource("StandardMaterial3D_v4s1y")
+mesh = SubResource("BoxMesh_r5tfs")
+
+[node name="Segment_00_Mullion_02" type="MeshInstance3D" parent="Architecture/WindowFrames/_GeneratedPanoramicFacade" unique_id=1928320744]
+transform = Transform3D(0.70710677, 0, 0.7071068, 0, 1, 0, -0.70710677, 0, 0.7071068, -20.605888, 2.08, -22.059113)
+material_override = SubResource("StandardMaterial3D_v4s1y")
+mesh = SubResource("BoxMesh_leiba")
+
+[node name="Segment_00_Mullion_03" type="MeshInstance3D" parent="Architecture/WindowFrames/_GeneratedPanoramicFacade" unique_id=847526959]
+transform = Transform3D(0.70710677, 0, 0.7071068, 0, 1, 0, -0.70710677, 0, 0.7071068, -18.908833, 2.08, -23.756168)
+material_override = SubResource("StandardMaterial3D_v4s1y")
+mesh = SubResource("BoxMesh_4yis7")
+
+[node name="Segment_00_Mullion_04" type="MeshInstance3D" parent="Architecture/WindowFrames/_GeneratedPanoramicFacade" unique_id=1233464373]
+transform = Transform3D(0.70710677, 0, 0.7071068, 0, 1, 0, -0.70710677, 0, 0.7071068, -17.211775, 2.08, -25.453226)
+material_override = SubResource("StandardMaterial3D_v4s1y")
+mesh = SubResource("BoxMesh_4u8m7")
+
+[node name="Segment_00_Mullion_05" type="MeshInstance3D" parent="Architecture/WindowFrames/_GeneratedPanoramicFacade" unique_id=412541667]
+transform = Transform3D(0.70710677, 0, 0.7071068, 0, 1, 0, -0.70710677, 0, 0.7071068, -14, 2.08, -28.665)
+material_override = SubResource("StandardMaterial3D_v4s1y")
+mesh = SubResource("BoxMesh_8xkkx")
+
+[node name="Segment_01_StoneSill" type="MeshInstance3D" parent="Architecture/WindowFrames/_GeneratedPanoramicFacade" unique_id=465461662]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0.225, -28.665)
+material_override = SubResource("StandardMaterial3D_ojnio")
+mesh = SubResource("BoxMesh_yyfnm")
+
+[node name="Segment_01_Glass" type="MeshInstance3D" parent="Architecture/WindowFrames/_GeneratedPanoramicFacade" unique_id=433764205]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 2.08, -28.665)
+material_override = SubResource("StandardMaterial3D_7k2yl")
+mesh = SubResource("BoxMesh_vu7m7")
+
+[node name="Segment_01_SillBronzeAccent" type="MeshInstance3D" parent="Architecture/WindowFrames/_GeneratedPanoramicFacade" unique_id=68525193]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0.475, -28.665)
+material_override = SubResource("StandardMaterial3D_v4s1y")
+mesh = SubResource("BoxMesh_tgxj5")
+
+[node name="Segment_01_TopRail" type="MeshInstance3D" parent="Architecture/WindowFrames/_GeneratedPanoramicFacade" unique_id=864474549]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 3.755, -28.665)
+material_override = SubResource("StandardMaterial3D_v4s1y")
+mesh = SubResource("BoxMesh_uwn2a")
+
+[node name="Segment_01_Mullion_00" type="MeshInstance3D" parent="Architecture/WindowFrames/_GeneratedPanoramicFacade" unique_id=51684380]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 2.08, -28.665)
+material_override = SubResource("StandardMaterial3D_v4s1y")
+mesh = SubResource("BoxMesh_ykpfq")
+
+[node name="Segment_01_Mullion_01" type="MeshInstance3D" parent="Architecture/WindowFrames/_GeneratedPanoramicFacade" unique_id=1441525532]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.6, 2.08, -28.665)
+material_override = SubResource("StandardMaterial3D_v4s1y")
+mesh = SubResource("BoxMesh_feb43")
+
+[node name="Segment_01_Mullion_02" type="MeshInstance3D" parent="Architecture/WindowFrames/_GeneratedPanoramicFacade" unique_id=1394249647]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.2, 2.08, -28.665)
+material_override = SubResource("StandardMaterial3D_v4s1y")
+mesh = SubResource("BoxMesh_ff5vl")
+
+[node name="Segment_01_Mullion_03" type="MeshInstance3D" parent="Architecture/WindowFrames/_GeneratedPanoramicFacade" unique_id=86497150]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.8, 2.08, -28.665)
+material_override = SubResource("StandardMaterial3D_v4s1y")
+mesh = SubResource("BoxMesh_5oagg")
+
+[node name="Segment_01_Mullion_04" type="MeshInstance3D" parent="Architecture/WindowFrames/_GeneratedPanoramicFacade" unique_id=1952834988]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.3999996, 2.08, -28.665)
+material_override = SubResource("StandardMaterial3D_v4s1y")
+mesh = SubResource("BoxMesh_s3ud5")
+
+[node name="Segment_01_Mullion_05" type="MeshInstance3D" parent="Architecture/WindowFrames/_GeneratedPanoramicFacade" unique_id=746845033]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 2.08, -28.665)
+material_override = SubResource("StandardMaterial3D_v4s1y")
+mesh = SubResource("BoxMesh_i6pti")
+
+[node name="Segment_01_Mullion_06" type="MeshInstance3D" parent="Architecture/WindowFrames/_GeneratedPanoramicFacade" unique_id=630642788]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.39999962, 2.08, -28.665)
+material_override = SubResource("StandardMaterial3D_v4s1y")
+mesh = SubResource("BoxMesh_qts34")
+
+[node name="Segment_01_Mullion_07" type="MeshInstance3D" parent="Architecture/WindowFrames/_GeneratedPanoramicFacade" unique_id=138082735]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7999992, 2.08, -28.665)
+material_override = SubResource("StandardMaterial3D_v4s1y")
+mesh = SubResource("BoxMesh_ywip6")
+
+[node name="Segment_01_Mullion_08" type="MeshInstance3D" parent="Architecture/WindowFrames/_GeneratedPanoramicFacade" unique_id=2035311829]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.200001, 2.08, -28.665)
+material_override = SubResource("StandardMaterial3D_v4s1y")
+mesh = SubResource("BoxMesh_t7e4x")
+
+[node name="Segment_01_Mullion_09" type="MeshInstance3D" parent="Architecture/WindowFrames/_GeneratedPanoramicFacade" unique_id=1522015292]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.6000004, 2.08, -28.665)
+material_override = SubResource("StandardMaterial3D_v4s1y")
+mesh = SubResource("BoxMesh_7qvvu")
+
+[node name="Segment_01_Mullion_10" type="MeshInstance3D" parent="Architecture/WindowFrames/_GeneratedPanoramicFacade" unique_id=1590243916]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 2.08, -28.665)
+material_override = SubResource("StandardMaterial3D_v4s1y")
+mesh = SubResource("BoxMesh_pe6qn")
 
 [node name="SpawnPoints" type="Node3D" parent="." unique_id=429364050]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.2, 0.21, 0)
