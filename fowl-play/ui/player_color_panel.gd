@@ -120,16 +120,15 @@ func _refresh_panel() -> void:
 		if identity != null:
 			taken_by[identity.color_index] = peer_id
 
-	var local_peer_id: int = multiplayer.get_unique_id()
 	for color_key: Variant in _buttons.keys():
 		var color_index: int = int(color_key)
 		var button: Node = _buttons[color_index]
 		var owner_id: int = int(taken_by.get(color_index, 0))
-		var taken_by_other: bool = owner_id > 0 and owner_id != local_peer_id
+		var color_taken: bool = owner_id > 0
 		var interactable: Interactable = button.get_node_or_null("Interactable") as Interactable
 		if is_instance_valid(interactable):
-			interactable.enabled = not taken_by_other
-		_set_button_dimmed(color_index, button, taken_by_other)
+			interactable.enabled = not color_taken
+		_set_button_dimmed(color_index, button, color_taken)
 
 
 func _set_button_dimmed(color_index: int, button: Node, dimmed: bool) -> void:
