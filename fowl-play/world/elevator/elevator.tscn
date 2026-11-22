@@ -1185,7 +1185,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 1.32)
 mesh = SubResource("BoxMesh_jqjt3")
 
 [node name="TerminalButton" parent="InteriorDetails" unique_id=354275653 instance=ExtResource("2_olmxj")]
-transform = Transform3D(-8.742278e-08, -2, 0, -8.742278e-08, 3.821371e-15, -2, 2, -8.742278e-08, -8.742278e-08, 1.565, 0.844, 0)
+transform = Transform3D(-8.742278e-08, -2, 0, -8.742278e-08, 3.821371e-15, -2, 2, -8.742278e-08, -8.742278e-08, 1.565, 1.15, 0)
 display_text = "DEPART"
 
 [node name="KeyMesh" parent="InteriorDetails/TerminalButton/Visuals/ButtonKey" parent_id_path=PackedInt32Array(354275653, 1669914177) index="0" unique_id=1470809806]
