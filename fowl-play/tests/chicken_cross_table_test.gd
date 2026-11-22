@@ -19,10 +19,10 @@ func _run() -> void:
 	var wager: Dictionary = table.call("place_wager", 1, 100, {})
 	var wager_id: String = str(wager.get("wager_id", ""))
 	_check_result(wager, true, "Host places Chicken Cross wager")
-	_check_result(table.call("start_round", 1), true, "Chicken Cross locks wagers and initializes model")
-	_check(int(table.get("state")) == 2, "Chicken Cross enters RUNNING state")
+	_check(int(table.get("state")) == 1, "Confirmed wager leaves Chicken Cross OPEN until the player crosses")
 	var cross_result: Dictionary = table.call("request_cross")
-	_check_result(cross_result, true, "Host can request an individual Cross action")
+	_check_result(cross_result, true, "First Cross locks the wager, starts the round, and advances the chicken")
+	_check(int(table.get("state")) == 2 or int(table.get("state")) == 0, "First Cross starts gameplay; an immediate loss may settle the round")
 	if bool(cross_result.get("failed", false)):
 		_check(str(wallet.call("get_wager", wager_id)["status"]) == "settled", "A failed chicken settles its wager immediately")
 	else:
