@@ -6,7 +6,7 @@ const MAIN_MENU_HEADER: String = "MULTIPLAYER"
 const MAIN_MENU_DESCRIPTION: String = "START A GAME OR JOIN A FRIEND."
 const MAIN_MENU_PROMPT: String = "UP/DOWN: MOVE\nUSE / ENTER: SELECT"
 const JOIN_HEADER: String = "JOIN SESSION"
-const JOIN_PROMPT: String = "TYPE HOST IP  •  ENTER CONNECTS  •  ESC BACK"
+const JOIN_PROMPT: String = "ENTER: JOIN\nESC: BACK"
 const HOST_HEADER: String = "SESSION HOSTING"
 const CLIENT_HEADER: String = "CONNECTED"
 const ERROR_HEADER: String = "CONNECTION FAILED"
@@ -31,7 +31,7 @@ func _ready() -> void:
 	if not is_instance_valid(screen):
 		screen = get_node_or_null("../SlimWorldScreen/WorldScreen") as WorldScreen
 	if is_instance_valid(screen):
-		screen.set_text_scale(0.5)
+		screen.set_text_scale(0.42)
 	if not is_instance_valid(screen_interactable):
 		screen_interactable = get_node_or_null("../SlimWorldScreen/WorldScreen/ScreenHit/Interactable") as Interactable
 	if not is_instance_valid(proximity_area):
@@ -68,7 +68,7 @@ func _process(delta: float) -> void:
 	elif status == "failed" and _status_presentation != "failed":
 		_status_presentation = "failed"
 		_menu.close()
-		screen.show_layout("warning", ERROR_HEADER, "Could not connect to that address. Check the IP and make sure the host is online.", "ESC RETURN TO MENU")
+		screen.show_layout("warning", ERROR_HEADER, "HOST NOT FOUND. CHECK THE IP.", "ESC RETURN TO MENU")
 
 func handle_menu_action(action: StringName) -> bool:
 	if not _session_active or _editing_address:
@@ -223,7 +223,7 @@ func _handle_address_key(event: InputEventKey) -> void:
 func _confirm_join() -> void:
 	var address: String = _address_buffer.strip_edges()
 	if not address.is_valid_ip_address() or not address.contains("."):
-		screen.show_layout("warning", "INVALID IP ADDRESS", "Enter a valid IPv4 address, for example 192.168.1.20.", "TYPE AGAIN  •  ESC CANCELS")
+		screen.show_layout("warning", "INVALID IP ADDRESS", "USE AN IPv4 ADDRESS.", "TYPE AGAIN\nESC: CANCEL")
 		return
 	if not is_instance_valid(_network):
 		_show_error("NETWORK AUTOLOAD IS UNAVAILABLE.")
@@ -236,11 +236,11 @@ func _confirm_join() -> void:
 		return
 	_menu.close()
 	_status_presentation = "connecting"
-	screen.show_layout("information", "CONNECTING", "CONTACTING %s:%d..." % [address, int(_network.get("port"))], "PLEASE WAIT")
+	screen.show_layout("information", "CONNECTING", "CONTACTING HOST\n%s:%d" % [address, int(_network.get("port"))], "WAIT...")
 	_status_presentation = "connecting"
 
 func _show_client_details() -> void:
-	screen.show_layout("success", CLIENT_HEADER, "YOU ARE CONNECTED TO THE HOST SESSION.", "ESC: BACK  •  LEAVE: DISCONNECT")
+	screen.show_layout("success", CLIENT_HEADER, "CONNECTED TO HOST.", "ESC: BACK\nLEAVE: DISCONNECT")
 
 func _request_leave() -> void:
 	if not is_instance_valid(_network) or _network.get("peer") == null:
@@ -277,7 +277,7 @@ func _handle_network_session_ended_deferred() -> void:
 		return
 	_was_client = false
 	if connection_failed:
-		_show_error("The host could not be reached. Check the address and try again.")
+		_show_error("HOST NOT FOUND. CHECK THE IP.")
 		return
 	_return_to_apartment()
 
