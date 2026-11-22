@@ -29,7 +29,7 @@ func _run() -> void:
 
 	var red_interactable: Interactable = panel.get_node("ColorButtons/RedButton/Interactable") as Interactable
 	var orange_interactable: Interactable = panel.get_node("ColorButtons/OrangeButton/Interactable") as Interactable
-	_check(red_interactable != null and red_interactable.enabled, "Local player's own color remains selectable")
+	_check(red_interactable != null and not red_interactable.enabled, "Local player's assigned color is marked as taken")
 	_check(orange_interactable != null and not orange_interactable.enabled, "Another player's color is disabled")
 	var orange_key: MeshInstance3D = panel.get_node("ColorButtons/OrangeButton/Visuals/ButtonKey/KeyMesh") as MeshInstance3D
 	var orange_material: StandardMaterial3D = orange_key.material_override as StandardMaterial3D
