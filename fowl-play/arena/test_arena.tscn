@@ -9,7 +9,6 @@
 [ext_resource type="Script" uid="uid://bw1bicstmeec7" path="res://props/prop_profile.gd" id="6_w7fvv"]
 [ext_resource type="PackedScene" uid="uid://cvivaojdxc1yn" path="res://casino/tables/chicken_cross/chicken_cross_table.tscn" id="9_1y418"]
 [ext_resource type="PackedScene" uid="uid://bohm84tw787n0" path="res://environment/kit/slim_world_screen.tscn" id="9_v7nqo"]
-[ext_resource type="PackedScene" uid="uid://cyebu5h2uxu7" path="res://world/elevator/elevator.tscn" id="10_v7nqo"]
 [ext_resource type="PackedScene" uid="uid://cfhki0q6u05ao" path="res://environment/terminals/registration_terminal.tscn" id="12_0nxpi"]
 
 [sub_resource type="Environment" id="Environment_interaction_glow"]
@@ -125,6 +124,3 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.6564336, 1.7200003, -4.287
 
 [node name="ChickenCrossTable" parent="." unique_id=1850824241 instance=ExtResource("9_1y418")]
 transform = Transform3D(-0.551937, 0, 0.8338858, 0, 1, 0, -0.8338858, 0, -0.551937, -5.3233795, 0.51, -0.92724633)
-
-[node name="Elevator" parent="." unique_id=1588872627 instance=ExtResource("10_v7nqo")]
-transform = Transform3D(-0.99691737, 0, 0.07845898, 0, 1, 0, -0.07845898, 0, -0.99691737, 1.8000451, 0.60060906, -6.3754134)
