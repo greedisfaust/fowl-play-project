@@ -41,6 +41,13 @@ func _run() -> void:
 	if bool(controller.call("can_peer_request_departure", 2, peers, missing_one)):
 		_finish(false, "A player must not request departure while a teammate is outside.")
 		return
+	var offline_peers: Array[int] = [0]
+	if not bool(controller.call("are_all_expected_players_inside", offline_peers, offline_peers)):
+		_finish(false, "The offline local player (peer ID zero) should count as an elevator occupant.")
+		return
+	if not bool(controller.call("can_peer_request_departure", 0, offline_peers, offline_peers)):
+		_finish(false, "The offline local player should be allowed to request departure when inside.")
+		return
 
 	controller.free()
 	_finish(true, "full-team occupancy, empty-session rejection, occupant authorization, and missing-player rejection")
