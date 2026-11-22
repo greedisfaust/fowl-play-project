@@ -1,10 +1,39 @@
 [gd_scene format=3 uid="uid://4py8dov15dm8"]
 
 [ext_resource type="PackedScene" uid="uid://bohm84tw787n0" path="res://environment/kit/slim_world_screen.tscn" id="1_ttc7j"]
+[ext_resource type="Script" path="res://ui/lobby_host_join_terminal.gd" id="2_controller"]
+[ext_resource type="Script" uid="uid://dd5c04repreo1" path="res://interaction/interactable.gd" id="3_interactable"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_screen"]
+size = Vector3(2.35, 3.1, 0.08)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_proximity"]
+radius = 6.2
 
 [node name="LobbyHostJoinTerminal" type="Node3D" unique_id=371980261]
 
 [node name="SlimWorldScreen" parent="." unique_id=1216012003 instance=ExtResource("1_ttc7j")]
 display_size = Vector2(2.35, 3.1)
 
+[node name="ScreenHit" type="StaticBody3D" parent="SlimWorldScreen/WorldScreen"]
+position = Vector3(0, 0, 0.04)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SlimWorldScreen/WorldScreen/ScreenHit"]
+shape = SubResource("BoxShape3D_screen")
+
+[node name="Interactable" type="Node" parent="SlimWorldScreen/WorldScreen/ScreenHit"]
+script = ExtResource("3_interactable")
+prompt_text = "[USE] Host / Join Terminal"
+
+[node name="ProximityArea" type="Area3D" parent="."]
+collision_mask = 16
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ProximityArea"]
+shape = SubResource("SphereShape3D_proximity")
+
 [node name="LobbyHostJoinController" type="Node3D" parent="." unique_id=445900307]
+script = ExtResource("2_controller")
+screen = NodePath("../SlimWorldScreen/WorldScreen")
+screen_interactable = NodePath("../SlimWorldScreen/WorldScreen/ScreenHit/Interactable")
+proximity_area = NodePath("../ProximityArea")
+wake_distance = 6.0
