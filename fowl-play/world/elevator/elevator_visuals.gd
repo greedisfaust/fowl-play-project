@@ -130,12 +130,13 @@ func _build_doors(door_assembly: Node3D) -> void:
 		if panel == null:
 			push_error("Elevator is missing door pivot: %s" % panel_names[index])
 			continue
-		panel.position = Vector3(panel_x[index], 1.1, -1.48)
+		var depth_offset: float = -1.52 if panel.name == "LeftOuterPanel" or panel.name == "RightOuterPanel" else -1.44
+		panel.position = Vector3(panel_x[index], 1.1, depth_offset)
 		var visuals: Node3D = _reset_container(panel, "GeneratedPanel")
-		_add_box(visuals, "DoorLeaf", Vector3(0.59, 2.18, 0.075), Vector3.ZERO, panel_material)
-		_add_box(visuals, "DoorInset", Vector3(0.48, 1.92, 0.018), Vector3(0.0, 0.0, -0.047), inset_material)
-		_add_box(visuals, "DoorTopRail", Vector3(0.6, 0.035, 0.11), Vector3(0.0, 1.055, -0.035), brass)
-		_add_box(visuals, "DoorBottomRail", Vector3(0.6, 0.035, 0.11), Vector3(0.0, -1.055, -0.035), brass)
+		_add_box(visuals, "DoorLeaf", Vector3(0.62, 2.18, 0.075), Vector3.ZERO, panel_material)
+		_add_box(visuals, "DoorInset", Vector3(0.50, 1.92, 0.018), Vector3(0.0, 0.0, -0.047), inset_material)
+		_add_box(visuals, "DoorTopRail", Vector3(0.62, 0.035, 0.11), Vector3(0.0, 1.055, -0.035), brass)
+		_add_box(visuals, "DoorBottomRail", Vector3(0.62, 0.035, 0.11), Vector3(0.0, -1.055, -0.035), brass)
 		_add_box(visuals, "DoorLeftRail", Vector3(0.025, 2.12, 0.11), Vector3(-0.285, 0.0, -0.035), brass)
 		_add_box(visuals, "DoorRightRail", Vector3(0.025, 2.12, 0.11), Vector3(0.285, 0.0, -0.035), brass)
 
