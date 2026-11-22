@@ -206,7 +206,7 @@ func _render_address_entry() -> void:
 	screen.show_layout(
 		"information",
 		JOIN_HEADER,
-		"%s_\n\nENTER THE HOST'S IPv4 ADDRESS." % _address_buffer,
+		"%s_\n\nENTER HOST IPv4\nADDRESS." % _address_buffer,
 		JOIN_PROMPT
 	)
 
