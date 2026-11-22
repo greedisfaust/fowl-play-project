@@ -126,6 +126,15 @@ func _build_perimeter(parent: Node3D, material: Material, thickness: float, scen
 		material, thickness, scene_root)
 
 func _build_interior(parent: Node3D, material: Material, thickness: float, scene_root: Node) -> void:
+	# The hallway right-hand wall continues beyond both ends of the shared divider.
+	# These sections close the exposed side gaps when looking left or right from the doorway.
+	_build_segment(parent, "Hallway_RightWall_North",
+		Vector2(-11.0, -17.0), Vector2(-11.0, -9.5),
+		material, thickness, scene_root)
+	_build_segment(parent, "Hallway_RightWall_South",
+		Vector2(-11.0, 9.5), Vector2(-11.0, 17.0),
+		material, thickness, scene_root)
+
 	# Shared wall between hallway and main room. Door is near the elevator end.
 	_build_segment(parent, "Hallway_MainRoom_Divider",
 		Vector2(-11.0, -9.5), Vector2(-11.0, 9.5),
