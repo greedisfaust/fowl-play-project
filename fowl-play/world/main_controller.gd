@@ -58,6 +58,9 @@ func _ready() -> void:
 	if _network == null:
 		push_error("MainController requires the Network autoload.")
 		return
+	var run_manager: Node = get_node_or_null("/root/RunManager")
+	if run_manager != null and run_manager.has_method("bind_main_controller"):
+		run_manager.call("bind_main_controller", self)
 
 	_player_spawner.spawn_path = _player_spawner.get_path_to(_players)
 	_player_spawner.spawn_limit = TUNING.MAX_PLAYERS
