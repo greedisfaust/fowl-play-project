@@ -128,8 +128,65 @@ func _run() -> void:
 		_finish(false, "Session reset should clear the local casino-day state.")
 		return
 
+	# Day 10 failure uses the continuation to replay Day 10 once, then a second
+	# failed attempt ends the run instead of creating a Day 11.
+	var fresh_run: Dictionary = manager.call("begin_new_run")
+	if not bool(fresh_run.get("ok", false)):
+		_finish(false, "A fresh run should be available after session cleanup.")
+		return
+	manager.call("_publish_state", true, 10, 2, false)
+	if not bool(day_manager.get("day_active")) or int(day_manager.get("day_number")) != 10:
+		_finish(false, "The Day 10 test phase should initialize the Day 10 timer.")
+		return
+	day_manager.call("advance_day_timer", 300.0, 1000)
+	if not bool(manager.call("complete_world_transition", 1, 0)):
+		_finish(false, "The first failed Day 10 should be allowed to use the continuation.")
+		return
+	snapshot = manager.call("get_snapshot")
+	if int(snapshot.get("phase", -1)) != 3 or not bool(snapshot.get("repeat_day_after_rest", false)):
+		_finish(false, "The first Day 10 failure should schedule one Day 10 replay.")
+		return
+	if int(manager.call("get_departure_destination", 0)) != 1:
+		_finish(false, "The Day 10 replay must permit returning from the Apartment.")
+		return
+	if not bool(manager.call("complete_world_transition", 0, 1)):
+		_finish(false, "The House continuation should successfully restart Day 10.")
+		return
+	if not bool(day_manager.get("day_active")) or int(day_manager.get("day_number")) != 10 or int(day_manager.get("starting_wallet")) != 1500:
+		_finish(false, "The replayed Day 10 should restart its timer using the continued wallet.")
+		return
+	day_manager.call("advance_day_timer", 300.0, 1500)
+	if not bool(manager.call("complete_world_transition", 1, 0)):
+		_finish(false, "The second failed Day 10 should still complete the return transition.")
+		return
+	if int(manager.call("get_snapshot").get("phase", -1)) != 6:
+		_finish(false, "A second failed quota after the continuation is used must end the run.")
+		return
+	manager.call("reset_for_session_end")
+
+	# A successful Day 10 ends the contract without a Day 11.
+	fresh_run = manager.call("begin_new_run")
+	if not bool(fresh_run.get("ok", false)):
+		_finish(false, "A new run should start after the failed run is reset.")
+		return
+	manager.call("_publish_state", true, 10, 2, false)
+	if not bool(day_manager.get("day_active")) or int(day_manager.get("day_number")) != 10:
+		_finish(false, "The successful Day 10 test should initialize correctly.")
+		return
+	day_manager.call("advance_day_timer", 300.0, 2200)
+	if not bool(manager.call("complete_world_transition", 1, 0)):
+		_finish(false, "Successful Day 10 should complete its final transition.")
+		return
+	if int(manager.call("get_snapshot").get("phase", -1)) != 4:
+		_finish(false, "Successful Day 10 should mark the contract fulfilled.")
+		return
+	if int(manager.call("get_departure_destination", 0)) != -1:
+		_finish(false, "A fulfilled contract must not start Day 11.")
+		return
+	manager.call("reset_for_session_end")
+
 	transition_source.free()
-	_finish(true, "Day 1 failure continuation loan, carried wallet and recalculated Day 2 quota, successful progression to Day 3, and session cleanup")
+	_finish(true, "Day 1 continuation loan, carried wallet and Day 2 quota, Day 10 replay/game over, Day 10 victory, and session cleanup")
 
 
 func _finish(passed: bool, message: String) -> void:
