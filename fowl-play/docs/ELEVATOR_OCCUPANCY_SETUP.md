@@ -19,6 +19,9 @@ healthy-player and limp-body collision layers.
 - A player is counted once, using the stable `input_peer_id` assigned by MainController.
 - The player's normal CharacterBody3D and limp interaction proxy resolve to the same player.
   One body exiting does not remove the player while another body belonging to them remains inside.
+- A player being carried by someone inside the elevator is counted as an occupant, even though
+  the carried player's normal and limp-proxy collision bodies are disabled while being carried.
+  Dropping them or the carrier leaving removes that carried-player occupancy link.
 - A player is removed when all of their tracked bodies leave the area.
 - A player despawning while inside is removed automatically.
 - Occupant peer IDs are returned in sorted order.
