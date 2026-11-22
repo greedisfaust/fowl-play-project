@@ -25,9 +25,13 @@ class_name CasinoWindowFacadeBuilder
 @export_range(0.025, 0.2, 0.005) var rail_height: float = 0.09
 @export_range(0.0, 1.0, 0.01) var pillar_clearance: float = 0.70
 
-@export_group("Upper Transom")
-@export var generate_upper_transom: bool = true
+@export_group("Architectural Header")
+@export var generate_architectural_header: bool = true
 @export_range(3.8, 4.5, 0.01) var ceiling_underside_y: float = 4.02
+@export_range(0.0, 0.08, 0.005) var header_shadow_gap: float = 0.025
+@export_range(0.15, 0.55, 0.01) var header_depth: float = 0.34
+@export var header_color: Color = Color(0.035, 0.041, 0.049, 1.0)
+@export var header_recess_light_color: Color = Color(1.0, 0.48, 0.19, 1.0)
 
 @export_group("Placement")
 @export var base_y: float = 0.0
@@ -82,6 +86,17 @@ func _rebuild_geometry() -> void:
 	bronze_material.metallic = 0.78
 	bronze_material.roughness = 0.24
 
+	var header_material: StandardMaterial3D = StandardMaterial3D.new()
+	header_material.albedo_color = header_color
+	header_material.metallic = 0.10
+	header_material.roughness = 0.38
+
+	var header_light_material: StandardMaterial3D = StandardMaterial3D.new()
+	header_light_material.albedo_color = header_recess_light_color
+	header_light_material.emission_enabled = true
+	header_light_material.emission = header_recess_light_color
+	header_light_material.emission_energy_multiplier = 1.35
+
 	var sill_material: StandardMaterial3D = StandardMaterial3D.new()
 	sill_material.albedo_color = sill_color
 	sill_material.metallic = 0.12
@@ -95,6 +110,8 @@ func _rebuild_geometry() -> void:
 			glass_material,
 			bronze_material,
 			sill_material,
+			header_material,
+			header_light_material,
 			scene_root,
 			point_index
 		)
@@ -106,6 +123,8 @@ func _build_facade_segment(
 	glass_material: Material,
 	bronze_material: Material,
 	sill_material: Material,
+	header_material: Material,
+	header_light_material: Material,
 	scene_root: Node,
 	segment_index: int
 ) -> void:
@@ -163,14 +182,29 @@ func _build_facade_segment(
 		bronze_material, scene_root
 	)
 
-	# Narrow glass transom closes the 22cm gap between the top rail and ceiling.
-	var transom_height: float = maxf(0.0, ceiling_underside_y - top_y)
-	if generate_upper_transom and transom_height > 0.025:
+	# A solid charcoal fascia fills the gap above the glazing. A small recessed
+	# warm reveal sits on its underside; a narrow shadow gap separates it from
+	# the ceiling so the header reads as deliberate architecture, not a patch.
+	var header_height: float = maxf(0.0, ceiling_underside_y - top_y - header_shadow_gap)
+	if generate_architectural_header and header_height > 0.025:
+		var header_center_y: float = top_y + header_height * 0.5
 		_add_box(
-			parent, prefix + "Upper_Transom_Glass",
-			Vector3(maxf(0.05, edge_length - mullion_width), transom_height, glass_thickness),
-			Transform3D(segment_basis, midpoint + Vector3.UP * (top_y + transom_height * 0.5)),
-			glass_material, scene_root
+			parent, prefix + "Charcoal_Architectural_Header",
+			Vector3(edge_length, header_height, header_depth),
+			Transform3D(segment_basis, midpoint + Vector3.UP * header_center_y),
+			header_material, scene_root
+		)
+		_add_box(
+			parent, prefix + "Header_Bronze_Underside_Reveal",
+			Vector3(edge_length, 0.018, header_depth + 0.015),
+			Transform3D(segment_basis, midpoint + Vector3.UP * (top_y + 0.012)),
+			bronze_material, scene_root
+		)
+		_add_box(
+			parent, prefix + "Header_Recessed_Warm_Light",
+			Vector3(maxf(0.05, edge_length - 0.12), 0.012, 0.025),
+			Transform3D(segment_basis, midpoint + Vector3.UP * (top_y + 0.032) + normal * (header_depth * 0.5 - 0.018)),
+			header_light_material, scene_root
 		)
 
 	# Repeated vertical mullions create a refined curtain-wall rhythm.
@@ -188,13 +222,6 @@ func _build_facade_segment(
 			Transform3D(segment_basis, post_position + Vector3.UP * (glass_bottom + glass_height * 0.5)),
 			bronze_material, scene_root
 		)
-		if generate_upper_transom and transom_height > 0.025:
-			_add_box(
-				parent, prefix + "Transom_Mullion_%02d" % post_index,
-				Vector3(mullion_width, transom_height, frame_depth),
-				Transform3D(segment_basis, post_position + Vector3.UP * (top_y + transom_height * 0.5)),
-				bronze_material, scene_root
-			)
 
 func _add_box(
 	parent: Node3D,
