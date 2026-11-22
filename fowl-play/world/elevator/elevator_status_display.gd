@@ -144,7 +144,7 @@ func _refresh_display() -> void:
 	var main_size: int = maxi(roundi(float(base_size) * main_text_scale), 8)
 	var status_size: int = maxi(roundi(float(base_size) * status_text_scale), 8)
 
-	var header: String = "[table=2][cell][color=%s][font_size=%d][b]ELEVATOR STATUS[/b][/font_size][/color][/cell][cell align=right][color=%s][font_size=%d][b]TEAM %d[/b][/font_size][/color][/cell][/table]" % [
+	var header: String = "[table=2][cell][color=%s][font_size=%d][b]ELEVATOR STATUS[/b][/font_size][/color][/cell][cell align=right][color=%s][font_size=%d][b]TEAM SIZE %d[/b][/font_size][/color][/cell][/table]" % [
 		COLOR_HEADER, header_size, COLOR_TEXT, header_size, total_players
 	]
 	var count_line: String = "[center][font_size=%d][b]INSIDE [color=%s]%d[/color] / %d[/b][/font_size][/center]" % [
