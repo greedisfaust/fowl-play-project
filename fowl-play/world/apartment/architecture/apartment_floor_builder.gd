@@ -131,19 +131,23 @@ func _build_main_room_stone(parent: Node3D, scene_root: Node) -> void:
 	while z_cursor < 9.499:
 		var tile_depth: float = minf(main_tile_width, 9.5 - z_cursor)
 		var column_index: int = 0
-		var x_cursor: float = x_start
+		var row_stagger: float = main_tile_length * 0.5 if row_index % 2 == 1 else 0.0
+		var x_cursor: float = x_start - row_stagger
 		while x_cursor < 10.999:
-			var tile_length_value: float = minf(main_tile_length, 11.0 - x_cursor)
-			var tile_size: Vector3 = Vector3(
-				maxf(0.05, tile_length_value - grout_gap),
-				SURFACE_THICKNESS,
-				maxf(0.05, tile_depth - grout_gap)
-			)
-			var material_index: int = posmod(row_index * 3 + column_index * 2 + (row_index % 2), _stone_materials.size())
-			var tile_name: String = "Limestone_Tile_R%02d_C%02d" % [row_index, column_index]
-			_add_box(section, tile_name, tile_size,
-				Vector3(x_cursor + tile_length_value * 0.5, FLOOR_TOP_Y - SURFACE_THICKNESS * 0.5,
-					z_cursor + tile_depth * 0.5), _stone_materials[material_index], scene_root)
+			var tile_start: float = maxf(-11.0, x_cursor)
+			var tile_end: float = minf(11.0, x_cursor + main_tile_length)
+			var tile_length_value: float = tile_end - tile_start
+			if tile_length_value > 0.05:
+				var tile_size: Vector3 = Vector3(
+					maxf(0.05, tile_length_value - grout_gap),
+					SURFACE_THICKNESS,
+					maxf(0.05, tile_depth - grout_gap)
+				)
+				var material_index: int = posmod(row_index * 3 + column_index * 2 + (row_index % 2), _stone_materials.size())
+				var tile_name: String = "Limestone_Tile_R%02d_C%02d" % [row_index, column_index]
+				_add_box(section, tile_name, tile_size,
+					Vector3((tile_start + tile_end) * 0.5, FLOOR_TOP_Y - SURFACE_THICKNESS * 0.5,
+						z_cursor + tile_depth * 0.5), _stone_materials[material_index], scene_root)
 			x_cursor += main_tile_length
 			column_index += 1
 		z_cursor += main_tile_width
