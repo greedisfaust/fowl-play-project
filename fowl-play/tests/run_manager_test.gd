@@ -68,8 +68,16 @@ func _run() -> void:
 		_finish(false, "Simulating the deadline should close Day 1 before entering Rest.")
 		return
 	transition_source.emit_signal("world_changed", 1, 0)
-	if int(manager.call("get_snapshot").get("phase", -1)) != 3:
+	snapshot = manager.call("get_snapshot")
+	if int(snapshot.get("phase", -1)) != 3:
 		_finish(false, "Completing Casino to Apartment should advance into the Rest phase.")
+		return
+	if not bool(snapshot.get("continuation_used", false)) or int(snapshot.get("continuation_loan_amount", 0)) != 500:
+		_finish(false, "The first failed quota should consume the one-time 50% House continuation.")
+		return
+	wallet_snapshot = wallet.call("get_snapshot")
+	if int(wallet_snapshot.get("available_balance", 0)) != 1500:
+		_finish(false, "The House continuation should be added to the remaining shared wallet.")
 		return
 	if int(manager.call("get_departure_destination", 0)) != 1:
 		_finish(false, "Apartment Rest-phase departure should lead to the next Casino day.")
@@ -83,12 +91,24 @@ func _run() -> void:
 	if int(snapshot.get("current_day", 0)) != 2 or int(snapshot.get("phase", -1)) != 2:
 		_finish(false, "Returning from the Apartment Rest phase should begin Day 2 in the Casino.")
 		return
+	if not bool(day_manager.get("day_active")) or int(day_manager.get("starting_wallet")) != 1500 or int(day_manager.get("daily_quota")) != 2670:
+		_finish(false, "Day 2 should start with the continued wallet and recalculate its quota.")
+		return
+	day_manager.call("advance_day_timer", 300.0, 2670)
+	transition_source.emit_signal("world_changed", 1, 0)
+	if int(manager.call("get_snapshot").get("phase", -1)) != 3:
+		_finish(false, "A successful Day 2 should enter the Apartment Rest phase.")
+		return
+	transition_source.emit_signal("world_changed", 0, 1)
+	if int(manager.call("get_snapshot").get("current_day", 0)) != 3:
+		_finish(false, "A successful Day 2 should advance the next Casino day to Day 3.")
+		return
 	var repeated_start: Dictionary = manager.call("begin_new_run")
 	if bool(repeated_start.get("ok", false)):
 		_finish(false, "A second run must not overwrite an active run.")
 		return
 
-	if not bool(day_manager.get("day_active")) or int(day_manager.get("day_number")) != 2:
+	if not bool(day_manager.get("day_active")) or int(day_manager.get("day_number")) != 3:
 		_finish(false, "The Day 2 casino state should be active before session cleanup is tested.")
 		return
 
@@ -109,7 +129,7 @@ func _run() -> void:
 		return
 
 	transition_source.free()
-	_finish(true, "Day 1 initialization, Apartment/Casino/Rest flow, quota gate, day increment, and session cleanup")
+	_finish(true, "Day 1 failure continuation loan, carried wallet and recalculated Day 2 quota, successful progression to Day 3, and session cleanup")
 
 
 func _finish(passed: bool, message: String) -> void:
