@@ -85,7 +85,6 @@ The selector infrastructure is implemented, but the production catalog currently
 ## Not included yet
 
 - The other eleven production game definitions and their finalized names/IDs.
-- Casino screen/status UI displaying timer, wallet, quota, and selected games.
 - One-time House continuation/loan and terminal run outcomes.
 - Casino screen/status UI displaying timer, wallet, quota, and selected games.
 - End-to-end multiplayer verification of wallet replication and full casino-day gameplay.

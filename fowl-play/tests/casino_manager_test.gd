@@ -36,6 +36,15 @@ func _run() -> void:
 
 	_check(bool(manager.call("is_catalog_complete")), "Exactly twelve registered game types complete the roster")
 	_check(manager.call("get_registered_game_ids").size() == 12, "Catalog contains twelve unique game IDs")
+	var overflow: Resource = CasinoGameDefinitionScript.new()
+	overflow.set("game_id", &"thirteenth_game")
+	overflow.set("display_name", "Thirteenth Game")
+	var overflow_root: Node = Node.new()
+	var overflow_scene: PackedScene = PackedScene.new()
+	overflow_scene.pack(overflow_root)
+	overflow_root.free()
+	overflow.set("table_scene", overflow_scene)
+	_check(not bool(manager.call("register_game", overflow).get("ok", false)), "Catalog rejects a thirteenth game type")
 
 	var duplicate: Resource = CasinoGameDefinitionScript.new()
 	duplicate.set("game_id", &"chicken_cross")
@@ -69,6 +78,9 @@ func _run() -> void:
 	manager.call("_on_run_state_changed", {"run_active": true, "phase_name": "APARTMENT"})
 	_check(int(manager.get("selected_day")) == 0, "Starting a fresh run clears the previous run's daily selection")
 	_check(manager.call("get_selected_game_ids").is_empty(), "Fresh-run reset clears selected game IDs")
+	manager.call("_on_run_state_changed", {"run_active": true, "phase_name": "CASINO", "current_day": 3})
+	_check(int(manager.get("selected_day")) == 3, "A complete catalog is selected automatically on Casino arrival")
+	_check(manager.call("get_selected_game_ids").size() == 6, "Automatic arrival selection still chooses six games")
 
 	var roster: Array[String] = []
 	for game_id: StringName in manager.call("get_registered_game_ids"):

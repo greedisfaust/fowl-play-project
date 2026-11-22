@@ -73,6 +73,8 @@ func register_game(definition: CasinoGameDefinition) -> Dictionary:
 		return _failure("Game '%s' must provide an instantiable table scene." % game_id)
 	if _registered_games.has(game_id):
 		return _failure("Game ID '%s' is already registered." % game_id)
+	if _registered_games.size() >= REQUIRED_GAME_COUNT:
+		return _failure("The casino catalog already contains all twelve game types.")
 	_registered_games[game_id] = definition
 	game_catalog_changed.emit(_registered_games.size(), REQUIRED_GAME_COUNT)
 	_log("Registered casino game '%s' (%s)." % [game_id, definition.display_name])
