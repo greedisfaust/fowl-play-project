@@ -41,6 +41,10 @@ func _run() -> void:
 	_check(not _has_property(actor, "registration_terminal_active"), "Registration actor should not require the obsolete session-wide lock property")
 	var rendered: String = screen.get_screen_text().get_parsed_text()
 	_check(rendered.contains("PLAYER REGISTRATION") and rendered.contains("EDIT NICKNAME"), "Main menu should render")
+	_check(not rendered.contains("SELECT COLOR") and not rendered.contains("COLOR:"), "Registration menu should no longer expose player color selection")
+	var initial_options: Array[Dictionary] = menu.get_options()
+	_check(initial_options.size() == 3, "Registration menu should contain nickname, register, and close options only")
+	_check(str(initial_options[1].get("id", "")) == "register", "Register should be the second menu option")
 	terminal.registration_header = "CUSTOM REGISTRATION"
 	terminal.edit_nickname_option_label = "CUSTOM NAME LABEL"
 	terminal.call("_show_main_menu")
@@ -50,7 +54,7 @@ func _run() -> void:
 	terminal.edit_nickname_option_label = "EDIT NICKNAME"
 	terminal.call("_show_main_menu")
 	_check(bool(terminal.handle_menu_action(ScreenMenu.ACTION_DOWN)), "Menu navigation should be forwarded")
-	_check(menu.get_selected_option_id() == &"choose_color", "Down action should select color settings")
+	_check(menu.get_selected_option_id() == &"register", "Down action should select registration now that color selection is separate")
 	menu.select_index(0)
 	_check(bool(terminal.handle_menu_action(ScreenMenu.ACTION_CONFIRM)), "Nickname edit option should open")
 	_check(bool(actor.get("terminal_movement_locked")), "Entering nickname editing should lock player movement")
@@ -66,8 +70,8 @@ func _run() -> void:
 	terminal.call("_handle_nickname_key", cancel_key)
 	_check(not bool(actor.get("terminal_movement_locked")), "Cancelling nickname editing should restore player movement")
 	menu.select_index(1)
-	_check(bool(terminal.handle_menu_action(ScreenMenu.ACTION_CONFIRM)), "Color option should open")
-	_check(screen.get_screen_text().get_parsed_text().contains("SELECT PLAYER COLOR"), "Color choices should render")
+	_check(menu.get_selected_option_id() == &"register", "Registration action remains available after nickname editing")
+	_check(not screen.get_screen_text().get_parsed_text().contains("SELECT PLAYER COLOR"), "Registration terminal should not render a color submenu")
 	terminal.close_registration_session()
 	_check(not terminal.has_active_session() and not menu.is_active(), "Closing should end the base session and menu")
 	_check(not bool(actor.get("terminal_movement_locked")), "Closing the terminal should never leave movement locked")

@@ -6,15 +6,11 @@ const PlayerIdentity = preload("res://core/player_identity.gd")
 
 @export_group("Registration Copy")
 @export var registration_header: String = "PLAYER REGISTRATION"
-@export_multiline var main_menu_description_format: String = "NICKNAME: %s\nCOLOR: %s\n\nChoose your identity settings."
+@export_multiline var main_menu_description_format: String = "NICKNAME: %s\n\nSet your player nickname."
 @export var main_menu_prompt: String = "CLICK OPTION  •  ARROWS MOVE  •  M1 / E / ENTER SELECT"
 @export var edit_nickname_option_label: String = "EDIT NICKNAME"
-@export var choose_color_option_label: String = "SELECT COLOR"
 @export var confirm_registration_option_label: String = "CONFIRM REGISTRATION"
 @export var close_terminal_option_label: String = "CLOSE TERMINAL"
-@export var color_menu_header: String = "SELECT PLAYER COLOR"
-@export_multiline var color_menu_description: String = "Choose a preferred color. If occupied, the host assigns the next available color."
-@export var color_menu_prompt: String = "CLICK OPTION  •  ARROWS MOVE  •  M1 / E / ENTER SELECT"
 @export var nickname_editor_header: String = "SET NICKNAME"
 @export var nickname_editor_instruction_format: String = "TYPE A NAME (MAX %d CHARACTERS)."
 @export var nickname_editor_prompt: String = "ENTER ACCEPTS  •  ESC CANCELS  •  BACKSPACE ERASES"
@@ -30,7 +26,7 @@ const PlayerIdentity = preload("res://core/player_identity.gd")
 @export_multiline var registration_sent_description: String = "Waiting for the host to assign your identity..."
 @export var please_wait_prompt: String = "PLEASE WAIT"
 @export var registration_success_header: String = "REGISTRATION COMPLETE"
-@export var registration_success_body_format: String = "%s\nCOLOR: %s"
+@export var registration_success_body_format: String = "%s"
 @export var registration_success_prompt: String = "IDENTITY ASSIGNED BY HOST"
 
 var _menu: ScreenMenu = ScreenMenu.new()
@@ -236,7 +232,6 @@ func _handle_nickname_key(event: InputEventKey) -> void:
 func _show_main_menu() -> void:
 	var options: Array[Dictionary] = [
 		{"id": &"edit_nickname", "label": edit_nickname_option_label},
-		{"id": &"choose_color", "label": choose_color_option_label},
 		{"id": &"register", "label": confirm_registration_option_label},
 		{"id": &"close", "label": close_terminal_option_label}
 	]
@@ -244,31 +239,11 @@ func _show_main_menu() -> void:
 		screen,
 		registration_header,
 		main_menu_description_format % [
-			_requested_nickname,
-			PlayerIdentity.color_name_for_index(_requested_color_index).to_upper()
+			_requested_nickname
 		],
 		options,
 		main_menu_prompt
 	)
-
-func _show_color_menu() -> void:
-	var options: Array[Dictionary] = []
-	for index: int in range(PlayerIdentity.palette_size()):
-		options.append({
-			"id": StringName("color_%d" % index),
-			"label": "%s%s" % [
-				PlayerIdentity.color_name_for_index(index).to_upper(),
-				"  [CURRENT]" if index == _requested_color_index else ""
-			]
-		})
-	_menu.open(
-		screen,
-		color_menu_header,
-		color_menu_description,
-		options,
-		color_menu_prompt
-	)
-	_menu.select_index(_requested_color_index)
 
 func _begin_nickname_edit() -> void:
 	_menu.close()
@@ -293,15 +268,9 @@ func _render_nickname_editor() -> void:
 	)
 
 func _on_option_confirmed(option_id: StringName, _option_label: String) -> void:
-	if str(option_id).begins_with("color_"):
-		_requested_color_index = int(str(option_id).trim_prefix("color_"))
-		_show_main_menu()
-		return
 	match option_id:
 		&"edit_nickname":
 			_begin_nickname_edit()
-		&"choose_color":
-			_show_color_menu()
 		&"register":
 			_submit_registration()
 		&"close":
@@ -342,6 +311,6 @@ func _on_identity_roster_changed() -> void:
 	screen.show_layout(
 		"success",
 		registration_success_header,
-		registration_success_body_format % [identity.get_display_label(), identity.get_color_name().to_upper()],
+		registration_success_body_format % [identity.get_display_label()],
 		registration_success_prompt
 	)
