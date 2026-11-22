@@ -110,13 +110,13 @@ func _build_table_perimeter(parent: Node3D, bronze: Material, dark_metal: Materi
 
 func _build_lane_details(parent: Node3D, bronze: Material, warm_emission: Material) -> void:
 	# Raised edge rails frame the twelve-step road without covering the existing markings.
-	_add_box(parent, "LaneRail_Left", Vector3(3.04, 0.012, 0.018), Vector3(0.0, SURFACE_Y, -0.462), bronze)
-	_add_box(parent, "LaneRail_Right", Vector3(3.04, 0.012, 0.018), Vector3(0.0, SURFACE_Y, 0.462), bronze)
+	_add_box(parent, "LaneRail_Left", Vector3(3.04, 0.012, 0.018), Vector3(0.0, 1.078, -0.462), bronze)
+	_add_box(parent, "LaneRail_Right", Vector3(3.04, 0.012, 0.018), Vector3(0.0, 1.078, 0.462), bronze)
 
 	# Tiny separators make each step read as a deliberate inlaid module.
 	for separator_index: int in range(TILE_COUNT - 1):
 		var x_position: float = TILE_FIRST_X + (float(separator_index) + 0.5) * TILE_STEP_X
-		_add_box(parent, "TileDivider_%02d" % (separator_index + 1), Vector3(0.009, 0.006, 0.82), Vector3(x_position, 1.091, 0.0), bronze)
+		_add_box(parent, "TileDivider_%02d" % (separator_index + 1), Vector3(0.009, 0.006, 0.82), Vector3(x_position, 1.088, 0.0), bronze)
 
 	if add_risk_lights:
 		for tile_index: int in range(TILE_COUNT):
@@ -125,12 +125,12 @@ func _build_lane_details(parent: Node3D, bronze: Material, warm_emission: Materi
 			var risk_color: Color = Color(0.16, 0.72, 0.43, 1.0).lerp(Color(1.0, 0.19, 0.12, 1.0), progress)
 			var socket_material: StandardMaterial3D = _make_material(Color(0.018, 0.024, 0.03, 1.0), 0.65, 0.28)
 			var lamp_material: StandardMaterial3D = _make_material(risk_color, 0.18, 0.28, risk_color, 1.25)
-			_add_box(parent, "RiskSocket_%02d" % (tile_index + 1), Vector3(0.07, 0.012, 0.07), Vector3(x_position, 1.086, -0.535), socket_material)
-			_add_sphere(parent, "RiskLamp_%02d" % (tile_index + 1), 0.018, 0.014, Vector3(x_position, 1.101, -0.535), lamp_material)
+			_add_box(parent, "RiskSocket_%02d" % (tile_index + 1), Vector3(0.07, 0.012, 0.07), Vector3(x_position, 1.078, -0.535), socket_material)
+			_add_sphere(parent, "RiskLamp_%02d" % (tile_index + 1), 0.018, 0.014, Vector3(x_position, 1.096, -0.535), lamp_material)
 
 	# A restrained warm start/finish glow at the two ends of the road.
-	_add_box(parent, "StartGlow", Vector3(0.035, 0.008, 0.58), Vector3(-1.535, 1.09, 0.0), warm_emission)
-	_add_box(parent, "FinishGlow", Vector3(0.035, 0.008, 0.58), Vector3(1.535, 1.09, 0.0), warm_emission)
+	_add_box(parent, "StartGlow", Vector3(0.035, 0.008, 0.58), Vector3(-1.535, 1.075, 0.0), warm_emission)
+	_add_box(parent, "FinishGlow", Vector3(0.035, 0.008, 0.58), Vector3(1.535, 1.075, 0.0), warm_emission)
 
 func _build_leg_details(parent: Node3D, bronze: Material, dark_metal: Material) -> void:
 	var leg_positions: Array[Vector2] = [
