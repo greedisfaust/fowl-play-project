@@ -75,9 +75,6 @@ func _ready() -> void:
 
 	if not is_connected("departure_requested", _on_departure_requested):
 		departure_requested.connect(_on_departure_requested)
-	if not _main_controller.world_changed.is_connected(_on_world_changed):
-		_main_controller.world_changed.connect(_on_world_changed)
-
 	_debug_hub = get_node_or_null("/root/DebugHub")
 	if is_instance_valid(_debug_hub):
 		_debug_hub.call("watch", &"elevator/departure_ready", Callable(self, "are_all_players_inside"))
@@ -88,8 +85,6 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	if is_instance_valid(_interactable) and _interactable.availability_check == Callable(self, "_can_interact"):
 		_interactable.availability_check = Callable()
-	if is_instance_valid(_main_controller) and _main_controller.world_changed.is_connected(_on_world_changed):
-		_main_controller.world_changed.disconnect(_on_world_changed)
 	if is_instance_valid(_button) and _button.has_signal("button_activated"):
 		if _button.is_connected("button_activated", _on_button_activated):
 			_button.disconnect("button_activated", _on_button_activated)
@@ -163,16 +158,6 @@ func _on_departure_requested(_actor_peer_id: int) -> void:
 		return
 	if not accept_departure_request(destination_world):
 		reject_departure_request("the approved destination could not be started")
-
-
-## RunManager commits progression only after MainController installs the destination world.
-func _on_world_changed(previous_world: int, current_world: int) -> void:
-	if previous_world < 0 or not _is_network_authority() or not is_instance_valid(_run_manager):
-		return
-	if not bool(_run_manager.call("complete_world_transition", previous_world, current_world)):
-		return
-	if is_instance_valid(_debug_hub):
-		_debug_hub.call("log", &"run", "Elevator arrival committed: world %d -> %d." % [previous_world, current_world])
 
 
 ## Called by the outer-loop progression coordinator after it approves the request.
