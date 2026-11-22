@@ -248,10 +248,21 @@ func _publish_player_state(peer_id: int) -> void:
 	if player_state.is_empty():
 		return
 	player_state_changed.emit(peer_id, player_state.duplicate(true))
+	_apply_local_player_presentation(peer_id, player_state)
 	if multiplayer.multiplayer_peer != null:
 		_receive_player_state.rpc(peer_id, player_state)
 
+func _apply_local_player_presentation(peer_id: int, player_state: Dictionary) -> void:
+	# The tabletop is shared geometry, so each client presents only its own
+	# chicken. Other players' state remains available through player_state_changed.
+	if peer_id != multiplayer.get_unique_id():
+		return
+	var visuals: Node = get_node_or_null("Visuals")
+	if visuals != null and visuals.has_method("apply_player_state"):
+		visuals.call("apply_player_state", player_state)
+
 @rpc("authority", "call_remote", "reliable")
 func _receive_player_state(peer_id: int, player_state: Dictionary) -> void:
-	# The authority-only RPC annotation restricts this update to the host.
+	# Each client receives authoritative state but renders only its own chicken.
 	player_state_changed.emit(peer_id, player_state.duplicate(true))
+	_apply_local_player_presentation(peer_id, player_state)
