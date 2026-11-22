@@ -6,7 +6,8 @@ class_name CasinoFloorBuilder
 ## Attach to Architecture/FloorDetails. All coordinates are relative to Casino root.
 
 @export_group("Floor Surface")
-@export var floor_surface_height: float = 0.156
+@export var gaming_floor_top_height: float = 0.15
+@export var bar_floor_top_height: float = 0.0
 @export var gaming_stone_color: Color = Color(0.075, 0.082, 0.095, 1.0)
 @export var gaming_stone_variation: float = 0.012
 @export var bar_stone_color: Color = Color(0.105, 0.078, 0.058, 1.0)
@@ -52,7 +53,7 @@ func _ready() -> void:
 func _rebuild_floor() -> void:
 	if not Engine.is_editor_hint():
 		return
-	if gaming_tile_size <= 0.5 or floor_surface_height < 0.0:
+	if gaming_tile_size <= 0.5 or gaming_floor_top_height < 0.0 or bar_floor_top_height < 0.0:
 		push_warning("CasinoFloorBuilder has invalid floor dimensions.")
 		return
 
@@ -110,7 +111,7 @@ func _build_gaming_tiles(parent: Node3D, base_material: Material, scene_root: No
 				_add_box(
 					parent, "Gaming_MarbleTile_%02d_%02d" % [row, int((x + 24.0) / gaming_tile_size)],
 					Vector3(gaming_tile_size - grout_width, 0.012, gaming_tile_size - grout_width),
-					Transform3D(Basis.IDENTITY, Vector3(x, floor_surface_height, z)),
+					Transform3D(Basis.IDENTITY, Vector3(x, gaming_floor_top_height + 0.006, z)),
 					material, scene_root
 				)
 			z += gaming_tile_size
@@ -144,7 +145,7 @@ func _build_bar_planks(parent: Node3D, material: Material, scene_root: Node) -> 
 				_add_box(
 					parent, "Bar_SmokedOak_Plank_%02d_%02d" % [row, int(x * 2.0)],
 					Vector3(bar_plank_length - 0.05, 0.012, bar_plank_width - 0.024),
-					Transform3D(Basis.IDENTITY, Vector3(x, floor_surface_height + 0.002, z)),
+					Transform3D(Basis.IDENTITY, Vector3(x, bar_floor_top_height + 0.006, z)),
 					plank_material, scene_root
 				)
 			x += bar_plank_length
@@ -155,7 +156,7 @@ func _build_bar_stone(parent: Node3D, material: Material, scene_root: Node) -> v
 	var mesh_material: StandardMaterial3D = material as StandardMaterial3D
 	for x_index: int in range(4):
 		for z_index: int in range(6):
-			var center: Vector3 = Vector3(bar_min_x + 1.1 + float(x_index) * 2.1, floor_surface_height, -27.0 + float(z_index) * 4.2)
+			var center: Vector3 = Vector3(bar_min_x + 1.1 + float(x_index) * 2.1, bar_floor_top_height + 0.006, -27.0 + float(z_index) * 4.2)
 			_add_box(parent, "Bar_StoneTile_%02d_%02d" % [x_index, z_index], Vector3(2.05, 0.012, 4.12), Transform3D(Basis.IDENTITY, center), mesh_material, scene_root)
 
 func _build_perimeter_inlay(parent: Node3D, material: Material, scene_root: Node) -> void:
@@ -167,14 +168,14 @@ func _build_perimeter_inlay(parent: Node3D, material: Material, scene_root: Node
 		var inward: Vector2 = (center - (start + finish) * 0.5).normalized()
 		var inset_start: Vector2 = start + inward * perimeter_inset
 		var inset_end: Vector2 = finish + inward * perimeter_inset
-		_add_floor_line(parent, "Bronze_Perimeter_Inlay_%02d" % index, inset_start, inset_end, 0.035, material, scene_root)
-		_add_floor_line(parent, "Dark_Perimeter_Pinstripe_%02d" % index, inset_start + inward * 0.075, inset_end + inward * 0.075, 0.018, material, scene_root)
+		_add_floor_line_by_zone(parent, "Bronze_Perimeter_Inlay_%02d" % index, inset_start, inset_end, 0.035, material, scene_root)
+		_add_floor_line_by_zone(parent, "Dark_Perimeter_Pinstripe_%02d" % index, inset_start + inward * 0.075, inset_end + inward * 0.075, 0.018, material, scene_root)
 
 func _build_bar_threshold(parent: Node3D, material: Material, scene_root: Node) -> void:
 	_add_box(
 		parent, "Bar_Threshold_Bronze",
 		Vector3(0.075, 0.014, 21.0),
-		Transform3D(Basis.IDENTITY, Vector3(bar_min_x - 0.18, floor_surface_height + 0.006, -14.75)),
+		Transform3D(Basis.IDENTITY, Vector3(bar_min_x - 0.18, gaming_floor_top_height + 0.007, -14.75)),
 		material, scene_root
 	)
 
@@ -186,7 +187,7 @@ func _build_medallion(parent: Node3D, bronze_material: Material, dark_material: 
 	outer_instance.name = "House_Medallion_Outer_Ring"
 	outer_instance.mesh = outer
 	outer_instance.material_override = bronze_material
-	outer_instance.position = Vector3(medallion_center.x, floor_surface_height + 0.012, medallion_center.y)
+	outer_instance.position = Vector3(medallion_center.x, gaming_floor_top_height + 0.012, medallion_center.y)
 	parent.add_child(outer_instance)
 	outer_instance.owner = scene_root
 
@@ -197,7 +198,7 @@ func _build_medallion(parent: Node3D, bronze_material: Material, dark_material: 
 	inner_instance.name = "House_Medallion_Inner_Ring"
 	inner_instance.mesh = inner
 	inner_instance.material_override = bronze_material
-	inner_instance.position = Vector3(medallion_center.x, floor_surface_height + 0.012, medallion_center.y)
+	inner_instance.position = Vector3(medallion_center.x, gaming_floor_top_height + 0.012, medallion_center.y)
 	parent.add_child(inner_instance)
 	inner_instance.owner = scene_root
 
@@ -209,11 +210,28 @@ func _build_medallion(parent: Node3D, bronze_material: Material, dark_material: 
 	disc_instance.name = "House_Medallion_Enamel_Center"
 	disc_instance.mesh = center_disc
 	disc_instance.material_override = dark_material
-	disc_instance.position = Vector3(medallion_center.x, floor_surface_height + 0.006, medallion_center.y)
+	disc_instance.position = Vector3(medallion_center.x, gaming_floor_top_height + 0.006, medallion_center.y)
 	parent.add_child(disc_instance)
 	disc_instance.owner = scene_root
 
-func _add_floor_line(parent: Node3D, node_name: String, start: Vector2, finish: Vector2, width: float, material: Material, scene_root: Node) -> void:
+func _add_floor_line_by_zone(parent: Node3D, node_name: String, start: Vector2, finish: Vector2, width: float, material: Material, scene_root: Node) -> void:
+	var start_side: float = start.x - bar_min_x
+	var finish_side: float = finish.x - bar_min_x
+	if start_side * finish_side < 0.0:
+		var split_amount: float = (bar_min_x - start.x) / (finish.x - start.x)
+		var split_point: Vector2 = start.lerp(finish, split_amount)
+		if start.x < bar_min_x:
+			_add_floor_line(parent, node_name + "_Gaming", start, split_point, width, gaming_floor_top_height, material, scene_root)
+			_add_floor_line(parent, node_name + "_Bar", split_point, finish, width, bar_floor_top_height, material, scene_root)
+		else:
+			_add_floor_line(parent, node_name + "_Bar", start, split_point, width, bar_floor_top_height, material, scene_root)
+			_add_floor_line(parent, node_name + "_Gaming", split_point, finish, width, gaming_floor_top_height, material, scene_root)
+	elif (start.x + finish.x) * 0.5 >= bar_min_x:
+		_add_floor_line(parent, node_name, start, finish, width, bar_floor_top_height, material, scene_root)
+	else:
+		_add_floor_line(parent, node_name, start, finish, width, gaming_floor_top_height, material, scene_root)
+
+func _add_floor_line(parent: Node3D, node_name: String, start: Vector2, finish: Vector2, width: float, surface_height: float, material: Material, scene_root: Node) -> void:
 	var edge: Vector2 = finish - start
 	var length: float = edge.length()
 	if length <= 0.1:
@@ -221,7 +239,7 @@ func _add_floor_line(parent: Node3D, node_name: String, start: Vector2, finish: 
 	var tangent: Vector3 = Vector3(edge.x, 0.0, edge.y).normalized()
 	var inward: Vector3 = tangent.cross(Vector3.UP).normalized()
 	var basis: Basis = Basis(tangent, Vector3.UP, inward)
-	var center: Vector3 = Vector3((start.x + finish.x) * 0.5, floor_surface_height + 0.008, (start.y + finish.y) * 0.5)
+	var center: Vector3 = Vector3((start.x + finish.x) * 0.5, surface_height + 0.006, (start.y + finish.y) * 0.5)
 	_add_box(parent, node_name, Vector3(length, 0.012, width), Transform3D(basis, center), material, scene_root)
 
 func _add_box(parent: Node3D, node_name: String, size: Vector3, box_transform: Transform3D, material: Material, scene_root: Node) -> void:
