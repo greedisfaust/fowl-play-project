@@ -13,10 +13,12 @@ class_name CasinoTableSpawner
 var _spawned_slot_ids: Dictionary = {}
 var _spawned_day_number: int = 0
 var _casino_manager: Node = null
+var _run_manager: Node = null
 var _debug_hub: Node = null
 
 func _ready() -> void:
 	_casino_manager = get_node_or_null("/root/CasinoManager")
+	_run_manager = get_node_or_null("/root/RunManager")
 	_debug_hub = get_node_or_null("/root/DebugHub")
 	if is_instance_valid(_debug_hub):
 		_debug_hub.call("watch", &"casino/table_spawner/active_tables", func() -> int: return _spawned_slot_ids.size())
@@ -24,10 +26,18 @@ func _ready() -> void:
 		var callback: Callable = Callable(self, "_on_daily_selection_changed")
 		if not _casino_manager.is_connected("daily_selection_changed", callback):
 			_casino_manager.connect("daily_selection_changed", callback)
+	if is_instance_valid(_run_manager) and _run_manager.has_signal("run_state_changed"):
+		var run_callback: Callable = Callable(self, "_on_run_state_changed")
+		if not _run_manager.is_connected("run_state_changed", run_callback):
+			_run_manager.connect("run_state_changed", run_callback)
 	if spawn_on_ready:
 		call_deferred("spawn_tables")
 
 func _exit_tree() -> void:
+	if is_instance_valid(_run_manager) and _run_manager.has_signal("run_state_changed"):
+		var run_callback: Callable = Callable(self, "_on_run_state_changed")
+		if _run_manager.is_connected("run_state_changed", run_callback):
+			_run_manager.disconnect("run_state_changed", run_callback)
 	if is_instance_valid(_casino_manager) and _casino_manager.has_signal("daily_selection_changed"):
 		var callback: Callable = Callable(self, "_on_daily_selection_changed")
 		if _casino_manager.is_connected("daily_selection_changed", callback):
@@ -37,6 +47,11 @@ func _exit_tree() -> void:
 
 func _on_daily_selection_changed(_day_number: int, _game_ids: Array) -> void:
 	call_deferred("spawn_tables")
+
+
+func _on_run_state_changed(snapshot: Dictionary) -> void:
+	if int(snapshot.get("phase", -1)) == 2:
+		call_deferred("spawn_tables")
 
 ## Uses the current authoritative daily selection. If the catalog is not ready yet,
 ## the spawner waits for CasinoManager.daily_selection_changed.
