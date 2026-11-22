@@ -1,0 +1,166 @@
+## Bridges the elevator's physical DEPART button to the future outer-loop progression manager.
+## Attach to a plain Node child named DepartureController under the Elevator root.
+## This validates occupancy only; quota/day rules and world transitions belong to progression.
+class_name ElevatorDepartureController
+extends Node
+
+signal departure_requested(actor_peer_id: int)
+
+@export_group("Scene References")
+@export var button_path: NodePath = ^"../InteriorDetails/TerminalButton"
+@export var occupancy_path: NodePath = ^"../ElevatorArea"
+
+var _button: Node
+var _interactable: Interactable
+var _occupancy: ElevatorOccupancy
+var _network: Node
+var _request_pending: bool = false
+var _debug_hub: Node
+
+
+func _ready() -> void:
+	_button = get_node_or_null(button_path)
+	_occupancy = get_node_or_null(occupancy_path) as ElevatorOccupancy
+	_network = get_node_or_null("/root/Network")
+
+	if not is_instance_valid(_button):
+		push_error("ElevatorDepartureController could not find the DEPART button at %s." % button_path)
+		set_process(false)
+		return
+	if _occupancy == null:
+		push_error("ElevatorDepartureController could not find ElevatorOccupancy at %s." % occupancy_path)
+		set_process(false)
+		return
+
+	_interactable = _button.get("interactable") as Interactable
+	if not is_instance_valid(_interactable):
+		_interactable = _button.get_node_or_null("Interactable") as Interactable
+	if not is_instance_valid(_interactable):
+		push_error("ElevatorDepartureController could not resolve the button's Interactable.")
+		set_process(false)
+		return
+
+	_interactable.availability_check = Callable(self, "_can_interact")
+	if _button.has_signal("button_activated"):
+		if not _button.is_connected("button_activated", _on_button_activated):
+			_button.connect("button_activated", _on_button_activated)
+	else:
+		push_error("ElevatorDepartureController expects TerminalButton.button_activated.")
+		set_process(false)
+		return
+
+	_debug_hub = get_node_or_null("/root/DebugHub")
+	if is_instance_valid(_debug_hub):
+		_debug_hub.call("watch", &"elevator/departure_ready", Callable(self, "are_all_players_inside"))
+		_debug_hub.call("watch", &"elevator/departure_request_pending", func() -> bool: return _request_pending)
+
+
+func _exit_tree() -> void:
+	if is_instance_valid(_interactable) and _interactable.availability_check == Callable(self, "_can_interact"):
+		_interactable.availability_check = Callable()
+	if is_instance_valid(_button) and _button.has_signal("button_activated"):
+		if _button.is_connected("button_activated", _on_button_activated):
+			_button.disconnect("button_activated", _on_button_activated)
+	if is_instance_valid(_debug_hub):
+		_debug_hub.call("unwatch", &"elevator/departure_ready")
+		_debug_hub.call("unwatch", &"elevator/departure_request_pending")
+
+
+## Returns true only when every connected player is inside the elevator.
+## ElevatorOccupancy already accounts for players being carried by another player.
+func are_all_players_inside() -> bool:
+	if not is_instance_valid(_occupancy):
+		return false
+	var expected_peer_ids: Array[int] = _get_expected_peer_ids()
+	return are_all_expected_players_inside(expected_peer_ids, _occupancy.get_occupant_peer_ids())
+
+
+static func are_all_expected_players_inside(expected_peer_ids: Array[int], occupant_peer_ids: Array[int]) -> bool:
+	if expected_peer_ids.is_empty():
+		return false
+	for peer_id: int in expected_peer_ids:
+		if peer_id <= 0 or not occupant_peer_ids.has(peer_id):
+			return false
+	return true
+
+
+static func can_peer_request_departure(actor_peer_id: int, expected_peer_ids: Array[int], occupant_peer_ids: Array[int]) -> bool:
+	return actor_peer_id > 0 and occupant_peer_ids.has(actor_peer_id) and are_all_expected_players_inside(expected_peer_ids, occupant_peer_ids)
+
+
+func _can_interact(actor: Node, action: StringName) -> bool:
+	if action != &"use" or _request_pending or not is_instance_valid(actor):
+		return false
+	var actor_peer_id: int = int(actor.get("input_peer_id"))
+	return can_peer_request_departure(actor_peer_id, _get_expected_peer_ids(), _occupancy.get_occupant_peer_ids())
+
+
+func _on_button_activated(_button_id: StringName, actor_peer_id: int) -> void:
+	if not _is_network_authority() or _request_pending:
+		return
+	if not can_peer_request_departure(actor_peer_id, _get_expected_peer_ids(), _occupancy.get_occupant_peer_ids()):
+		_log_rejection("DEPART rejected: every connected player must be inside the elevator.")
+		return
+
+	_request_pending = true
+	if is_instance_valid(_debug_hub):
+		_debug_hub.call("log", &"net", "Elevator departure requested by peer %d." % actor_peer_id)
+	departure_requested.emit(actor_peer_id)
+
+
+## Called by the future progression coordinator when its quota/day-state checks reject the request.
+func reject_departure_request(reason: String = "") -> void:
+	if not _request_pending:
+		return
+	_request_pending = false
+	if not reason.is_empty():
+		_log_rejection("DEPART rejected by progression: %s" % reason)
+
+
+## Called by the future transition sequence after the group has arrived at its destination.
+func finish_departure_request() -> void:
+	_request_pending = false
+
+
+func is_departure_request_pending() -> bool:
+	return _request_pending
+
+
+func _get_expected_peer_ids() -> Array[int]:
+	var peer_ids: Array[int] = []
+	if not is_instance_valid(_network):
+		return peer_ids
+
+	var roster_value: Variant = _network.get("roster")
+	if roster_value is Array:
+		for peer_value: Variant in roster_value:
+			var peer_id: int = int(peer_value)
+			if peer_id > 0 and not peer_ids.has(peer_id):
+				peer_ids.append(peer_id)
+
+	# Offline/dev sessions may not have a published roster. Use the live player
+	# registry so the local host is still counted.
+	if peer_ids.is_empty():
+		var players_value: Variant = _network.get("movement_players")
+		if players_value is Dictionary:
+			for peer_value: Variant in players_value.keys():
+				var peer_id: int = int(peer_value)
+				if peer_id > 0 and not peer_ids.has(peer_id):
+					peer_ids.append(peer_id)
+
+	peer_ids.sort()
+	return peer_ids
+
+
+func _is_network_authority() -> bool:
+	if not is_instance_valid(_network):
+		return multiplayer.is_server()
+	var network_peer: MultiplayerPeer = _network.get("peer") as MultiplayerPeer
+	return network_peer == null or bool(_network.get("is_host"))
+
+
+func _log_rejection(message: String) -> void:
+	if is_instance_valid(_debug_hub):
+		_debug_hub.call("warn", &"net", message)
+	else:
+		push_warning(message)
