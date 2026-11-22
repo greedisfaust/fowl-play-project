@@ -14,6 +14,7 @@ extends Node3D
 var _door_controller: ElevatorDoorController
 var _network: Node
 var _commanded_open: bool = false
+var _departure_locked: bool = false
 var _time_without_nearby_players: float = 0.0
 var _debug_hub: Node
 
@@ -43,7 +44,7 @@ func _exit_tree() -> void:
 
 
 func _process(delta: float) -> void:
-	if not _is_network_authority():
+	if not _is_network_authority() or _departure_locked:
 		return
 
 	if _count_players_within_distance(open_distance) > 0:
@@ -97,6 +98,24 @@ func _apply_door_state(open: bool) -> void:
 		_door_controller.open_doors()
 	else:
 		_door_controller.close_doors()
+
+
+## Host-only lock used while the elevator is preparing to depart.
+## The normal proximity loop cannot reopen the doors while this lock is active.
+func begin_departure_closure() -> bool:
+	if not _is_network_authority() or _departure_locked:
+		return false
+	_departure_locked = true
+	_request_door_state(false)
+	return true
+
+
+## Restores normal proximity behavior if a departure sequence aborts.
+func cancel_departure_closure() -> void:
+	if not _is_network_authority():
+		return
+	_departure_locked = false
+	_request_door_state(true)
 
 
 func _on_door_motion_finished(is_open: bool) -> void:
