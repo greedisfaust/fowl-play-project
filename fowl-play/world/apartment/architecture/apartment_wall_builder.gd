@@ -140,7 +140,6 @@ func _build_segment(
 	if length <= 0.05:
 		return
 	var along_x: bool = absf(delta.x) >= absf(delta.y)
-	var direction: float = 1.0 if (delta.x if along_x else delta.y) >= 0.0 else -1.0
 	var opening_start: float = clampf(opening_center - opening_width * 0.5, 0.0, length)
 	var opening_end: float = clampf(opening_center + opening_width * 0.5, 0.0, length)
 	var valid_opening: bool = has_opening and opening_width > 0.05 and opening_top > opening_bottom and opening_end > opening_start
