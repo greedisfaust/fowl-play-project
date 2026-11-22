@@ -204,7 +204,7 @@ DECIDED: only unstarted rounds are refunded. Started rounds are automatically re
 - Consecutive-day repeats allowed.
 - No duplicate game type within a day.
 - Six physical table locations in the casino.
-- Day progression is ten days. The current dynamic quota formula and multiplier schedule below are approved; historical GDD quota tables remain superseded.
+- Day progression is ten days. The dynamic quota formula below is approved. The Day 1–10 multiplier curve is the initial tuning schedule and remains provisional for balance review; historical GDD quota tables are superseded.
 
 ### Dynamic daily quota
 
