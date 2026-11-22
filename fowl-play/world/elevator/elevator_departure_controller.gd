@@ -107,13 +107,13 @@ static func are_all_expected_players_inside(expected_peer_ids: Array[int], occup
 	if expected_peer_ids.is_empty():
 		return false
 	for peer_id: int in expected_peer_ids:
-		if peer_id <= 0 or not occupant_peer_ids.has(peer_id):
+		if peer_id < 0 or not occupant_peer_ids.has(peer_id):
 			return false
 	return true
 
 
 static func can_peer_request_departure(actor_peer_id: int, expected_peer_ids: Array[int], occupant_peer_ids: Array[int]) -> bool:
-	return actor_peer_id > 0 and occupant_peer_ids.has(actor_peer_id) and are_all_expected_players_inside(expected_peer_ids, occupant_peer_ids)
+	return actor_peer_id >= 0 and occupant_peer_ids.has(actor_peer_id) and are_all_expected_players_inside(expected_peer_ids, occupant_peer_ids)
 
 
 func _can_interact(actor: Node, action: StringName) -> bool:
@@ -318,10 +318,11 @@ func _get_expected_peer_ids() -> Array[int]:
 	# registry so the local host is still counted.
 	if peer_ids.is_empty():
 		var players_value: Variant = _network.get("movement_players")
+		var offline_session: bool = _network.get("peer") == null
 		if players_value is Dictionary:
 			for peer_value: Variant in players_value.keys():
 				var peer_id: int = int(peer_value)
-				if peer_id > 0 and not peer_ids.has(peer_id):
+				if (peer_id > 0 or (offline_session and peer_id == 0)) and not peer_ids.has(peer_id):
 					peer_ids.append(peer_id)
 
 	peer_ids.sort()
