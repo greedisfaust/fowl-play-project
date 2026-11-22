@@ -406,6 +406,13 @@ The test arena has an editor-authored `WorldEnvironment` with restrained Glow en
 - Keyboard/gamepad and physical USE routing are deferred to Registration Terminal integration to prevent inactive screens stealing player controls.
 
 
+## Lobby Devices
+- Lobby Host / Join uses a dedicated `ScreenHit/Interactable` on the SLIM screen; the controller resolves the sibling screen, sensor, and interaction component before connecting.
+- Its text scale is reduced for the portrait display and prompts are split into short lines to avoid oversized single-line wrapping.
+- Player Color Panel behavior is attached by MainController to the scene-authored `ColorPanelController` node. Each physical button uses the existing `TerminalButton` and `Interactable` path.
+- The host updates identity from the peer ID on the authoritative button activation. Occupied colors are disabled and visibly dimmed on every peer; changing color releases the old choice. The host identity allocator remains the final race/uniqueness guard.
+- Focused check: `player-color-panel` stage in `tests/run_checks.ps1`.
+
 ## Registration Terminal
 
 - USER VERIFIED: the terminal interaction/registration flow and the fixes to its wake/session/proximity behavior are working. Keep the checks below as regression guidance.
