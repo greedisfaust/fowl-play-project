@@ -139,10 +139,27 @@ func _handle_interacted_button(actor: Node, advance_chicken: bool) -> void:
 func _peer_id_for_actor(actor: Node) -> int:
 	if not is_instance_valid(actor):
 		return 0
-	var peer_id: int = int(actor.get("input_peer_id"))
-	# Offline test-arena players may not receive a network owner ID. Treat the
-	# local offline player as the offline multiplayer peer so table proximity
-	# and keypad confirmation use the same identity.
+
+	# Area3D body_entered can report any physics body, not only a Player.
+	# Check that this actor actually exposes the player identity property
+	# before reading it; Object.get() returns null for a missing property,
+	# and converting that null with int() raises a runtime error.
+	var has_input_peer_id: bool = false
+	for property_info: Dictionary in actor.get_property_list():
+		if str(property_info.get("name", "")) == "input_peer_id":
+			has_input_peer_id = true
+			break
+	if not has_input_peer_id:
+		return 0
+
+	var peer_value: Variant = actor.get("input_peer_id")
+	if typeof(peer_value) != TYPE_INT:
+		return 0
+	var peer_id: int = peer_value
+
+	# Offline players may not receive a network owner ID. Treat the local
+	# offline player as the offline multiplayer peer so table proximity and
+	# keypad confirmation use the same identity.
 	if peer_id <= 0 and _network != null and _network.get("peer") == null:
 		peer_id = multiplayer.get_unique_id()
 	return peer_id
