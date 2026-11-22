@@ -710,3 +710,7 @@ The generic table lifecycle controller registers these watches per configured ta
 - `casino_table/<table_id>/round_id` — active round identifier, or empty when idle.
 
 Lifecycle decisions are logged through the existing `wallet` category and include the table ID. There are no gameplay-changing debug commands; table actions must use the same host-authoritative controller API as normal gameplay.
+
+## Temporary local multiplayer hotkeys
+
+For the current elevator/world-building playtests, the Network autoload also accepts **H** to host and **J** to join `127.0.0.1` from a second local game instance. These are temporary development-only shortcuts; see `fowl-play/docs/TEMPORARY_DEV_SHORTCUTS.md` for setup and the mandatory pre-release removal checklist. The existing `net_host`, `net_join`, and `net_disconnect` console commands remain available.
