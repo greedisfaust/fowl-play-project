@@ -134,7 +134,7 @@ func _publish_state(active: bool, day: int, next_phase: Phase, departure_allowed
 func _rpc_apply_state(active: bool, day: int, next_phase: int, departure_allowed: bool) -> void:
 	if day < 0 or day > MAX_DAYS or next_phase < Phase.IDLE or next_phase > Phase.RUN_FAILED:
 		return
-	_apply_state(active, day, next_phase as Phase, departure_allowed)
+	_apply_state(active, day, next_phase, departure_allowed)
 
 
 func _apply_state(active: bool, day: int, next_phase: Phase, departure_allowed: bool) -> void:
