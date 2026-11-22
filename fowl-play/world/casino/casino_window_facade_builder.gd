@@ -23,6 +23,9 @@ class_name CasinoWindowFacadeBuilder
 @export_range(0.025, 0.2, 0.005) var mullion_width: float = 0.075
 @export_range(0.025, 0.2, 0.005) var frame_depth: float = 0.12
 @export_range(0.025, 0.2, 0.005) var rail_height: float = 0.09
+@export_group("Upper Transom")
+@export var generate_upper_transom: bool = true
+@export_range(3.8, 4.5, 0.01) var ceiling_underside_y: float = 4.02
 
 @export_group("Placement")
 @export var base_y: float = 0.0
@@ -152,6 +155,16 @@ func _build_facade_segment(
 		bronze_material, scene_root
 	)
 
+	# Narrow glass transom closes the 22cm gap between the top rail and ceiling.
+	var transom_height: float = maxf(0.0, ceiling_underside_y - top_y)
+	if generate_upper_transom and transom_height > 0.025:
+		_add_box(
+			parent, prefix + "Upper_Transom_Glass",
+			Vector3(maxf(0.05, edge_length - mullion_width), transom_height, glass_thickness),
+			Transform3D(segment_basis, midpoint + Vector3.UP * (top_y + transom_height * 0.5)),
+			glass_material, scene_root
+		)
+
 	# Repeated vertical mullions create a refined curtain-wall rhythm.
 	var post_count: int = maxi(1, int(floor(edge_length / maxf(0.5, mullion_spacing))))
 	for post_index: int in range(post_count + 1):
@@ -167,6 +180,13 @@ func _build_facade_segment(
 			Transform3D(segment_basis, post_position + Vector3.UP * (glass_bottom + glass_height * 0.5)),
 			bronze_material, scene_root
 		)
+		if generate_upper_transom and transom_height > 0.025:
+			_add_box(
+				parent, prefix + "Transom_Mullion_%02d" % post_index,
+				Vector3(mullion_width, transom_height, frame_depth),
+				Transform3D(segment_basis, post_position + Vector3.UP * (top_y + transom_height * 0.5)),
+				bronze_material, scene_root
+			)
 
 func _add_box(
 	parent: Node3D,
