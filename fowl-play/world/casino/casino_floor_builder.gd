@@ -27,7 +27,7 @@ class_name CasinoFloorBuilder
 
 @export_group("Bar Flooring")
 @export var generate_bar_planks: bool = true
-@export var bar_min_x: float = 1.85
+@export var bar_min_x: float = 1.5
 @export_range(0.12, 0.35, 0.01) var bar_plank_width: float = 0.22
 @export_range(1.0, 2.5, 0.1) var bar_plank_length: float = 1.8
 
