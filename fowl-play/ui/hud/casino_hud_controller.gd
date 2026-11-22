@@ -41,6 +41,7 @@ var _local_player: Node
 var _contributions: Dictionary = {}
 var _counted_wagers: Dictionary = {}
 var _current_contribution_day: int = 0
+var _last_run_active: bool = false
 var _last_quota_reached: bool = false
 var _contribution_list: VBoxContainer
 var _modifier_panel: VBoxContainer
@@ -165,6 +166,14 @@ func _disconnect_services() -> void:
 
 
 func _on_run_state_changed(snapshot: Dictionary) -> void:
+	var run_active: bool = bool(snapshot.get("run_active", false))
+	if run_active and not _last_run_active:
+		_contributions.clear()
+		_counted_wagers.clear()
+		_current_contribution_day = int(snapshot.get("current_day", 0))
+		_last_quota_reached = false
+		_refresh_contribution_panel()
+	_last_run_active = run_active
 	_refresh_visibility()
 	_day_label.text = "DAY %d" % int(snapshot.get("current_day", 0))
 	if int(snapshot.get("phase", -1)) != PHASE_CASINO:
@@ -418,6 +427,7 @@ func _connect_focus_sources() -> void:
 		if is_instance_valid(focus_node) and focus_node.has_signal("focus_target_changed"):
 			if not focus_node.focus_target_changed.is_connected(_on_focus_target_changed):
 				focus_node.focus_target_changed.connect(_on_focus_target_changed)
+		_refresh_action_prompt()
 		return
 
 
