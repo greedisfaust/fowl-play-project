@@ -38,6 +38,22 @@ func _ready() -> void:
 	_debug_hub.call("watch", &"run/day", func() -> int: return current_day)
 	_debug_hub.call("watch", &"run/phase", func() -> String: return _phase_name(phase))
 	_debug_hub.call("watch", &"run/casino_departure_allowed", func() -> bool: return casino_departure_allowed)
+	_debug_hub.call(
+		"command",
+		&"run_begin",
+		Callable(self, "_debug_begin_new_run"),
+		"Start a fresh development run and initialize the shared wallet.",
+		true,
+		false
+	)
+	_debug_hub.call(
+		"command",
+		&"run_status",
+		Callable(self, "_debug_run_status"),
+		"Show the current run phase and wallet balance.",
+		false,
+		false
+	)
 
 
 func _exit_tree() -> void:
@@ -79,6 +95,20 @@ func begin_new_run() -> Dictionary:
 	_publish_state(true, 1, Phase.APARTMENT, false)
 	_log("New run started. Day 1 begins in the Apartment.")
 	return _success(get_snapshot())
+
+
+func _debug_begin_new_run(_args: Array[Variant]) -> Dictionary:
+	var result: Dictionary = begin_new_run()
+	if not bool(result.get("ok", false)):
+		_log("Could not start development run: %s" % str(result.get("reason", "unknown error")))
+	return result
+
+
+func _debug_run_status(_args: Array[Variant]) -> Dictionary:
+	var snapshot: Dictionary = get_snapshot()
+	if is_instance_valid(_casino_wallet):
+		snapshot["wallet"] = _casino_wallet.call("get_snapshot")
+	return snapshot
 
 
 ## The progression manager asks for a destination; the elevator never decides game rules.
