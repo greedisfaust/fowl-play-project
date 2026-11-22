@@ -5,6 +5,7 @@ const ScreenScene = preload("res://environment/kit/world_screen.tscn")
 const TerminalScript = preload("res://ui/lobby_host_join_terminal.gd")
 const InteractableScript = preload("res://interaction/interactable.gd")
 const ActorScript = preload("res://tests/support/local_terminal_test_actor.gd")
+const AuthoredLobbyScene = preload("res://environment/terminals/lobby_host_join_terminal.tscn")
 
 var _failed: bool = false
 
@@ -61,6 +62,26 @@ func _run() -> void:
 		await process_frame
 		_check(str(terminal.get("_status_presentation")) == "failed", "A failed connection should show an error even if the client flag was cleared before the deferred callback")
 		_check(screen.get_screen_text().get_parsed_text().contains("CONNECTION FAILED"), "Failed connection should display retry guidance")
+
+	# Exercise the real authored PackedScene as well as the synthetic contract
+	# fixture above. This catches broken sibling NodePaths and missing wiring.
+	var authored_lobby: Node3D = AuthoredLobbyScene.instantiate() as Node3D
+	root.add_child(authored_lobby)
+	await process_frame
+	var authored_controller: Node = authored_lobby.get_node("LobbyHostJoinController")
+	var authored_screen: WorldScreen = authored_controller.get("screen") as WorldScreen
+	var authored_interactable: Interactable = authored_controller.get("screen_interactable") as Interactable
+	_check(authored_screen != null, "Authored lobby scene should resolve its WorldScreen")
+	_check(authored_interactable != null and authored_interactable.enabled, "Authored lobby screen target should be enabled")
+	_check(authored_interactable != null and authored_interactable.kind == Interactable.InteractionKind.USE, "Authored lobby screen target should accept USE")
+	if authored_screen != null and authored_interactable != null:
+		authored_controller.call("_on_proximity_body_entered", actor)
+		authored_interactable.interaction_requested.emit(actor, &"use")
+		_check(bool(authored_controller.call("has_active_session")), "Physical authored lobby screen interaction should open its menu")
+		var authored_text: String = authored_screen.get_screen_text().get_parsed_text()
+		_check(authored_text.contains("UP / DOWN: MOVE") and authored_text.contains("ENTER / E: SELECT"), "Lobby prompt should use the compact multi-line format")
+		authored_controller.call("end_session")
+	authored_lobby.queue_free()
 	terminal.queue_free()
 	actor.queue_free()
 	await process_frame
