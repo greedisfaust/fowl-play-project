@@ -114,6 +114,24 @@ func begin_casino_day(requested_day: int, wallet_at_day_start: int) -> Dictionar
 	return _success(get_snapshot())
 
 
+## Clears a recorded Day 10 failure before replaying that same day with the House loan.
+func prepare_day_replay() -> Dictionary:
+	if not _is_authority():
+		return _failure("Only the host can prepare a casino-day replay.")
+	if day_active or not day_result_recorded or day_success:
+		return _failure("Only a completed failed day can be replayed.")
+	day_result_recorded = false
+	day_success = false
+	final_wallet_snapshot = 0
+	quota_reached = false
+	seconds_remaining = 0.0
+	current_wallet_balance = _get_current_wallet_balance()
+	_last_published_second = -1
+	_publish_state()
+	_log("Day %d replay prepared with carried wallet %d." % [day_number, current_wallet_balance])
+	return _success(get_snapshot())
+
+
 func advance_day_timer(delta: float, current_balance: int) -> void:
 	if not _is_authority() or not day_active or delta <= 0.0:
 		return
