@@ -146,6 +146,15 @@ Run `tests/run_multiplayer_local_checks.bat` and complete `docs/NETWORK_MULTIPLA
 
 ## Session log
 
+### Session 8 — 2026-11-22 — Chicken Cross round-start hardening
+- Re-audited the current Chicken Cross rules, round model, table adapter, keypad controller, authored table scene, and casino design contract. The old folder README incorrectly described the table adapter as future work; refreshed it to match the branch.
+- Hardened `ChickenCrossTable.start_round()`: it now validates each reserved wager and prepares the complete per-player round model before calling `BaseTable.start_round()` to lock stakes. Invalid duplicate-player or malformed wagers therefore leave the round OPEN and refundable instead of risking locked funds without a game model.
+- Added host-side `Network.validate_rpc()` checks to client Cross and Cash Out requests before deriving the acting peer from the RPC sender.
+- Expanded `chicken_cross_table_test.gd` with deterministic two-player independent progress/failure/cash-out/settlement coverage and a duplicate-wager rejection/refund case. Updated `docs/CASINO_CHICKEN_CROSS.md` to distinguish previously user-verified checks from the new tests awaiting execution.
+- Commits: `78728ec` (preflight before lock), `a729e0f` and `6fe3dd7` (table tests), `f7148f8` (README), `a0382ed` (contract status), `a70d80a` (RPC sender validation).
+- No scene files were edited. Godot is unavailable in the assistant environment, so the expanded test runner has NOT been executed here.
+- Next: user pulls the branch and runs `fowl-play/tests/run_chicken_cross_checks.bat`; fix any reported failure. Then complete the remaining editor-reference and in-game Chicken Cross presentation verification before integrating full day progression.
+
 ### Session 7 — 2026-11-22 — multiplayer verification preparation
 - Audited Network, MainController, player spawning, Apartment spawn markers, and Godot 4.7 multiplayer replication behavior.
 - Confirmed Main is the project startup scene; Apartment has four MainController `SpawnPoints`. Host creates the peer roster and uses the existing MultiplayerSpawner for authoritative player spawns; ENet server capacity is three clients plus host.
