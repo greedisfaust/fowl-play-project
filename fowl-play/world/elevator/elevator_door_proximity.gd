@@ -67,7 +67,7 @@ func _process(delta: float) -> void:
 func _is_network_authority() -> bool:
 	if _network == null:
 		return multiplayer.is_server()
-	if str(_network.get("status")) == "offline":
+	if multiplayer.multiplayer_peer is OfflineMultiplayerPeer:
 		return true
 	return bool(_network.get("is_host"))
 
@@ -77,7 +77,7 @@ func _request_door_state(open: bool) -> void:
 		return
 
 	_commanded_open = open
-	if _network == null or str(_network.get("status")) == "offline":
+	if _network == null or multiplayer.multiplayer_peer is OfflineMultiplayerPeer:
 		_apply_door_state(open)
 		return
 
