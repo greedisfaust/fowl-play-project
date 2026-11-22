@@ -112,16 +112,6 @@ func _create_materials() -> void:
 
 func _build_gaming_stone(parent: Node3D, scene_root: Node) -> void:
 	var section: Node3D = _make_group(parent, "Gaming_Area_Limestone_Tiles", scene_root)
-	var gaming_width: float = bar_min_x - FLOOR_FOOTPRINT[0].x
-	_add_box(
-		section,
-		"Gaming_Dark_Grout_Bed",
-		Vector3(gaming_width, 0.008, floor_max_z - floor_min_z),
-		Vector3((FLOOR_FOOTPRINT[0].x + bar_min_x) * 0.5, gaming_floor_top_height + 0.002, (floor_min_z + floor_max_z) * 0.5),
-		_grout_material,
-		scene_root
-	)
-
 	var row_index: int = 0
 	var z_cursor: float = floor_min_z
 	while z_cursor < floor_max_z:
