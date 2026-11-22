@@ -46,6 +46,21 @@ func _exit_tree() -> void:
 	_debug_hub.call("unwatch", &"run/casino_departure_allowed")
 
 
+## MainController is persistent; bind its world signal once so progression commits survive elevator scene swaps.
+func bind_main_controller(controller: Node) -> void:
+	if controller == null or not controller.has_signal("world_changed"):
+		return
+	var callback: Callable = Callable(self, "_on_main_world_changed")
+	if not controller.is_connected("world_changed", callback):
+		controller.connect("world_changed", callback)
+
+
+func _on_main_world_changed(previous_world: int, current_world: int) -> void:
+	if previous_world < 0 or not _is_authority():
+		return
+	complete_world_transition(previous_world, current_world)
+
+
 ## Starts a new run in the Apartment on Day 1. Wallet initialization remains owned by CasinoWallet.
 func begin_new_run() -> Dictionary:
 	if not _is_authority():
