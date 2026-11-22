@@ -7,4 +7,4 @@
 [node name="SlimWorldScreen" parent="." unique_id=1216012003 instance=ExtResource("1_ttc7j")]
 display_size = Vector2(2.35, 3.1)
 
-[node name="LobbyHostJoinController" type="Node" parent="." unique_id=1502928339]
+[node name="LobbyHostJoinController" type="Node3D" parent="." unique_id=445900307]
