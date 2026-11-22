@@ -16,8 +16,8 @@ func _run() -> void:
 		_finish(false, "Main scene root must be Node3D.")
 		return
 
-	main.set("apartment_scene", _make_world_scene(Vector3(2.0, 0.0, 3.0)))
-	main.set("casino_scene", _make_world_scene(Vector3(-8.0, 0.0, 5.0)))
+	main.set("apartment_scene", _make_world_scene(Vector3(2.0, 0.0, 3.0), "LobbySpawnPoints", true))
+	main.set("casino_scene", _make_world_scene(Vector3(-8.0, 0.0, 5.0), "PlayerSpawnPoints"))
 	main.set("initial_world", 0)
 	main.set("fade_duration_seconds", 0.0)
 	root.add_child(main)
@@ -117,10 +117,15 @@ func _run() -> void:
 	_finish(true, "offline spawn, Network registration, persistent player identity, world repositioning, intentional shutdown recovery, and failed-connection recovery")
 
 
-func _make_world_scene(spawn_position: Vector3) -> PackedScene:
+func _make_world_scene(spawn_position: Vector3, spawn_container_name: String, include_empty_spawn_points: bool = false) -> PackedScene:
 	var world: Node3D = Node3D.new()
+	if include_empty_spawn_points:
+		var empty_spawn_points: Node3D = Node3D.new()
+		empty_spawn_points.name = "SpawnPoints"
+		world.add_child(empty_spawn_points)
+		empty_spawn_points.owner = world
 	var spawn_points: Node3D = Node3D.new()
-	spawn_points.name = "SpawnPoints"
+	spawn_points.name = spawn_container_name
 	world.add_child(spawn_points)
 	spawn_points.owner = world
 	for index: int in range(4):
