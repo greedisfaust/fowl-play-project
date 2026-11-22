@@ -63,6 +63,18 @@ func _run() -> void:
 		_finish(false, "Standing player was not moved to the destination world's matching spawn slot.")
 		return
 
+	# Leaving a multiplayer session replaces the transport with OfflineMultiplayerPeer.
+	# The persistent Main controller must still be able to create a fresh local player.
+	network.call("shutdown")
+	await process_frame
+	main.call("_refresh_players_for_world")
+	await process_frame
+	await process_frame
+	if players.get_child_count() != 1 or players.get_node_or_null("1") == null:
+		main.queue_free()
+		_finish(false, "Disconnected local session should respawn one local player.")
+		return
+
 	main.queue_free()
 	await process_frame
 	_finish(true, "offline spawn, Network registration, persistent player identity, and world repositioning")
