@@ -319,7 +319,7 @@ func _build_runtime_hud_sections() -> void:
 	_watched_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_modifier_panel.add_child(_blessed_label)
 	_modifier_panel.add_child(_watched_label)
-	_modifier_panel.visible = false
+	_modifier_panel.visible = true
 
 	var contribution_root: VBoxContainer = VBoxContainer.new()
 	contribution_root.name = "ContributionPanel"
@@ -511,7 +511,7 @@ func set_modifier_status(blessed_player: String, watched_player: String) -> void
 		return
 	_blessed_label.text = "BLESSED — %s" % blessed_player if not blessed_player.is_empty() else "BLESSED —"
 	_watched_label.text = "WATCHED — %s" % watched_player if not watched_player.is_empty() else "WATCHED —"
-	_modifier_panel.visible = not blessed_player.is_empty() or not watched_player.is_empty()
+	_modifier_panel.visible = true
 
 
 func _on_carry_started_for_prompt(_item: Node3D) -> void:
