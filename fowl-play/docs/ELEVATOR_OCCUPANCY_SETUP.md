@@ -59,6 +59,6 @@ The component registers DebugHub watches named:
 Run `tests/run_elevator_occupancy_checks.bat` from the project folder. It imports the
 project resources and runs `tests/elevator_occupancy_test.gd`.
 
-The test covers player entry, duplicate body protection, exit tracking, and cleanup when
-a player is despawned. It does not simulate real physics overlap or a live multiplayer session;
-those remain in-editor playtest checks.
+The test covers player entry, duplicate body protection, carried-player registration and release,
+exit tracking, and cleanup when a player is despawned. It does not simulate real physics overlap
+or a live multiplayer session; those remain in-editor playtest checks.
