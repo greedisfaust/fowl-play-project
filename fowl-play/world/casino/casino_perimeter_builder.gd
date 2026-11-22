@@ -32,6 +32,12 @@ class_name CasinoPerimeterBuilder
 
 const ELEVATOR_WALL_SEGMENT_INDEX: int = 1
 
+@export var generate_elevator_portal: bool = true
+@export_range(0.02, 0.18, 0.01) var elevator_portal_trim_width: float = 0.08
+@export_range(0.02, 0.12, 0.01) var elevator_portal_trim_depth: float = 0.055
+@export var elevator_portal_trim_color: Color = Color(0.36, 0.22, 0.105, 1.0)
+@export var elevator_portal_return_color: Color = Color(0.035, 0.041, 0.049, 1.0)
+
 @export_group("Collision")
 @export var generate_collision: bool = true
 
@@ -134,6 +140,12 @@ func _build_wall_segment(
 				wainscoting_material, panel_material, molding_material, scene_root
 			)
 
+		if generate_elevator_portal:
+			_build_elevator_portal(
+				parent, start, tangent, inward, edge_length, segment_basis,
+				molding_material, scene_root
+			)
+
 		# Solid stone header above the opening; the space below remains clear.
 		var header_height: float = wall_height - elevator_opening_height
 		if header_height > 0.1:
@@ -180,6 +192,68 @@ func _build_wall_piece(
 			parent, prefix, start, tangent, inward, edge_length,
 			segment_basis, wainscoting_material, panel_material, molding_material, scene_root
 		)
+
+
+func _build_elevator_portal(
+	parent: Node3D,
+	wall_start: Vector3,
+	tangent: Vector3,
+	inward: Vector3,
+	edge_length: float,
+	segment_basis: Basis,
+	bronze_material: Material,
+	scene_root: Node
+) -> void:
+	var center: Vector3 = wall_start + tangent * elevator_opening_center_distance
+	var wall_face_offset: float = wall_thickness * 0.5 + 0.025
+	var return_material: StandardMaterial3D = _make_material(elevator_portal_return_color, 0.08, 0.42)
+	var trim_material: StandardMaterial3D = _make_material(elevator_portal_trim_color, 0.62, 0.28)
+	var half_width: float = elevator_opening_width * 0.5
+	var trim_width: float = elevator_portal_trim_width
+
+	# Dark stone reveals line the inside edges of the wall opening without narrowing it.
+	for side_index: int in range(2):
+		var side_sign: float = -1.0 if side_index == 0 else 1.0
+		var reveal_center: Vector3 = center + tangent * (side_sign * (half_width - 0.018))
+		reveal_center += Vector3.UP * (floor_level + elevator_opening_height * 0.5)
+		_add_box(
+			parent, "ElevatorPortal_Return_%d" % side_index,
+			Vector3(0.036, elevator_opening_height, wall_thickness),
+			Transform3D(segment_basis, reveal_center),
+			return_material, scene_root, false
+		)
+
+	# A dark stone reveal across the top of the opening.
+	var top_reveal_center: Vector3 = center + Vector3.UP * (floor_level + elevator_opening_height - 0.018)
+	_add_box(
+		parent, "ElevatorPortal_TopReturn",
+		Vector3(elevator_opening_width, 0.036, wall_thickness),
+		Transform3D(segment_basis, top_reveal_center),
+		return_material, scene_root, false
+	)
+
+	# Restrained bronze frame on the casino-facing wall surface.
+	for side_index: int in range(2):
+		var side_sign: float = -1.0 if side_index == 0 else 1.0
+		var jamb_center: Vector3 = center + tangent * (side_sign * (half_width + trim_width * 0.5))
+		jamb_center += Vector3.UP * (floor_level + elevator_opening_height * 0.5)
+		jamb_center += inward * wall_face_offset
+		_add_box(
+			parent, "ElevatorPortal_BronzeJamb_%d" % side_index,
+			Vector3(trim_width, elevator_opening_height + trim_width, elevator_portal_trim_depth),
+			Transform3D(segment_basis, jamb_center),
+			trim_material, scene_root, false
+		)
+
+	var header_center: Vector3 = center + Vector3.UP * (floor_level + elevator_opening_height + trim_width * 0.5)
+	header_center += inward * wall_face_offset
+	_add_box(
+		parent, "ElevatorPortal_BronzeHeader",
+		Vector3(elevator_opening_width + trim_width * 2.0, trim_width, elevator_portal_trim_depth),
+		Transform3D(segment_basis, header_center),
+		trim_material, scene_root, false
+	)
+
 
 func _build_wainscoting(
 	parent: Node3D,
