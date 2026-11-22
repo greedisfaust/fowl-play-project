@@ -320,6 +320,10 @@ func _on_session_started() -> void:
 
 func _on_session_ended() -> void:
 	for player: Node in _players.get_children():
+		# queue_free() alone leaves the node attached until the end of the frame.
+		# A replicated MultiplayerSpawner child can arrive during that window and
+		# collide with the stale offline Players/<peer_id> node name.
+		_players.remove_child(player)
 		player.queue_free()
 	_spawn_slots.clear()
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
