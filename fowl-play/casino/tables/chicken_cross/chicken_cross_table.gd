@@ -190,13 +190,20 @@ func _submit_player_action(advance_chicken: bool) -> Dictionary:
 
 @rpc("any_peer", "call_remote", "reliable")
 func _rpc_request_cross() -> void:
-	if multiplayer.is_server():
-		_handle_player_action(multiplayer.get_remote_sender_id(), true)
+	if not multiplayer.is_server() or not _validate_remote_action_sender():
+		return
+	_handle_player_action(multiplayer.get_remote_sender_id(), true)
 
 @rpc("any_peer", "call_remote", "reliable")
 func _rpc_request_cash_out() -> void:
-	if multiplayer.is_server():
-		_handle_player_action(multiplayer.get_remote_sender_id(), false)
+	if not multiplayer.is_server() or not _validate_remote_action_sender():
+		return
+	_handle_player_action(multiplayer.get_remote_sender_id(), false)
+
+func _validate_remote_action_sender() -> bool:
+	if not is_instance_valid(_network) or not _network.has_method("validate_rpc"):
+		return false
+	return bool(_network.call("validate_rpc"))
 
 func _handle_player_action(peer_id: int, advance_chicken: bool) -> Dictionary:
 	if not _is_authority():
