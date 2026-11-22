@@ -21,15 +21,16 @@ Do not add another screen, viewport, or occupancy Area3D.
 The display intentionally stays to three visual elements:
 
 - Top row: `ELEVATOR STATUS` on the left and `TEAM SIZE [count]` spaced toward the right edge.
-- Main row: a large, left-aligned `INSIDE [count] / [total]`.
+- Main row: `INSIDE [count] / [total]` stays left-aligned at the normal terminal font size.
   - Green count when every rostered player is inside.
   - Red count when one or more players are missing.
+- Bottom row: the current state message is the large, centered text. Its default size is 1.75 times the terminal font size.
 - Bottom row: one concise state message, such as `WAITING FOR PLAYERS`,
   `WAITING FOR QUOTA`, `READY TO DEPART`, or `QUOTA NOT MET`.
 
 The count refreshes when elevator occupancy changes or the Network roster changes.
-Text sizing is applied per line so the main count is substantially larger than the header
-and state message.
+Text sizing is applied per line so the state message is substantially larger than the header
+and inside count.
 
 Until the run/quota coordinator supplies an authoritative result, the state message is
 `WAITING FOR QUOTA` when everyone is inside. The display does not claim eligibility early.
