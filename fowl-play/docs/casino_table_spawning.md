@@ -56,3 +56,22 @@ The spawn-point footprint is only a planning indicator; it does not create colli
 ## Checks
 
 Run `tests/run_casino_table_spawner_checks.bat` from Windows. The test covers enabled/disabled slots, instantiation, transform placement, metadata, and duplicate prevention.
+
+## Verification
+
+### Automated
+
+Run `tests/run_casino_table_spawner_checks.bat`. It checks enabled and disabled slots, Node3D scene instantiation, marker transform placement, table metadata, and duplicate prevention. The spawner also exposes the DebugHub watch `casino/table_spawner/active_tables`.
+
+### Two-instance multiplayer checklist
+
+Once at least one table scene is assigned:
+
+1. Start a host and join a client.
+2. Enter the Casino on both instances.
+3. Confirm each instance displays one table at every enabled configured slot, with matching position and facing.
+4. Confirm no duplicate table appears after leaving and re-entering the Casino.
+5. Have the host interact with a table and confirm the existing BaseTable host-authoritative behavior remains intact.
+6. Confirm a disabled slot does not spawn on either instance.
+
+The local table placement check does not replace a multiplayer gameplay test. Record visual placement and host/client gameplay results separately.
