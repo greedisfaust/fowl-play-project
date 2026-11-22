@@ -230,6 +230,9 @@ func _connect_key_buttons_recursive(parent_node: Node) -> void:
 		if child.has_signal("button_activated") and not child.is_connected("button_activated", _on_button_activated):
 			child.connect("button_activated", _on_button_activated)
 			_connected_buttons.append(child)
+			if is_instance_valid(_debug_hub):
+				var connected_id: String = str(child.get("button_id"))
+				_debug_hub.call("log", &"wallet", "Connected keypad input '%s' at %s." % [connected_id, str(child.get_path())])
 		_connect_key_buttons_recursive(child)
 
 func _on_button_activated(button_id: StringName, peer_id: int) -> void:
@@ -238,6 +241,8 @@ func _on_button_activated(button_id: StringName, peer_id: int) -> void:
 	# by the wager-entry keypad.
 	if action in ["CROSS", "CASH_OUT", "CASHOUT"]:
 		return
+	if is_instance_valid(_debug_hub):
+		_debug_hub.call("log", &"wallet", "Received physical keypad input '%s' from peer %d." % [String(button_id), peer_id])
 	var result: Dictionary = handle_button_input(button_id, peer_id)
 	if is_instance_valid(_debug_hub) and not bool(result.get("ok", false)):
 		_debug_hub.call("log", &"wallet", "Keypad button '%s' rejected for peer %d: %s" % [String(button_id), peer_id, str(result.get("reason", "unknown error"))])
