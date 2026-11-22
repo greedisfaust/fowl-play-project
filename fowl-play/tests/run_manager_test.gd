@@ -57,7 +57,8 @@ func _run() -> void:
 	if int(snapshot.get("current_day", 0)) != 2 or int(snapshot.get("phase", -1)) != 2:
 		_finish(false, "Returning from the Rest Area should begin Day 2 in the Casino.")
 		return
-	if bool(manager.call("begin_new_run").get("ok", false)):
+	var repeated_start: Dictionary = manager.call("begin_new_run")
+	if bool(repeated_start.get("ok", false)):
 		_finish(false, "A second run must not overwrite an active run.")
 		return
 
