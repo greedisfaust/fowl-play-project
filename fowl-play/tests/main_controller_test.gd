@@ -51,6 +51,18 @@ func _run() -> void:
 		_finish(false, "Spawned player did not register with the existing Network autoload.")
 		return
 
+	var player_spawner: MultiplayerSpawner = main.get_node("MultiplayerSpawner") as MultiplayerSpawner
+	if player_spawner == null or player_spawner.get_multiplayer_authority() != 1 or not player_spawner.is_multiplayer_authority():
+		main.queue_free()
+		_finish(false, "MultiplayerSpawner must explicitly be authoritative on the host peer.")
+		return
+	var spawn_points: Node3D = main.call("_get_player_spawn_points") as Node3D
+	main.call("_spawn_player", 1, spawn_points)
+	if players.get_child_count() != 1:
+		main.queue_free()
+		_finish(false, "Repeated spawn requests must not create a duplicate player.")
+		return
+
 	main.call("transition_to", 1)
 	await process_frame
 	await process_frame
