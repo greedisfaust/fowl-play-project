@@ -208,7 +208,7 @@ func _add_wall_box(
 	mesh_instance.position = box_center
 	parent.add_child(mesh_instance)
 	mesh_instance.owner = scene_root
-	if generate_wainscoting:
+	if generate_wainscoting and bottom <= 0.01 and top >= wall_height - 0.01:
 		_build_wainscoting(parent, node_name, box_size, box_center, along_x, material, scene_root)
 	if generate_collision:
 		var body: StaticBody3D = StaticBody3D.new()
