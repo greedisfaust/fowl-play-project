@@ -1,6 +1,7 @@
 extends BaseTable
 
 const RoundModel = preload("res://casino/tables/chicken_cross/chicken_cross_round.gd")
+const Rules = preload("res://casino/tables/chicken_cross/chicken_cross_rules.gd")
 const BettingKeypadControllerScript = preload("res://casino/terminals/components/betting_keypad_controller.gd")
 
 signal player_state_changed(peer_id: int, player_state: Dictionary)
@@ -260,6 +261,46 @@ func _apply_local_player_presentation(peer_id: int, player_state: Dictionary) ->
 	var visuals: Node = get_node_or_null("Visuals")
 	if visuals != null and visuals.has_method("apply_player_state"):
 		visuals.call("apply_player_state", player_state)
+	_update_local_terminal_display(player_state)
+
+func _update_local_terminal_display(player_state: Dictionary) -> void:
+	var world_screen: Node = get_node_or_null("SlimWorldScreen/WorldScreen")
+	if world_screen == null or not world_screen.has_method("set_content"):
+		return
+	var tile_number: int = int(player_state.get("tile", 0))
+	var stake: int = int(player_state.get("stake", 0))
+	var status: String = str(player_state.get("status", "active"))
+	var header: String = "CHICKEN CROSS"
+	var body: String = ""
+	var prompt: String = ""
+	if status == "failed":
+		body = "TILE %02d / %02d\\nCHICKEN LOST\\nWAGER LOST" % [tile_number, Rules.TILE_COUNT]
+		prompt = "ROUND RESOLVED"
+	elif status == "cashed_out":
+		var multiplier: float = float(player_state.get("multiplier", 0.0))
+		var gross_return: int = int(player_state.get("gross_return", 0))
+		body = "SAFE AT TILE %02d / %02d\\nRETURN %.1fX\\nPAYOUT $%s" % [tile_number, Rules.TILE_COUNT, multiplier, _format_currency(gross_return)]
+		prompt = "CASH OUT COMPLETE"
+	elif tile_number <= 0:
+		body = "WAGER LOCKED\\nREADY TO CROSS\\n12 TILES AHEAD"
+		prompt = "CROSS TO BEGIN"
+	else:
+		var next_tile: int = mini(tile_number + 1, Rules.TILE_COUNT)
+		var risk: float = Rules.failure_chance_for_tile(next_tile) * 100.0
+		var multiplier: float = Rules.multiplier_for_tile(tile_number)
+		var gross_return: int = Rules.gross_return_for_stake(stake, tile_number)
+		body = "SAFE TILE %02d / %02d\\nNEXT RISK %.0f%%\\nCASH OUT %.1fX  $%s" % [tile_number, Rules.TILE_COUNT, risk, multiplier, _format_currency(gross_return)]
+		prompt = "CROSS FOR MORE  /  CASH OUT"
+	world_screen.call("set_content", header, body, prompt)
+
+func _format_currency(amount: int) -> String:
+	var raw: String = str(maxi(amount, 0))
+	var formatted: String = ""
+	for index: int in range(raw.length()):
+		if index > 0 and (raw.length() - index) % 3 == 0:
+			formatted += ","
+		formatted += raw.substr(index, 1)
+	return formatted
 
 @rpc("authority", "call_remote", "reliable")
 func _receive_player_state(peer_id: int, player_state: Dictionary) -> void:
