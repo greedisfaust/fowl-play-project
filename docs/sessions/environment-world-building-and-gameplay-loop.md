@@ -9,7 +9,7 @@ Base docs: `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `
 
 ## Current state (rewrite every session)
 
-- Branch `environment/world-building-and-gameplay-loop` is active; latest verified head before this slice is `353fbb5b1bf971f1c06fa94f0cbcd73203af3d9e`.
+- Branch `environment/world-building-and-gameplay-loop` is active; latest verified head before this slice is `2d56f1f28ac56be358be086217753416a7b91eb7`.
 - Persistent Main owns player spawning across Apartment/Casino world swaps. Lobby HOST/JOIN/LEAVE and Registration terminals use the existing Network, PlayerIdentity, Interactable, and InteractiveTerminal systems.
 - Session cleanup is implemented: Network shutdown clears local run progression, wallet/day state, and daily game selection. Failed connection recovery is user-verified; this slice extends local-player restoration to every offline session shutdown, including host departure and intentional leave.
 - Shared wallet and generic script-only `BaseTable` controller are implemented. Casino wallet/BaseTable, RunManager, and CasinoDayManager checks were USER VERIFIED passing in Godot 4.7.2.
@@ -38,7 +38,7 @@ Base docs: `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `
 
 ## Exact next step
 
-Run the MainController and lobby terminal checks after pulling the session-end recovery update. Then perform separate-instance ENet verification: host/client spawn, late join, disconnect/rejoin, host shutdown, and four-player capacity. The current automated checks cover local lifecycle recovery, not the complete multi-process ENet lifecycle. The production game roster currently has Chicken Cross only; the other eleven game names/IDs have not been finalized. Do not invent them.
+Run `tests/run_multiplayer_local_checks.bat` and complete `docs/NETWORK_MULTIPLAYER_VERIFICATION.md` with two to five local game instances. This is a real ENet smoke test, not an automated regression test. The existing MainController/lobby checks cover local lifecycle recovery, not multi-process networking. The production game roster currently has Chicken Cross only; the other eleven game names/IDs have not been finalized. Do not invent them.
 
 ## Waiting on the user
 
@@ -145,6 +145,13 @@ Run the MainController and lobby terminal checks after pulling the session-end r
 > Read `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `docs/PROJECT_STATE.md`, and this session file. Verify the branch and files against GitHub and the local checkout. Recap in at most eight lines and wait for the user's go before implementing.
 
 ## Session log
+
+### Session 7 — 2026-11-22 — multiplayer verification preparation
+- Audited Network, MainController, player spawning, Apartment spawn markers, and Godot 4.7 multiplayer replication behavior.
+- Confirmed Main is the project startup scene; Apartment has four MainController `SpawnPoints`. Host creates the peer roster and uses the existing MultiplayerSpawner for authoritative player spawns; ENet server capacity is three clients plus host.
+- Confirmed Godot 4.7 MultiplayerSpawner tracks spawned nodes for new peers, and the MultiplayerAPI emits peer_connected on the server and to the newly connected peer for existing members. Late-join replication is designed to replay currently tracked spawned nodes; verify it in the real test rather than adding a second custom spawn system.
+- Added a repeatable local multi-instance launch helper and a manual lifecycle checklist covering host/client, late join, disconnect/rejoin, four-player capacity, fifth-player rejection, and host departure. No gameplay scripts or scene files changed.
+- Next: user runs the local ENet checklist and reports any failing step; fix only observed failures.
 
 ### Session 6 — 2026-11-22 — restore local player after every session shutdown
 - Continued the multiplayer lifecycle audit after the user verified the lobby and MainController checks passing in Godot 4.7.2.
