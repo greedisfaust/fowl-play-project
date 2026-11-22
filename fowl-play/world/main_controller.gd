@@ -209,13 +209,40 @@ func _perform_transition(destination: int, packed_scene: PackedScene) -> void:
 func _refresh_players_for_world() -> void:
 	if not _has_active_world or not is_instance_valid(_players):
 		return
-	var spawn_points: Node3D = active_world_instance.get_node_or_null("SpawnPoints") as Node3D
-	if spawn_points == null or spawn_points.get_child_count() == 0:
-		push_warning("World %s needs SpawnPoints with Marker3D children; player spawning is waiting." % active_world_instance.name)
+	var spawn_points: Node3D = _get_player_spawn_points()
+	if spawn_points == null:
+		push_warning("World %s has no populated player spawn container. Checked SpawnPoints, LobbySpawnPoints, and PlayerSpawnPoints." % active_world_instance.name)
 		return
 
 	_place_existing_players(spawn_points)
 	_spawn_connected_players(spawn_points)
+
+
+## World scenes use different authored names for player spawn markers.
+## Ignore empty placeholder containers and select the first populated marker group.
+func _get_player_spawn_points() -> Node3D:
+	if not _has_active_world or not is_instance_valid(active_world_instance):
+		return null
+	var candidate_names: PackedStringArray = PackedStringArray([
+		"SpawnPoints",
+		"LobbySpawnPoints",
+		"PlayerSpawnPoints"
+	])
+	for candidate_name: String in candidate_names:
+		var candidate: Node3D = active_world_instance.get_node_or_null(candidate_name) as Node3D
+		if _count_spawn_markers(candidate) > 0:
+			return candidate
+	return null
+
+
+func _count_spawn_markers(spawn_points: Node3D) -> int:
+	if spawn_points == null:
+		return 0
+	var marker_count: int = 0
+	for child: Node in spawn_points.get_children():
+		if child is Marker3D:
+			marker_count += 1
+	return marker_count
 
 
 func _place_existing_players(spawn_points: Node3D) -> void:
@@ -289,7 +316,7 @@ func _restore_local_player_after_session_end() -> void:
 func _on_peer_connected(peer_id: int) -> void:
 	if not _can_spawn_players() or not _has_active_world:
 		return
-	var spawn_points: Node3D = active_world_instance.get_node_or_null("SpawnPoints") as Node3D
+	var spawn_points: Node3D = _get_player_spawn_points()
 	_spawn_player.call_deferred(peer_id, spawn_points)
 
 
@@ -309,7 +336,7 @@ func _spawn_player(peer_id: int, spawn_points: Node3D) -> void:
 		return
 	if spawn_points == null:
 		return
-	var slot: int = _find_available_spawn_slot(spawn_points.get_child_count())
+	var slot: int = _find_available_spawn_slot(_count_spawn_markers(spawn_points))
 	if slot < 0:
 		if _debug_hub != null:
 			_debug_hub.call("warn", &"net", "No spawn slot available for peer %d." % peer_id)
@@ -336,7 +363,7 @@ func _create_player(data: Variant) -> Node:
 	var slot: int = int(spawn_data.get("slot", -1))
 	if peer_id <= 0:
 		return null
-	var spawn_points: Node3D = active_world_instance.get_node_or_null("SpawnPoints") as Node3D if is_instance_valid(active_world_instance) else null
+	var spawn_points: Node3D = _get_player_spawn_points()
 	var marker: Marker3D = _get_spawn_marker(spawn_points, slot)
 	if marker == null:
 		push_warning("Rejected player spawn for peer %d: invalid spawn slot %d." % [peer_id, slot])
@@ -354,9 +381,17 @@ func _create_player(data: Variant) -> Node:
 
 
 func _get_spawn_marker(spawn_points: Node3D, slot: int) -> Marker3D:
-	if spawn_points == null or slot < 0 or slot >= spawn_points.get_child_count():
+	if spawn_points == null or slot < 0:
 		return null
-	return spawn_points.get_child(slot) as Marker3D
+	var marker_index: int = 0
+	for child: Node in spawn_points.get_children():
+		var marker: Marker3D = child as Marker3D
+		if marker == null:
+			continue
+		if marker_index == slot:
+			return marker
+		marker_index += 1
+	return null
 
 
 func _create_transition_overlay() -> void:
