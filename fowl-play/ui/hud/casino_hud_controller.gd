@@ -427,6 +427,12 @@ func _connect_focus_sources() -> void:
 		if is_instance_valid(focus_node) and focus_node.has_signal("focus_target_changed"):
 			if not focus_node.focus_target_changed.is_connected(_on_focus_target_changed):
 				focus_node.focus_target_changed.connect(_on_focus_target_changed)
+		var carrier: Node = player.get("carrier") as Node
+		if is_instance_valid(carrier):
+			if carrier.has_signal("carry_started") and not carrier.carry_started.is_connected(_on_carry_started_for_prompt):
+				carrier.carry_started.connect(_on_carry_started_for_prompt)
+			if carrier.has_signal("carry_ended") and not carrier.carry_ended.is_connected(_on_carry_ended_for_prompt):
+				carrier.carry_ended.connect(_on_carry_ended_for_prompt)
 		_refresh_action_prompt()
 		return
 
@@ -479,3 +485,11 @@ func set_modifier_status(blessed_player: String, watched_player: String) -> void
 	_blessed_label.text = "BLESSED — %s" % blessed_player if not blessed_player.is_empty() else "BLESSED —"
 	_watched_label.text = "WATCHED — %s" % watched_player if not watched_player.is_empty() else "WATCHED —"
 	_modifier_panel.visible = not blessed_player.is_empty() or not watched_player.is_empty()
+
+
+func _on_carry_started_for_prompt(_item: Node3D) -> void:
+	_refresh_action_prompt()
+
+
+func _on_carry_ended_for_prompt() -> void:
+	_refresh_action_prompt()
