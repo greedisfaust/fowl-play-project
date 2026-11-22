@@ -154,10 +154,19 @@ func _refresh_display() -> void:
 	var main_size: int = maxi(roundi(float(base_size) * main_text_scale), 8)
 	var status_size: int = maxi(roundi(float(base_size) * status_text_scale), 8)
 
-	var header: String = "[table=2][cell][color=%s][font_size=%d][b]ELEVATOR STATUS[/b][/font_size][/color][/cell][cell align=right][color=%s][font_size=%d][b]TEAM SIZE %d[/b][/font_size][/color][/cell][/table]" % [
-		COLOR_HEADER, header_size, COLOR_TEXT, header_size, total_players
+	var left_header: String = "ELEVATOR STATUS"
+	var right_header: String = "TEAM SIZE %d" % total_players
+	var header_columns: int = 30
+	if _screen_text.terminal_font != null:
+		var character_width: float = _screen_text.terminal_font.get_string_size("M", HORIZONTAL_ALIGNMENT_LEFT, -1, header_size).x
+		if character_width > 0.0:
+			var horizontal_padding: float = float(header_size) * _screen_text.content_padding_ratio * 2.0
+			header_columns = maxi(1, floori((_screen_text.size.x - horizontal_padding) / character_width))
+	var header_gap: int = maxi(2, header_columns - left_header.length() - right_header.length())
+	var header: String = "[color=%s][font_size=%d][b]%s%s%s[/b][/font_size][/color]" % [
+		COLOR_HEADER, header_size, left_header, " ".repeat(header_gap), right_header
 	]
-	var count_line: String = "[center][font_size=%d][b]INSIDE [color=%s]%d[/color] / %d[/b][/font_size][/center]" % [
+	var count_line: String = "[font_size=%d][b]INSIDE [color=%s]%d[/color] / %d[/b][/font_size]" % [
 		main_size, count_color, players_inside, total_players
 	]
 	var status_line: String = "[center][color=%s][font_size=%d][b]%s[/b][/font_size][/color][/center]" % [
