@@ -1,8 +1,8 @@
 # Fowl Play — Project State
 
-**Status:** Casino Foundation & World Gameplay Loop is active on `environment/world-building-and-gameplay-loop`. Phase 0 audit and architecture specification are complete. The host-authoritative shared wallet and script-only BaseTable lifecycle controller are implemented. USER VERIFIED: wallet and BaseTable headless suites pass in Godot 4.7.2. Chicken Cross pure rules and per-player round-state model are implemented under `casino/tables/chicken_cross/`; its focused test is awaiting user execution.
+**Status:** Casino Foundation & World Gameplay Loop is active on `environment/world-building-and-gameplay-loop`. The host-authoritative wallet, BaseTable lifecycle, Chicken Cross rules/round model/table adapter, and wager keypad are implemented. Run/day progression now connects the five-minute timer, quota, early departure, carried wallet, one-time House continuation, Day 10 replay, victory and game over. The casino spawner has a one-table Chicken Cross development fallback while the 12-game roster is incomplete. CasinoHUD has been refined to the user's terminal-style specification. New/expanded headless checks are authored but await user execution in Godot 4.7.2; no scene files were edited.
 
-## Last updated (2026-11-21; casino wallet + BaseTable test verification)
+## Last updated (2026-11-22; casino inner/outer loop integration)
 
 - Current branch: `environment/world-building-and-gameplay-loop`. Latest Chicken Cross rules/model commit: `6b4ce2b7ca39c117835bc5337bdb6fc6f9e01521`. Shared wallet and BaseTable scripts/tests exist; physical casino scenes remain editor-authored and have not started.
 - Godot 4.7 project: `fowl-play/`, using Jolt Physics, Forward+, and D3D12.
@@ -64,7 +64,7 @@ Casino foundation decisions and open questions are tracked in [the active casino
 
 The user also confirmed the latest player-color implementation works in-game. This is user verification, not a claim that the assistant ran Godot tests. Existing automated test stages and any unconfirmed WorldScreen visual checks remain recorded as pending rather than being silently marked passed.
 
-**Active feature:** Casino Foundation & World Gameplay Loop, branch `environment/world-building-and-gameplay-loop`. Shared wallet, BaseTable lifecycle, and Chicken Cross pure rules/model are implemented. Chicken Cross network/table integration is next; physical casino scenes remain editor-authored. See [the active feature session](sessions/environment-world-building-and-gameplay-loop.md).
+**Active feature:** Casino Foundation & World Gameplay Loop, branch `environment/world-building-and-gameplay-loop`. Chicken Cross is the reference playable table and can now spawn alone as a development fallback. Run/day outcomes, continuation policy, shared wallet replication, and HUD integration are in source. Run fowl-play/tests/run_game_loop_checks.bat and complete the two-instance in-game loop verification. Physical scene construction remains editor-authored. See [the active feature session](sessions/environment-world-building-and-gameplay-loop.md).
 
 ## Historical verification notes
 
