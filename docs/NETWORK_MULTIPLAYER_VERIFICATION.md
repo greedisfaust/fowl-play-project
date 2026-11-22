@@ -23,6 +23,10 @@ The project starts at the Main scene. Apartment player markers are under `LobbyS
 - [ ] Move around on the host; client sees the host move.
 - [ ] Move around on the client; host sees the client move.
 - [ ] Both instances show the correct player identities/colors.
+- [ ] Player Color Panel dims and disables colors owned by other peers.
+- [ ] Selecting a free color updates the host-authoritative roster on both instances; the previous color becomes available.
+- [ ] A late joiner receives a distinct free color and sees all occupied buttons dimmed.
+- [ ] Lobby Host / Join screen can be focused and used with E/M1; the text fits the portrait display without oversized single-line wrapping.
 
 **Important:** The client seeing the host's already-existing player is the late-join snapshot check. Godot 4.7's MultiplayerSpawner tracks active spawned nodes and sends them to newly connected peers; the actual ENet run must confirm the project integration behaves as expected.
 
