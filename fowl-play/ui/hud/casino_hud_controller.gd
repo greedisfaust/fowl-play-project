@@ -35,6 +35,20 @@ var _day_manager: Node
 var _wallet: Node
 var _main_controller: Node
 var _last_day_snapshot: Dictionary = {}
+var _network: Node
+var _players_root: Node
+var _local_player: Node
+var _contributions: Dictionary = {}
+var _counted_wagers: Dictionary = {}
+var _current_contribution_day: int = 0
+var _last_quota_reached: bool = false
+var _contribution_list: VBoxContainer
+var _modifier_panel: VBoxContainer
+var _blessed_label: Label
+var _watched_label: Label
+var _action_prompt: Label
+var _announcement_label: Label
+var _announcement_tween: Tween
 
 
 func _ready() -> void:
@@ -59,6 +73,8 @@ func _ready() -> void:
 
 	_apply_typography()
 	_connect_services()
+	_build_runtime_hud_sections()
+	_connect_focus_sources()
 	_refresh_all()
 	call_deferred("_refresh_visibility")
 
@@ -107,6 +123,16 @@ func _connect_services() -> void:
 		_day_manager.day_state_changed.connect(_on_day_state_changed)
 	if _wallet.has_signal("wallet_changed"):
 		_wallet.wallet_changed.connect(_on_wallet_changed)
+	if _wallet.has_signal("wager_changed"):
+		_wallet.wager_changed.connect(_on_wager_changed)
+	if _day_manager.has_signal("day_finished"):
+		_day_manager.day_finished.connect(_on_day_finished)
+	_network = get_node_or_null("/root/Network")
+	if is_instance_valid(_network) and _network.has_signal("identity_roster_changed"):
+		_network.identity_roster_changed.connect(_on_identity_roster_changed)
+	_players_root = get_node_or_null("../Players")
+	if is_instance_valid(_players_root) and _players_root.has_signal("child_entered_tree"):
+		_players_root.child_entered_tree.connect(_on_player_added)
 	if is_instance_valid(_main_controller) and _main_controller.has_signal("world_changed"):
 		_main_controller.world_changed.connect(_on_world_changed)
 
@@ -121,6 +147,18 @@ func _disconnect_services() -> void:
 	if is_instance_valid(_wallet) and _wallet.has_signal("wallet_changed"):
 		if _wallet.wallet_changed.is_connected(_on_wallet_changed):
 			_wallet.wallet_changed.disconnect(_on_wallet_changed)
+	if is_instance_valid(_wallet) and _wallet.has_signal("wager_changed"):
+		if _wallet.wager_changed.is_connected(_on_wager_changed):
+			_wallet.wager_changed.disconnect(_on_wager_changed)
+	if is_instance_valid(_day_manager) and _day_manager.has_signal("day_finished"):
+		if _day_manager.day_finished.is_connected(_on_day_finished):
+			_day_manager.day_finished.disconnect(_on_day_finished)
+	if is_instance_valid(_network) and _network.has_signal("identity_roster_changed"):
+		if _network.identity_roster_changed.is_connected(_on_identity_roster_changed):
+			_network.identity_roster_changed.disconnect(_on_identity_roster_changed)
+	if is_instance_valid(_players_root) and _players_root.has_signal("child_entered_tree"):
+		if _players_root.child_entered_tree.is_connected(_on_player_added):
+			_players_root.child_entered_tree.disconnect(_on_player_added)
 	if is_instance_valid(_main_controller) and _main_controller.has_signal("world_changed"):
 		if _main_controller.world_changed.is_connected(_on_world_changed):
 			_main_controller.world_changed.disconnect(_on_world_changed)
@@ -135,6 +173,16 @@ func _on_run_state_changed(snapshot: Dictionary) -> void:
 
 
 func _on_day_state_changed(snapshot: Dictionary) -> void:
+	var new_day: int = int(snapshot.get("day_number", 0))
+	if new_day > 0 and new_day != _current_contribution_day:
+		_current_contribution_day = new_day
+		_contributions.clear()
+		_counted_wagers.clear()
+		_refresh_contribution_panel()
+	var quota_now: bool = bool(snapshot.get("quota_reached", false))
+	if quota_now and not _last_quota_reached:
+		_show_announcement("DAILY QUOTA REACHED")
+	_last_quota_reached = quota_now
 	_last_day_snapshot = snapshot.duplicate(true)
 	_refresh_day_display(snapshot)
 
@@ -217,3 +265,207 @@ func _format_time(total_seconds: int) -> String:
 	var minutes: int = floori(float(safe_seconds) / 60.0)
 	var seconds: int = safe_seconds % 60
 	return "%02d:%02d" % [minutes, seconds]
+
+
+
+func _build_runtime_hud_sections() -> void:
+	_modifier_panel = VBoxContainer.new()
+	_modifier_panel.name = "ModifierStatusPanel"
+	_modifier_panel.anchor_left = 1.0
+	_modifier_panel.anchor_right = 1.0
+	_modifier_panel.offset_left = -420.0
+	_modifier_panel.offset_top = 32.0
+	_modifier_panel.offset_right = -32.0
+	_modifier_panel.offset_bottom = 84.0
+	_modifier_panel.add_theme_constant_override("separation", 2)
+	add_child(_modifier_panel)
+	_blessed_label = _make_runtime_label("BLESSED —", 18, HORIZONTAL_ALIGNMENT_LEFT)
+	_watched_label = _make_runtime_label("WATCHED —", 18, HORIZONTAL_ALIGNMENT_RIGHT)
+	_modifier_panel.add_child(_blessed_label)
+	_modifier_panel.add_child(_watched_label)
+	_modifier_panel.visible = false
+
+	var contribution_root: VBoxContainer = VBoxContainer.new()
+	contribution_root.name = "ContributionPanel"
+	contribution_root.anchor_left = 1.0
+	contribution_root.anchor_right = 1.0
+	contribution_root.offset_left = -420.0
+	contribution_root.offset_top = 104.0
+	contribution_root.offset_right = -32.0
+	contribution_root.offset_bottom = 330.0
+	contribution_root.add_theme_constant_override("separation", 4)
+	add_child(contribution_root)
+	var heading: Label = _make_runtime_label("TODAY'S CONTRIBUTIONS", 15, HORIZONTAL_ALIGNMENT_LEFT)
+	contribution_root.add_child(heading)
+	_contribution_list = VBoxContainer.new()
+	_contribution_list.add_theme_constant_override("separation", 2)
+	contribution_root.add_child(_contribution_list)
+	_refresh_contribution_panel()
+
+	_action_prompt = _make_runtime_label("", 18, HORIZONTAL_ALIGNMENT_LEFT)
+	_action_prompt.anchor_top = 1.0
+	_action_prompt.anchor_bottom = 1.0
+	_action_prompt.offset_left = 32.0
+	_action_prompt.offset_top = -112.0
+	_action_prompt.offset_right = 720.0
+	_action_prompt.offset_bottom = -32.0
+	_action_prompt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	add_child(_action_prompt)
+
+	_announcement_label = _make_runtime_label("", 24, HORIZONTAL_ALIGNMENT_CENTER)
+	_announcement_label.anchor_left = 0.5
+	_announcement_label.anchor_right = 0.5
+	_announcement_label.offset_left = -360.0
+	_announcement_label.offset_top = 112.0
+	_announcement_label.offset_right = 360.0
+	_announcement_label.offset_bottom = 154.0
+	_announcement_label.modulate.a = 0.0
+	add_child(_announcement_label)
+
+
+func _make_runtime_label(label_text: String, size: int, alignment: HorizontalAlignment) -> Label:
+	var label: Label = Label.new()
+	label.text = label_text
+	label.horizontal_alignment = alignment
+	label.add_theme_font_size_override("font_size", size)
+	label.add_theme_color_override("font_color", COLOR_TIMER_NORMAL)
+	if terminal_font != null:
+		label.add_theme_font_override("font", terminal_font)
+	return label
+
+
+func _on_wager_changed(wager_id: String, status: String) -> void:
+	if status != "settled" or _counted_wagers.has(wager_id) or not is_instance_valid(_wallet):
+		return
+	var wager: Dictionary = _wallet.call("get_wager", wager_id)
+	if wager.is_empty():
+		return
+	if int(wager.get("peer_id", 0)) <= 0:
+		return
+	_counted_wagers[wager_id] = true
+	var peer_id: int = int(wager.get("peer_id", 0))
+	var net_result: int = int(wager.get("net_result", 0))
+	_contributions[peer_id] = int(_contributions.get(peer_id, 0)) + net_result
+	_refresh_contribution_panel()
+
+
+func _refresh_contribution_panel() -> void:
+	if not is_instance_valid(_contribution_list):
+		return
+	for child: Node in _contribution_list.get_children():
+		_contribution_list.remove_child(child)
+		child.queue_free()
+	if _contributions.is_empty():
+		var empty_label: Label = _make_runtime_label("NO SETTLED WAGERS", 14, HORIZONTAL_ALIGNMENT_LEFT)
+		_contribution_list.add_child(empty_label)
+		return
+	var peer_ids: Array = _contributions.keys()
+	peer_ids.sort()
+	for peer_value: Variant in peer_ids:
+		var peer_id: int = int(peer_value)
+		var amount: int = int(_contributions[peer_id])
+		var row: HBoxContainer = HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		var amount_label: Label = _make_runtime_label(_format_signed_money(amount), 16, HORIZONTAL_ALIGNMENT_LEFT)
+		amount_label.add_theme_color_override("font_color", COLOR_WALLET if amount > 0 else COLOR_QUOTA_UNMET if amount < 0 else COLOR_TIMER_NORMAL)
+		amount_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var nickname_label: Label = _make_runtime_label(_get_player_nickname(peer_id), 16, HORIZONTAL_ALIGNMENT_RIGHT)
+		var identity: Object = _get_player_identity(peer_id)
+		if identity != null and identity.has_method("get_color"):
+			nickname_label.add_theme_color_override("font_color", identity.call("get_color"))
+		row.add_child(amount_label)
+		row.add_child(nickname_label)
+		_contribution_list.add_child(row)
+
+
+func _format_signed_money(amount: int) -> String:
+	if amount > 0:
+		return "+" + _format_money(amount)
+	if amount < 0:
+		return "-" + _format_money(absi(amount))
+	return _format_money(0)
+
+
+func _get_player_identity(peer_id: int) -> Object:
+	if not is_instance_valid(_network) or not _network.has_method("get_player_identity"):
+		return null
+	return _network.call("get_player_identity", peer_id) as Object
+
+
+func _get_player_nickname(peer_id: int) -> String:
+	var identity: Object = _get_player_identity(peer_id)
+	if identity != null:
+		return str(identity.get("nickname"))
+	return "PLAYER %d" % peer_id
+
+
+func _on_identity_roster_changed() -> void:
+	_refresh_contribution_panel()
+
+
+func _on_player_added(_player: Node) -> void:
+	call_deferred("_connect_focus_sources")
+
+
+func _connect_focus_sources() -> void:
+	if not is_instance_valid(_players_root):
+		return
+	for player: Node in _players_root.get_children():
+		if not bool(player.get("is_local_player")):
+			continue
+		_local_player = player
+		var focus_node: Node = player.find_child("Focus", true, false)
+		if is_instance_valid(focus_node) and focus_node.has_signal("focus_target_changed"):
+			if not focus_node.focus_target_changed.is_connected(_on_focus_target_changed):
+				focus_node.focus_target_changed.connect(_on_focus_target_changed)
+		return
+
+
+func _on_focus_target_changed(target: Interactable) -> void:
+	_refresh_action_prompt(target)
+
+
+func _refresh_action_prompt(target: Interactable = null) -> void:
+	if not is_instance_valid(_action_prompt):
+		return
+	var prompt_parts: PackedStringArray = PackedStringArray()
+	if is_instance_valid(target) and target.enabled:
+		var controls: PackedStringArray = PackedStringArray()
+		if target.action_for_input(&"primary") != &"":
+			controls.append("M1")
+		if target.action_for_input(&"interact") != &"":
+			controls.append("E")
+		if not controls.is_empty():
+			prompt_parts.append("%s — %s" % [" / ".join(controls), target.prompt_text])
+	if is_instance_valid(_local_player) and _local_player.has_method("is_carrying") and bool(_local_player.call("is_carrying")):
+		prompt_parts.append("Q — DROP  |  HOLD Q — THROW")
+	else:
+		prompt_parts.append("Q — PUNCH  |  F — PARRY")
+	_action_prompt.text = "\n".join(prompt_parts)
+
+
+func _on_day_finished(day: int, success: bool, final_wallet: int, quota: int) -> void:
+	var result_text: String = "QUOTA MET" if success else "QUOTA MISSED"
+	_show_announcement("DAY %d — %s  |  WALLET %s / %s" % [day, result_text, _format_money(final_wallet), _format_money(quota)])
+
+
+func _show_announcement(message: String) -> void:
+	if not is_instance_valid(_announcement_label):
+		return
+	_announcement_label.text = message
+	if _announcement_tween != null and _announcement_tween.is_running():
+		_announcement_tween.kill()
+	_announcement_label.modulate.a = 0.0
+	_announcement_tween = create_tween()
+	_announcement_tween.tween_property(_announcement_label, "modulate:a", 1.0, 0.2)
+	_announcement_tween.tween_interval(2.8)
+	_announcement_tween.tween_property(_announcement_label, "modulate:a", 0.0, 0.5)
+
+
+## Future modifier service integration point. Call only with authoritative, real player assignments.
+func set_modifier_status(blessed_player: String, watched_player: String) -> void:
+	if not is_instance_valid(_modifier_panel):
+		return
+	_blessed_label.text = "BLESSED — %s" % blessed_player if not blessed_player.is_empty() else "BLESSED —"
+	_watched_label.text = "WATCHED — %s" % watched_player if not watched_player.is_empty() else "WATCHED —"
+	_modifier_panel.visible = not blessed_player.is_empty() or not watched_player.is_empty()
