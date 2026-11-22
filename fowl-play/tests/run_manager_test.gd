@@ -11,6 +11,13 @@ func _run() -> void:
 		_finish(false, "RunManager autoload was not registered.")
 		return
 
+	var transition_source: Node = Node.new()
+	transition_source.add_user_signal("world_changed", [
+		{"name": "previous_world", "type": TYPE_INT},
+		{"name": "current_world", "type": TYPE_INT},
+	])
+	manager.call("bind_main_controller", transition_source)
+
 	var start_result: Dictionary = manager.call("begin_new_run")
 	if not bool(start_result.get("ok", false)):
 		_finish(false, "A new run should begin successfully: %s" % str(start_result.get("reason", "")))
@@ -26,7 +33,8 @@ func _run() -> void:
 	if int(manager.call("get_departure_destination", 2)) != -1:
 		_finish(false, "The Apartment phase should reject a departure from the Rest Area.")
 		return
-	if not bool(manager.call("complete_world_transition", 0, 1)):
+	transition_source.emit_signal("world_changed", 0, 1)
+	if int(manager.call("get_snapshot").get("phase", -1)) != 2:
 		_finish(false, "Completing Apartment to Casino should advance the phase.")
 		return
 
@@ -43,13 +51,15 @@ func _run() -> void:
 	if int(manager.call("get_departure_destination", 1)) != 2:
 		_finish(false, "An unlocked Casino departure should lead to the Rest Area.")
 		return
-	if not bool(manager.call("complete_world_transition", 1, 2)):
+	transition_source.emit_signal("world_changed", 1, 2)
+	if int(manager.call("get_snapshot").get("phase", -1)) != 3:
 		_finish(false, "Completing Casino to Rest Area should advance the phase.")
 		return
 	if int(manager.call("get_departure_destination", 2)) != 1:
 		_finish(false, "Rest Area departure should lead to the next Casino day.")
 		return
-	if not bool(manager.call("complete_world_transition", 2, 1)):
+	transition_source.emit_signal("world_changed", 2, 1)
+	if int(manager.call("get_snapshot").get("current_day", 0)) != 2:
 		_finish(false, "Completing Rest Area to Casino should advance the day.")
 		return
 
@@ -62,7 +72,8 @@ func _run() -> void:
 		_finish(false, "A second run must not overwrite an active run.")
 		return
 
-	_finish(true, "Day 1 initialization, Apartment/Casino/Rest Area flow, quota gate, and day increment")
+	transition_source.free()
+	_finish(true, "Day 1 initialization, MainController arrival signal, Apartment/Casino/Rest Area flow, quota gate, and day increment")
 
 
 func _finish(passed: bool, message: String) -> void:
