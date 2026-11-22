@@ -29,6 +29,56 @@ func _ready() -> void:
 	_apply_existing_finishes()
 	_rebuild_details()
 
+## Resets the local player's lane before a new round begins.
+func reset_player_presentation() -> void:
+	_apply_player_tile_state(0, "active")
+
+## Lights the local player's safe path and marks the current/result tile.
+## The table calls this only for the local peer, so multiple players do not
+## overwrite one another's view on their own machines.
+func apply_player_state(player_state: Dictionary) -> void:
+	var tile_number: int = clampi(int(player_state.get("tile", 0)), 0, TILE_COUNT)
+	var status: String = str(player_state.get("status", "active"))
+	_apply_player_tile_state(tile_number, status)
+
+func _apply_player_tile_state(tile_number: int, status: String) -> void:
+	var lane: Node = get_node_or_null("TileLane")
+	if lane == null:
+		return
+	var neutral_color: Color = Color(0.055, 0.075, 0.082, 1.0)
+	var safe_color: Color = Color(0.055, 0.42, 0.24, 1.0)
+	var current_color: Color = Color(1.0, 0.66, 0.22, 1.0)
+	var failed_color: Color = Color(0.9, 0.12, 0.09, 1.0)
+	var cashed_color: Color = Color(0.86, 0.62, 0.22, 1.0)
+	for tile_index: int in range(1, TILE_COUNT + 1):
+		var tile_node: MeshInstance3D = lane.get_node_or_null("Tile_%02d" % tile_index) as MeshInstance3D
+		if not is_instance_valid(tile_node):
+			continue
+		var tile_color: Color = neutral_color
+		var lamp_color: Color = neutral_color
+		if tile_index < tile_number:
+			tile_color = safe_color
+			lamp_color = safe_color
+		elif tile_index == tile_number:
+			if status == "failed":
+				tile_color = failed_color
+				lamp_color = failed_color
+			elif status == "cashed_out":
+				tile_color = cashed_color
+				lamp_color = cashed_color
+			elif tile_number > 0:
+				tile_color = current_color
+				lamp_color = current_color
+		elif tile_index <= tile_number and status == "cashed_out":
+			tile_color = safe_color
+			lamp_color = safe_color
+		var tile_material: StandardMaterial3D = _make_material(tile_color, 0.18, 0.48, tile_color, 0.32 if tile_color != neutral_color else 0.0)
+		tile_node.material_override = tile_material
+		var lamp: MeshInstance3D = get_node_or_null("%s/RiskLamp_%02d" % [GENERATED_NAME, tile_index]) as MeshInstance3D
+		if is_instance_valid(lamp):
+			var lamp_material: StandardMaterial3D = _make_material(lamp_color, 0.12, 0.3, lamp_color, 1.6 if lamp_color != neutral_color else 0.0)
+			lamp.material_override = lamp_material
+
 func _apply_existing_finishes() -> void:
 	var stone: StandardMaterial3D = _make_material(dark_stone_color, 0.42, 0.28)
 	var leg_finish: StandardMaterial3D = _make_material(Color(0.075, 0.085, 0.095, 1.0), 0.62, 0.3)
