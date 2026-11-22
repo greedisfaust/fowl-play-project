@@ -77,6 +77,10 @@ func _exit_tree() -> void:
 func handle_button_input(button_id: StringName, peer_id: int) -> Dictionary:
 	if not multiplayer.is_server():
 		return _failure("Only the host processes keypad actions.")
+	# The offline MainController uses player ID zero internally. Normalize that
+	# local-only identity to Godot's offline multiplayer ID for the casino ledger.
+	if peer_id <= 0 and is_instance_valid(_network) and _network.get("peer") == null:
+		peer_id = multiplayer.get_unique_id()
 	if peer_id <= 0:
 		return _failure("The interacting player's peer ID is invalid.")
 	var action: String = _normalize_button_id(String(button_id))
