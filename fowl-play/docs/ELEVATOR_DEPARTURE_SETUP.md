@@ -1,8 +1,8 @@
 # Elevator DEPART Button — Request and Occupancy Validation
 
-This slice connects the existing physical `TerminalButton` (display text `DEPART`) to a
-host-authoritative departure-request interface. It does not implement day progression,
-quota rules, door-closing choreography, or world transitions yet.
+The existing physical `TerminalButton` (display text `DEPART`) submits a host-authoritative
+request. The controller validates occupancy, asks the persistent RunManager for the permitted
+destination, and runs the existing synchronized elevator departure choreography.
 
 ## Scene setup
 
@@ -37,25 +37,23 @@ Do not modify the existing scene's meshes or collision shapes.
 
 ## Progression boundary
 
-A valid press emits:
+A valid press emits `departure_requested(actor_peer_id)`. The controller's own progression
+handler forwards the request to `/root/RunManager`; no extra scene node or manual signal connection
+is required.
 
-```gdscript
-signal departure_requested(actor_peer_id: int)
-```
+- First valid departure from the Apartment starts a new run on Day 1 and targets the Casino.
+- Casino departure is rejected until RunManager's quota/deadline gate is unlocked.
+- An unlocked Casino departure targets the Rest Area.
+- Rest Area departure targets the Casino and increments the day on arrival.
+- MainController's persistent `world_changed` signal is bound to RunManager, so the progression
+  state commits after the destination world is installed, even though the old elevator scene unloads.
 
-The future outer-loop progression coordinator will connect to this signal and decide whether
-the current context permits departure (start a casino day, leave the casino after quota, or
-leave the Rest Area for the next day). Quota and day-state rules intentionally do not live in
-the elevator controller.
-
-If progression rejects the request, it calls `reject_departure_request(reason)`.
-After the complete group transition reaches its destination, the transition flow calls
-`finish_departure_request()`.
-
-No world transition is triggered by this slice alone.
+The elevator still owns occupancy, door closure, carry/ragdoll preparation, and the physical
+transition request. RunManager owns phase validation and destination choice.
 
 ## Debug watches
 
+- `run/active`, `run/day`, `run/phase`, `run/casino_departure_allowed` (RunManager)
 - `elevator/departure_ready`: whether all expected players are inside.
 - `elevator/departure_request_pending`: whether a valid request is awaiting progression.
 
@@ -82,5 +80,4 @@ everyone to finish recovering. Only then does it call persistent MainController.
 If preparation fails, it clears the pending state and reopens the doors. The MainController's
 existing fade and world swap performs the actual transition.
 
-No scene edits are needed. The progression coordinator is not implemented yet, so the button still
-waits for that coordinator to approve its departure_requested signal.
+No scene edits are needed. Run progression is now connected. The first Apartment departure starts Day 1; later departures follow the RunManager phase and quota gate.
