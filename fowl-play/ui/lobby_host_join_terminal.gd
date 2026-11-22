@@ -171,12 +171,14 @@ func _start_host() -> void:
 		_show_error("NETWORK AUTOLOAD IS UNAVAILABLE.")
 		return
 	_menu.close()
-	var result: int = int(_network.call("start_host"))
-	if result != OK:
-		_show_error("HOST START FAILED: %s" % error_string(result))
+	# Use the same deferred session transition as the H/J shortcuts.
+	# Direct start_host() skips shutdown/cleanup and can leave stale player nodes.
+	var result: String = str(_network.call("_request_session", true, ""))
+	if not result.begins_with("Starting host"):
+		_show_error(result.to_upper())
 		return
-	_status_presentation = "hosting"
-	_show_host_details()
+	_status_presentation = "starting"
+	screen.show_layout("information", "STARTING HOST", "OPENING LOCAL SESSION...", "PLEASE WAIT")
 
 func _show_host_details() -> void:
 	var addresses: PackedStringArray = PackedStringArray()
@@ -236,14 +238,15 @@ func _confirm_join() -> void:
 		return
 	_editing_address = false
 	_set_actor_movement_locked(false)
-	var result: int = int(_network.call("join_server", address))
-	if result != OK:
-		_show_error("JOIN FAILED TO START: %s" % error_string(result))
+	# Match the H/J shortcut path so stale offline/session players are
+	# detached before ENet assigns the new peer identity and spawns players.
+	var result: String = str(_network.call("_request_session", false, address))
+	if not result.begins_with("Joining "):
+		_show_error(result.to_upper())
 		return
 	_menu.close()
 	_status_presentation = "connecting"
 	screen.show_layout("information", "CONNECTING", "CONTACTING HOST\n%s:%d" % [address, int(_network.get("port"))], "WAIT...")
-	_status_presentation = "connecting"
 
 func _show_client_details() -> void:
 	screen.show_layout("success", CLIENT_HEADER, "CONNECTED TO HOST.", "ESC: BACK\nLEAVE: DISCONNECT")
