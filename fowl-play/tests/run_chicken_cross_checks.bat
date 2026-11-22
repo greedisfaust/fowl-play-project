@@ -36,17 +36,22 @@ echo Using Godot: "%GODOT%"
 echo Project: "%PROJECT%"
 echo.
 
-echo [1/3] Importing project resources...
+echo [1/4] Importing project resources...
 "%GODOT%" --headless --editor --path "%PROJECT%" --import
 if errorlevel 1 goto failed
 
 echo.
-echo [2/3] Running Chicken Cross rules checks...
+echo [2/4] Running Chicken Cross rules checks...
 "%GODOT%" --headless --path "%PROJECT%" --script res://tests/chicken_cross_rules_test.gd
 if errorlevel 1 goto failed
 
 echo.
-echo [3/3] Running Chicken Cross table checks...
+echo [3/4] Running betting keypad checks...
+"%GODOT%" --headless --path "%PROJECT%" --script res://tests/betting_keypad_test.gd
+if errorlevel 1 goto failed
+
+echo.
+echo [4/4] Running Chicken Cross table checks...
 "%GODOT%" --headless --path "%PROJECT%" --script res://tests/chicken_cross_table_test.gd
 if errorlevel 1 goto failed
 
