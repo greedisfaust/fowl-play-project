@@ -48,6 +48,8 @@ func _ready() -> void:
 			interactable.interacted.connect(_on_interactable_activated.bind(color_id, color_index))
 		_cache_button_materials(color_index, button)
 
+	if _buttons.size() != PlayerIdentity.palette_size():
+		push_warning("PlayerColorPanel mapped %d of %d color buttons. Check each button name or button_id." % [_buttons.size(), PlayerIdentity.palette_size()])
 	if is_instance_valid(_network) and _network.has_signal("identity_roster_changed"):
 		_network.connect("identity_roster_changed", _on_identity_roster_changed)
 	_refresh_panel()
