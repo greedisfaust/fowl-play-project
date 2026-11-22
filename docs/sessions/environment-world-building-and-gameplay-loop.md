@@ -146,6 +146,18 @@ Run `tests/run_multiplayer_local_checks.bat` and complete `docs/NETWORK_MULTIPLA
 
 ## Session log
 
+### Session 9 — 2026-11-22 — casino inner/outer loop integration
+- Connected run progression to recorded casino-day outcomes. Day 1 starts from the Apartment at the initial shared wallet; CasinoDayManager starts the five-minute clock on Casino entry, computes the dynamic quota, and unlocks early elevator departure once quota is reached. Returning to the Apartment records the result; the next Casino entry starts the next day from the carried wallet.
+- Implemented the one-time House continuation: on the first failed day, credit 50% of that day's starting wallet through CasinoWallet. A first Day 10 failure schedules one Day 10 replay; another failure ends the run. Successful Day 10 marks the contract fulfilled and prevents Day 11.
+- Added client replication for the complete shared wallet/wager ledger so all HUDs can show the authoritative balance and settled player contributions. Added the House-loan wallet transaction.
+- Added the incomplete-roster development fallback: with only Chicken Cross registered, every peer spawns one Chicken Cross table in the first enabled authored casino slot; the other five slots stay empty. The fallback is replaced by the full daily selection if/when the roster is complete.
+- Refined CasinoHUD in script without editing its scene: load JetBrains Mono by default, responsive full-rect anchors, Blessed/Watched side-by-side, contribution rows, exact key prompts, and gold quota glow. Preserves 32px margins, 16/42/30/36px main label sizes, left alignment except specified right-side elements, and casino-only visibility.
+- Hardened offline elevator/keypad identity handling for local peer ID zero. Elevator departure still requires the full connected roster inside; the existing MainController fade-to-black/world-swap/fade-from-black sequence and elevator door/recovery choreography are preserved.
+- Added fowl-play/tests/run_game_loop_checks.bat to run wallet, BaseTable, Chicken Cross rules/keypad/table, day timer, RunManager Day 1–10 outcomes, table spawner, and elevator occupancy/departure checks in one Godot headless pass.
+- Commits include 725043f, ab3ebc7, 3e0e558, 394ce9c, 1a448fa, f47a14c, c7cb409, 808f9e2, 7c3aea6, aa53031, 4002e9f, 78b6d10, ccd0886, f39ac45, 94b6188, 766ddb7, 400ce51, 9ee7a67, and 1e91922.
+- No .tscn files were changed. The assistant cannot run Godot here; all new/expanded tests remain unexecuted until the user runs the unified runner.
+- Next: user pulls and runs fowl-play/tests/run_game_loop_checks.bat. Then test the actual Main → Elevator → Casino → Chicken Cross wager/play/settlement → quota departure → Apartment → Day 2 sequence in Godot with two instances, and report the first observed failure. Do not ask the user to run five instances.
+
 ### Session 8 — 2026-11-22 — Chicken Cross round-start hardening
 - Re-audited the current Chicken Cross rules, round model, table adapter, keypad controller, authored table scene, and casino design contract. The old folder README incorrectly described the table adapter as future work; refreshed it to match the branch.
 - Hardened `ChickenCrossTable.start_round()`: it now validates each reserved wager and prepares the complete per-player round model before calling `BaseTable.start_round()` to lock stakes. Invalid duplicate-player or malformed wagers therefore leave the round OPEN and refundable instead of risking locked funds without a game model.
