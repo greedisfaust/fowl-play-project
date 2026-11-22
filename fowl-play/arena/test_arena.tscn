@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://ctr8im3lpy4pn"]
 
 [ext_resource type="Script" uid="uid://n6lbgq5xyb75" path="res://arena/test_arena.gd" id="1_555b8"]
+[ext_resource type="PackedScene" uid="uid://dckbpatdy1odv" path="res://ui/hud/casino_hud.tscn" id="2_ivh0u"]
 [ext_resource type="PackedScene" uid="uid://p4yueflmbgmy" path="res://ui/debug/debug_console.tscn" id="2_nr24g"]
 [ext_resource type="Script" uid="uid://46ghk5d3vk2r" path="res://interaction/debug_use_device.gd" id="3_6pj3w"]
 [ext_resource type="Script" uid="uid://dd5c04repreo1" path="res://interaction/interactable.gd" id="3_555b8"]
@@ -39,6 +40,8 @@ radius = 0.35
 
 [node name="TestArena" type="Node3D" unique_id=2059650083]
 script = ExtResource("1_555b8")
+
+[node name="CasinoHUD" parent="." unique_id=753540955 instance=ExtResource("2_ivh0u")]
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1645614701]
 transform = Transform3D(1, 0, 0, 0, 0.66412145, 0.74762475, 0, -0.74762475, 0.66412145, 0, 9.354715, 7.996682)
