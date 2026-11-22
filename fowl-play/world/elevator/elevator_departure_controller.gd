@@ -141,13 +141,16 @@ func accept_departure_request(destination_world: int) -> bool:
 
 
 func _execute_departure_sequence(destination_world: int) -> void:
-	if not await _close_doors_for_departure():
+	var doors_closed: bool = await _close_doors_for_departure()
+	if not doors_closed:
 		_abort_departure("elevator doors did not finish closing")
 		return
-	if not await _prepare_players_for_transition():
+	var players_prepared: bool = await _prepare_players_for_transition()
+	if not players_prepared:
 		_abort_departure("could not safely prepare every player for transport")
 		return
-	if not await _wait_for_all_players_recovered():
+	var players_recovered: bool = await _wait_for_all_players_recovered()
+	if not players_recovered:
 		_abort_departure("a player did not finish recovering before the departure timeout")
 		return
 	_request_pending = false
@@ -164,6 +167,7 @@ func _close_doors_for_departure() -> bool:
 		return false
 	if _door_controller.are_doors_open():
 		_door_controller.close_doors()
+	deadline = Time.get_ticks_msec() + int(door_timeout_seconds * 1000.0)
 	while (_door_controller.are_doors_open() or _door_controller.are_doors_moving()) and Time.get_ticks_msec() < deadline:
 		await get_tree().process_frame
 	return not _door_controller.are_doors_open() and not _door_controller.are_doors_moving()
