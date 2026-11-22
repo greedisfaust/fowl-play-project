@@ -1,6 +1,6 @@
-## Bridges the elevator's physical DEPART button to the future outer-loop progression manager.
-## Attach to a plain Node child named DepartureController under the Elevator root.
-## This validates occupancy only; quota/day rules and world transitions belong to progression.
+## Bridges the elevator's physical DEPART button to host-authoritative run progression.
+## Attach to the existing plain Node child named DepartureController under the Elevator root.
+## Occupancy and physical choreography live here; phase and destination rules live in RunManager.
 class_name ElevatorDepartureController
 extends Node
 
