@@ -70,6 +70,20 @@ func _run() -> void:
 		_finish(false, "A player was not removed after all of their bodies exited.")
 		return
 
+	var offline_player: FakePlayer = FakePlayer.new()
+	offline_player.input_peer_id = 0
+	offline_player.name = "OfflineLocalPlayer"
+	root.add_child(offline_player)
+	area.call("_on_body_entered", offline_player)
+	if not bool(area.call("is_player_inside", 0)):
+		_finish(false, "The offline local player (peer ID zero) should be tracked in the elevator.")
+		return
+	area.call("_on_body_exited", offline_player)
+	if bool(area.call("is_player_inside", 0)):
+		_finish(false, "The offline local player should be removed after exiting the elevator.")
+		return
+	offline_player.queue_free()
+
 	var carried_player: FakePlayer = FakePlayer.new()
 	carried_player.input_peer_id = 43
 	carried_player.name = "43"
