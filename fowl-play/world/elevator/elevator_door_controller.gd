@@ -18,10 +18,10 @@ const PANEL_NAMES: Array[String] = [
 	"RightOuterPanel"
 ]
 const OPEN_OFFSETS: Dictionary = {
-	"LeftOuterPanel": -1.2,
-	"LeftInnerPanel": -0.6,
-	"RightInnerPanel": 0.6,
-	"RightOuterPanel": 1.2
+	"LeftOuterPanel": -0.6,
+	"LeftInnerPanel": -1.2,
+	"RightInnerPanel": 1.2,
+	"RightOuterPanel": 0.6
 }
 
 var _is_open: bool = false
