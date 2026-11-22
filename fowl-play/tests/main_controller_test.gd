@@ -35,6 +35,15 @@ func _run() -> void:
 		main.queue_free()
 		_finish(false, "Offline host player was not created with peer ID 1.")
 		return
+	if not bool(main.call("can_transition_to", 1)):
+		main.queue_free()
+		_finish(false, "Main should accept an assigned, different destination.")
+		return
+	if bool(main.call("can_transition_to", 0)) or bool(main.call("can_transition_to", 3)):
+		main.queue_free()
+		_finish(false, "Main should reject the current world and invalid destination IDs.")
+		return
+
 	var network: Node = root.get_node("Network")
 	var movement_players: Dictionary = network.get("movement_players")
 	if movement_players.get(1) != player:
