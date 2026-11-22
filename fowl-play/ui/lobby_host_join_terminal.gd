@@ -250,15 +250,23 @@ func _request_leave() -> void:
 func _leave_network_session() -> void:
 	if not is_instance_valid(_network):
 		return
-	_was_client = bool(_network.get("is_client"))
 	_network.call("shutdown")
+	_was_client = false
 	_status_presentation = ""
 	_return_to_apartment()
 
 func _on_network_session_ended() -> void:
 	if _was_client and not _returning_to_apartment:
-		_was_client = false
-		_return_to_apartment()
+		_handle_network_session_ended_deferred.call_deferred()
+
+func _handle_network_session_ended_deferred() -> void:
+	if not _was_client or _returning_to_apartment or not is_instance_valid(_network):
+		return
+	_was_client = false
+	if str(_network.get("status")) == "failed":
+		_show_error("The host could not be reached. Check the address and try again.")
+		return
+	_return_to_apartment()
 
 func _return_to_apartment() -> void:
 	if _returning_to_apartment:
