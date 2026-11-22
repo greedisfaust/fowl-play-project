@@ -4,14 +4,14 @@ extends InteractiveTerminal
 
 const MAIN_MENU_HEADER: String = "MULTIPLAYER"
 const MAIN_MENU_DESCRIPTION: String = "START A GAME OR JOIN A FRIEND."
-const MAIN_MENU_PROMPT: String = "UP/DOWN: MOVE\nUSE / ENTER: SELECT"
+const MAIN_MENU_PROMPT: String = "UP / DOWN: MOVE\nENTER / E: SELECT"
 const JOIN_HEADER: String = "JOIN SESSION"
 const JOIN_PROMPT: String = "ENTER: JOIN\nESC: BACK"
 const HOST_HEADER: String = "SESSION HOSTING"
 const CLIENT_HEADER: String = "CONNECTED"
 const ERROR_HEADER: String = "CONNECTION FAILED"
 const LEAVE_CONFIRM_HEADER: String = "CLOSE HOST SESSION?"
-const LEAVE_CONFIRM_BODY: String = "Leaving closes this session and disconnects everyone."
+const LEAVE_CONFIRM_BODY: String = "Closing this session\ndisconnects every player."
 
 var _menu: ScreenMenu = ScreenMenu.new()
 var _network: Node = null
@@ -36,8 +36,14 @@ func _ready() -> void:
 		screen_interactable = get_node_or_null("../SlimWorldScreen/WorldScreen/ScreenHit/Interactable") as Interactable
 	if not is_instance_valid(proximity_area):
 		proximity_area = get_node_or_null("../ProximityArea") as Area3D
+	if is_instance_valid(screen_interactable):
+		# This is the dedicated lobby screen target. Keep it available through
+		# the same Focus/Network validation path as every other device.
+		screen_interactable.kind = Interactable.InteractionKind.USE
+		screen_interactable.enabled = true
 	super._ready()
 	if not is_instance_valid(screen) or not is_instance_valid(proximity_area) or not is_instance_valid(screen_interactable):
+		push_warning("LobbyHostJoinTerminal is missing a screen, screen Interactable, or proximity Area3D reference.")
 		set_process_input(false)
 		return
 	_network = get_node_or_null("/root/Network")
@@ -180,12 +186,12 @@ func _show_host_details() -> void:
 				addresses.append(address)
 	var address_text: String = "\n".join(addresses)
 	if address_text.is_empty():
-		address_text = "No LAN IPv4 address detected. Check your network adapter."
+		address_text = "NO LAN IPv4 FOUND.\nCHECK NETWORK ADAPTER."
 	var port_value: int = int(_network.get("port"))
 	screen.show_layout(
 		"success",
 		HOST_HEADER,
-		"SESSION OPEN\n\nLAN ADDRESSES:\n%s\n\nPORT: %d" % [address_text, port_value],
+		"SESSION OPEN\n\nLAN IPv4:\n%s\n\nPORT: %d" % [address_text, port_value],
 		"ESC: BACK TO MENU"
 	)
 
@@ -223,7 +229,7 @@ func _handle_address_key(event: InputEventKey) -> void:
 func _confirm_join() -> void:
 	var address: String = _address_buffer.strip_edges()
 	if not address.is_valid_ip_address() or not address.contains("."):
-		screen.show_layout("warning", "INVALID IP ADDRESS", "USE AN IPv4 ADDRESS.", "TYPE AGAIN\nESC: CANCEL")
+		screen.show_layout("warning", "INVALID IP ADDRESS", "USE IPv4 ONLY.", "TYPE AGAIN\nESC: CANCEL")
 		return
 	if not is_instance_valid(_network):
 		_show_error("NETWORK AUTOLOAD IS UNAVAILABLE.")
