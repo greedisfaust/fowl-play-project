@@ -34,13 +34,12 @@ func _run() -> void:
 	var rig: Node3D = carried_player.get_node("Rig") as Node3D
 	var chest_skeleton: Skeleton3D = rig.get_node("Skeleton3D") as Skeleton3D
 	var chest_bone_index: int = chest_skeleton.find_bone("Chest")
-	var expected_chest_basis: Basis = (
-		chest_skeleton.global_basis * chest_skeleton.get_bone_global_pose(chest_bone_index).basis
-	).orthonormalized()
+	var chest_physical_bone: PhysicalBone3D = rig.get_node("Skeleton3D/PhysicalBoneSimulator3D/Physical Bone Chest") as PhysicalBone3D
+	var expected_chest_basis: Basis = chest_physical_bone.global_basis.orthonormalized()
 	var reported_chest_basis: Basis = rig.call("get_chest_world_basis")
 	check(
 		reported_chest_basis.y.normalized().dot(expected_chest_basis.y.normalized()) > 0.999,
-		"ragdoll carry grip uses the rendered skeleton chest-up axis while host physics is active"
+		"host ragdoll carry grip follows the live physical chest basis while physics is active"
 	)
 	var hips: PhysicalBone3D = rig.get_node("Skeleton3D/PhysicalBoneSimulator3D/Physical Bone Hips") as PhysicalBone3D
 	var interactable: Interactable = carried_player.get_node("Interactable") as Interactable
