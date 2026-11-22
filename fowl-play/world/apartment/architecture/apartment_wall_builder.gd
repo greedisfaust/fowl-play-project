@@ -29,7 +29,7 @@ enum WallSet {
 
 @export_group("Hallway Window")
 @export var generate_hallway_window: bool = true
-@export_range(1.0, 30.0, 0.25) var hallway_window_width: float = 26.0
+@export_range(1.0, 32.0, 0.25) var hallway_window_width: float = 30.0
 @export_range(0.5, 2.0, 0.05) var hallway_window_sill_height: float = 0.9
 @export_range(2.0, 3.8, 0.05) var hallway_window_top: float = 2.7
 
