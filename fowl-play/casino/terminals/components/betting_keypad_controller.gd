@@ -102,10 +102,60 @@ func handle_button_input(button_id: StringName, peer_id: int) -> Dictionary:
 			_pending_digits = _pending_digits.left(_pending_digits.length() - 1) if _pending_digits.length() > 1 else "0"
 			_publish_snapshot()
 			return _success({"pending_amount": get_pending_wager_amount()})
+		"MIN":
+			return _apply_wager_preset(profile.get_effective_minimum())
+		"QUARTER", "1/4", "ONE_QUARTER", "QTR":
+			return _apply_balance_fraction(4)
+		"HALF", "1/2", "ONE_HALF":
+			return _apply_balance_fraction(2)
+		"MAX":
+			var maximum_value: int = profile.get_effective_maximum() if profile != null else 2147483647
+			return _apply_wager_preset(mini(maximum_value, _get_available_balance()))
 		"CONFIRM", "ENTER", "OK", "SUBMIT":
-			return _confirm_pending_wager(peer_id)
+			var confirmation: Dictionary = _confirm_pending_wager(peer_id)
+			_last_confirmation_status = "CONFIRMED %s" % _format_money(get_pending_wager_amount()) if bool(confirmation.get("ok", false)) else "REJECTED: %s" % str(confirmation.get("reason", "unknown error"))
+			_publish_snapshot()
+			if is_instance_valid(_debug_hub):
+				_debug_hub.call("log", &"wallet", "Keypad confirmation for peer %d: %s" % [peer_id, _last_confirmation_status])
+			return confirmation
 		_:
 			return _failure("Unknown keypad button ID '%s'." % action)
+
+func _apply_balance_fraction(divisor: int) -> Dictionary:
+	if divisor <= 0:
+		return _failure("Invalid wager preset.")
+	var amount: int = floori(float(_get_available_balance()) / float(divisor))
+	var maximum_value: int = profile.get_effective_maximum() if profile != null else 2147483647
+	amount = mini(amount, maximum_value)
+	return _apply_wager_preset(amount)
+
+
+func _apply_wager_preset(amount: int) -> Dictionary:
+	var minimum_value: int = profile.get_effective_minimum() if profile != null else 1
+	if _get_available_balance() < minimum_value:
+		return _failure("Available shared funds are below the minimum wager.")
+	var adjusted_amount: int = clampi(amount, minimum_value, mini(profile.get_effective_maximum(), _get_available_balance())) if profile != null else maxi(amount, minimum_value)
+	_pending_digits = str(adjusted_amount)
+	_publish_snapshot()
+	return _success({"pending_amount": adjusted_amount})
+
+
+func _get_available_balance() -> int:
+	if not is_instance_valid(_wallet) or not _wallet.has_method("get_snapshot"):
+		return 0
+	var snapshot: Dictionary = _wallet.call("get_snapshot")
+	return int(snapshot.get("available_balance", 0))
+
+
+func _format_money(amount: int) -> String:
+	var digits: String = str(maxi(amount, 0))
+	var formatted: String = ""
+	for index: int in range(digits.length()):
+		if index > 0 and (digits.length() - index) % 3 == 0:
+			formatted += ","
+		formatted += digits.substr(index, 1)
+	return "$" + formatted
+
 
 func get_pending_wager_amount() -> int:
 	return int(_pending_digits) if _pending_digits.is_valid_int() else 0
