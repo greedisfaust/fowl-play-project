@@ -24,6 +24,14 @@ class_name CasinoPerimeterBuilder
 @export var panel_color: Color = Color(0.095, 0.105, 0.118, 1.0)
 @export var molding_color: Color = Color(0.20, 0.15, 0.105, 1.0)
 
+@export_group("Elevator Opening")
+@export var generate_elevator_opening: bool = true
+@export_range(0.0, 35.0, 0.05) var elevator_opening_center_distance: float = 4.8
+@export_range(3.5, 5.0, 0.05) var elevator_opening_width: float = 3.9
+@export_range(2.8, 3.8, 0.05) var elevator_opening_height: float = 3.15
+
+const ELEVATOR_WALL_SEGMENT_INDEX: int = 1
+
 @export_group("Collision")
 @export var generate_collision: bool = true
 
@@ -103,10 +111,62 @@ func _build_wall_segment(
 	var tangent: Vector3 = edge / edge_length
 	var inward: Vector3 = tangent.cross(Vector3.UP).normalized()
 	var segment_basis: Basis = Basis(tangent, Vector3.UP, inward)
-	var midpoint: Vector3 = (start + end) * 0.5
 	var prefix: String = "Wall_%02d_" % segment_index
 
-	# Main uninterrupted stone wall. Collision is generated only for this solid wall.
+	# Segment 1 is the long rear wall, where the existing elevator faces.
+	# Leave a full-height opening centered on the elevator's committed position.
+	if segment_index == ELEVATOR_WALL_SEGMENT_INDEX:
+		var opening_start: float = elevator_opening_center_distance - elevator_opening_width * 0.5
+		var opening_end: float = elevator_opening_center_distance + elevator_opening_width * 0.5
+		opening_start = clampf(opening_start, 0.0, edge_length)
+		opening_end = clampf(opening_end, 0.0, edge_length)
+
+		if opening_start > 0.1:
+			_build_wall_piece(
+				parent, prefix + "Left", start, tangent, inward, opening_start,
+				segment_basis, wall_material, wainscoting_material, panel_material,
+				molding_material, scene_root
+			)
+		if edge_length - opening_end > 0.1:
+			_build_wall_piece(
+				parent, prefix + "Right", start + tangent * opening_end, tangent, inward,
+				edge_length - opening_end, segment_basis, wall_material,
+				wainscoting_material, panel_material, molding_material, scene_root
+			)
+
+		# Solid stone header above the opening; the space below remains clear.
+		var header_height: float = wall_height - elevator_opening_height
+		if header_height > 0.1:
+			var header_center: Vector3 = start + tangent * elevator_opening_center_distance
+			header_center += Vector3.UP * (floor_level + elevator_opening_height + header_height * 0.5)
+			_add_box(
+				parent, prefix + "ElevatorOpening_Header",
+				Vector3(elevator_opening_width, header_height, wall_thickness),
+				Transform3D(segment_basis, header_center),
+				wall_material, scene_root, true
+			)
+		return
+
+	_build_wall_piece(
+		parent, prefix, start, tangent, inward, edge_length, segment_basis,
+		wall_material, wainscoting_material, panel_material, molding_material, scene_root
+	)
+
+func _build_wall_piece(
+	parent: Node3D,
+	prefix: String,
+	start: Vector3,
+	tangent: Vector3,
+	inward: Vector3,
+	edge_length: float,
+	segment_basis: Basis,
+	wall_material: Material,
+	wainscoting_material: Material,
+	panel_material: Material,
+	molding_material: Material,
+	scene_root: Node
+) -> void:
+	var midpoint: Vector3 = start + tangent * (edge_length * 0.5)
 	var wall_center: Vector3 = midpoint + Vector3.UP * (floor_level + wall_height * 0.5)
 	_add_box(
 		parent, prefix + "Stone",
