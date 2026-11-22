@@ -77,25 +77,38 @@ func start_round(peer_id: int) -> Dictionary:
 			reserved_wagers.append(wager)
 	if reserved_wagers.is_empty():
 		return _failure("Chicken Cross needs at least one active wager.")
+
+	# Validate and prepare the game model BEFORE BaseTable locks the wallet.
+	# A malformed wager must never leave a live round with committed stakes
+	# but no usable Chicken Cross state.
 	var seen_peers: Dictionary = {}
+	var seen_wager_ids: Dictionary = {}
+	var model_wagers: Array[Dictionary] = []
 	for wager: Dictionary in reserved_wagers:
 		var bettor_id: int = int(wager.get("peer_id", 0))
-		if bettor_id <= 0 or seen_peers.has(bettor_id):
+		var wager_id: String = str(wager.get("wager_id", ""))
+		var stake: int = int(wager.get("stake", 0))
+		if bettor_id <= 0 or wager_id.is_empty() or stake <= 0:
+			return _failure("Every Chicken Cross wager needs a valid player, wager ID, and positive stake.")
+		if seen_peers.has(bettor_id):
 			return _failure("Chicken Cross allows exactly one active wager per participant.")
+		if seen_wager_ids.has(wager_id):
+			return _failure("Chicken Cross wager IDs must be unique.")
 		seen_peers[bettor_id] = true
+		seen_wager_ids[wager_id] = true
+		var model_wager: Dictionary = wager.duplicate(true)
+		model_wager["status"] = "locked"
+		model_wagers.append(model_wager)
+
+	var prepared_model: RefCounted = RoundModel.new()
+	var model_result: Dictionary = prepared_model.call("begin", model_wagers)
+	if not bool(model_result.get("ok", false)):
+		return _failure("Chicken Cross could not prepare its wagers: %s" % str(model_result.get("reason", "")))
+
 	var start_result: Dictionary = super.start_round(peer_id)
 	if not bool(start_result.get("ok", false)):
 		return start_result
-	var all_round_wagers: Array[Dictionary] = get_round_wagers()
-	var locked_wagers: Array[Dictionary] = []
-	for wager: Dictionary in all_round_wagers:
-		if str(wager.get("status", "")) == "locked":
-			locked_wagers.append(wager)
-	_round_model = RoundModel.new()
-	var model_result: Dictionary = _round_model.call("begin", locked_wagers)
-	if not bool(model_result.get("ok", false)):
-		push_error("Chicken Cross model initialization failed after wagers locked: %s" % str(model_result.get("reason", "")))
-		return _failure("Chicken Cross could not initialize its locked wagers.")
+	_round_model = prepared_model
 	for player_state: Dictionary in _round_model.call("get_players"):
 		_publish_player_state(int(player_state["peer_id"]))
 	return start_result
