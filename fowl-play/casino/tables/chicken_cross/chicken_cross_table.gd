@@ -274,22 +274,22 @@ func _update_local_terminal_display(player_state: Dictionary) -> void:
 	var body: String = ""
 	var prompt: String = ""
 	if status == "failed":
-		body = "TILE %02d / %02d\\nCHICKEN LOST\\nWAGER LOST" % [tile_number, Rules.TILE_COUNT]
+		body = "TILE %02d / %02d\nCHICKEN LOST\nWAGER LOST" % [tile_number, Rules.TILE_COUNT]
 		prompt = "ROUND RESOLVED"
 	elif status == "cashed_out":
 		var multiplier: float = float(player_state.get("multiplier", 0.0))
 		var gross_return: int = int(player_state.get("gross_return", 0))
-		body = "SAFE AT TILE %02d / %02d\\nRETURN %.1fX\\nPAYOUT $%s" % [tile_number, Rules.TILE_COUNT, multiplier, _format_currency(gross_return)]
+		body = "SAFE AT TILE %02d / %02d\nRETURN %.1fX\nPAYOUT $%s" % [tile_number, Rules.TILE_COUNT, multiplier, _format_currency(gross_return)]
 		prompt = "CASH OUT COMPLETE"
 	elif tile_number <= 0:
-		body = "WAGER LOCKED\\nREADY TO CROSS\\n12 TILES AHEAD"
+		body = "WAGER LOCKED\nREADY TO CROSS\n12 TILES AHEAD"
 		prompt = "CROSS TO BEGIN"
 	else:
 		var next_tile: int = mini(tile_number + 1, Rules.TILE_COUNT)
 		var risk: float = Rules.failure_chance_for_tile(next_tile) * 100.0
 		var multiplier: float = Rules.multiplier_for_tile(tile_number)
 		var gross_return: int = Rules.gross_return_for_stake(stake, tile_number)
-		body = "SAFE TILE %02d / %02d\\nNEXT RISK %.0f%%\\nCASH OUT %.1fX  $%s" % [tile_number, Rules.TILE_COUNT, risk, multiplier, _format_currency(gross_return)]
+		body = "SAFE TILE %02d / %02d\nNEXT RISK %.0f%%\nCASH OUT %.1fX  $%s" % [tile_number, Rules.TILE_COUNT, risk, multiplier, _format_currency(gross_return)]
 		prompt = "CROSS FOR MORE  /  CASH OUT"
 	world_screen.call("set_content", header, body, prompt)
 
