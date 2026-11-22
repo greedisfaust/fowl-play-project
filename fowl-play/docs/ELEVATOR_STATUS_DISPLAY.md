@@ -20,8 +20,8 @@ Do not add another screen, viewport, or occupancy Area3D.
 
 The display intentionally stays to three visual elements:
 
-- Top row: `ELEVATOR STATUS` on the left and `TEAM [count]` right-aligned.
-- Main row: a large, centered `INSIDE [count] / [total]`.
+- Top row: `ELEVATOR STATUS` on the left and `TEAM SIZE [count]` spaced toward the right edge.
+- Main row: a large, left-aligned `INSIDE [count] / [total]`.
   - Green count when every rostered player is inside.
   - Red count when one or more players are missing.
 - Bottom row: one concise state message, such as `WAITING FOR PLAYERS`,
