@@ -23,7 +23,7 @@ class_name CasinoWindowFacadeBuilder
 @export_range(0.025, 0.2, 0.005) var mullion_width: float = 0.075
 @export_range(0.025, 0.2, 0.005) var frame_depth: float = 0.12
 @export_range(0.025, 0.2, 0.005) var rail_height: float = 0.09
-@export_range(0.0, 1.0, 0.01) var pillar_clearance: float = 0.50
+@export_range(0.0, 1.0, 0.01) var pillar_clearance: float = 0.70
 
 @export_group("Upper Transom")
 @export var generate_upper_transom: bool = true
