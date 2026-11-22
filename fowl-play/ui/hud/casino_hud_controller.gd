@@ -252,10 +252,10 @@ func _refresh_quota_colors() -> void:
 func _refresh_visibility() -> void:
 	var in_casino: bool = false
 	if is_instance_valid(_main_controller):
-		in_casino = int(_main_controller.get("active_world")) == 1
+		in_casino = _main_controller.get("active_world") == 1
 	else:
 		var run_snapshot: Dictionary = _run_manager.call("get_snapshot")
-		in_casino = int(run_snapshot.get("phase", -1)) == PHASE_CASINO
+		in_casino = run_snapshot.get("phase", -1) == PHASE_CASINO
 	visible = in_casino
 
 
