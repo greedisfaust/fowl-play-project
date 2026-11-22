@@ -204,7 +204,33 @@ DECIDED: only unstarted rounds are refunded. Started rounds are automatically re
 - Consecutive-day repeats allowed.
 - No duplicate game type within a day.
 - Six physical table locations in the casino.
-- Day progression is ten days; old GDD numeric quota values are historical and not approved as current tuning.
+- Day progression is ten days. The current dynamic quota formula and multiplier schedule below are approved; historical GDD quota tables remain superseded.
+
+### Dynamic daily quota
+
+At the beginning of each casino day, use the actual shared wallet carried into that day:
+
+    quota = W + (W * 0.50) + (W * M)
+    quota = W * (1.50 + M)
+
+W is the starting shared wallet for that day. M is the additional multiplier for that day. Round the result up to the next whole wallet unit.
+
+| Day | Additional multiplier |
+|---:|---:|
+| 1 | 0.25 |
+| 2 | 0.28 |
+| 3 | 0.32 |
+| 4 | 0.36 |
+| 5 | 0.40 |
+| 6 | 0.45 |
+| 7 | 0.50 |
+| 8 | 0.55 |
+| 9 | 0.62 |
+| 10 | 0.70 |
+
+Example: Day 1 starts at 1,000, so quota = 1,000 + 500 + 250 = 1,750. If the team carries 2,000 out of Day 1, Day 2 starts at 2,000 and its quota is 2,000 + 1,000 + 560 = 3,560.
+
+The quota is a threshold, not a cap. The team may keep playing after reaching it. The full wallet remaining at the end of a successful day becomes the next day's starting wallet; it is never reset to 1,000 between days.
 - The one-time House continuation is consumed on the first failed quota of a run. The House loan equals 50% of the failed day's initial wallet and is added to the remaining wallet.
 - A later failed quota ends the run.
 - Day 10 failure repeats Day 10 if the one-time continuation is still unused; if already consumed, the run ends. There is no Day 11.
@@ -257,7 +283,7 @@ Do not implement every service at once. Build and test a vertical slice, then ex
 ## 13. Non-goals for the first slice
 
 - No implementation of all twelve games.
-- No final quota tuning or old GDD table import.
+- No import of historical GDD quota tables; the current dynamic quota schedule is documented above and remains available for future balance tuning.
 - No full casino environment scene.
 - No Rest Area, apartment, elevator, or Day 10 cinematic implementation.
 - No forced common betting terminal.

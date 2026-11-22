@@ -83,7 +83,7 @@ User pulls the persistent player-spawning commit and runs `tests/run_checks.ps1 
 - Rejoin: player spawns at elevator; prior wagers/state may not be restored. Exact identity/run continuity is open.
 - AFK: rare 30-minute timeout followed by comedic explosion/kick is an idea, not yet a technical contract.
 - Day 10 failure if continuation remains: repeat Day 10 with the one-time loan. If already consumed: run ends. Confirm the precise end-screen presentation later.
-- Quota formula/table values are not finalized in the current conversation; old GDD numbers are historical, not approved.
+- The current dynamic quota formula and Day 1–10 additional multipliers are approved and documented in Casino Foundation Design. Historical GDD quota tables are superseded.
 - Exact game roster names/rules and game-specific participation limits remain to be designed one by one.
 - Daily report screen layout, announcement count, and detailed stat schema remain open.
 

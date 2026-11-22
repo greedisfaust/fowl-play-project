@@ -193,6 +193,19 @@ func _execute_departure_sequence(destination_world: int) -> void:
 	if not players_recovered:
 		_abort_departure("a player did not finish recovering before the departure timeout")
 		return
+	if _main_controller.active_world == MainController.World.CASINO and destination_world == MainController.World.REST_AREA:
+		var casino_day_manager: Node = get_node_or_null("/root/CasinoDayManager")
+		if not is_instance_valid(casino_day_manager):
+			_abort_departure("CasinoDayManager is unavailable")
+			return
+		if bool(casino_day_manager.get("day_active")):
+			var day_end_result: Dictionary = casino_day_manager.call("finish_early_departure")
+			if not bool(day_end_result.get("ok", false)):
+				_abort_departure(str(day_end_result.get("reason", "casino day could not be completed")))
+				return
+		elif not bool(casino_day_manager.get("day_result_recorded")):
+			_abort_departure("casino day has no recorded deadline or early-departure result")
+			return
 	_request_pending = false
 	if is_instance_valid(_debug_hub):
 		_debug_hub.call("log", &"net", "Elevator departure approved; transitioning to world %d." % destination_world)

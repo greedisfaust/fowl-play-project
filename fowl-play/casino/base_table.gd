@@ -37,6 +37,7 @@ var _round_sequence: int = 1
 var _open_round_inactivity_remaining: float = 0.0
 
 func _ready() -> void:
+	add_to_group("casino_tables")
 	_wallet = get_node_or_null("/root/CasinoWallet")
 	_debug_hub = get_node_or_null("/root/DebugHub")
 	if _wallet == null:

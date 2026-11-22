@@ -13,6 +13,7 @@ enum Phase {
 }
 
 const MAX_DAYS: int = 10
+const INITIAL_RUN_WALLET: int = 1000
 const WORLD_APARTMENT: int = 0
 const WORLD_CASINO: int = 1
 const WORLD_REST_AREA: int = 2

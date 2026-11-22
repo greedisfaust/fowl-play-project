@@ -22,6 +22,10 @@ func _run() -> void:
 	if not bool(start_result.get("ok", false)):
 		_finish(false, "A new run should begin successfully: %s" % str(start_result.get("reason", "")))
 		return
+	var wallet: Node = root.get_node_or_null("CasinoWallet")
+	if not is_instance_valid(wallet) or int(wallet.call("get_snapshot").get("available_balance", -1)) != 1000:
+		_finish(false, "A fresh run should initialize the shared wallet to 1,000.")
+		return
 	var snapshot: Dictionary = manager.call("get_snapshot")
 	if not bool(snapshot.get("run_active", false)) or int(snapshot.get("current_day", 0)) != 1 or int(snapshot.get("phase", -1)) != 1:
 		_finish(false, "A new run should start active on Day 1 in the Apartment.")
