@@ -1,6 +1,6 @@
 # Chicken Cross — Rules and Round-State Contract
 
-Status: Chicken Cross rules and table integration checks user-verified PASS. Physical button/proximity hookups are implemented in the table script; scene references and in-game multiplayer presentation verification remain pending.
+Status: Original Chicken Cross rules and table integration checks user-verified PASS. The table adapter now prepares and validates its round model before locking wallet stakes. Expanded two-player settlement and duplicate-wager regression checks are authored but await local Godot execution. Physical button/proximity hookups are implemented in the table script; scene references and in-game multiplayer presentation verification remain pending.
 
 ## Approved game rules
 
