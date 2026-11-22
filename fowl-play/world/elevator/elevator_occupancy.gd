@@ -68,7 +68,7 @@ func _on_body_entered(body: Node3D) -> void:
 		return
 
 	var peer_id: int = int(player.get("input_peer_id"))
-	if peer_id <= 0:
+	if not _is_valid_peer_id(peer_id):
 		return
 
 	_add_occupant_body(peer_id, player, body.get_instance_id())
@@ -86,6 +86,15 @@ func _on_body_exited(body: Node3D) -> void:
 
 	var peer_id: int = int(player.get("input_peer_id"))
 	_remove_occupant_body(peer_id, player, body.get_instance_id())
+
+
+func _is_valid_peer_id(peer_id: int) -> bool:
+	if peer_id > 0:
+		return true
+	if peer_id < 0:
+		return false
+	var network: Node = get_node_or_null("/root/Network")
+	return is_instance_valid(network) and network.get("peer") == null
 
 
 func _add_occupant_body(peer_id: int, player: Node, body_id: int) -> void:
@@ -164,7 +173,7 @@ func _register_carried_player(carrier_peer_id: int, carrier_player: Node, item: 
 		return
 
 	var carried_peer_id: int = int(item.get("input_peer_id"))
-	if carried_peer_id <= 0 or carried_peer_id == carrier_peer_id:
+	if not _is_valid_peer_id(carried_peer_id) or carried_peer_id == carrier_peer_id:
 		return
 
 	var existing_link: Dictionary = _carried_peer_by_carrier.get(carrier_peer_id, {})
