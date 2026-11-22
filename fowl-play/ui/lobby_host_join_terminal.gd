@@ -3,15 +3,15 @@ class_name LobbyHostJoinTerminal
 extends InteractiveTerminal
 
 const MAIN_MENU_HEADER: String = "MULTIPLAYER"
-const MAIN_MENU_DESCRIPTION: String = "HOST A SESSION, JOIN A FRIEND, OR LEAVE YOUR CURRENT SESSION."
-const MAIN_MENU_PROMPT: String = "UP/DOWN MOVE  •  ENTER / USE SELECT  •  ESC BACK"
+const MAIN_MENU_DESCRIPTION: String = "START A GAME OR JOIN A FRIEND."
+const MAIN_MENU_PROMPT: String = "UP/DOWN: MOVE\nUSE / ENTER: SELECT"
 const JOIN_HEADER: String = "JOIN SESSION"
 const JOIN_PROMPT: String = "TYPE HOST IP  •  ENTER CONNECTS  •  ESC BACK"
 const HOST_HEADER: String = "SESSION HOSTING"
 const CLIENT_HEADER: String = "CONNECTED"
 const ERROR_HEADER: String = "CONNECTION FAILED"
 const LEAVE_CONFIRM_HEADER: String = "CLOSE HOST SESSION?"
-const LEAVE_CONFIRM_BODY: String = "Other players are connected. Leaving will close this host session and disconnect everyone. They can host or join another session afterward."
+const LEAVE_CONFIRM_BODY: String = "Leaving closes this session and disconnects everyone."
 
 var _menu: ScreenMenu = ScreenMenu.new()
 var _network: Node = null
@@ -30,6 +30,8 @@ func _ready() -> void:
 	# PackedScene instance does not restore its exported Node references.
 	if not is_instance_valid(screen):
 		screen = get_node_or_null("../SlimWorldScreen/WorldScreen") as WorldScreen
+	if is_instance_valid(screen):
+		screen.set_text_scale(0.5)
 	if not is_instance_valid(screen_interactable):
 		screen_interactable = get_node_or_null("../SlimWorldScreen/WorldScreen/ScreenHit/Interactable") as Interactable
 	if not is_instance_valid(proximity_area):
@@ -183,8 +185,8 @@ func _show_host_details() -> void:
 	screen.show_layout(
 		"success",
 		HOST_HEADER,
-		"YOUR SESSION IS OPEN.\n\nSHARE ONE OF THESE LAN ADDRESSES:\n%s\n\nPORT: %d" % [address_text, port_value],
-		"ESC BACK TO MENU  •  FRIENDS SELECT JOIN"
+		"SESSION OPEN\n\nLAN ADDRESSES:\n%s\n\nPORT: %d" % [address_text, port_value],
+		"ESC: BACK TO MENU"
 	)
 
 func _begin_address_entry() -> void:
@@ -238,7 +240,7 @@ func _confirm_join() -> void:
 	_status_presentation = "connecting"
 
 func _show_client_details() -> void:
-	screen.show_layout("success", CLIENT_HEADER, "YOU ARE CONNECTED TO THE HOST SESSION.", "ESC BACK TO MENU  •  LEAVE TO DISCONNECT")
+	screen.show_layout("success", CLIENT_HEADER, "YOU ARE CONNECTED TO THE HOST SESSION.", "ESC: BACK  •  LEAVE: DISCONNECT")
 
 func _request_leave() -> void:
 	if not is_instance_valid(_network) or _network.get("peer") == null:
