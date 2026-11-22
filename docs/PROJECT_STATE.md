@@ -353,6 +353,14 @@ The latest user-authored FAT and SLIM scenes were inspected at commit `61409bf`.
 - No scenes or global InputMap actions changed. Keyboard/gamepad/physical USE routing is deferred to the Registration Terminal input owner. Godot tests and rendered verification have not been run by the assistant.
 
 
+## Lobby device runtime integration
+
+- Lobby Host / Join now has a physical `ScreenHit/Interactable` on its SLIM WorldScreen, using the existing Focus/Interactable interaction path.
+- Its portrait display uses reduced text scale and compact, explicitly line-broken prompts to keep menu copy readable.
+- The Apartment's existing `PlayerColorPanel/ColorPanelController` node receives its runtime controller from MainController. Its ten authored TerminalButtons submit color selection through host-authoritative identity assignment.
+- Occupied colors are dimmed and disabled on every peer. A color becomes available again when its owner changes color or disconnects; late joiners receive the next free palette color.
+- Added `tests/m3_player_color_panel_test.gd` and the `player-color-panel` test stage. Godot execution and live host/client panel verification remain user-run.
+
 ## Registration Terminal foundation
 
 - Added RegistrationTerminal as a reusable local controller for the existing WorldScreen, ScreenMenu, PhysicalUseButton, Interactable, and host-authoritative PlayerIdentity systems.
