@@ -323,7 +323,7 @@ func _build_runtime_hud_sections() -> void:
 	add_child(_announcement_label)
 
 
-func _make_runtime_label(label_text: String, size: int, alignment: HorizontalAlignment) -> Label:
+func _make_runtime_label(label_text: String, size: int, alignment: int) -> Label:
 	var label: Label = Label.new()
 	label.text = label_text
 	label.horizontal_alignment = alignment
