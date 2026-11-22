@@ -9,8 +9,10 @@ Base docs: `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `
 
 ## Current state (rewrite every session)
 
-- Branch `environment/world-building-and-gameplay-loop` is active; W1 architecture and persistent player spawning are being added on top of the user scene commit `ddc186113aab03c95be087c7c30bcee79a201e94`.
-- Shared wallet and generic script-only `BaseTable` controller are implemented. Casino wallet/BaseTable, RunManager, and CasinoDayManager checks have been USER VERIFIED passing in Godot 4.7.2.
+- Branch `environment/world-building-and-gameplay-loop` is active; latest verified head before this slice is `e03fa2582af3bf8544c5c105671472134349ca94`.
+- Persistent Main owns player spawning across Apartment/Casino world swaps. Lobby HOST/JOIN/LEAVE and Registration terminals use the existing Network, PlayerIdentity, Interactable, and InteractiveTerminal systems.
+- Session cleanup is implemented: Network shutdown clears local run progression, wallet/day state, and daily game selection. This slice closes a failed-connection recovery gap so an unreachable host does not leave the local instance without an Apartment player.
+- Shared wallet and generic script-only `BaseTable` controller are implemented. Casino wallet/BaseTable, RunManager, and CasinoDayManager checks were USER VERIFIED passing in Godot 4.7.2.
 - CasinoManager selector foundation is implemented: typed game definitions, Chicken Cross production registration, incomplete-roster gate, host-authoritative six-of-twelve draw, stable daily selection, and reliable peer synchronization. Its test runner is awaiting user execution.
 - The project is Godot 4.7, typed GDScript, Jolt, ENet, max four players; `fowl-play/` is the Godot project.
 - Existing reusable foundations include `Interactable` / `Focus`, `Network`, `PlayerIdentity`, `DebugHub`, and the current player/nameplate presentation.
@@ -36,7 +38,7 @@ Base docs: `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `
 
 ## Exact next step
 
-User pulls the CasinoManager selector commit and runs `tests/run_casino_manager_checks.bat`. The production roster currently has Chicken Cross only; the other eleven game names/IDs have not been finalized. Do not invent them. Once the user and team define those games, register their CasinoGameDefinition resources so the automatic daily selection can activate.
+Continue multiplayer reliability verification before synchronized run startup: validate host/client spawn, late join, disconnect/rejoin, host shutdown, failed connection recovery, and four-player capacity in separate Godot instances. The current automated terminal/MainController checks cover UI contracts and local failure recovery, not the complete two-peer ENet lifecycle. The production game roster currently has Chicken Cross only; the other eleven game names/IDs have not been finalized. Do not invent them.
 
 ## Waiting on the user
 
@@ -143,6 +145,13 @@ User pulls the CasinoManager selector commit and runs `tests/run_casino_manager_
 > Read `CLAUDE.md`, `SESSION_MEMORY_RULES.md`, `docs/PROJECT_OVERVIEW.md`, `docs/PROJECT_STATE.md`, and this session file. Verify the branch and files against GitHub and the local checkout. Recap in at most eight lines and wait for the user's go before implementing.
 
 ## Session log
+
+### Session 5 — 2026-11-22 — failed connection recovery
+- Audited the actual Network, MainController, and LobbyHostJoinTerminal lifecycle after the user approved direct repository commits.
+- Found that Network connection failure called shutdown, which cleared MainController's player nodes; the terminal displayed an error but did not restore local Apartment play. Also found the terminal's deferred error handling depended on a per-frame client flag, which could miss an unusually fast failure.
+- Added deferred local-player restoration specifically for failed connection attempts and made terminal failure presentation inspect the final Network status rather than relying solely on the client flag.
+- Expanded MainController and lobby terminal regression tests; updated the lobby handoff documentation. No scene files changed. Godot tests remain unexecuted in the assistant environment.
+- Next: separate-instance host/client lifecycle verification (late join, disconnect/rejoin, host departure, and capacity).
 
 ### Session 4 — 2026-11-22 — persistent Main player spawning
 - Confirmed the user's Main hierarchy on GitHub: `WorldRoot`, `Players`, `MultiplayerSpawner`, and `DebugConsole` are present. The spawner is named `MultiplayerSpawner`; MainController configures its `spawn_path` to `../Players` at runtime.

@@ -256,14 +256,17 @@ func _leave_network_session() -> void:
 	_return_to_apartment()
 
 func _on_network_session_ended() -> void:
-	if _was_client and not _returning_to_apartment:
+	if not _returning_to_apartment:
 		_handle_network_session_ended_deferred.call_deferred()
 
 func _handle_network_session_ended_deferred() -> void:
-	if not _was_client or _returning_to_apartment or not is_instance_valid(_network):
+	if _returning_to_apartment or not is_instance_valid(_network):
+		return
+	var connection_failed: bool = str(_network.get("status")) == "failed"
+	if not _was_client and not connection_failed:
 		return
 	_was_client = false
-	if str(_network.get("status")) == "failed":
+	if connection_failed:
 		_show_error("The host could not be reached. Check the address and try again.")
 		return
 	_return_to_apartment()

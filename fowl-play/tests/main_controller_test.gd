@@ -82,6 +82,10 @@ func _run() -> void:
 		return
 	network.call("shutdown")
 	await process_frame
+	if players.get_child_count() != 0:
+		main.queue_free()
+		_finish(false, "Intentional session shutdown should clear the previous player before local recovery.")
+		return
 	var run_snapshot: Dictionary = run_manager.call("get_snapshot")
 	if bool(run_snapshot.get("run_active", true)) or int(run_snapshot.get("current_day", -1)) != 0 or int(run_snapshot.get("phase", -1)) != 0:
 		main.queue_free()
@@ -97,12 +101,14 @@ func _run() -> void:
 		main.queue_free()
 		_finish(false, "Network session end should clear the shared wallet ledger.")
 		return
-	main.call("_refresh_players_for_world")
+	# Exercise the same callback Godot emits when an ENet client cannot reach its host.
+	# Unlike an intentional leave, a failed attempt should restore local Apartment play.
+	network.call("_on_connection_failed")
 	await process_frame
 	await process_frame
 	if players.get_child_count() != 1 or players.get_node_or_null("1") == null:
 		main.queue_free()
-		_finish(false, "Disconnected local session should respawn one local player.")
+		_finish(false, "A failed connection should automatically restore one local Apartment player.")
 		return
 
 	main.queue_free()

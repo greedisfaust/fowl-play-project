@@ -8,7 +8,7 @@ The Apartment lobby uses `res://environment/terminals/lobby_host_join_terminal.t
 - HOST starts the existing ENet host and displays detected LAN IPv4 addresses plus the configured port. Share an address with friends on the same reachable network.
 - JOIN opens keyboard address entry. Enter confirms; Escape returns to the menu. A successful connection displays CONNECTED.
 - LEAVE disconnects the local peer and returns that instance to its local Apartment. A host with connected clients receives a second confirmation because closing the host also disconnects every client. Clients independently return to their own Apartment after the host disconnects.
-- A connection failure displays an error and allows returning to the menu.
+- A failed connection attempt displays an error and allows retrying. The persistent Main controller restores the local Apartment player after Network has finished clearing the failed peer's queued player nodes, so a refused/unreachable host does not strand the local instance without a player.
 
 ## Controls
 - Up / Down: select menu item.
@@ -18,7 +18,7 @@ The Apartment lobby uses `res://environment/terminals/lobby_host_join_terminal.t
 - While entering an address: digits and periods, Backspace, Enter, Escape.
 
 ## Network behavior and limitations
-The terminal calls the existing `Network.start_host()`, `Network.join_server(address)`, and `Network.shutdown()` APIs. It does not add a second networking layer. `MainController` now treats an `OfflineMultiplayerPeer` as eligible for local spawning even after the Network status becomes `disconnected`, so the player is recreated in their local Apartment after leaving. The host cannot migrate to another peer: if the host leaves, the session closes and connected clients are disconnected; each client then returns to its local Apartment. For internet play across different networks, the host may need router port forwarding or another network transport; the displayed LAN address is intended for reachable local networks.
+The terminal calls the existing `Network.start_host()`, `Network.join_server(address)`, and `Network.shutdown()` APIs. It does not add a second networking layer. `MainController` treats an `OfflineMultiplayerPeer` as eligible for local spawning even after the Network status becomes `disconnected`, so the player is recreated in their local Apartment after leaving. If an ENet connection attempt fails, MainController waits for queued player deletion and restores local Apartment play automatically; the terminal independently presents the connection error even if the failure arrives before its per-frame client-state tracking runs. The host cannot migrate to another peer: if the host leaves, the session closes and connected clients are disconnected; each client then returns to its local Apartment. For internet play across different networks, the host may need router port forwarding or another network transport; the displayed LAN address is intended for reachable local networks.
 
 ## Verification
 Run `tests/run_m3_lobby_host_join_checks.bat`. It follows the project's existing Steam Godot auto-detection flow, imports resources, and runs both the lobby terminal contract test and MainController's disconnect/respawn test. A parameterized PowerShell runner is also available at `tests/run_m3_lobby_host_join_checks.ps1`. Multiplayer host/client behavior still requires a two-instance in-game check.

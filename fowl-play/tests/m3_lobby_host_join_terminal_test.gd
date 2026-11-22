@@ -54,6 +54,13 @@ func _run() -> void:
 	_check(not "not-an-ip".is_valid_ip_address(), "Invalid host text should fail IP validation")
 	terminal.call("end_session")
 	_check(not bool(terminal.call("has_active_session")), "Closing the terminal should end the session")
+	var network: Node = root.get_node_or_null("Network")
+	if is_instance_valid(network):
+		network.set("status", "failed")
+		terminal.call("_on_network_session_ended")
+		await process_frame
+		_check(str(terminal.get("_status_presentation")) == "failed", "A failed connection should show an error even if the client flag was cleared before the deferred callback")
+		_check(screen.get_screen_text().get_parsed_text().contains("CONNECTION FAILED"), "Failed connection should display retry guidance")
 	terminal.queue_free()
 	actor.queue_free()
 	await process_frame
