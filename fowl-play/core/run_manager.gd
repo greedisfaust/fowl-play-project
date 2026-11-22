@@ -240,7 +240,7 @@ func _resolve_completed_casino_day() -> Dictionary:
 		return _success({"day": current_day, "phase": Phase.RUN_FAILED})
 
 	var starting_wallet: int = int(day_snapshot.get("starting_wallet", 0))
-	var loan_amount: int = floori(float(starting_wallet) * 0.5)
+	var loan_amount: int = ceili(float(starting_wallet) * 0.5)
 	if loan_amount <= 0:
 		return _failure("The House continuation loan is not valid for this starting wallet.")
 	if not is_instance_valid(_casino_wallet):
