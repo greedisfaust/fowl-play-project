@@ -5,6 +5,7 @@ extends Node3D
 
 const PLAYER_SCENE: PackedScene = preload("res://player/player.tscn")
 const TUNING = preload("res://core/tuning.gd")
+const PLAYER_COLOR_PANEL_CONTROLLER = preload("res://ui/player_color_panel.gd")
 
 enum World {
 	APARTMENT,
@@ -161,6 +162,7 @@ func _install_world(world: int, packed_scene: PackedScene) -> bool:
 		return false
 
 	world_instance.name = _world_name(world)
+	_install_lobby_device_controllers(world_instance)
 	_world_root.add_child(world_instance)
 
 	var previous_world: int = active_world if _has_active_world else -1
@@ -171,6 +173,16 @@ func _install_world(world: int, packed_scene: PackedScene) -> bool:
 	_refresh_players_for_world()
 	return true
 
+
+
+## The Apartment scene already authors a dedicated ColorPanelController node.
+## Attach its behavior here so the authored button hierarchy remains untouched.
+func _install_lobby_device_controllers(world_instance: Node3D) -> void:
+	if world_instance == null:
+		return
+	var color_panel_controller: Node = world_instance.get_node_or_null("LobbyDevices/PlayerColorPanel/ColorPanelController")
+	if is_instance_valid(color_panel_controller):
+		color_panel_controller.set_script(PLAYER_COLOR_PANEL_CONTROLLER)
 
 func _perform_transition(destination: int, packed_scene: PackedScene) -> void:
 	if _transition_in_progress:
