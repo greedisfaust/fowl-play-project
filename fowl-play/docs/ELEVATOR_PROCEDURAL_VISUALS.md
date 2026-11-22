@@ -42,9 +42,7 @@ piano-black lacquer, champagne brass, walnut accents, dark inset panels, and war
 
 ## Current scope
 
-This is the initial geometry and material pass only. Sliding-door animation, elevator buttons,
-occupancy tracking, network synchronization, and MainController transition integration are
-separate follow-up slices. No runtime or multiplayer behavior is claimed by this visual builder.
+This is the initial geometry and material pass only. Sliding-door animation is handled by the separate door controller below. Elevator occupancy is implemented by `world/elevator/elevator_occupancy.gd`; see [Elevator Occupancy Setup](ELEVATOR_OCCUPANCY_SETUP.md). Elevator buttons, host-authoritative group departure, network transition coordination, and MainController transition integration remain follow-up slices. No runtime or multiplayer behavior is claimed by this visual builder.
 
 
 ## Sliding door controller
