@@ -6,7 +6,7 @@ class_name CasinoFloorBuilder
 ## Attach to Architecture/FloorDetails. All coordinates are relative to Casino root.
 
 @export_group("Floor Surface")
-@export var floor_surface_height: float = 0.17
+@export var floor_surface_height: float = 0.156
 @export var gaming_stone_color: Color = Color(0.075, 0.082, 0.095, 1.0)
 @export var gaming_stone_variation: float = 0.012
 @export var bar_stone_color: Color = Color(0.105, 0.078, 0.058, 1.0)
