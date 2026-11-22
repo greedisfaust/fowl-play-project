@@ -2,6 +2,10 @@
 
 [ext_resource type="PackedScene" uid="uid://bohm84tw787n0" path="res://environment/kit/slim_world_screen.tscn" id="1_ttc7j"]
 [ext_resource type="Script" uid="uid://cu3kjcbnjsjpa" path="res://ui/lobby_host_join_terminal.gd" id="2_controller"]
+[ext_resource type="Script" path="res://interaction/interactable.gd" id="3_interactable"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_screen_hit"]
+size = Vector3(2.35, 3.1, 0.08)
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_proximity"]
 radius = 6.2
@@ -10,6 +14,17 @@ radius = 6.2
 
 [node name="SlimWorldScreen" parent="." unique_id=1216012003 instance=ExtResource("1_ttc7j")]
 display_size = Vector2(2.35, 3.1)
+
+[node name="ScreenHit" type="StaticBody3D" parent="SlimWorldScreen/WorldScreen"]
+position = Vector3(0, 0, 0.04)
+collision_layer = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SlimWorldScreen/WorldScreen/ScreenHit"]
+shape = SubResource("BoxShape3D_screen_hit")
+
+[node name="Interactable" type="Node" parent="SlimWorldScreen/WorldScreen/ScreenHit"]
+script = ExtResource("3_interactable")
+prompt_text = "[USE] Lobby Host / Join"
 
 [node name="ProximityArea" type="Area3D" parent="." unique_id=81046651]
 collision_mask = 16
