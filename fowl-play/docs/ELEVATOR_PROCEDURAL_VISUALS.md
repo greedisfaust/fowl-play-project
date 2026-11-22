@@ -49,7 +49,7 @@ separate follow-up slices. No runtime or multiplayer behavior is claimed by this
 
 ## Sliding door controller
 
-The four door pivots are animated by `world/elevator/elevator_door_controller.gd`.
+The four door pivots are animated by `world/elevator/elevator_door_controller.gd`. The leaves use a telescoping stack: each pair slides into the side pocket and overlaps in depth, clearing the full 2.4 m entrance.
 
 1. Select the existing `DoorAnimation` child (the AnimationPlayer).
 2. Attach `res://world/elevator/elevator_door_controller.gd`.
@@ -59,8 +59,7 @@ The four door pivots are animated by `world/elevator/elevator_door_controller.gd
    `$DoorAnimation.close_doors()`.
 
 The controller moves all four leaves together, with a subtle inner-panel delay.
-Default travel time is 0.9 seconds. The outer leaves travel farther into the side
-pockets while the inner leaves travel a shorter distance, clearing the 2.4 m entrance.
+Default travel time is 0.9 seconds. The inner leaves travel farther laterally while the outer leaves follow, stacking both leaves on each side in separate depth planes. This clears the full 2.4 m entrance without requiring oversized side pockets.
 
 Signals:
 - `door_state_changed(is_open: bool)` fires when the doors finish moving.
