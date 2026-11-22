@@ -64,3 +64,23 @@ No world transition is triggered by this slice alone.
 Run `tests/run_elevator_departure_checks.bat`. It checks full-team occupancy, missing players,
 empty sessions, actor membership, and the carried-player-compatible peer-ID contract.
 It does not replace an in-editor multiplayer interaction test.
+
+
+## Accepted departure sequence (W5-B)
+
+The outer-loop progression coordinator approves a request with an explicit destination:
+
+```gdscript
+departure_controller.accept_departure_request(MainController.World.CASINO)
+```
+
+Destination IDs are Apartment=0, Casino=1, Rest Area=2. The elevator does not decide quota/day rules.
+
+After approval, the controller closes the existing four-panel doors, force-drops carried props/players
+through Network, starts the existing synchronized ragdoll recovery for limp players, and waits for
+everyone to finish recovering. Only then does it call persistent MainController.transition_to().
+If preparation fails, it clears the pending state and reopens the doors. The MainController's
+existing fade and world swap performs the actual transition.
+
+No scene edits are needed. The progression coordinator is not implemented yet, so the button still
+waits for that coordinator to approve its departure_requested signal.
