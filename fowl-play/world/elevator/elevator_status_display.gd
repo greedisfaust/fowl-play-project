@@ -42,9 +42,19 @@ func _ready() -> void:
 		set_process(false)
 		return
 
-	_screen_text = _world_screen.call("get_screen_text") as ScreenText
+	# Accept either the actual ScreenText node or a WorldScreen/SlimWorldScreen
+	# housing path. The elevator scene may point directly at the nested ScreenText.
+	if _world_screen is ScreenText:
+		_screen_text = _world_screen as ScreenText
+	elif _world_screen.has_method("get_screen_text"):
+		_screen_text = _world_screen.call("get_screen_text") as ScreenText
+	else:
+		var nested_world_screen: Node = _world_screen.get_node_or_null("WorldScreen")
+		if nested_world_screen != null and nested_world_screen.has_method("get_screen_text"):
+			_screen_text = nested_world_screen.call("get_screen_text") as ScreenText
+
 	if _screen_text == null:
-		push_error("ElevatorStatusDisplay could not find the WorldScreen's ScreenText.")
+		push_error("ElevatorStatusDisplay could not resolve a ScreenText node from world_screen_path.")
 		set_process(false)
 		return
 
