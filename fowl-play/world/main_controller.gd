@@ -87,6 +87,15 @@ func _exit_tree() -> void:
 		_debug_hub.call("unwatch", &"net/player_count")
 
 
+## Validates a destination before a departure sequence starts.
+func can_transition_to(destination: int) -> bool:
+	if destination < World.APARTMENT or destination > World.REST_AREA:
+		return false
+	if _transition_in_progress or (_has_active_world and active_world == destination):
+		return false
+	return _get_scene_for_world(destination) != null
+
+
 ## Called by the host when the team moves to another world.
 ## Every peer receives the same world ID and loads its local copy of that scene.
 func transition_to(destination: int) -> void:
