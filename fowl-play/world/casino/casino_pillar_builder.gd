@@ -15,7 +15,7 @@ class_name CasinoPillarBuilder
 ])
 
 @export_group("Dimensions")
-@export_range(3.5, 4.5, 0.05) var pillar_height: float = 4.2
+@export_range(3.5, 4.5, 0.05) var pillar_height: float = 4.02
 @export_range(0.45, 1.2, 0.05) var shaft_width: float = 0.68
 @export_range(0.05, 0.3, 0.01) var base_height: float = 0.18
 @export_range(0.08, 0.35, 0.01) var capital_height: float = 0.22
