@@ -81,8 +81,53 @@ func _run_checks() -> void:
 		_fail("Spawner should reject a slot count that does not match the daily selection.")
 		return
 
-	print("CASINO TABLE SPAWNER PASS: daily game definitions, enabled slots, disabled slots, scene instantiation, transform placement, metadata, slot-count validation, and duplicate prevention")
+	_test_single_chicken_cross_fallback()
+	print("CASINO TABLE SPAWNER PASS: daily game definitions, Chicken Cross development fallback, enabled slots, disabled slots, scene instantiation, transform placement, metadata, slot-count validation, and duplicate prevention")
 	quit(0)
+
+func _test_single_chicken_cross_fallback() -> void:
+	var spawner: Node3D = Node3D.new()
+	spawner.set_script(SPAWNER_SCRIPT)
+	spawner.set("spawn_on_ready", false)
+	var spawn_points: Node3D = Node3D.new()
+	spawn_points.name = "SpawnPoints"
+	var spawned_tables: Node3D = Node3D.new()
+	spawned_tables.name = "SpawnedTables"
+	spawner.add_child(spawn_points)
+	spawner.add_child(spawned_tables)
+	root.add_child(spawner)
+	for index: int in range(6):
+		var slot: Marker3D = _make_slot("TestSlot_%02d" % (index + 1), "table_%02d" % (index + 1), true)
+		spawn_points.add_child(slot)
+	var table_root: Node3D = Node3D.new()
+	var packed_table: PackedScene = PackedScene.new()
+	if packed_table.pack(table_root) != OK:
+		_fail("Could not pack the Chicken Cross fallback test scene.")
+		return
+	table_root.free()
+	var definition: CasinoGameDefinition = CasinoGameDefinition.new()
+	definition.game_id = &"chicken_cross"
+	definition.display_name = "Chicken Cross"
+	definition.table_scene = packed_table
+	var result: Dictionary = spawner.call("spawn_single_test_table", 1, definition)
+	if not bool(result.get("ok", false)) or int(result.get("spawned_count", 0)) != 1:
+		_fail("Incomplete-roster fallback should spawn exactly one Chicken Cross table.")
+		return
+	if spawned_tables.get_child_count() != 1:
+		_fail("Chicken Cross fallback must leave the other five table slots empty.")
+		return
+	var table: Node3D = spawned_tables.get_child(0) as Node3D
+	if table == null or table.name != "table_01_ChickenCrossTest":
+		_fail("Chicken Cross fallback did not use the first enabled table slot.")
+		return
+	if table.get_meta("casino_game_id", "") != "chicken_cross":
+		_fail("Chicken Cross fallback table is missing its game ID.")
+		return
+	var repeated: Dictionary = spawner.call("spawn_single_test_table", 1, definition)
+	if int(repeated.get("spawned_count", -1)) != 0 or spawned_tables.get_child_count() != 1:
+		_fail("Repeated Chicken Cross fallback call created a duplicate.")
+	spawner.queue_free()
+
 
 func _make_slot(slot_name: String, slot_id: String, is_enabled: bool) -> Marker3D:
 	var slot: Marker3D = Marker3D.new()
