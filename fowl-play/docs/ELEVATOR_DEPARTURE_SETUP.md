@@ -74,7 +74,7 @@ The outer-loop progression coordinator approves a request with an explicit desti
 departure_controller.accept_departure_request(MainController.World.CASINO)
 ```
 
-Destination IDs are Apartment=0, Casino=1, Rest Area=2. The elevator does not decide quota/day rules.
+Destination IDs are Apartment=0, Casino=1, Rest Area=2. The elevator does not decide quota/day rules. The sequence locks the proximity opener so it cannot reopen the doors while the team is preparing to leave.
 
 After approval, the controller closes the existing four-panel doors, force-drops carried props/players
 through Network, starts the existing synchronized ragdoll recovery for limp players, and waits for
