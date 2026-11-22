@@ -3,6 +3,7 @@
 extends CanvasLayer
 
 const PHASE_CASINO: int = 2
+const TERMINAL_FONT: Font = preload("res://assets/fonts/JetBrainsMonoNL-Regular.ttf")
 const COLOR_WALLET: Color = Color(0.25, 0.82, 0.48, 1.0)
 const COLOR_QUOTA_UNMET: Color = Color(0.88, 0.27, 0.29, 1.0)
 const COLOR_QUOTA_MET: Color = Color(0.91, 0.72, 0.34, 1.0)
@@ -45,7 +46,7 @@ var _current_contribution_day: int = 0
 var _last_run_active: bool = false
 var _last_quota_reached: bool = false
 var _contribution_list: VBoxContainer
-var _modifier_panel: VBoxContainer
+var _modifier_panel: HBoxContainer
 var _blessed_label: Label
 var _watched_label: Label
 var _action_prompt: Label
@@ -103,6 +104,17 @@ func _validate_display_nodes() -> bool:
 
 
 func _apply_typography() -> void:
+	if terminal_font == null:
+		terminal_font = TERMINAL_FONT
+	var layout_root: Control = get_node_or_null("MarginContainer/LayoutRoot") as Control
+	var top_left: Control = get_node_or_null("MarginContainer/LayoutRoot/TopLeft") as Control
+	var top_center: Control = get_node_or_null("MarginContainer/LayoutRoot/TopCenter") as Control
+	if is_instance_valid(layout_root):
+		layout_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	if is_instance_valid(top_left):
+		top_left.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	if is_instance_valid(top_center):
+		top_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_day_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_wallet_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_quota_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -241,12 +253,23 @@ func _refresh_day_display(snapshot: Dictionary) -> void:
 
 	_wallet_label.add_theme_color_override("font_color", COLOR_QUOTA_MET if quota_reached else COLOR_WALLET)
 	_quota_label.add_theme_color_override("font_color", COLOR_QUOTA_MET if quota_reached else COLOR_QUOTA_UNMET)
+	_set_quota_glow(quota_reached)
 
 
 func _refresh_quota_colors() -> void:
 	var quota_reached: bool = bool(_last_day_snapshot.get("quota_reached", false))
 	_wallet_label.add_theme_color_override("font_color", COLOR_QUOTA_MET if quota_reached else COLOR_WALLET)
 	_quota_label.add_theme_color_override("font_color", COLOR_QUOTA_MET if quota_reached else COLOR_QUOTA_UNMET)
+	_set_quota_glow(quota_reached)
+
+
+func _set_quota_glow(enabled: bool) -> void:
+	var glow_color: Color = Color(1.0, 0.72, 0.28, 0.78) if enabled else Color(0.0, 0.0, 0.0, 0.0)
+	for label: Label in [_wallet_label, _quota_label]:
+		label.add_theme_color_override("font_shadow_color", glow_color)
+		label.add_theme_constant_override("shadow_outline_size", 10 if enabled else 0)
+		label.add_theme_constant_override("shadow_offset_x", 0)
+		label.add_theme_constant_override("shadow_offset_y", 0)
 
 
 func _refresh_visibility() -> void:
@@ -279,18 +302,21 @@ func _format_time(total_seconds: int) -> String:
 
 
 func _build_runtime_hud_sections() -> void:
-	_modifier_panel = VBoxContainer.new()
+	# Compact terminal readout: Blessed on the left, Watched on the right.
+	_modifier_panel = HBoxContainer.new()
 	_modifier_panel.name = "ModifierStatusPanel"
 	_modifier_panel.anchor_left = 1.0
 	_modifier_panel.anchor_right = 1.0
 	_modifier_panel.offset_left = -420.0
 	_modifier_panel.offset_top = 32.0
 	_modifier_panel.offset_right = -32.0
-	_modifier_panel.offset_bottom = 84.0
-	_modifier_panel.add_theme_constant_override("separation", 2)
+	_modifier_panel.offset_bottom = 58.0
+	_modifier_panel.add_theme_constant_override("separation", 12)
 	add_child(_modifier_panel)
-	_blessed_label = _make_runtime_label("BLESSED —", 18, HORIZONTAL_ALIGNMENT_LEFT)
-	_watched_label = _make_runtime_label("WATCHED —", 18, HORIZONTAL_ALIGNMENT_RIGHT)
+	_blessed_label = _make_runtime_label("BLESSED —", 15, HORIZONTAL_ALIGNMENT_LEFT)
+	_watched_label = _make_runtime_label("WATCHED —", 15, HORIZONTAL_ALIGNMENT_RIGHT)
+	_blessed_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_watched_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_modifier_panel.add_child(_blessed_label)
 	_modifier_panel.add_child(_watched_label)
 	_modifier_panel.visible = false
@@ -300,29 +326,29 @@ func _build_runtime_hud_sections() -> void:
 	contribution_root.anchor_left = 1.0
 	contribution_root.anchor_right = 1.0
 	contribution_root.offset_left = -420.0
-	contribution_root.offset_top = 104.0
+	contribution_root.offset_top = 82.0
 	contribution_root.offset_right = -32.0
 	contribution_root.offset_bottom = 330.0
-	contribution_root.add_theme_constant_override("separation", 4)
+	contribution_root.add_theme_constant_override("separation", 5)
 	add_child(contribution_root)
-	var heading: Label = _make_runtime_label("TODAY'S CONTRIBUTIONS", 15, HORIZONTAL_ALIGNMENT_LEFT)
+	var heading: Label = _make_runtime_label("TODAY'S CONTRIBUTIONS", 13, HORIZONTAL_ALIGNMENT_LEFT)
 	contribution_root.add_child(heading)
 	_contribution_list = VBoxContainer.new()
-	_contribution_list.add_theme_constant_override("separation", 2)
+	_contribution_list.add_theme_constant_override("separation", 3)
 	contribution_root.add_child(_contribution_list)
 	_refresh_contribution_panel()
 
-	_action_prompt = _make_runtime_label("", 18, HORIZONTAL_ALIGNMENT_LEFT)
+	_action_prompt = _make_runtime_label("", 16, HORIZONTAL_ALIGNMENT_LEFT)
 	_action_prompt.anchor_top = 1.0
 	_action_prompt.anchor_bottom = 1.0
 	_action_prompt.offset_left = 32.0
-	_action_prompt.offset_top = -112.0
+	_action_prompt.offset_top = -88.0
 	_action_prompt.offset_right = 720.0
 	_action_prompt.offset_bottom = -32.0
 	_action_prompt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(_action_prompt)
 
-	_announcement_label = _make_runtime_label("", 24, HORIZONTAL_ALIGNMENT_CENTER)
+	_announcement_label = _make_runtime_label("", 22, HORIZONTAL_ALIGNMENT_CENTER)
 	_announcement_label.anchor_left = 0.5
 	_announcement_label.anchor_right = 0.5
 	_announcement_label.offset_left = -360.0
@@ -331,7 +357,6 @@ func _build_runtime_hud_sections() -> void:
 	_announcement_label.offset_bottom = 154.0
 	_announcement_label.modulate.a = 0.0
 	add_child(_announcement_label)
-
 
 func _make_runtime_label(label_text: String, size: int, alignment: int) -> Label:
 	var label: Label = Label.new()
@@ -454,7 +479,7 @@ func _refresh_action_prompt() -> void:
 		if _focused_interactable.action_for_input(&"interact") != &"":
 			controls.append("E")
 		if not controls.is_empty():
-			prompt_parts.append("%s — %s" % [" / ".join(controls), _focused_interactable.prompt_text])
+			prompt_parts.append("%s — %s" % [", ".join(controls), _focused_interactable.prompt_text])
 	if is_instance_valid(_local_player) and _local_player.has_method("is_carrying") and bool(_local_player.call("is_carrying")):
 		prompt_parts.append("Q — DROP  |  HOLD Q — THROW")
 	else:
