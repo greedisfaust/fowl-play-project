@@ -27,8 +27,8 @@ func _ready() -> void:
 
 	_debug_hub = get_node_or_null("/root/DebugHub")
 	if _debug_hub != null:
-		_debug_hub.call("watch", DEBUG_COUNT_WATCH, get_occupant_count)
-		_debug_hub.call("watch", DEBUG_PEERS_WATCH, get_occupant_peer_ids)
+		_debug_hub.call("watch", DEBUG_COUNT_WATCH, func() -> int: return get_occupant_count())
+		_debug_hub.call("watch", DEBUG_PEERS_WATCH, func() -> Array[int]: return get_occupant_peer_ids())
 
 
 func _exit_tree() -> void:
