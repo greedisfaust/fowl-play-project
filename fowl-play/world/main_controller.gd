@@ -268,6 +268,9 @@ func _on_session_ended() -> void:
 		player.queue_free()
 	_spawn_slots.clear()
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	var run_manager: Node = get_node_or_null("/root/RunManager")
+	if is_instance_valid(run_manager) and run_manager.has_method("reset_for_session_end"):
+		run_manager.call("reset_for_session_end")
 
 
 func _on_peer_connected(peer_id: int) -> void:

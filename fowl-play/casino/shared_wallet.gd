@@ -63,6 +63,21 @@ func begin_run(initial_balance: int) -> Dictionary:
 	_emit_wallet_changed()
 	return _success({"initial_balance": _initial_balance, "available_balance": _available_balance})
 
+## Clears the local ledger after the multiplayer session has ended.
+## This intentionally discards outstanding wagers because the disconnected run cannot continue.
+func reset_for_session_end() -> bool:
+	var active_peer: MultiplayerPeer = multiplayer.multiplayer_peer
+	if not active_peer is OfflineMultiplayerPeer:
+		return false
+	_run_active = false
+	_initial_balance = 0
+	_available_balance = 0
+	_next_wager_sequence = 1
+	_wagers.clear()
+	_rounds.clear()
+	_emit_wallet_changed()
+	return true
+
 ## Opens a betting round. Round IDs must be unique within their table for the current run.
 func open_round(table_id: String, round_id: String) -> Dictionary:
 	if not _is_authority():

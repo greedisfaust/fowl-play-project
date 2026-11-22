@@ -59,6 +59,14 @@ func _run() -> void:
 	if int(manager.call("get_departure_destination", 1)) != 0:
 		_finish(false, "An unlocked Casino departure should return to the Apartment for the Rest phase.")
 		return
+	var day_manager: Node = root.get_node_or_null("CasinoDayManager")
+	if not is_instance_valid(day_manager) or not bool(day_manager.get("day_active")):
+		_finish(false, "Day 1 casino state should be active before its deadline is simulated.")
+		return
+	day_manager.call("advance_day_timer", 300.0, 1000)
+	if bool(day_manager.get("day_active")) or not bool(day_manager.get("day_result_recorded")):
+		_finish(false, "Simulating the deadline should close Day 1 before entering Rest.")
+		return
 	transition_source.emit_signal("world_changed", 1, 0)
 	if int(manager.call("get_snapshot").get("phase", -1)) != 3:
 		_finish(false, "Completing Casino to Apartment should advance into the Rest phase.")
@@ -80,8 +88,28 @@ func _run() -> void:
 		_finish(false, "A second run must not overwrite an active run.")
 		return
 
+	if not bool(day_manager.get("day_active")) or int(day_manager.get("day_number")) != 2:
+		_finish(false, "The Day 2 casino state should be active before session cleanup is tested.")
+		return
+
+	var reset_ok: bool = bool(manager.call("reset_for_session_end"))
+	if not reset_ok:
+		_finish(false, "RunManager should permit local reset after the network session ends.")
+		return
+	snapshot = manager.call("get_snapshot")
+	if bool(snapshot.get("run_active", true)) or int(snapshot.get("current_day", -1)) != 0 or int(snapshot.get("phase", -1)) != 0:
+		_finish(false, "Session reset should return progression to IDLE with no active day.")
+		return
+	var wallet_after_reset: Dictionary = wallet.call("get_snapshot")
+	if bool(wallet_after_reset.get("run_active", true)) or int(wallet_after_reset.get("available_balance", -1)) != 0:
+		_finish(false, "Session reset should clear the local wallet ledger.")
+		return
+	if bool(day_manager.get("day_active")) or int(day_manager.get("day_number")) != 0:
+		_finish(false, "Session reset should clear the local casino-day state.")
+		return
+
 	transition_source.free()
-	_finish(true, "Day 1 initialization, MainController arrival signal, Apartment/Casino/Rest-phase flow, quota gate, and day increment")
+	_finish(true, "Day 1 initialization, Apartment/Casino/Rest flow, quota gate, day increment, and session cleanup")
 
 
 func _finish(passed: bool, message: String) -> void:

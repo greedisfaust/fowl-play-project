@@ -65,8 +65,38 @@ func _run() -> void:
 
 	# Leaving a multiplayer session replaces the transport with OfflineMultiplayerPeer.
 	# The persistent Main controller must still be able to create a fresh local player.
+	var run_manager: Node = root.get_node_or_null("RunManager")
+	var run_start: Dictionary = run_manager.call("begin_new_run")
+	if not bool(run_start.get("ok", false)):
+		main.queue_free()
+		_finish(false, "Could not prepare a run before session-end reset verification.")
+		return
+	if not bool(run_manager.call("complete_world_transition", 0, 1)):
+		main.queue_free()
+		_finish(false, "Could not enter the Casino phase before session-end reset verification.")
+		return
+	var day_manager: Node = root.get_node_or_null("CasinoDayManager")
+	if not is_instance_valid(day_manager) or not bool(day_manager.get("day_active")):
+		main.queue_free()
+		_finish(false, "Casino day state should be active before the network session ends.")
+		return
 	network.call("shutdown")
 	await process_frame
+	var run_snapshot: Dictionary = run_manager.call("get_snapshot")
+	if bool(run_snapshot.get("run_active", true)) or int(run_snapshot.get("current_day", -1)) != 0 or int(run_snapshot.get("phase", -1)) != 0:
+		main.queue_free()
+		_finish(false, "Network session end should reset run progression to IDLE.")
+		return
+	if bool(day_manager.get("day_active")) or int(day_manager.get("day_number")) != 0:
+		main.queue_free()
+		_finish(false, "Network session end should clear casino-day state.")
+		return
+	var wallet: Node = root.get_node_or_null("CasinoWallet")
+	var wallet_snapshot: Dictionary = wallet.call("get_snapshot")
+	if bool(wallet_snapshot.get("run_active", true)) or int(wallet_snapshot.get("available_balance", -1)) != 0:
+		main.queue_free()
+		_finish(false, "Network session end should clear the shared wallet ledger.")
+		return
 	main.call("_refresh_players_for_world")
 	await process_frame
 	await process_frame

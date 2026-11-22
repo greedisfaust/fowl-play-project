@@ -169,6 +169,9 @@ func get_selected_game_definitions() -> Array[CasinoGameDefinition]:
 func _on_run_state_changed(snapshot: Dictionary) -> void:
 	if not bool(snapshot.get("run_active", false)):
 		_pending_day_number = 0
+		selected_day = 0
+		selected_game_ids.clear()
+		daily_selection_changed.emit(selected_day, get_selected_game_ids())
 		return
 	var phase_name: String = str(snapshot.get("phase_name", ""))
 	if phase_name == "APARTMENT":

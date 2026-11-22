@@ -26,6 +26,7 @@ The maximum run length is ten days.
 ## API
 
 - `begin_new_run() -> Dictionary`: host-only; starts Day 1 in the Apartment. Rejects a second start while a run is active.
+- `reset_for_session_end() -> bool`: clears the local run and wallet mirror after Network switches to OfflineMultiplayerPeer during session shutdown.
 - `get_departure_destination(current_world: int) -> int`: returns the permitted destination, or `-1` when departure is not currently allowed.
 - `bind_main_controller(controller: Node) -> void`: connects the persistent MainController `world_changed` signal to the progression commit handler.
 - `complete_world_transition(previous_world: int, destination_world: int) -> bool`: host-only; commits progression after MainController installs the destination world.

@@ -137,9 +137,23 @@ func _on_wallet_changed(available_balance: int, _reserved_total: int) -> void:
 
 
 func _on_run_state_changed(snapshot: Dictionary) -> void:
+	var run_is_active: bool = bool(snapshot.get("run_active", false))
+	if not run_is_active:
+		day_active = false
+		day_number = 0
+		starting_wallet = 0
+		current_wallet_balance = 0
+		daily_quota = 0
+		seconds_remaining = 0.0
+		quota_reached = false
+		day_result_recorded = false
+		day_success = false
+		final_wallet_snapshot = 0
+		_last_published_second = -1
+		day_state_changed.emit(get_snapshot())
+		return
 	if not _is_authority():
 		return
-	var run_is_active: bool = bool(snapshot.get("run_active", false))
 	var phase_value: int = int(snapshot.get("phase", -1))
 	if not run_is_active or phase_value != 2:
 		return

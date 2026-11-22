@@ -15,6 +15,8 @@ CasinoDayManager is an Autoload at /root/CasinoDayManager. It persists across wo
 
 RunManager.begin_new_run() initializes CasinoWallet to the starting run wallet of **1,000**. This happens once at the start of a fresh run, not at the beginning of every day.
 
+When the Network session ends, MainController tells RunManager to clear the local run state after Network has switched to OfflineMultiplayerPeer. RunManager clears the wallet ledger, and the run-state notification resets CasinoDayManager and CasinoManager on that peer. This is a session teardown, not a day transition: any outstanding wagers are discarded because the disconnected run cannot continue.
+
 When RunManager commits arrival into the Casino, CasinoDayManager reads the actual available shared wallet and starts that day. The full remaining wallet carries forward; the wallet is never reset to 1,000 between successful days.
 
 ## Dynamic quota formula

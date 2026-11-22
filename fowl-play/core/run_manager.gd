@@ -96,6 +96,19 @@ func begin_new_run() -> Dictionary:
 	return _success(get_snapshot())
 
 
+## Clears local run progression after Network has replaced the session peer with OfflineMultiplayerPeer.
+## Each disconnected peer resets its own local mirror; the host's shutdown does not affect other peers' state.
+func reset_for_session_end() -> bool:
+	var active_peer: MultiplayerPeer = multiplayer.multiplayer_peer
+	if not active_peer is OfflineMultiplayerPeer:
+		return false
+	_apply_state(false, 0, Phase.IDLE, false)
+	if is_instance_valid(_casino_wallet) and _casino_wallet.has_method("reset_for_session_end"):
+		_casino_wallet.call("reset_for_session_end")
+	_log("Run state reset after network session ended.")
+	return true
+
+
 func _debug_begin_new_run(_args: Array[Variant]) -> Dictionary:
 	var result: Dictionary = begin_new_run()
 	if not bool(result.get("ok", false)):
