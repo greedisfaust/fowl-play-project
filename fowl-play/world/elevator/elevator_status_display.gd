@@ -126,8 +126,7 @@ func _refresh_display() -> void:
 	elif total_players == 0:
 		departure_status = "NO SESSION"
 
-	var body: String = "PLAYERS   %d / %d\nINSIDE    %d / %d\n\nEARLY DEPARTURE\n%s\n%s" % [
-		players_inside,
+	var body: String = "TEAM SIZE %d\nINSIDE    %d / %d\n\nEARLY DEPARTURE\n%s\n%s" % [
 		total_players,
 		players_inside,
 		total_players,
