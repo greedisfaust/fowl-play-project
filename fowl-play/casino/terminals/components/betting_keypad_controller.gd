@@ -112,8 +112,9 @@ func handle_button_input(button_id: StringName, peer_id: int) -> Dictionary:
 			var maximum_value: int = profile.get_effective_maximum() if profile != null else 2147483647
 			return _apply_wager_preset(mini(maximum_value, _get_available_balance()))
 		"CONFIRM", "ENTER", "OK", "SUBMIT":
+			var submitted_amount: int = get_pending_wager_amount()
 			var confirmation: Dictionary = _confirm_pending_wager(peer_id)
-			_last_confirmation_status = "CONFIRMED %s" % _format_money(get_pending_wager_amount()) if bool(confirmation.get("ok", false)) else "REJECTED: %s" % str(confirmation.get("reason", "unknown error"))
+			_last_confirmation_status = "CONFIRMED %s" % _format_money(submitted_amount) if bool(confirmation.get("ok", false)) else "REJECTED: %s" % str(confirmation.get("reason", "unknown error"))
 			_publish_snapshot()
 			if is_instance_valid(_debug_hub):
 				_debug_hub.call("log", &"wallet", "Keypad confirmation for peer %d: %s" % [peer_id, _last_confirmation_status])
