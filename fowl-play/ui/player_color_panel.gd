@@ -41,13 +41,11 @@ func _ready() -> void:
 		var color_index: int = int(COLOR_BUTTONS[color_id])
 		_buttons[color_index] = button
 		var interactable: Interactable = button.get_node_or_null("Interactable") as Interactable
-		if button.has_signal("button_activated"):
-			button.connect("button_activated", _on_button_activated.bind(color_index))
-		elif is_instance_valid(interactable):
-			# Plain authored button roots use the host-approved Interactable signal.
-			interactable.interacted.connect(_on_interactable_activated.bind(color_id, color_index))
 		if is_instance_valid(interactable):
+			# Use the host-approved Interactable event, never a local button
+			# presentation signal, as the source of identity changes.
 			interactable.availability_check = Callable(self, "_can_select_color").bind(color_index)
+			interactable.interacted.connect(_on_interactable_activated.bind(color_id, color_index))
 		_cache_button_materials(color_index, button)
 
 	if is_instance_valid(_network) and _network.has_signal("identity_roster_changed"):
