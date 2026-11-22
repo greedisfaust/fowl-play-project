@@ -939,10 +939,11 @@ func get_chest_world_position() -> Vector3:
 	return get_hips_world_position()
 
 func get_chest_world_basis() -> Basis:
-	# Use the rendered skeleton pose on every peer. The host simulates
-	# PhysicalBone3D bodies, while clients render the replicated Skeleton3D pose;
-	# reading the physical body's basis only on the host can introduce a
-	# different grip-up axis from the one clients use for their hands.
+	# The host's live PhysicalBone transform must stay paired with the live
+	# PhysicalBone position used by carry-hand placement. The replicated
+	# Skeleton3D pose is the correct fallback when this rig is not simulating.
+	if simulator.is_simulating_physics() and _chest_physical_bone != null:
+		return _chest_physical_bone.global_basis.orthonormalized()
 	if _chest_bone_index >= 0:
 		return (skeleton.global_basis * skeleton.get_bone_global_pose(_chest_bone_index).basis).orthonormalized()
 	return global_basis.orthonormalized()
