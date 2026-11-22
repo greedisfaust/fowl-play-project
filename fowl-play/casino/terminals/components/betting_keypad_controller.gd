@@ -217,9 +217,13 @@ func _confirm_pending_wager(peer_id: int) -> Dictionary:
 	return wager_result
 
 func _connect_key_buttons() -> void:
-	if get_parent() == null:
+	# Search the complete table, not only the keypad instance. Some tables
+	# place the dedicated CONFIRM key beside the keypad under a shared
+	# Controls node. Restricting discovery to the keypad silently misses it.
+	var button_root: Node = table if is_instance_valid(table) else get_parent()
+	if button_root == null:
 		return
-	_connect_key_buttons_recursive(get_parent())
+	_connect_key_buttons_recursive(button_root)
 
 func _connect_key_buttons_recursive(parent_node: Node) -> void:
 	for child: Node in parent_node.get_children():
@@ -229,7 +233,14 @@ func _connect_key_buttons_recursive(parent_node: Node) -> void:
 		_connect_key_buttons_recursive(child)
 
 func _on_button_activated(button_id: StringName, peer_id: int) -> void:
-	handle_button_input(button_id, peer_id)
+	var action: String = _normalize_button_id(String(button_id))
+	# Cross/cash-out controls are handled by ChickenCrossTable itself, not
+	# by the wager-entry keypad.
+	if action in ["CROSS", "CASH_OUT", "CASHOUT"]:
+		return
+	var result: Dictionary = handle_button_input(button_id, peer_id)
+	if is_instance_valid(_debug_hub) and not bool(result.get("ok", false)):
+		_debug_hub.call("log", &"wallet", "Keypad button '%s' rejected for peer %d: %s" % [String(button_id), peer_id, str(result.get("reason", "unknown error"))])
 
 func _connect_authority_signals() -> void:
 	if is_instance_valid(table):
