@@ -16,17 +16,23 @@ components. It does not create another UI renderer or interactable.
 Do not replace the script on `SlimWorldScreen`; it must keep its existing WorldScreen controller.
 Do not add another screen, viewport, or occupancy Area3D.
 
-## Display behavior
+## Compact display behavior
 
-- Shows the number of players currently inside versus the current session roster.
-- Updates when elevator occupancy changes.
-- Updates when the Network roster changes (players join or leave).
-- Shows whether every connected player is inside.
-- Shows early-departure eligibility as `CHECKING` until the run/quota coordinator supplies
-  an authoritative result. This avoids falsely claiming the team is eligible or ineligible
-  before quota logic exists.
-- Shows `READY TO DEPART` only when all players are inside and the quota coordinator has
-  marked early departure eligible.
+The display intentionally stays to three visual elements:
+
+- Top row: `ELEVATOR STATUS` on the left and `TEAM [count]` right-aligned.
+- Main row: a large, centered `INSIDE [count] / [total]`.
+  - Green count when every rostered player is inside.
+  - Red count when one or more players are missing.
+- Bottom row: one concise state message, such as `WAITING FOR PLAYERS`,
+  `WAITING FOR QUOTA`, `READY TO DEPART`, or `QUOTA NOT MET`.
+
+The count refreshes when elevator occupancy changes or the Network roster changes.
+Text sizing is applied per line so the main count is substantially larger than the header
+and state message.
+
+Until the run/quota coordinator supplies an authoritative result, the state message is
+`WAITING FOR QUOTA` when everyone is inside. The display does not claim eligibility early.
 
 ## Run/quota integration API
 
@@ -46,11 +52,11 @@ permission to transition worlds.
 
 In TestArena with the elevator instanced:
 
-1. Run with one player and enter/leave the elevator. Confirm `INSIDE` changes between
-   `1 / 1` and `0 / 1`.
-2. Host a session and join with another player. Confirm the total roster count updates.
+1. Run with one player and enter/leave the elevator. Confirm the count changes between
+   `INSIDE 1 / 1` and `INSIDE 0 / 1`.
+2. Host a session and join with another player. Confirm the team count updates.
 3. Have each player enter and leave. Confirm the count follows the occupants.
-4. Before the daily quota system is connected, confirm the screen says `CHECKING` and
-   `QUOTA STATUS PENDING`, not a fabricated eligibility result.
+4. Confirm the inside count is green only when everyone is inside and red otherwise.
+5. Confirm only one concise state message appears below the count.
 
-The controller has not been live-tested in Godot as part of this code change.
+The compact layout has not been live-tested in Godot as part of this code change.
