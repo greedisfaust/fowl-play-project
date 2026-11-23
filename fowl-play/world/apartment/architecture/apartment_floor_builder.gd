@@ -106,20 +106,20 @@ func _add_main_room_perimeter_inlay(parent: Node3D, scene_root: Node) -> void:
 	# A restrained double pinstripe frames the limestone field without occupying table footprints.
 	_add_box(group, "Outer_North_Bronze", Vector3(22.0 - inset * 2.0, 0.006, outer_width),
 		Vector3(0.0, line_y, -9.5 + inset), bronze, scene_root)
-	_add_box(group, "Outer_South_Bronze", Vector3(22.0 - inset * 2.0, 0.012, outer_width),
+	_add_box(group, "Outer_South_Bronze", Vector3(22.0 - inset * 2.0, 0.006, outer_width),
 		Vector3(0.0, line_y, 9.5 - inset), bronze, scene_root)
-	_add_box(group, "Outer_West_Bronze", Vector3(outer_width, 0.012, 19.0 - inset * 2.0),
+	_add_box(group, "Outer_West_Bronze", Vector3(outer_width, 0.006, 19.0 - inset * 2.0),
 		Vector3(-11.0 + inset, line_y, 0.0), bronze, scene_root)
 	_add_box(group, "Outer_East_Bronze", Vector3(outer_width, 0.012, 19.0 - inset * 2.0),
 		Vector3(11.0 - inset, line_y, 0.0), bronze, scene_root)
 	var inner_inset: float = inset + 0.12
 	_add_box(group, "Inner_North_Reveal", Vector3(22.0 - inner_inset * 2.0, 0.004, inner_width),
 		Vector3(0.0, line_y + 0.001, -9.5 + inner_inset), dark_reveal, scene_root)
-	_add_box(group, "Inner_South_Reveal", Vector3(22.0 - inner_inset * 2.0, 0.008, inner_width),
-		Vector3(0.0, line_y + 0.002, 9.5 - inner_inset), dark_reveal, scene_root)
+	_add_box(group, "Inner_South_Reveal", Vector3(22.0 - inner_inset * 2.0, 0.004, inner_width),
+		Vector3(0.0, line_y + 0.001, 9.5 - inner_inset), dark_reveal, scene_root)
 	_add_box(group, "Inner_West_Reveal", Vector3(inner_width, 0.004, 19.0 - inner_inset * 2.0),
 		Vector3(-11.0 + inner_inset, line_y + 0.002, 0.0), dark_reveal, scene_root)
-	_add_box(group, "Inner_East_Reveal", Vector3(inner_width, 0.008, 19.0 - inner_inset * 2.0),
+	_add_box(group, "Inner_East_Reveal", Vector3(inner_width, 0.004, 19.0 - inner_inset * 2.0),
 		Vector3(11.0 - inner_inset, line_y + 0.002, 0.0), dark_reveal, scene_root)
 
 func _create_materials() -> void:
