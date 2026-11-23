@@ -40,10 +40,10 @@ func _on_interacted(actor: Node, action: StringName) -> void:
 	if action != &"use" or not multiplayer.is_server():
 		return
 	if _is_open:
-		rpc("apply_door_state", false, _open_direction)
+		_publish_state(false, _open_direction)
 	else:
 		var direction: int = -1 if actor.global_position.x > _door_plane_x else 1
-		rpc("apply_door_state", true, direction)
+		_publish_state(true, direction)
 
 func _on_body_entered(body: Node3D) -> void:
 	if not body is CharacterBody3D:
@@ -66,11 +66,17 @@ func _request_bump(direction: int) -> void:
 	else:
 		rpc_id(1, "request_bump_open", direction)
 
+func _publish_state(opened: bool, direction: int) -> void:
+	if multiplayer.get_peers().is_empty():
+		apply_door_state(opened, direction)
+	else:
+		rpc("apply_door_state", opened, direction)
+
 @rpc("any_peer", "call_remote", "reliable")
 func request_bump_open(direction: int) -> void:
 	if not multiplayer.is_server():
 		return
-	rpc("apply_door_state", true, clampi(direction, -1, 1))
+	_publish_state(true, clampi(direction, -1, 1))
 
 @rpc("authority", "call_local", "reliable")
 func apply_door_state(opened: bool, direction: int) -> void:
@@ -93,4 +99,4 @@ func apply_door_state(opened: bool, direction: int) -> void:
 func _close_after_delay(token: int) -> void:
 	await get_tree().create_timer(AUTO_CLOSE_SECONDS).timeout
 	if token == _close_token and _is_open and multiplayer.is_server():
-		rpc("apply_door_state", false, _open_direction)
+		_publish_state(false, _open_direction)
