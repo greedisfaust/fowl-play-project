@@ -12,6 +12,9 @@
 [ext_resource type="Script" uid="uid://btk8pq5c7lhf" path="res://world/casino/casino_table_spawner.gd" id="8_rix1d"]
 [ext_resource type="Script" uid="uid://chj7lbwjtq3l0" path="res://world/casino/casino_table_spawn_point.gd" id="9_r5tfs"]
 
+[ext_resource type="Environment" path="res://world/casino/casino_night_environment.tres" id="10_night_env"]
+[ext_resource type="Script" path="res://world/casino/casino_night_exterior.gd" id="11_night_exterior"]
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_r5tfs"]
 albedo_color = Color(0.055, 0.062, 0.072, 1)
 metallic = 0.08
@@ -6699,6 +6702,18 @@ rings = 24
 ring_segments = 8
 
 [node name="Casino" type="Node3D" unique_id=1271131405]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = ExtResource("10_night_env")
+
+[node name="Moonlight" type="DirectionalLight3D" parent="."]
+rotation = Vector3(-0.78, -0.42, 0.0)
+light_color = Color(0.48, 0.62, 0.92, 1)
+light_energy = 0.22
+shadow_enabled = false
+
+[node name="NightExterior" type="Node3D" parent="."]
+script = ExtResource("11_night_exterior")
 
 [node name="Environment" type="Node3D" parent="." unique_id=723661189]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -9.665)
