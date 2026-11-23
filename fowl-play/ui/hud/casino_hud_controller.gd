@@ -491,9 +491,9 @@ func _build_runtime_hud_sections() -> void:
 	_announcement_panel.anchor_left = 0.5
 	_announcement_panel.anchor_right = 0.5
 	_announcement_panel.offset_left = -330.0
-	_announcement_panel.offset_top = 122.0
+	_announcement_panel.offset_top = 112.0
 	_announcement_panel.offset_right = 330.0
-	_announcement_panel.offset_bottom = 318.0
+	_announcement_panel.offset_bottom = 308.0
 	_announcement_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_announcement_panel)
 	_announcement_feed = VBoxContainer.new()
