@@ -2,35 +2,37 @@
 extends Node3D
 class_name ApartmentLightingBuilder
 
-## Editor-time warm lighting setup for the Apartment.
-## Attach to Environment/Lighting at local origin.
-## Creates real OmniLight3D nodes only; it does not modify architectural geometry.
+## Soft residential lighting for the Apartment.
+## Attach to Environment/Lighting at local origin. Uses the shared Fowl Play
+## light rig so both environments follow the same construction and quality rules.
+
+const LightingRig = preload("res://world/shared/lighting/fowl_play_lighting_rig.gd")
 
 @export_group("Main Room")
 @export var generate_main_room_lights: bool = true
-@export var main_room_light_color: Color = Color(1.0, 0.78, 0.58, 1.0)
-@export_range(0.1, 4.0, 0.05) var main_room_light_energy: float = 1.35
-@export_range(3.0, 16.0, 0.5) var main_room_light_range: float = 9.0
-@export_range(0.0, 2.0, 0.05) var window_side_fill_energy: float = 0.55
+@export var main_room_light_color: Color = Color(1.0, 0.82, 0.66, 1.0)
+@export_range(0.1, 4.0, 0.05) var main_room_light_energy: float = 0.82
+@export_range(3.0, 16.0, 0.5) var main_room_light_range: float = 9.5
+@export_range(0.0, 2.0, 0.05) var window_side_fill_energy: float = 0.28
 
 @export_group("Hallway")
 @export var generate_hallway_lights: bool = true
-@export var hallway_light_color: Color = Color(1.0, 0.68, 0.43, 1.0)
-@export_range(0.1, 3.0, 0.05) var hallway_light_energy: float = 0.95
-@export_range(2.0, 10.0, 0.5) var hallway_light_range: float = 5.2
+@export var hallway_light_color: Color = Color(1.0, 0.76, 0.58, 1.0)
+@export_range(0.1, 3.0, 0.05) var hallway_light_energy: float = 0.58
+@export_range(2.0, 10.0, 0.5) var hallway_light_range: float = 5.5
 @export var hallway_light_start_z: float = -14.0
 @export var hallway_light_end_z: float = 1.5
 @export_range(2, 8, 1) var hallway_light_count: int = 4
 
 @export_group("Elevator Lobby")
 @export var generate_lobby_lights: bool = true
-@export var lobby_light_color: Color = Color(1.0, 0.78, 0.58, 1.0)
-@export_range(0.1, 4.0, 0.05) var lobby_light_energy: float = 1.55
+@export var lobby_light_color: Color = Color(1.0, 0.82, 0.66, 1.0)
+@export_range(0.1, 4.0, 0.05) var lobby_light_energy: float = 0.92
 @export_range(2.0, 10.0, 0.5) var lobby_light_range: float = 5.0
 
 @export_group("Light Quality")
 @export var enable_shadows: bool = false
-@export_range(0.0, 1.0, 0.05) var light_specular: float = 0.35
+@export_range(0.0, 1.0, 0.05) var light_specular: float = 0.32
 
 @export_group("Generation")
 @export var rebuild_lighting: bool = false:
@@ -50,7 +52,6 @@ func _rebuild_lighting() -> void:
 	var scene_root: Node = get_tree().edited_scene_root
 	if scene_root == null:
 		return
-
 	var old_root: Node = get_node_or_null(GENERATED_ROOT_NAME)
 	if old_root != null:
 		old_root.free()
@@ -68,7 +69,7 @@ func _rebuild_lighting() -> void:
 		_build_lobby_lights(generated_root, scene_root)
 
 func _build_main_room_lights(parent: Node3D, scene_root: Node) -> void:
-	# Six broad pools of light, arranged to cover the 22 x 19 m communal room.
+	# Six gentle ceiling pools cover the communal room without flattening its corners.
 	var x_positions: Array[float] = [-6.5, 0.0, 6.5]
 	var z_positions: Array[float] = [-4.8, 4.8]
 	for row_index: int in range(z_positions.size()):
@@ -81,12 +82,12 @@ func _build_main_room_lights(parent: Node3D, scene_root: Node) -> void:
 				main_room_light_range, scene_root
 			)
 
-	# A softer fill near the panoramic glazing keeps the window-side seating area from feeling flat.
+	# A very soft cool-neutral edge fill keeps the panoramic seating area legible.
 	if window_side_fill_energy > 0.01:
 		_add_omni_light(
 			parent, "MainRoom_CityWindow_SoftFill",
-			Vector3(7.6, 3.35, 0.0),
-			main_room_light_color, window_side_fill_energy,
+			Vector3(7.6, 3.25, 0.0),
+			Color(0.68, 0.76, 0.88, 1.0), window_side_fill_energy,
 			6.5, scene_root
 		)
 
@@ -98,7 +99,6 @@ func _build_hallway_lights(parent: Node3D, scene_root: Node) -> void:
 		if hallway_light_count > 1:
 			progress = float(light_index) / float(hallway_light_count - 1)
 		var light_z: float = lerpf(hallway_light_start_z, hallway_light_end_z, progress)
-		# Keep the last light before the void fade begins at Z = 4.
 		_add_omni_light(
 			parent, "Hallway_Ceiling_%02d" % (light_index + 1),
 			Vector3(-12.75, 3.42, light_z),
@@ -116,7 +116,7 @@ func _build_lobby_lights(parent: Node3D, scene_root: Node) -> void:
 	_add_omni_light(
 		parent, "ElevatorLobby_Elevator_WelcomeFill",
 		Vector3(-12.75, 2.9, -20.7),
-		lobby_light_color, lobby_light_energy * 0.55,
+		lobby_light_color, lobby_light_energy * 0.48,
 		3.5, scene_root
 	)
 
@@ -129,13 +129,4 @@ func _add_omni_light(
 	range_value: float,
 	scene_root: Node
 ) -> void:
-	var light: OmniLight3D = OmniLight3D.new()
-	light.name = node_name
-	light.position = light_position
-	light.light_color = color
-	light.light_energy = energy
-	light.omni_range = range_value
-	light.shadow_enabled = enable_shadows
-	light.light_specular = light_specular
-	parent.add_child(light)
-	light.owner = scene_root
+	LightingRig.add_omni(parent, node_name, light_position, color, energy, range_value, scene_root, light_specular)
