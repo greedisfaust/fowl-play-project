@@ -58,6 +58,7 @@ if errorlevel 1 goto failed
 call :run_test res://tests/elevator_departure_test.gd "Elevator all-player departure gate"
 if errorlevel 1 goto failed
 call :run_test res://tests/elevator_occupancy_test.gd "Elevator occupant and carried-player tracking"
+call :run_test res://tests/elevator_door_collision_test.gd "Elevator door panel collision"
 if errorlevel 1 goto failed
 
 echo.
