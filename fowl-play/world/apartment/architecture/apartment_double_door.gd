@@ -102,4 +102,7 @@ func apply_door_state(opened: bool, direction: int) -> void:
 func _close_after_delay(token: int) -> void:
 	await get_tree().create_timer(AUTO_CLOSE_SECONDS).timeout
 	if token == _close_token and _is_open and multiplayer.is_server():
-		_publish_state(false, _open_direction)
+		if not bump_area.get_overlapping_bodies().is_empty():
+			_close_after_delay(token)
+		else:
+			_publish_state(false, _open_direction)
