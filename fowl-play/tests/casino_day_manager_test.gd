@@ -3,6 +3,7 @@ extends SceneTree
 
 const CasinoDayManagerScript = preload("res://casino/casino_day_manager.gd")
 var _failed: bool = false
+var _day_finished_count: int = 0
 
 func _initialize() -> void:
 	_run.call_deferred()
@@ -21,6 +22,8 @@ func _run() -> void:
 	_check(CasinoDayManagerScript.calculate_daily_quota(-1, 1) == -1, "Negative wallet is rejected")
 
 	manager.set("casino_day_duration_seconds", 300.0)
+	var day_finished_callback: Callable = Callable(self, "_on_day_finished")
+	manager.day_finished.connect(day_finished_callback)
 	var day_one: Dictionary = manager.call("begin_casino_day", 1, 1000)
 	if not bool(day_one.get("ok", false)):
 		_finish(false, "Day 1 should initialize: %s" % str(day_one.get("reason", "")))
@@ -44,6 +47,7 @@ func _run() -> void:
 	_check(bool(snapshot.get("day_success", false)), "Early departure records success when final wallet exceeds quota")
 	_check(int(snapshot.get("final_wallet_snapshot", 0)) == 1800, "Early departure records the final wallet snapshot")
 	_check(not bool(snapshot.get("day_active", true)), "Early departure stops the timer")
+	_check(_day_finished_count == 1, "Early departure emits one day-finished signal")
 
 	var day_two: Dictionary = manager.call("begin_casino_day", 2, 2000)
 	if not bool(day_two.get("ok", false)):
@@ -58,12 +62,18 @@ func _run() -> void:
 	_check(not bool(snapshot.get("day_success", true)), "Wallet one below quota fails at deadline")
 	_check(int(snapshot.get("final_wallet_snapshot", 0)) == 3559, "Deadline snapshots wallet before table cleanup")
 	_check(int(snapshot.get("seconds_remaining", -1)) == 0, "Deadline stops the timer")
+	_check(_day_finished_count == 2, "Five-minute deadline emits day-finished for the forced elevator return")
+	manager.day_finished.disconnect(day_finished_callback)
 
 	if _failed:
 		quit(1)
 		return
 	print("CASINO DAY PASS: dynamic quota, carried wallet, five-minute timer, early quota unlock, and deadline snapshot")
 	quit(0)
+
+
+func _on_day_finished(_day_number: int, _success: bool, _final_wallet: int, _quota: int) -> void:
+	_day_finished_count += 1
 
 
 func _check(condition: bool, label: String) -> void:
