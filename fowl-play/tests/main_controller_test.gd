@@ -40,8 +40,10 @@ func _run() -> void:
 		return
 
 	# Rest-phase spawn must override the Apartment's normal lobby spawn and use its elevator.
-	main.call("_on_run_state_changed_for_spawn", {"phase": 3})
-	await process_frame
+	if not bool(main.call("place_players_at_apartment_elevator")):
+		main.queue_free()
+		_finish(false, "Main should expose the Apartment elevator rest-spawn placement.")
+		return
 	var apartment_elevator: Node3D = main.get_active_world().get_node_or_null("Elevator") as Node3D
 	if apartment_elevator == null:
 		main.queue_free()
