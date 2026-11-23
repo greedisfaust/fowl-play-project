@@ -43,8 +43,15 @@ class_name ApartmentCeilingBuilder
 const GENERATED_ROOT_NAME: String = "_GeneratedApartmentCeiling"
 
 func _ready() -> void:
-	if Engine.is_editor_hint() and get_node_or_null(GENERATED_ROOT_NAME) == null:
+	if not Engine.is_editor_hint():
+		return
+	var generated: Node3D = get_node_or_null(GENERATED_ROOT_NAME) as Node3D
+	if generated == null:
 		_rebuild_geometry()
+	else:
+		if generated.find_child("MainRoom_Grand_Circular_Fixture", true, false) == null:
+			_build_circular_fixture(generated, get_tree().edited_scene_root)
+		_setup_night_city_environment(get_tree().edited_scene_root)
 
 func _rebuild_geometry() -> void:
 	if not Engine.is_editor_hint():
@@ -88,7 +95,8 @@ func _rebuild_geometry() -> void:
 		_build_hallway_detail(generated_root, walnut_material, bronze_material, light_material, scene_root)
 	if generate_lobby_frame:
 		_build_lobby_frame(generated_root, walnut_material, bronze_material, light_material, scene_root)
-	_build_circular_fixture(generated_root, scene_root)
+	if generated_root.find_child("MainRoom_Grand_Circular_Fixture", true, false) == null:
+		_build_circular_fixture(generated_root, scene_root)
 	_setup_night_city_environment(scene_root)
 
 
