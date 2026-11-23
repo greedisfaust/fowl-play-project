@@ -127,6 +127,9 @@ func start_round(peer_id: int) -> Dictionary:
 		model_wager["status"] = "locked"
 		model_wagers.append(model_wager)
 
+	if not seen_peers.has(peer_id):
+		return _failure("Only a player with a confirmed wager can start Chicken Cross.")
+
 	var prepared_model: RefCounted = RoundModel.new()
 	var model_result: Dictionary = prepared_model.call("begin", model_wagers)
 	if not bool(model_result.get("ok", false)):
@@ -254,6 +257,8 @@ func _resolve_player_action(peer_id: int, advance_chicken: bool) -> Dictionary:
 	# The first CROSS after a confirmed wager starts the round, locks all stakes,
 	# initializes the chicken states, and then advances onto the first tile.
 	if state == TableState.OPEN:
+		if not advance_chicken:
+			return _failure("CROSS must start the round before any player can cash out.")
 		var start_result: Dictionary = start_round(peer_id)
 		if not bool(start_result.get("ok", false)):
 			return start_result
