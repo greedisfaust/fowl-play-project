@@ -123,7 +123,8 @@ func report_player_feedback(peer_id: int, message: String, severity: StringName 
 	if not _is_authority() or peer_id <= 0 or message.strip_edges().is_empty():
 		return false
 	_receive_player_feedback(peer_id, message, severity)
-	if multiplayer.multiplayer_peer != null:
+	var network: Node = get_node_or_null("/root/Network")
+	if is_instance_valid(network) and network.get("peer") != null:
 		_receive_player_feedback.rpc(peer_id, message, severity)
 	return true
 
