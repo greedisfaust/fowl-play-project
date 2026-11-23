@@ -61,6 +61,10 @@ func _ready() -> void:
 	var run_manager: Node = get_node_or_null("/root/RunManager")
 	if run_manager != null and run_manager.has_method("bind_main_controller"):
 		run_manager.call("bind_main_controller", self)
+	if run_manager != null and run_manager.has_signal("run_state_changed"):
+		var spawn_state_callback: Callable = Callable(self, "_on_run_state_changed_for_spawn")
+		if not run_manager.is_connected("run_state_changed", spawn_state_callback):
+			run_manager.connect("run_state_changed", spawn_state_callback)
 
 	_player_spawner.spawn_path = _player_spawner.get_path_to(_players)
 	_player_spawner.spawn_limit = TUNING.MAX_PLAYERS
@@ -89,6 +93,11 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+	var run_manager: Node = get_node_or_null("/root/RunManager")
+	if is_instance_valid(run_manager) and run_manager.has_signal("run_state_changed"):
+		var spawn_state_callback: Callable = Callable(self, "_on_run_state_changed_for_spawn")
+		if run_manager.is_connected("run_state_changed", spawn_state_callback):
+			run_manager.disconnect("run_state_changed", spawn_state_callback)
 	if is_instance_valid(_debug_hub):
 		_debug_hub.call("unwatch", &"net/player_count")
 
@@ -146,6 +155,46 @@ func _rpc_transition_to(destination: int) -> void:
 
 func get_active_world() -> Node3D:
 	return active_world_instance
+
+
+## Rest days begin beside the Apartment elevator, ready for the next departure.
+## Called on every peer after the authoritative RunManager state reaches REST.
+func _on_run_state_changed_for_spawn(snapshot: Dictionary) -> void:
+	if not _has_active_world or active_world != World.APARTMENT:
+		return
+	if int(snapshot.get("phase", -1)) != 3:
+		return
+	place_players_at_apartment_elevator.call_deferred()
+
+
+func place_players_at_apartment_elevator() -> bool:
+	if not _has_active_world or active_world != World.APARTMENT or not is_instance_valid(_players):
+		return false
+	var elevator: Node3D = active_world_instance.get_node_or_null("Elevator") as Node3D
+	if elevator == null:
+		push_warning("Apartment is missing its root-level Elevator node; rest spawn remains at the normal Apartment spawn points.")
+		return false
+	var offsets: Array[Vector3] = [
+		Vector3(-0.45, 0.0, -0.45),
+		Vector3(0.45, 0.0, -0.45),
+		Vector3(-0.45, 0.0, 0.45),
+		Vector3(0.45, 0.0, 0.45),
+	]
+	var players: Array[Node] = _players.get_children()
+	players.sort_custom(func(a: Node, b: Node) -> bool: return int(str(a.name)) < int(str(b.name)))
+	for index: int in range(players.size()):
+		var player: Node = players[index]
+		var offset: Vector3 = offsets[index % offsets.size()]
+		var spawn_transform: Transform3D = Transform3D(
+			elevator.global_basis,
+			elevator.global_position + elevator.global_basis * offset
+		)
+		if player.has_method("place_at_world_spawn"):
+			if not bool(player.call("place_at_world_spawn", spawn_transform)):
+				push_warning("Could not place player %s at the Apartment elevator rest spawn." % player.name)
+		else:
+			player.global_transform = spawn_transform
+	return true
 
 
 func _get_scene_for_world(world: int) -> PackedScene:
