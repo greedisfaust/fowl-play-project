@@ -6,7 +6,6 @@
 [ext_resource type="Script" uid="uid://cacs7tu45501a" path="res://world/apartment/architecture/apartment_main_window_builder.gd" id="3_p6yhy"]
 [ext_resource type="Script" uid="uid://fsfkuusxpc5f" path="res://world/apartment/architecture/apartment_ceiling_builder.gd" id="3_qj7ip"]
 [ext_resource type="Script" uid="uid://fq3gm7cclgng" path="res://world/apartment/architecture/apartment_void_illusion.gd" id="4_a7ve1"]
-[ext_resource type="Script" uid="uid://dp0a66pddneye" path="res://world/apartment/lighting/apartment_lighting_builder.gd" id="5_sscet"]
 [ext_resource type="Script" uid="uid://dp0ngux8vl7gi" path="res://world/apartment/architecture/apartment_floor_builder.gd" id="6_6x7u6"]
 [ext_resource type="PackedScene" uid="uid://cfhki0q6u05ao" path="res://environment/terminals/registration_terminal.tscn" id="14_mf5iq"]
 [ext_resource type="PackedScene" uid="uid://88jup3hci5jy" path="res://environment/kit/player_color_panel.tscn" id="14_riwmd"]
@@ -8885,111 +8884,6 @@ mesh = SubResource("BoxMesh_rahpd")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.93, 3.725, -19.25)
 material_override = SubResource("StandardMaterial3D_7w5tp")
 mesh = SubResource("BoxMesh_yhrmt")
-
-[node name="Lighting" type="Node3D" parent="Environment/Architecture" unique_id=1712281809]
-script = ExtResource("5_sscet")
-main_room_light_color = Color(1, 0.78, 0.58, 1)
-main_room_light_energy = 1.35
-main_room_light_range = 9.0
-window_side_fill_energy = 0.55
-hallway_light_color = Color(1, 0.68, 0.43, 1)
-hallway_light_energy = 0.95
-hallway_light_range = 5.2
-lobby_light_color = Color(1, 0.78, 0.58, 1)
-lobby_light_energy = 1.55
-light_specular = 0.35
-
-[node name="_GeneratedApartmentLighting" type="Node3D" parent="Environment/Architecture/Lighting" unique_id=397733614]
-
-[node name="MainRoom_Ceiling_1_1" type="OmniLight3D" parent="Environment/Architecture/Lighting/_GeneratedApartmentLighting" unique_id=272161297]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5, 3.48, -4.8)
-light_color = Color(1, 0.78, 0.58, 1)
-light_energy = 1.35
-light_specular = 0.35
-omni_range = 9.0
-
-[node name="MainRoom_Ceiling_1_2" type="OmniLight3D" parent="Environment/Architecture/Lighting/_GeneratedApartmentLighting" unique_id=719698207]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.48, -4.8)
-light_color = Color(1, 0.78, 0.58, 1)
-light_energy = 1.35
-light_specular = 0.35
-omni_range = 9.0
-
-[node name="MainRoom_Ceiling_1_3" type="OmniLight3D" parent="Environment/Architecture/Lighting/_GeneratedApartmentLighting" unique_id=1613548911]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 3.48, -4.8)
-light_color = Color(1, 0.78, 0.58, 1)
-light_energy = 1.35
-light_specular = 0.35
-omni_range = 9.0
-
-[node name="MainRoom_Ceiling_2_1" type="OmniLight3D" parent="Environment/Architecture/Lighting/_GeneratedApartmentLighting" unique_id=154849521]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5, 3.48, 4.8)
-light_color = Color(1, 0.78, 0.58, 1)
-light_energy = 1.35
-light_specular = 0.35
-omni_range = 9.0
-
-[node name="MainRoom_Ceiling_2_2" type="OmniLight3D" parent="Environment/Architecture/Lighting/_GeneratedApartmentLighting" unique_id=687034145]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.48, 4.8)
-light_color = Color(1, 0.78, 0.58, 1)
-light_energy = 1.35
-light_specular = 0.35
-omni_range = 9.0
-
-[node name="MainRoom_Ceiling_2_3" type="OmniLight3D" parent="Environment/Architecture/Lighting/_GeneratedApartmentLighting" unique_id=1749230619]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 3.48, 4.8)
-light_color = Color(1, 0.78, 0.58, 1)
-light_energy = 1.35
-light_specular = 0.35
-omni_range = 9.0
-
-[node name="MainRoom_CityWindow_SoftFill" type="OmniLight3D" parent="Environment/Architecture/Lighting/_GeneratedApartmentLighting" unique_id=1154868691]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.6, 3.35, 0)
-light_color = Color(1, 0.78, 0.58, 1)
-light_energy = 0.55
-light_specular = 0.35
-omni_range = 6.5
-
-[node name="Hallway_Ceiling_01" type="OmniLight3D" parent="Environment/Architecture/Lighting/_GeneratedApartmentLighting" unique_id=71475584]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.75, 3.42, -14)
-light_color = Color(1, 0.68, 0.43, 1)
-light_energy = 0.95
-light_specular = 0.35
-omni_range = 5.2
-
-[node name="Hallway_Ceiling_02" type="OmniLight3D" parent="Environment/Architecture/Lighting/_GeneratedApartmentLighting" unique_id=1028608019]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.75, 3.42, -8.833333)
-light_color = Color(1, 0.68, 0.43, 1)
-light_energy = 0.95
-light_specular = 0.35
-omni_range = 5.2
-
-[node name="Hallway_Ceiling_03" type="OmniLight3D" parent="Environment/Architecture/Lighting/_GeneratedApartmentLighting" unique_id=1245738900]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.75, 3.42, -3.6666667)
-light_color = Color(1, 0.68, 0.43, 1)
-light_energy = 0.95
-light_specular = 0.35
-omni_range = 5.2
-
-[node name="Hallway_Ceiling_04" type="OmniLight3D" parent="Environment/Architecture/Lighting/_GeneratedApartmentLighting" unique_id=2139253771]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.75, 3.42, 1.5)
-light_color = Color(1, 0.68, 0.43, 1)
-light_energy = 0.95
-light_specular = 0.35
-omni_range = 5.2
-
-[node name="ElevatorLobby_Ceiling_Main" type="OmniLight3D" parent="Environment/Architecture/Lighting/_GeneratedApartmentLighting" unique_id=2049937785]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.75, 3.42, -19.25)
-light_color = Color(1, 0.78, 0.58, 1)
-light_energy = 1.55
-light_specular = 0.35
-
-[node name="ElevatorLobby_Elevator_WelcomeFill" type="OmniLight3D" parent="Environment/Architecture/Lighting/_GeneratedApartmentLighting" unique_id=298144733]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.75, 2.9, -20.7)
-light_color = Color(1, 0.78, 0.58, 1)
-light_energy = 0.8525
-light_specular = 0.35
-omni_range = 3.5
 
 [node name="FloorFinish" type="Node3D" parent="Environment/Architecture" unique_id=328204367]
 script = ExtResource("6_6x7u6")

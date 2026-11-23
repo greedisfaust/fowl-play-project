@@ -15,6 +15,9 @@
 [ext_resource type="Script" uid="uid://bp5f1uqq2i2vs" path="res://world/casino/night_city_environment.gd" id="11_night_city"]
 [ext_resource type="Shader" uid="uid://7wkski0qajnv" path="res://world/casino/shaders/night_city_rain.gdshader" id="14_8xkkx"]
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_g4v7s"]
+size = Vector3(0.32, 0.5, 26.279297)
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8xkkx"]
 albedo_color = Color(0.055, 0.062, 0.072, 1)
 metallic = 0.08
@@ -11288,199 +11291,199 @@ size = Vector3(2.392, 0.014, 0.152)
 [sub_resource type="BoxMesh" id="BoxMesh_41x0c"]
 size = Vector3(2.292, 0.014, 0.152)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rt13x"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yyfnm"]
 transparency = 1
 cull_mode = 2
 depth_draw_mode = 2
 shading_mode = 0
 albedo_color = Color(0.2, 0.72, 0.78, 0.2)
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_my6kt"]
+[sub_resource type="PlaneMesh" id="PlaneMesh_vu7m7"]
 size = Vector2(3.2, 2.4)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xr6ta"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_uwn2a"]
 cull_mode = 2
 shading_mode = 0
 albedo_color = Color(0.62, 0.39, 0.17, 0.95)
 
-[sub_resource type="BoxMesh" id="BoxMesh_yawle"]
+[sub_resource type="BoxMesh" id="BoxMesh_ykpfq"]
 size = Vector3(3.2, 0.035, 0.055)
 
-[sub_resource type="BoxMesh" id="BoxMesh_7yi7k"]
+[sub_resource type="BoxMesh" id="BoxMesh_5oagg"]
 size = Vector3(3.2, 0.035, 0.055)
 
-[sub_resource type="BoxMesh" id="BoxMesh_8mtlh"]
+[sub_resource type="BoxMesh" id="BoxMesh_dcn78"]
 size = Vector3(0.055, 0.035, 2.4)
 
-[sub_resource type="BoxMesh" id="BoxMesh_jcdgo"]
+[sub_resource type="BoxMesh" id="BoxMesh_e0wfw"]
 size = Vector3(0.055, 0.035, 2.4)
 
-[sub_resource type="TorusMesh" id="TorusMesh_bktdb"]
+[sub_resource type="TorusMesh" id="TorusMesh_qpxrx"]
 inner_radius = 0.18
 outer_radius = 0.23
 rings = 24
 ring_segments = 8
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ob8cx"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_una2j"]
 transparency = 1
 cull_mode = 2
 depth_draw_mode = 2
 shading_mode = 0
 albedo_color = Color(0.2, 0.72, 0.78, 0.2)
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_jmqmg"]
+[sub_resource type="PlaneMesh" id="PlaneMesh_t6k6m"]
 size = Vector2(3.2, 2.4)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wb5jy"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2g8n0"]
 cull_mode = 2
 shading_mode = 0
 albedo_color = Color(0.62, 0.39, 0.17, 0.95)
 
-[sub_resource type="BoxMesh" id="BoxMesh_67t32"]
+[sub_resource type="BoxMesh" id="BoxMesh_k1poi"]
 size = Vector3(3.2, 0.035, 0.055)
 
-[sub_resource type="BoxMesh" id="BoxMesh_pvlu1"]
+[sub_resource type="BoxMesh" id="BoxMesh_fthr4"]
 size = Vector3(3.2, 0.035, 0.055)
 
-[sub_resource type="BoxMesh" id="BoxMesh_8lnaq"]
+[sub_resource type="BoxMesh" id="BoxMesh_26e1p"]
 size = Vector3(0.055, 0.035, 2.4)
 
-[sub_resource type="BoxMesh" id="BoxMesh_jgtcv"]
+[sub_resource type="BoxMesh" id="BoxMesh_381rv"]
 size = Vector3(0.055, 0.035, 2.4)
 
-[sub_resource type="TorusMesh" id="TorusMesh_fv0oy"]
+[sub_resource type="TorusMesh" id="TorusMesh_drj2f"]
 inner_radius = 0.18
 outer_radius = 0.23
 rings = 24
 ring_segments = 8
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_po710"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_s3jm1"]
 transparency = 1
 cull_mode = 2
 depth_draw_mode = 2
 shading_mode = 0
 albedo_color = Color(0.2, 0.72, 0.78, 0.2)
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_8l8mw"]
+[sub_resource type="PlaneMesh" id="PlaneMesh_r6e37"]
 size = Vector2(3.2, 2.4)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_p086h"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5s2re"]
 cull_mode = 2
 shading_mode = 0
 albedo_color = Color(0.62, 0.39, 0.17, 0.95)
 
-[sub_resource type="BoxMesh" id="BoxMesh_28miy"]
+[sub_resource type="BoxMesh" id="BoxMesh_ra3gj"]
 size = Vector3(3.2, 0.035, 0.055)
 
-[sub_resource type="BoxMesh" id="BoxMesh_nabl0"]
+[sub_resource type="BoxMesh" id="BoxMesh_rxse7"]
 size = Vector3(3.2, 0.035, 0.055)
 
-[sub_resource type="BoxMesh" id="BoxMesh_6f2on"]
+[sub_resource type="BoxMesh" id="BoxMesh_axc48"]
 size = Vector3(0.055, 0.035, 2.4)
 
-[sub_resource type="BoxMesh" id="BoxMesh_inhwv"]
+[sub_resource type="BoxMesh" id="BoxMesh_7o564"]
 size = Vector3(0.055, 0.035, 2.4)
 
-[sub_resource type="TorusMesh" id="TorusMesh_35txy"]
+[sub_resource type="TorusMesh" id="TorusMesh_lcscp"]
 inner_radius = 0.18
 outer_radius = 0.23
 rings = 24
 ring_segments = 8
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_i8idp"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dshx8"]
 transparency = 1
 cull_mode = 2
 depth_draw_mode = 2
 shading_mode = 0
 albedo_color = Color(0.2, 0.72, 0.78, 0.2)
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_ajji4"]
+[sub_resource type="PlaneMesh" id="PlaneMesh_p2kpk"]
 size = Vector2(3.2, 2.4)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ovq6w"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_h12u5"]
 cull_mode = 2
 shading_mode = 0
 albedo_color = Color(0.62, 0.39, 0.17, 0.95)
 
-[sub_resource type="BoxMesh" id="BoxMesh_rdurd"]
+[sub_resource type="BoxMesh" id="BoxMesh_cobfw"]
 size = Vector3(3.2, 0.035, 0.055)
 
-[sub_resource type="BoxMesh" id="BoxMesh_x32fl"]
+[sub_resource type="BoxMesh" id="BoxMesh_h0srb"]
 size = Vector3(3.2, 0.035, 0.055)
 
-[sub_resource type="BoxMesh" id="BoxMesh_ohq47"]
+[sub_resource type="BoxMesh" id="BoxMesh_hqbtc"]
 size = Vector3(0.055, 0.035, 2.4)
 
-[sub_resource type="BoxMesh" id="BoxMesh_7b8vn"]
+[sub_resource type="BoxMesh" id="BoxMesh_grfgj"]
 size = Vector3(0.055, 0.035, 2.4)
 
-[sub_resource type="TorusMesh" id="TorusMesh_wls3i"]
+[sub_resource type="TorusMesh" id="TorusMesh_lxxeu"]
 inner_radius = 0.18
 outer_radius = 0.23
 rings = 24
 ring_segments = 8
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tlt06"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gkomo"]
 transparency = 1
 cull_mode = 2
 depth_draw_mode = 2
 shading_mode = 0
 albedo_color = Color(0.2, 0.72, 0.78, 0.2)
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_aor5y"]
+[sub_resource type="PlaneMesh" id="PlaneMesh_fytyt"]
 size = Vector2(3.2, 2.4)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jeuk2"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_u1mw2"]
 cull_mode = 2
 shading_mode = 0
 albedo_color = Color(0.62, 0.39, 0.17, 0.95)
 
-[sub_resource type="BoxMesh" id="BoxMesh_q0obi"]
+[sub_resource type="BoxMesh" id="BoxMesh_6ofct"]
 size = Vector3(3.2, 0.035, 0.055)
 
-[sub_resource type="BoxMesh" id="BoxMesh_eehuq"]
+[sub_resource type="BoxMesh" id="BoxMesh_3txqq"]
 size = Vector3(3.2, 0.035, 0.055)
 
-[sub_resource type="BoxMesh" id="BoxMesh_wmqik"]
+[sub_resource type="BoxMesh" id="BoxMesh_eiw3g"]
 size = Vector3(0.055, 0.035, 2.4)
 
-[sub_resource type="BoxMesh" id="BoxMesh_bbuvk"]
+[sub_resource type="BoxMesh" id="BoxMesh_ji7dp"]
 size = Vector3(0.055, 0.035, 2.4)
 
-[sub_resource type="TorusMesh" id="TorusMesh_igsvv"]
+[sub_resource type="TorusMesh" id="TorusMesh_33m6g"]
 inner_radius = 0.18
 outer_radius = 0.23
 rings = 24
 ring_segments = 8
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mm073"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_flrxe"]
 transparency = 1
 cull_mode = 2
 depth_draw_mode = 2
 shading_mode = 0
 albedo_color = Color(0.2, 0.72, 0.78, 0.2)
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_8x7po"]
+[sub_resource type="PlaneMesh" id="PlaneMesh_1v4y7"]
 size = Vector2(3.2, 2.4)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ftas3"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fktug"]
 cull_mode = 2
 shading_mode = 0
 albedo_color = Color(0.62, 0.39, 0.17, 0.95)
 
-[sub_resource type="BoxMesh" id="BoxMesh_hujnj"]
+[sub_resource type="BoxMesh" id="BoxMesh_3rig8"]
 size = Vector3(3.2, 0.035, 0.055)
 
-[sub_resource type="BoxMesh" id="BoxMesh_gm72v"]
+[sub_resource type="BoxMesh" id="BoxMesh_ccp6x"]
 size = Vector3(3.2, 0.035, 0.055)
 
-[sub_resource type="BoxMesh" id="BoxMesh_57p7g"]
+[sub_resource type="BoxMesh" id="BoxMesh_1ogfe"]
 size = Vector3(0.055, 0.035, 2.4)
 
-[sub_resource type="BoxMesh" id="BoxMesh_lcse7"]
+[sub_resource type="BoxMesh" id="BoxMesh_ctaay"]
 size = Vector3(0.055, 0.035, 2.4)
 
-[sub_resource type="TorusMesh" id="TorusMesh_u3kbj"]
+[sub_resource type="TorusMesh" id="TorusMesh_v4k75"]
 inner_radius = 0.18
 outer_radius = 0.23
 rings = 24
@@ -11625,6 +11628,12 @@ transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0
 use_collision = true
 polygon = PackedVector2Array(-24, -9, -14, -19, 1.5, -19, 1.5, 8, -24, 8)
 depth = 0.3
+
+[node name="HiddenStair" type="StaticBody3D" parent="Environment" unique_id=255307985]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Environment/HiddenStair" unique_id=2030091842]
+transform = Transform3D(0.6946584, -0.7193398, 0, 0.7193398, 0.6946584, 0, 0, 0, 1, 1.5583091, 0.17079543, -5.2579603)
+shape = SubResource("BoxShape3D_g4v7s")
 
 [node name="Architecture" type="Node3D" parent="." unique_id=1189615441]
 
@@ -13997,6 +14006,7 @@ script = ExtResource("1_ojnio")
 facade_points = PackedVector2Array(-24, -18.665, -14, -28.665, 11, -28.665)
 ceiling_underside_y = 4.5
 header_depth = 0.35
+generate_glass_collision = null
 
 [node name="_GeneratedPanoramicFacade" type="Node3D" parent="Architecture/WindowFrames" unique_id=537812368]
 
@@ -24954,224 +24964,266 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, 8)
 script = ExtResource("9_r5tfs")
 slot_id = "table_01"
 
-[node name="_TableSpawnPreview" type="Node3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01" unique_id=1722138397]
+[node name="_TableSpawnPreview" type="Node3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01" unique_id=2110983523]
 
-[node name="Footprint" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01/_TableSpawnPreview" unique_id=516890865]
+[node name="Footprint" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01/_TableSpawnPreview" unique_id=1921257449]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0)
-material_override = SubResource("StandardMaterial3D_rt13x")
-mesh = SubResource("PlaneMesh_my6kt")
+material_override = SubResource("StandardMaterial3D_yyfnm")
+mesh = SubResource("PlaneMesh_vu7m7")
 
-[node name="FrontEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01/_TableSpawnPreview" unique_id=2147028843]
+[node name="FrontEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01/_TableSpawnPreview" unique_id=589248651]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, -1.2)
-material_override = SubResource("StandardMaterial3D_xr6ta")
-mesh = SubResource("BoxMesh_yawle")
+material_override = SubResource("StandardMaterial3D_uwn2a")
+mesh = SubResource("BoxMesh_ykpfq")
 
-[node name="BackEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01/_TableSpawnPreview" unique_id=1636792347]
+[node name="BackEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01/_TableSpawnPreview" unique_id=1333491438]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 1.2)
-material_override = SubResource("StandardMaterial3D_xr6ta")
-mesh = SubResource("BoxMesh_7yi7k")
+material_override = SubResource("StandardMaterial3D_uwn2a")
+mesh = SubResource("BoxMesh_5oagg")
 
-[node name="LeftEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01/_TableSpawnPreview" unique_id=711280958]
+[node name="LeftEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01/_TableSpawnPreview" unique_id=670617587]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 0.025, 0)
-material_override = SubResource("StandardMaterial3D_xr6ta")
-mesh = SubResource("BoxMesh_8mtlh")
+material_override = SubResource("StandardMaterial3D_uwn2a")
+mesh = SubResource("BoxMesh_dcn78")
 
-[node name="RightEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01/_TableSpawnPreview" unique_id=386466949]
+[node name="RightEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01/_TableSpawnPreview" unique_id=55727917]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 0.025, 0)
-material_override = SubResource("StandardMaterial3D_xr6ta")
-mesh = SubResource("BoxMesh_jcdgo")
+material_override = SubResource("StandardMaterial3D_uwn2a")
+mesh = SubResource("BoxMesh_e0wfw")
 
-[node name="CenterOrientationRing" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01/_TableSpawnPreview" unique_id=395070149]
+[node name="CenterOrientationRing" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01/_TableSpawnPreview" unique_id=1537072825]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.045, 0)
-material_override = SubResource("StandardMaterial3D_xr6ta")
-mesh = SubResource("TorusMesh_bktdb")
+material_override = SubResource("StandardMaterial3D_uwn2a")
+mesh = SubResource("TorusMesh_qpxrx")
 
 [node name="TableSlot_02" type="Marker3D" parent="Architecture/TableSpawners/SpawnPoints" unique_id=194278063]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, 0)
 script = ExtResource("9_r5tfs")
 slot_id = "table_02"
 
-[node name="_TableSpawnPreview" type="Node3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02" unique_id=1752154549]
+[node name="_TableSpawnPreview" type="Node3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02" unique_id=2029054378]
 
-[node name="Footprint" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02/_TableSpawnPreview" unique_id=1063169030]
+[node name="Footprint" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02/_TableSpawnPreview" unique_id=1185309999]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0)
-material_override = SubResource("StandardMaterial3D_ob8cx")
-mesh = SubResource("PlaneMesh_jmqmg")
+material_override = SubResource("StandardMaterial3D_una2j")
+mesh = SubResource("PlaneMesh_t6k6m")
 
-[node name="FrontEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02/_TableSpawnPreview" unique_id=1279787406]
+[node name="FrontEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02/_TableSpawnPreview" unique_id=236193864]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, -1.2)
-material_override = SubResource("StandardMaterial3D_wb5jy")
-mesh = SubResource("BoxMesh_67t32")
+material_override = SubResource("StandardMaterial3D_2g8n0")
+mesh = SubResource("BoxMesh_k1poi")
 
-[node name="BackEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02/_TableSpawnPreview" unique_id=1525654546]
+[node name="BackEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02/_TableSpawnPreview" unique_id=1891435964]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 1.2)
-material_override = SubResource("StandardMaterial3D_wb5jy")
-mesh = SubResource("BoxMesh_pvlu1")
+material_override = SubResource("StandardMaterial3D_2g8n0")
+mesh = SubResource("BoxMesh_fthr4")
 
-[node name="LeftEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02/_TableSpawnPreview" unique_id=1988806617]
+[node name="LeftEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02/_TableSpawnPreview" unique_id=775104407]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 0.025, 0)
-material_override = SubResource("StandardMaterial3D_wb5jy")
-mesh = SubResource("BoxMesh_8lnaq")
+material_override = SubResource("StandardMaterial3D_2g8n0")
+mesh = SubResource("BoxMesh_26e1p")
 
-[node name="RightEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02/_TableSpawnPreview" unique_id=363418958]
+[node name="RightEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02/_TableSpawnPreview" unique_id=2080444340]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 0.025, 0)
-material_override = SubResource("StandardMaterial3D_wb5jy")
-mesh = SubResource("BoxMesh_jgtcv")
+material_override = SubResource("StandardMaterial3D_2g8n0")
+mesh = SubResource("BoxMesh_381rv")
 
-[node name="CenterOrientationRing" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02/_TableSpawnPreview" unique_id=1554414713]
+[node name="CenterOrientationRing" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02/_TableSpawnPreview" unique_id=1013510140]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.045, 0)
-material_override = SubResource("StandardMaterial3D_wb5jy")
-mesh = SubResource("TorusMesh_fv0oy")
+material_override = SubResource("StandardMaterial3D_2g8n0")
+mesh = SubResource("TorusMesh_drj2f")
 
 [node name="TableSlot_03" type="Marker3D" parent="Architecture/TableSpawners/SpawnPoints" unique_id=86204490]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.775, 0, 8)
 script = ExtResource("9_r5tfs")
 slot_id = "table_03"
 
-[node name="_TableSpawnPreview" type="Node3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03" unique_id=1765819169]
+[node name="_TableSpawnPreview" type="Node3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03" unique_id=938353041]
 
-[node name="Footprint" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03/_TableSpawnPreview" unique_id=1514402267]
+[node name="Footprint" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03/_TableSpawnPreview" unique_id=902803336]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0)
-material_override = SubResource("StandardMaterial3D_po710")
-mesh = SubResource("PlaneMesh_8l8mw")
+material_override = SubResource("StandardMaterial3D_s3jm1")
+mesh = SubResource("PlaneMesh_r6e37")
 
-[node name="FrontEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03/_TableSpawnPreview" unique_id=548193596]
+[node name="FrontEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03/_TableSpawnPreview" unique_id=1122008451]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, -1.2)
-material_override = SubResource("StandardMaterial3D_p086h")
-mesh = SubResource("BoxMesh_28miy")
+material_override = SubResource("StandardMaterial3D_5s2re")
+mesh = SubResource("BoxMesh_ra3gj")
 
-[node name="BackEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03/_TableSpawnPreview" unique_id=706635632]
+[node name="BackEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03/_TableSpawnPreview" unique_id=1479256931]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 1.2)
-material_override = SubResource("StandardMaterial3D_p086h")
-mesh = SubResource("BoxMesh_nabl0")
+material_override = SubResource("StandardMaterial3D_5s2re")
+mesh = SubResource("BoxMesh_rxse7")
 
-[node name="LeftEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03/_TableSpawnPreview" unique_id=771187548]
+[node name="LeftEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03/_TableSpawnPreview" unique_id=833887170]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 0.025, 0)
-material_override = SubResource("StandardMaterial3D_p086h")
-mesh = SubResource("BoxMesh_6f2on")
+material_override = SubResource("StandardMaterial3D_5s2re")
+mesh = SubResource("BoxMesh_axc48")
 
-[node name="RightEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03/_TableSpawnPreview" unique_id=1380541962]
+[node name="RightEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03/_TableSpawnPreview" unique_id=259190469]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 0.025, 0)
-material_override = SubResource("StandardMaterial3D_p086h")
-mesh = SubResource("BoxMesh_inhwv")
+material_override = SubResource("StandardMaterial3D_5s2re")
+mesh = SubResource("BoxMesh_7o564")
 
-[node name="CenterOrientationRing" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03/_TableSpawnPreview" unique_id=1349376281]
+[node name="CenterOrientationRing" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03/_TableSpawnPreview" unique_id=114112109]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.045, 0)
-material_override = SubResource("StandardMaterial3D_p086h")
-mesh = SubResource("TorusMesh_35txy")
+material_override = SubResource("StandardMaterial3D_5s2re")
+mesh = SubResource("TorusMesh_lcscp")
 
 [node name="TableSlot_04" type="Marker3D" parent="Architecture/TableSpawners/SpawnPoints" unique_id=1481430920]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.775, 0, 0)
 script = ExtResource("9_r5tfs")
 slot_id = "table_04"
 
-[node name="_TableSpawnPreview" type="Node3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04" unique_id=2088967071]
+[node name="_TableSpawnPreview" type="Node3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04" unique_id=1655878624]
 
-[node name="Footprint" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04/_TableSpawnPreview" unique_id=624732884]
+[node name="Footprint" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04/_TableSpawnPreview" unique_id=121575184]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0)
-material_override = SubResource("StandardMaterial3D_i8idp")
-mesh = SubResource("PlaneMesh_ajji4")
+material_override = SubResource("StandardMaterial3D_dshx8")
+mesh = SubResource("PlaneMesh_p2kpk")
 
-[node name="FrontEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04/_TableSpawnPreview" unique_id=845853501]
+[node name="FrontEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04/_TableSpawnPreview" unique_id=2056032253]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, -1.2)
-material_override = SubResource("StandardMaterial3D_ovq6w")
-mesh = SubResource("BoxMesh_rdurd")
+material_override = SubResource("StandardMaterial3D_h12u5")
+mesh = SubResource("BoxMesh_cobfw")
 
-[node name="BackEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04/_TableSpawnPreview" unique_id=792171829]
+[node name="BackEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04/_TableSpawnPreview" unique_id=1914189538]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 1.2)
-material_override = SubResource("StandardMaterial3D_ovq6w")
-mesh = SubResource("BoxMesh_x32fl")
+material_override = SubResource("StandardMaterial3D_h12u5")
+mesh = SubResource("BoxMesh_h0srb")
 
-[node name="LeftEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04/_TableSpawnPreview" unique_id=28340056]
+[node name="LeftEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04/_TableSpawnPreview" unique_id=414887037]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 0.025, 0)
-material_override = SubResource("StandardMaterial3D_ovq6w")
-mesh = SubResource("BoxMesh_ohq47")
+material_override = SubResource("StandardMaterial3D_h12u5")
+mesh = SubResource("BoxMesh_hqbtc")
 
-[node name="RightEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04/_TableSpawnPreview" unique_id=777960921]
+[node name="RightEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04/_TableSpawnPreview" unique_id=1511542452]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 0.025, 0)
-material_override = SubResource("StandardMaterial3D_ovq6w")
-mesh = SubResource("BoxMesh_7b8vn")
+material_override = SubResource("StandardMaterial3D_h12u5")
+mesh = SubResource("BoxMesh_grfgj")
 
-[node name="CenterOrientationRing" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04/_TableSpawnPreview" unique_id=1608738469]
+[node name="CenterOrientationRing" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04/_TableSpawnPreview" unique_id=351434179]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.045, 0)
-material_override = SubResource("StandardMaterial3D_ovq6w")
-mesh = SubResource("TorusMesh_wls3i")
+material_override = SubResource("StandardMaterial3D_h12u5")
+mesh = SubResource("TorusMesh_lxxeu")
 
 [node name="TableSlot_05" type="Marker3D" parent="Architecture/TableSpawners/SpawnPoints" unique_id=1588481136]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.775, 0, -8)
 script = ExtResource("9_r5tfs")
 slot_id = "table_05"
 
-[node name="_TableSpawnPreview" type="Node3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05" unique_id=2030918563]
+[node name="_TableSpawnPreview" type="Node3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05" unique_id=1310659768]
 
-[node name="Footprint" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05/_TableSpawnPreview" unique_id=1284805852]
+[node name="Footprint" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05/_TableSpawnPreview" unique_id=972579929]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0)
-material_override = SubResource("StandardMaterial3D_tlt06")
-mesh = SubResource("PlaneMesh_aor5y")
+material_override = SubResource("StandardMaterial3D_gkomo")
+mesh = SubResource("PlaneMesh_fytyt")
 
-[node name="FrontEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05/_TableSpawnPreview" unique_id=1109995668]
+[node name="FrontEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05/_TableSpawnPreview" unique_id=374757580]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, -1.2)
-material_override = SubResource("StandardMaterial3D_jeuk2")
-mesh = SubResource("BoxMesh_q0obi")
+material_override = SubResource("StandardMaterial3D_u1mw2")
+mesh = SubResource("BoxMesh_6ofct")
 
-[node name="BackEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05/_TableSpawnPreview" unique_id=864076005]
+[node name="BackEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05/_TableSpawnPreview" unique_id=1017080175]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 1.2)
-material_override = SubResource("StandardMaterial3D_jeuk2")
-mesh = SubResource("BoxMesh_eehuq")
+material_override = SubResource("StandardMaterial3D_u1mw2")
+mesh = SubResource("BoxMesh_3txqq")
 
-[node name="LeftEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05/_TableSpawnPreview" unique_id=863553107]
+[node name="LeftEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05/_TableSpawnPreview" unique_id=1145571196]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 0.025, 0)
-material_override = SubResource("StandardMaterial3D_jeuk2")
-mesh = SubResource("BoxMesh_wmqik")
+material_override = SubResource("StandardMaterial3D_u1mw2")
+mesh = SubResource("BoxMesh_eiw3g")
 
-[node name="RightEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05/_TableSpawnPreview" unique_id=762016263]
+[node name="RightEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05/_TableSpawnPreview" unique_id=240370765]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 0.025, 0)
-material_override = SubResource("StandardMaterial3D_jeuk2")
-mesh = SubResource("BoxMesh_bbuvk")
+material_override = SubResource("StandardMaterial3D_u1mw2")
+mesh = SubResource("BoxMesh_ji7dp")
 
-[node name="CenterOrientationRing" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05/_TableSpawnPreview" unique_id=1220074441]
+[node name="CenterOrientationRing" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05/_TableSpawnPreview" unique_id=919912378]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.045, 0)
-material_override = SubResource("StandardMaterial3D_jeuk2")
-mesh = SubResource("TorusMesh_igsvv")
+material_override = SubResource("StandardMaterial3D_u1mw2")
+mesh = SubResource("TorusMesh_33m6g")
 
 [node name="TableSlot_06" type="Marker3D" parent="Architecture/TableSpawners/SpawnPoints" unique_id=2027547547]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, -9)
 script = ExtResource("9_r5tfs")
 slot_id = "table_06"
 
-[node name="_TableSpawnPreview" type="Node3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06" unique_id=141746329]
+[node name="_TableSpawnPreview" type="Node3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06" unique_id=893971122]
 
-[node name="Footprint" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06/_TableSpawnPreview" unique_id=1332213014]
+[node name="Footprint" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06/_TableSpawnPreview" unique_id=483253347]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0)
-material_override = SubResource("StandardMaterial3D_mm073")
-mesh = SubResource("PlaneMesh_8x7po")
+material_override = SubResource("StandardMaterial3D_flrxe")
+mesh = SubResource("PlaneMesh_1v4y7")
 
-[node name="FrontEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06/_TableSpawnPreview" unique_id=816145396]
+[node name="FrontEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06/_TableSpawnPreview" unique_id=798022636]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, -1.2)
-material_override = SubResource("StandardMaterial3D_ftas3")
-mesh = SubResource("BoxMesh_hujnj")
+material_override = SubResource("StandardMaterial3D_fktug")
+mesh = SubResource("BoxMesh_3rig8")
 
-[node name="BackEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06/_TableSpawnPreview" unique_id=440838205]
+[node name="BackEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06/_TableSpawnPreview" unique_id=445088593]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 1.2)
-material_override = SubResource("StandardMaterial3D_ftas3")
-mesh = SubResource("BoxMesh_gm72v")
+material_override = SubResource("StandardMaterial3D_fktug")
+mesh = SubResource("BoxMesh_ccp6x")
 
-[node name="LeftEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06/_TableSpawnPreview" unique_id=1299725318]
+[node name="LeftEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06/_TableSpawnPreview" unique_id=724077724]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 0.025, 0)
-material_override = SubResource("StandardMaterial3D_ftas3")
-mesh = SubResource("BoxMesh_57p7g")
+material_override = SubResource("StandardMaterial3D_fktug")
+mesh = SubResource("BoxMesh_1ogfe")
 
-[node name="RightEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06/_TableSpawnPreview" unique_id=802690967]
+[node name="RightEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06/_TableSpawnPreview" unique_id=43745397]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 0.025, 0)
-material_override = SubResource("StandardMaterial3D_ftas3")
-mesh = SubResource("BoxMesh_lcse7")
+material_override = SubResource("StandardMaterial3D_fktug")
+mesh = SubResource("BoxMesh_ctaay")
 
-[node name="CenterOrientationRing" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06/_TableSpawnPreview" unique_id=1279220561]
+[node name="CenterOrientationRing" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06/_TableSpawnPreview" unique_id=1660828770]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.045, 0)
-material_override = SubResource("StandardMaterial3D_ftas3")
-mesh = SubResource("TorusMesh_u3kbj")
+material_override = SubResource("StandardMaterial3D_fktug")
+mesh = SubResource("TorusMesh_v4k75")
 
 [node name="SpawnedTables" type="Node3D" parent="Architecture/TableSpawners" unique_id=495716833]
+
+[node name="GamingTableLighting" type="Node3D" parent="Architecture" unique_id=896375808]
+
+[node name="Table_01_Warm_Pool" type="SpotLight3D" parent="Architecture/GamingTableLighting" unique_id=125325147]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -17, 3.82, -7.5)
+light_color = Color(1, 0.84, 0.69, 1)
+light_energy = 1.45
+light_specular = 0.22
+spot_range = 7.0
+spot_angle = 58.0
+
+[node name="Table_02_Warm_Pool" type="SpotLight3D" parent="Architecture/GamingTableLighting" unique_id=39115219]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -17, 3.82, -15.5)
+light_color = Color(1, 0.84, 0.69, 1)
+light_energy = 1.45
+light_specular = 0.22
+spot_range = 7.0
+spot_angle = 58.0
+
+[node name="Table_03_Warm_Pool" type="SpotLight3D" parent="Architecture/GamingTableLighting" unique_id=219676888]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -6.225, 3.82, -7.5)
+light_color = Color(1, 0.84, 0.69, 1)
+light_energy = 1.45
+light_specular = 0.22
+spot_range = 7.0
+spot_angle = 58.0
+
+[node name="Table_04_Warm_Pool" type="SpotLight3D" parent="Architecture/GamingTableLighting" unique_id=1289113920]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -6.225, 3.82, -15.5)
+light_color = Color(1, 0.84, 0.69, 1)
+light_energy = 1.45
+light_specular = 0.22
+spot_range = 7.0
+spot_angle = 58.0
+
+[node name="Table_05_Warm_Pool" type="SpotLight3D" parent="Architecture/GamingTableLighting" unique_id=949813420]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -6.225, 3.82, -23.5)
+light_color = Color(1, 0.84, 0.69, 1)
+light_energy = 1.45
+light_specular = 0.22
+spot_range = 7.0
+spot_angle = 58.0
 
 [node name="PlayerSpawnPoints" type="Node3D" parent="." unique_id=429364050]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.2, 0.21, 0)
@@ -25287,56 +25339,3 @@ light_color = Color(0.72, 0.8, 0.92, 1)
 light_energy = 0.0
 omni_range = 105.0
 omni_attenuation = 1.25
-
-
-[node name="GamingTableLighting" type="Node3D" parent="Architecture"]
-
-[node name="Table_01_Warm_Pool" type="SpotLight3D" parent="Architecture/GamingTableLighting"]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -17, 3.82, -7.5)
-light_color = Color(1, 0.84, 0.69, 1)
-light_energy = 1.45
-light_specular = 0.22
-spot_range = 7.0
-spot_attenuation = 1.0
-spot_angle = 58.0
-shadow_enabled = false
-
-[node name="Table_02_Warm_Pool" type="SpotLight3D" parent="Architecture/GamingTableLighting"]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -17, 3.82, -15.5)
-light_color = Color(1, 0.84, 0.69, 1)
-light_energy = 1.45
-light_specular = 0.22
-spot_range = 7.0
-spot_attenuation = 1.0
-spot_angle = 58.0
-shadow_enabled = false
-
-[node name="Table_03_Warm_Pool" type="SpotLight3D" parent="Architecture/GamingTableLighting"]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -6.225, 3.82, -7.5)
-light_color = Color(1, 0.84, 0.69, 1)
-light_energy = 1.45
-light_specular = 0.22
-spot_range = 7.0
-spot_attenuation = 1.0
-spot_angle = 58.0
-shadow_enabled = false
-
-[node name="Table_04_Warm_Pool" type="SpotLight3D" parent="Architecture/GamingTableLighting"]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -6.225, 3.82, -15.5)
-light_color = Color(1, 0.84, 0.69, 1)
-light_energy = 1.45
-light_specular = 0.22
-spot_range = 7.0
-spot_attenuation = 1.0
-spot_angle = 58.0
-shadow_enabled = false
-
-[node name="Table_05_Warm_Pool" type="SpotLight3D" parent="Architecture/GamingTableLighting"]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -6.225, 3.82, -23.5)
-light_color = Color(1, 0.84, 0.69, 1)
-light_energy = 1.45
-light_specular = 0.22
-spot_range = 7.0
-spot_attenuation = 1.0
-spot_angle = 58.0
-shadow_enabled = false
