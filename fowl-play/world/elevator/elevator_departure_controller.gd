@@ -32,6 +32,7 @@ var _debug_hub: Node
 var _casino_day_manager: Node
 var _deadline_forced_departure: bool = false
 var _rest_disembark_active: bool = false
+var _rest_disembark_initialized: bool = false
 var _rest_disembark_pending: Dictionary = {}
 var _rest_players_seen_inside: Dictionary = {}
 
@@ -188,26 +189,44 @@ func _sync_rest_disembark_gate() -> void:
 	var is_rest_phase: bool = int(_run_manager.get("phase")) == 3
 	if not is_rest_phase:
 		_rest_disembark_active = false
+		_rest_disembark_initialized = false
 		_rest_disembark_pending.clear()
 		_rest_players_seen_inside.clear()
 		return
-	if _rest_disembark_active:
-		_update_rest_disembark_progress()
-		return
 	_rest_disembark_active = true
-	_rest_disembark_pending.clear()
-	_rest_players_seen_inside.clear()
-	var occupants: Array[int] = _occupancy.get_occupant_peer_ids()
-	for peer_id: int in _get_expected_peer_ids():
-		_rest_disembark_pending[peer_id] = true
-		if occupants.has(peer_id):
-			_rest_players_seen_inside[peer_id] = true
-	if _rest_disembark_pending.is_empty():
-		_log_rejection("REST disembark gate could not initialize: no expected players were found.")
+	var expected_peer_ids: Array[int] = _get_expected_peer_ids()
+	if not _rest_disembark_initialized:
+		if expected_peer_ids.is_empty():
+			return
+		_rest_disembark_pending.clear()
+		_rest_players_seen_inside.clear()
+		var occupants: Array[int] = _occupancy.get_occupant_peer_ids()
+		for peer_id: int in expected_peer_ids:
+			_rest_disembark_pending[peer_id] = true
+			if occupants.has(peer_id):
+				_rest_players_seen_inside[peer_id] = true
+		_rest_disembark_initialized = true
+		return
+	# Keep the gate aligned with the live roster: disconnected players cannot
+	# permanently hold the team, and a newly connected player must also disembark.
+	for pending_peer: Variant in _rest_disembark_pending.keys():
+		if not expected_peer_ids.has(int(pending_peer)):
+			_rest_disembark_pending.erase(pending_peer)
+			_rest_players_seen_inside.erase(pending_peer)
+	var current_occupants: Array[int] = _occupancy.get_occupant_peer_ids()
+	for peer_id: int in expected_peer_ids:
+		if _rest_disembark_pending.has(peer_id):
+			continue
+		if not _rest_players_seen_inside.has(peer_id) and not current_occupants.has(peer_id):
+			# A player joining after the gate was initialized starts outside and
+			# must still enter then leave before departure is enabled.
+			_rest_disembark_pending[peer_id] = true
+			continue
+	_update_rest_disembark_progress()
 
 
 func _update_rest_disembark_progress() -> void:
-	if not _rest_disembark_active or _rest_disembark_pending.is_empty():
+	if not _rest_disembark_active or not _rest_disembark_initialized or _rest_disembark_pending.is_empty():
 		return
 	var occupants: Array[int] = _occupancy.get_occupant_peer_ids()
 	for peer_id: int in _get_expected_peer_ids():
@@ -235,7 +254,7 @@ func _on_rest_occupant_exited(peer_id: int, _player: Node) -> void:
 
 
 func is_rest_departure_unlocked() -> bool:
-	return not _rest_disembark_active or _rest_disembark_pending.is_empty()
+	return not _rest_disembark_active or (_rest_disembark_initialized and not _rest_disembark_pending.is_empty() == false)
 
 
 static func can_departure_during_rest(disembark_gate_active: bool, all_players_disembarked: bool) -> bool:
