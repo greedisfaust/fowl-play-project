@@ -582,6 +582,16 @@ func set_terminal_movement_locked(locked: bool) -> void:
 		velocity.x = 0.0
 		velocity.z = 0.0
 
+
+## Re-captures the mouse after a gameplay world transition.
+## Do not steal the cursor from an open console or active terminal text field.
+func restore_gameplay_mouse_capture() -> void:
+	if not is_local_player or is_limp or is_recovering or terminal_movement_locked:
+		return
+	if is_instance_valid(debug_hub) and bool(debug_hub.call("is_console_open")):
+		return
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+
 func correct_movement(at: Vector3) -> void:
 	if is_limp or is_recovering:
 		return
