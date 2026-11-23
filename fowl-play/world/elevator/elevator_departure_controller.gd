@@ -31,6 +31,9 @@ var _departure_in_progress: bool = false
 var _debug_hub: Node
 var _casino_day_manager: Node
 var _deadline_forced_departure: bool = false
+var _rest_disembark_active: bool = false
+var _rest_disembark_pending: Dictionary = {}
+var _rest_players_seen_inside: Dictionary = {}
 
 
 func _ready() -> void:
@@ -73,6 +76,11 @@ func _ready() -> void:
 		return
 
 	_interactable.availability_check = Callable(self, "_can_interact")
+	if _occupancy.is_connected("occupant_entered", _on_rest_occupant_entered) == false:
+		_occupancy.connect("occupant_entered", _on_rest_occupant_entered)
+	if _occupancy.is_connected("occupant_exited", _on_rest_occupant_exited) == false:
+		_occupancy.connect("occupant_exited", _on_rest_occupant_exited)
+	_sync_rest_disembark_gate()
 	if _button.has_signal("button_activated"):
 		if not _button.is_connected("button_activated", _on_button_activated):
 			_button.connect("button_activated", _on_button_activated)
@@ -91,6 +99,11 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+	if is_instance_valid(_occupancy):
+		if _occupancy.is_connected("occupant_entered", _on_rest_occupant_entered):
+			_occupancy.disconnect("occupant_entered", _on_rest_occupant_entered)
+		if _occupancy.is_connected("occupant_exited", _on_rest_occupant_exited):
+			_occupancy.disconnect("occupant_exited", _on_rest_occupant_exited)
 	if is_instance_valid(_casino_day_manager) and _casino_day_manager.has_signal("day_finished"):
 		var day_finished_callback: Callable = Callable(self, "_on_casino_day_finished")
 		if _casino_day_manager.is_connected("day_finished", day_finished_callback):
@@ -167,8 +180,75 @@ func _rpc_place_players_inside_elevator() -> void:
 			player.global_transform = target
 
 
+## In REST, every player must be observed inside the Apartment elevator and then leave it once.
+## The team can regroup and depart only after all expected peers have disembarked.
+func _sync_rest_disembark_gate() -> void:
+	if not is_instance_valid(_run_manager) or not is_instance_valid(_occupancy):
+		return
+	var is_rest_phase: bool = int(_run_manager.get("phase")) == 3
+	if not is_rest_phase:
+		_rest_disembark_active = false
+		_rest_disembark_pending.clear()
+		_rest_players_seen_inside.clear()
+		return
+	if _rest_disembark_active:
+		_update_rest_disembark_progress()
+		return
+	_rest_disembark_active = true
+	_rest_disembark_pending.clear()
+	_rest_players_seen_inside.clear()
+	var occupants: Array[int] = _occupancy.get_occupant_peer_ids()
+	for peer_id: int in _get_expected_peer_ids():
+		_rest_disembark_pending[peer_id] = true
+		if occupants.has(peer_id):
+			_rest_players_seen_inside[peer_id] = true
+	if _rest_disembark_pending.is_empty():
+		_log_rejection("REST disembark gate could not initialize: no expected players were found.")
+
+
+func _update_rest_disembark_progress() -> void:
+	if not _rest_disembark_active or _rest_disembark_pending.is_empty():
+		return
+	var occupants: Array[int] = _occupancy.get_occupant_peer_ids()
+	for peer_id: int in _get_expected_peer_ids():
+		if not _rest_disembark_pending.has(peer_id):
+			continue
+		if occupants.has(peer_id):
+			_rest_players_seen_inside[peer_id] = true
+		elif _rest_players_seen_inside.has(peer_id):
+			_rest_disembark_pending.erase(peer_id)
+			_rest_players_seen_inside.erase(peer_id)
+			if _rest_disembark_pending.is_empty():
+				_log_rejection("REST departure unlocked: every player has left the Apartment elevator.")
+
+
+func _on_rest_occupant_entered(peer_id: int, _player: Node) -> void:
+	if _rest_disembark_active and _rest_disembark_pending.has(peer_id):
+		_rest_players_seen_inside[peer_id] = true
+
+
+func _on_rest_occupant_exited(peer_id: int, _player: Node) -> void:
+	if not _rest_disembark_active or not _rest_players_seen_inside.has(peer_id):
+		return
+	_rest_disembark_pending.erase(peer_id)
+	_rest_players_seen_inside.erase(peer_id)
+
+
+func is_rest_departure_unlocked() -> bool:
+	return not _rest_disembark_active or _rest_disembark_pending.is_empty()
+
+
+static func can_departure_during_rest(disembark_gate_active: bool, all_players_disembarked: bool) -> bool:
+	return not disembark_gate_active or all_players_disembarked
+
+
 ## Returns true only when every connected player is inside the elevator.
 ## ElevatorOccupancy already accounts for players being carried by another player.
+func _process(_delta: float) -> void:
+	_sync_rest_disembark_gate()
+	_update_rest_disembark_progress()
+
+
 func are_all_players_inside() -> bool:
 	if not is_instance_valid(_occupancy):
 		return false
@@ -192,12 +272,17 @@ static func can_peer_request_departure(actor_peer_id: int, expected_peer_ids: Ar
 func _can_interact(actor: Node, action: StringName) -> bool:
 	if action != &"use" or _request_pending or _departure_in_progress or not is_instance_valid(actor):
 		return false
+	if not _is_rest_departure_unlocked():
+		return false
 	var actor_peer_id: int = int(actor.get("input_peer_id"))
 	return can_peer_request_departure(actor_peer_id, _get_expected_peer_ids(), _occupancy.get_occupant_peer_ids())
 
 
 func _on_button_activated(_button_id: StringName, actor_peer_id: int) -> void:
 	if not _is_network_authority() or _request_pending or _departure_in_progress:
+		return
+	if not _is_rest_departure_unlocked():
+		_log_rejection("REST departure locked: every player must leave the Apartment elevator once before regrouping.")
 		return
 	if not can_peer_request_departure(actor_peer_id, _get_expected_peer_ids(), _occupancy.get_occupant_peer_ids()):
 		_log_rejection("DEPART rejected: every connected player must be inside the elevator.")
