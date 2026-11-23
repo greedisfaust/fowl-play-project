@@ -108,8 +108,8 @@ Run the existing RunManager and Casino Day test runners after integration.
 6. Settle more than one wager for one player. Confirm the row accumulates the net results and does not double-count.
 7. Reach quota. Confirm every peer sees the announcement and wallet/quota transition from green/red to a smooth champagne-gold gradient, with a one-time bright reward sweep followed by a soft idle glow.
 8. Confirm the center announcer has a comfortable small gap beneath the timer without moving too far down the screen.\n9. Focus a USE target and a GRAB target. Confirm M1/E hints match the Interactable's accepted inputs and prompt text. Look away and confirm the target prompt clears.
-9. Stand still and confirm the movement baseline sits at the bottom-right. Move and confirm Sprint/Jump appear above it; focus an interactable and confirm Interact appears; carry an item and confirm Drop/Throw replace combat actions.
-10. Finish a casino day and confirm every peer sees the day-result announcement with the actual final wallet and quota.
+10. Stand still and confirm the movement baseline sits at the bottom-right. Move and confirm Sprint/Jump appear above it; focus an interactable and confirm Interact appears; carry an item and confirm Drop/Throw replace combat actions.
+11. Finish a casino day and confirm every peer sees the day-result announcement with the actual final wallet and quota.
 11. Start a fresh run and confirm prior contribution rows are cleared.
 12. Confirm the Blessed/Watched placeholder remains visible without invented player assignments; calling `set_modifier_status` should only happen with real authoritative values.
 13. Confirm the unboxed announcer stacks up to three notices newest-first, fades them out, suppresses duplicates, and lets critical quota/day-result notices override lower-priority notices.
