@@ -94,7 +94,9 @@ func _run() -> void:
 			_finish(false, "Casino HUD controls must ignore mouse input so FPS look events reach Player._unhandled_input.")
 			return
 	var yaw_before_mouse_look: float = float(player.rotation.y)
-	player.call("_rotate_view", Vector2(10.0, 0.0))
+	var mouse_motion: InputEventMouseMotion = InputEventMouseMotion.new()
+	mouse_motion.relative = Vector2(10.0, 0.0)
+	player.call("_input", mouse_motion)
 	if is_equal_approx(float(player.rotation.y), yaw_before_mouse_look):
 		main.queue_free()
 		_finish(false, "Mouse look should remain responsive while terminal movement is locked.")
