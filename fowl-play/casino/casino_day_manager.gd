@@ -173,8 +173,6 @@ func _on_run_state_changed(snapshot: Dictionary) -> void:
 		_last_published_second = -1
 		day_state_changed.emit(get_snapshot())
 		return
-	if not _is_authority():
-		return
 	var phase_value: int = int(snapshot.get("phase", -1))
 	if phase_value != 2:
 		day_start_pending = false
@@ -184,13 +182,24 @@ func _on_run_state_changed(snapshot: Dictionary) -> void:
 		return
 	if day_result_recorded and day_number == incoming_day:
 		return
-	# World arrival only arms the day. The elevator confirms the first player has
-	# physically disembarked before the five-minute clock begins.
-	day_start_pending = true
-	_log("Day %d is waiting for the first player to leave the elevator." % incoming_day)
+	# Mirror the incoming day immediately, but defer its actual timer/quota snapshot
+	# until the host observes the first player leaving the destination elevator.
+	day_active = false
+	day_number = incoming_day
+	starting_wallet = _get_current_wallet_balance()
+	current_wallet_balance = starting_wallet
+	daily_quota = 0
+	seconds_remaining = 0.0
+	quota_reached = false
+	day_result_recorded = false
+	day_success = false
+	final_wallet_snapshot = 0
+	_last_published_second = -1
+	day_start_pending = _is_authority()
+	day_state_changed.emit(get_snapshot())
+	if _is_authority():
+		_log("Day %d is waiting for the first player to leave the elevator." % incoming_day)
 
-
-## Called by the host's destination elevator after any player physically exits.
 func start_casino_day_after_disembark() -> Dictionary:
 	if not _is_authority():
 		return _failure("Only the host can start the casino day.")
