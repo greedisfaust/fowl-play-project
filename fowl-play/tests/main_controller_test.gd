@@ -63,9 +63,15 @@ func _run() -> void:
 		_finish(false, "Repeated spawn requests must not create a duplicate player.")
 		return
 
+	# Simulate the cursor being released during the elevator interaction.
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	main.call("transition_to", 1)
 	await process_frame
 	await process_frame
+	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+		main.queue_free()
+		_finish(false, "Gameplay mouse should be captured again after the world transition fade completes.")
+		return
 	if players.get_child_count() != 1 or players.get_node_or_null("1") != player:
 		main.queue_free()
 		_finish(false, "Player instance did not survive the world swap.")
