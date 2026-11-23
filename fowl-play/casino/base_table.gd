@@ -22,6 +22,8 @@ signal round_cancelled(table_id: String, round_id: String, refund_total: int)
 signal round_auto_resolution_requested(table_id: String, round_id: String, reason: String)
 ## Host-authoritative, peer-targeted feedback consumed by the persistent Casino HUD.
 signal player_feedback(peer_id: int, message: String, severity: StringName)
+## Host-authoritative notices intended for every connected player's HUD.
+signal global_announcement(message: String, category: String, priority: int)
 
 @export var open_round_inactivity_seconds: float = 45.0
 @export var table_id: String = ""
@@ -137,6 +139,24 @@ func _receive_player_feedback(peer_id: int, message: String, severity: StringNam
 			return
 	player_feedback.emit(peer_id, message, severity)
 
+
+## Broadcasts a meaningful gameplay event to every HUD. Call only from the host.
+func report_global_announcement(message: String, category: String = "CASINO NOTICE", priority: int = 1) -> bool:
+	if not _is_authority() or message.strip_edges().is_empty():
+		return false
+	_receive_global_announcement(message, category, priority)
+	var network: Node = get_node_or_null("/root/Network")
+	if is_instance_valid(network) and network.get("peer") != null:
+		_receive_global_announcement.rpc(message, category, priority)
+	return true
+
+@rpc("authority", "call_remote", "reliable", 0)
+func _receive_global_announcement(message: String, category: String, priority: int) -> void:
+	var network: Node = get_node_or_null("/root/Network")
+	if is_instance_valid(network) and network.get("peer") != null:
+		if not bool(network.call("validate_rpc", 1)):
+			return
+	global_announcement.emit(message, category, clampi(priority, 0, 3))
 
 ## Opens a round. The opener does not have to join or place a wager.
 func open_round(peer_id: int) -> Dictionary:
