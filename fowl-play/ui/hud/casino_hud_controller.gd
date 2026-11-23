@@ -11,8 +11,8 @@ const COLOR_QUOTA_UNMET: Color = Color(0.94, 0.29, 0.32, 1.0)
 const COLOR_QUOTA_MET: Color = Color(1.0, 0.78, 0.38, 1.0)
 const COLOR_TEXT: Color = Color(0.94, 0.94, 0.91, 1.0)
 const COLOR_MUTED: Color = Color(0.57, 0.59, 0.60, 1.0)
-const COLOR_PANEL: Color = Color(0.018, 0.023, 0.026, 0.84)
-const COLOR_PANEL_EDGE: Color = Color(0.72, 0.75, 0.73, 0.9)
+const COLOR_PANEL: Color = Color(0.018, 0.023, 0.026, 0.34)
+const COLOR_PANEL_EDGE: Color = Color(0.72, 0.75, 0.73, 0.38)
 const COLOR_TIMER_URGENT: Color = Color(0.96, 0.34, 0.31, 1.0)
 
 @export_group("Display Nodes")
@@ -61,7 +61,9 @@ var _action_rows: Dictionary = {}
 var _action_refresh_elapsed: float = 0.0
 var _last_action_signature: String = ""
 
-var _announcement_panel: PanelContainer
+var _announcement_panel: Control
+var _announcement_feed: VBoxContainer
+var _announcement_entries: Array[Dictionary] = []
 var _announcement_label: Label
 var _announcement_subtitle: Label
 var _announcement_queue: Array[Dictionary] = []
@@ -391,7 +393,7 @@ func _build_runtime_hud_sections() -> void:
 		_timer_caption.add_theme_color_override("font_color", COLOR_MUTED)
 		top_center.add_child(_timer_caption)
 
-	# Top-right status placeholder. It stays visible as a reserved, intentionally empty readout.
+	# Translucent top-right status and contribution readouts.
 	_modifier_panel = _make_panel()
 	_modifier_panel.name = "ModifierStatusPanel"
 	_modifier_panel.anchor_left = 1.0
@@ -410,7 +412,6 @@ func _build_runtime_hud_sections() -> void:
 	modifier_stack.add_child(_blessed_label)
 	modifier_stack.add_child(_watched_label)
 
-	# Contributions keep their existing settled-wager semantics, now in a quiet framed readout.
 	var contribution_panel: PanelContainer = _make_panel()
 	contribution_panel.name = "ContributionPanel"
 	contribution_panel.anchor_left = 1.0
@@ -431,7 +432,7 @@ func _build_runtime_hud_sections() -> void:
 	contribution_root.add_child(_contribution_list)
 	_refresh_contribution_panel()
 
-	# The control list is intentionally unboxed and anchored to the lower-right corner.
+	# Contextual controls: right-aligned, consistent terminal-white, no indentation.
 	_action_list = VBoxContainer.new()
 	_action_list.name = "ContextualControls"
 	_action_list.anchor_left = 1.0
@@ -447,27 +448,23 @@ func _build_runtime_hud_sections() -> void:
 	_action_list.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_action_list)
 
-	# Announcement is the only prominent center-screen panel; its queue is priority-aware.
-	_announcement_panel = _make_panel()
-	_announcement_panel.name = "CenterAnnouncer"
+	# Floating, unboxed announcer feed. New notices enter at the top.
+	_announcement_panel = Control.new()
+	_announcement_panel.name = "CenterAnnouncerFeed"
 	_announcement_panel.anchor_left = 0.5
 	_announcement_panel.anchor_right = 0.5
 	_announcement_panel.offset_left = -330.0
 	_announcement_panel.offset_top = 104.0
 	_announcement_panel.offset_right = 330.0
-	_announcement_panel.offset_bottom = 170.0
-	_announcement_panel.modulate.a = 0.0
+	_announcement_panel.offset_bottom = 300.0
+	_announcement_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_announcement_panel)
-	var announcement_stack: VBoxContainer = VBoxContainer.new()
-	announcement_stack.alignment = BoxContainer.ALIGNMENT_CENTER
-	announcement_stack.add_theme_constant_override("separation", 4)
-	_announcement_panel.add_child(announcement_stack)
-	_announcement_subtitle = _make_runtime_label("CASINO NOTICE", 10, HORIZONTAL_ALIGNMENT_CENTER, true)
-	_announcement_subtitle.add_theme_color_override("font_color", COLOR_MUTED)
-	_announcement_label = _make_runtime_label("", 19, HORIZONTAL_ALIGNMENT_CENTER, true)
-	_announcement_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	announcement_stack.add_child(_announcement_subtitle)
-	announcement_stack.add_child(_announcement_label)
+	_announcement_feed = VBoxContainer.new()
+	_announcement_feed.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_announcement_feed.alignment = BoxContainer.ALIGNMENT_BEGIN
+	_announcement_feed.add_theme_constant_override("separation", 8)
+	_announcement_feed.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_announcement_panel.add_child(_announcement_feed)
 
 	_wallet_glow_material = _make_glow_material()
 	_quota_glow_material = _make_glow_material()
@@ -475,7 +472,6 @@ func _build_runtime_hud_sections() -> void:
 	_quota_label.material = _quota_glow_material
 	_set_quota_glow(bool(_last_day_snapshot.get("quota_reached", false)))
 	_refresh_action_prompt()
-
 
 func _make_panel() -> PanelContainer:
 	var panel: PanelContainer = PanelContainer.new()
@@ -491,14 +487,13 @@ func _make_panel_style() -> StyleBoxFlat:
 	style.border_color = COLOR_PANEL_EDGE
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(3)
-	style.shadow_color = Color(0.0, 0.0, 0.0, 0.35)
-	style.shadow_size = 7
+	style.shadow_color = Color(0.0, 0.0, 0.0, 0.12)
+	style.shadow_size = 3
 	style.content_margin_left = 13.0
 	style.content_margin_right = 13.0
 	style.content_margin_top = 9.0
 	style.content_margin_bottom = 9.0
 	return style
-
 
 func _make_glow_material() -> ShaderMaterial:
 	var material: ShaderMaterial = ShaderMaterial.new()
@@ -626,7 +621,7 @@ func _on_focus_target_changed(target: Interactable) -> void:
 func _refresh_action_prompt() -> void:
 	if not is_instance_valid(_action_list):
 		return
-	var lines: Array[Dictionary] = []
+	var lines: Array[String] = []
 	var carrying: bool = is_instance_valid(_local_player) and _local_player.has_method("is_carrying") and bool(_local_player.call("is_carrying"))
 	var limp: bool = is_instance_valid(_local_player) and bool(_local_player.get("is_limp"))
 	var recovering: bool = is_instance_valid(_local_player) and bool(_local_player.get("is_recovering"))
@@ -636,17 +631,16 @@ func _refresh_action_prompt() -> void:
 	if is_instance_valid(_local_player):
 		var velocity_value: Variant = _local_player.get("velocity")
 		if velocity_value is Vector3:
-			var horizontal: Vector2 = Vector2(velocity_value.x, velocity_value.z)
-			moving = horizontal.length() > 0.35
+			moving = Vector2(velocity_value.x, velocity_value.z).length() > 0.35
 		if _local_player.has_method("is_on_floor"):
 			grounded = bool(_local_player.call("is_on_floor"))
 
 	if limp or recovering:
-		lines.append({"text": "RECOVER — AUTOMATIC", "indent": 0})
+		lines.append("RECOVER — AUTOMATIC")
 	elif carrying:
-		lines.append({"text": "THROW — [HOLD Q]", "indent": 0})
-		lines.append({"text": "DROP — [Q]", "indent": 1})
-		lines.append({"text": "MOVE — [W] [A] [S] [D]", "indent": 0})
+		lines.append("THROW — [HOLD Q]")
+		lines.append("DROP — [Q]")
+		lines.append("MOVE — [W] [A] [S] [D]")
 	elif not terminal_locked:
 		if is_instance_valid(_focused_interactable) and _focused_interactable.enabled:
 			var controls: PackedStringArray = PackedStringArray()
@@ -655,30 +649,27 @@ func _refresh_action_prompt() -> void:
 			if _focused_interactable.action_for_input(&"interact") != &"":
 				controls.append("E")
 			if not controls.is_empty():
-				lines.append({"text": "INTERACT — [%s]" % ", ".join(controls), "indent": 0})
+				lines.append("INTERACT — [%s]" % ", ".join(controls))
 		if moving:
-			lines.append({"text": "SPRINT — [SHIFT]", "indent": 0})
+			lines.append("SPRINT — [SHIFT]")
 			if grounded:
-				lines.append({"text": "JUMP — [SPACE]", "indent": 1})
-		lines.append({"text": "JAB / CHARGED PUNCH — [Q]", "indent": 1})
-		lines.append({"text": "PARRY — [F]", "indent": 1})
-		lines.append({"text": "MOVE — [W] [A] [S] [D]", "indent": 0})
+				lines.append("JUMP — [SPACE]")
+		lines.append("JAB / CHARGED PUNCH — [Q]")
+		lines.append("PARRY — [F]")
+		lines.append("MOVE — [W] [A] [S] [D]")
 
-	var signature: String = JSON.stringify(lines)
+	var signature: String = "\n".join(lines)
 	if signature == _last_action_signature:
 		return
 	_last_action_signature = signature
 	for child: Node in _action_list.get_children():
 		_action_list.remove_child(child)
 		child.queue_free()
-	# VBox reads top-to-bottom; append the baseline movement entry last so it sits at the bottom.
-	for line: Dictionary in lines:
-		var label: Label = _make_runtime_label(str(line["text"]), 13, HORIZONTAL_ALIGNMENT_LEFT, true)
-		label.add_theme_color_override("font_color", COLOR_TEXT if int(line["indent"]) == 0 else COLOR_MUTED)
-		if int(line["indent"]) > 0:
-			label.text = "    " + label.text
+	for line: String in lines:
+		var label: Label = _make_runtime_label(line, 13, HORIZONTAL_ALIGNMENT_RIGHT, true)
+		label.add_theme_color_override("font_color", COLOR_TEXT)
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_action_list.add_child(label)
-
 
 func _on_day_finished(day: int, success: bool, final_wallet: int, quota: int) -> void:
 	var result_text: String = "QUOTA MET" if success else "QUOTA MISSED"
@@ -687,60 +678,68 @@ func _on_day_finished(day: int, success: bool, final_wallet: int, quota: int) ->
 
 
 func _show_announcement(message: String, text_color: Color = COLOR_TEXT, priority: int = -1, subtitle: String = "") -> void:
-	if not is_instance_valid(_announcement_panel):
+	if not is_instance_valid(_announcement_feed) or message.strip_edges().is_empty():
 		return
 	var resolved_priority: int = priority
 	if resolved_priority < 0:
 		var upper: String = message.to_upper()
 		resolved_priority = 3 if upper.contains("DAY ") or upper.contains("QUOTA REACHED") or upper.contains("GAME OVER") else 1 if upper.contains("WON") or upper.contains("LOST") else 0
-	var item: Dictionary = {"message": message, "color": text_color, "priority": resolved_priority, "subtitle": subtitle}
-	if _announcement_queue.size() >= 8:
-		var lowest_index: int = 0
-		for i in range(_announcement_queue.size()):
-			if int(_announcement_queue[i]["priority"]) < int(_announcement_queue[lowest_index]["priority"]):
-				lowest_index = i
-		if int(_announcement_queue[lowest_index]["priority"]) > resolved_priority:
+
+	# Suppress repeated spam and keep critical notices visually dominant.
+	for existing: Dictionary in _announcement_entries:
+		if str(existing.get("message", "")) == message:
 			return
-		_announcement_queue.remove_at(lowest_index)
-	var insert_at: int = _announcement_queue.size()
-	for i in range(_announcement_queue.size()):
-		if resolved_priority > int(_announcement_queue[i]["priority"]):
-			insert_at = i
-			break
-	_announcement_queue.insert(insert_at, item)
-	if not _announcement_active:
-		_play_next_announcement()
+	if resolved_priority < 3:
+		for existing: Dictionary in _announcement_entries:
+			if int(existing.get("priority", 0)) >= 3:
+				return
+	else:
+		for existing: Dictionary in _announcement_entries.duplicate():
+			if int(existing.get("priority", 0)) < resolved_priority:
+				var old_node: Control = existing.get("node") as Control
+				if is_instance_valid(old_node):
+					old_node.queue_free()
+				_announcement_entries.erase(existing)
 
+	var entry: VBoxContainer = VBoxContainer.new()
+	entry.alignment = BoxContainer.ALIGNMENT_CENTER
+	entry.add_theme_constant_override("separation", 2)
+	entry.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	entry.modulate.a = 0.0
+	var category: Label = _make_runtime_label(subtitle if not subtitle.is_empty() else "CASINO NOTICE", 10, HORIZONTAL_ALIGNMENT_CENTER, true)
+	category.add_theme_color_override("font_color", text_color.lightened(0.12))
+	category.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var headline: Label = _make_runtime_label(message, 19, HORIZONTAL_ALIGNMENT_CENTER, true)
+	headline.add_theme_color_override("font_color", text_color)
+	headline.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	headline.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	entry.add_child(category)
+	entry.add_child(headline)
+	_announcement_feed.add_child(entry)
+	_announcement_feed.move_child(entry, 0)
+	var record: Dictionary = {"message": message, "priority": resolved_priority, "node": entry}
+	_announcement_entries.push_front(record)
 
-func _play_next_announcement() -> void:
-	if _announcement_queue.is_empty() or not is_instance_valid(_announcement_panel):
-		_announcement_active = false
-		return
-	_announcement_active = true
-	var item: Dictionary = _announcement_queue.pop_front()
-	_announcement_label.text = str(item["message"])
-	_announcement_label.add_theme_color_override("font_color", item["color"])
-	_announcement_subtitle.text = str(item["subtitle"]) if not str(item["subtitle"]).is_empty() else "CASINO NOTICE"
-	_announcement_panel.modulate.a = 0.0
-	_announcement_panel.scale = Vector2(0.97, 0.97)
-	if _announcement_tween != null and _announcement_tween.is_running():
-		_announcement_tween.kill()
-	_announcement_tween = create_tween()
-	_announcement_tween.set_parallel(true)
-	_announcement_tween.tween_property(_announcement_panel, "modulate:a", 1.0, 0.22)
-	_announcement_tween.tween_property(_announcement_panel, "scale", Vector2.ONE, 0.28).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_announcement_tween.set_parallel(false)
-	_announcement_tween.tween_interval(2.45 if int(item["priority"]) < 3 else 3.4)
-	_announcement_tween.tween_property(_announcement_panel, "modulate:a", 0.0, 0.38)
-	_announcement_tween.finished.connect(_on_announcement_finished)
+	while _announcement_entries.size() > 3:
+		var expired: Dictionary = _announcement_entries.pop_back()
+		var expired_node: Control = expired.get("node") as Control
+		if is_instance_valid(expired_node):
+			expired_node.queue_free()
 
+	var lifetime: float = 4.0 if resolved_priority >= 3 else 3.0
+	var tween: Tween = create_tween()
+	tween.tween_property(entry, "modulate:a", 1.0, 0.18)
+	tween.tween_interval(lifetime)
+	tween.tween_property(entry, "modulate:a", 0.0, 0.55)
+	tween.finished.connect(func() -> void:
+		for i in range(_announcement_entries.size() - 1, -1, -1):
+			if _announcement_entries[i].get("node") == entry:
+				_announcement_entries.remove_at(i)
+				break
+		if is_instance_valid(entry):
+			entry.queue_free()
+	)
 
-func _on_announcement_finished() -> void:
-	_announcement_active = false
-	_play_next_announcement()
-
-
-## Future modifier service integration point. Only call with authoritative player assignments.
 func set_modifier_status(blessed_player: String, watched_player: String) -> void:
 	if not is_instance_valid(_modifier_panel):
 		return
