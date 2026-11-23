@@ -119,8 +119,11 @@ func _exit_tree() -> void:
 	if get_tree().node_added.is_connected(_on_tree_node_added):
 		get_tree().node_added.disconnect(_on_tree_node_added)
 	for table: BaseTable in _connected_tables:
-		if is_instance_valid(table) and table.player_feedback.is_connected(_on_table_feedback):
-			table.player_feedback.disconnect(_on_table_feedback)
+		if is_instance_valid(table):
+			if table.player_feedback.is_connected(_on_table_feedback):
+				table.player_feedback.disconnect(_on_table_feedback)
+			if table.global_announcement.is_connected(_on_global_announcement):
+				table.global_announcement.disconnect(_on_global_announcement)
 	_connected_tables.clear()
 	_disconnect_services()
 	if _announcement_tween != null and _announcement_tween.is_running():
@@ -215,6 +218,8 @@ func _connect_table_feedback_source(node: Node) -> void:
 		return
 	if not table.player_feedback.is_connected(_on_table_feedback):
 		table.player_feedback.connect(_on_table_feedback)
+	if not table.global_announcement.is_connected(_on_global_announcement):
+		table.global_announcement.connect(_on_global_announcement)
 	_connected_tables.append(table)
 
 
@@ -233,6 +238,19 @@ func _on_table_feedback(peer_id: int, message: String, severity: StringName) -> 
 			tint = COLOR_QUOTA_UNMET
 			priority = 1
 	_show_announcement(message, tint, priority)
+
+
+
+func _on_global_announcement(message: String, category: String, priority: int) -> void:
+	var tint: Color = COLOR_TEXT
+	match category.to_upper():
+		"CHICKEN CROSS":
+			tint = COLOR_QUOTA_MET
+		"CASH OUT":
+			tint = COLOR_WALLET
+		"DAILY RESULT":
+			tint = COLOR_QUOTA_MET if message.contains("QUOTA MET") else COLOR_QUOTA_UNMET
+	_show_announcement(message, tint, priority, category)
 
 
 func _get_local_peer_id() -> int:
@@ -673,8 +691,7 @@ func _refresh_action_prompt() -> void:
 
 func _on_day_finished(day: int, success: bool, final_wallet: int, quota: int) -> void:
 	var result_text: String = "QUOTA MET" if success else "QUOTA MISSED"
-	_show_announcement("DAY %d — %s" % [day, result_text], COLOR_QUOTA_MET if success else COLOR_QUOTA_UNMET, 3,
-		"WALLET %s  /  %s" % [_format_money(final_wallet), _format_money(quota)])
+	_show_announcement("DAY %d — %s" % [day, result_text], COLOR_QUOTA_MET if success else COLOR_QUOTA_UNMET, 3, "DAILY RESULT")
 
 
 func _show_announcement(message: String, text_color: Color = COLOR_TEXT, priority: int = -1, subtitle: String = "") -> void:
