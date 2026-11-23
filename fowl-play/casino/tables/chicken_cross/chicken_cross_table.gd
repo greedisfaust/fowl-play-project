@@ -9,6 +9,8 @@ signal round_finished(payouts: Dictionary, settlement: Dictionary)
 
 var _round_model: RefCounted = null
 var _network: Node = null
+## Last authoritative state for every participant; used by the shared table display.
+var _round_player_states: Dictionary = {}
 
 @export var proximity_area: Area3D
 @export var cross_interactable: Interactable
@@ -109,6 +111,7 @@ func start_round(peer_id: int) -> Dictionary:
 	if not bool(start_result.get("ok", false)):
 		return start_result
 	_round_model = prepared_model
+	_round_player_states.clear()
 	for player_state: Dictionary in _round_model.call("get_players"):
 		_publish_player_state(int(player_state["peer_id"]))
 	return start_result
@@ -291,50 +294,73 @@ func _publish_player_state(peer_id: int) -> void:
 	var player_state: Dictionary = _round_model.call("get_player", peer_id)
 	if player_state.is_empty():
 		return
+	_round_player_states[peer_id] = player_state.duplicate(true)
 	player_state_changed.emit(peer_id, player_state.duplicate(true))
 	_apply_local_player_presentation(peer_id, player_state)
+	_update_table_terminal_display()
 	if multiplayer.multiplayer_peer != null:
 		_receive_player_state.rpc(peer_id, player_state)
 
+
 func _apply_local_player_presentation(peer_id: int, player_state: Dictionary) -> void:
-	# The tabletop is shared geometry, so each client presents only its own
-	# chicken. Other players' state remains available through player_state_changed.
+	# The lane's single-player highlight is a local convenience only. The shared
+	# terminal below always reports every participant, on every peer.
 	if peer_id != multiplayer.get_unique_id():
 		return
 	var visuals: Node = get_node_or_null("Visuals")
 	if visuals != null and visuals.has_method("apply_player_state"):
 		visuals.call("apply_player_state", player_state)
-	_update_local_terminal_display(player_state)
 
-func _update_local_terminal_display(player_state: Dictionary) -> void:
+
+func get_round_player_display_lines() -> Array[String]:
+	var lines: Array[String] = []
+	var peer_ids: Array[int] = []
+	for peer_value: Variant in _round_player_states.keys():
+		peer_ids.append(int(peer_value))
+	peer_ids.sort()
+	for peer_id: int in peer_ids:
+		var player_state: Dictionary = _round_player_states[peer_id]
+		var nickname: String = _get_player_nickname(peer_id)
+		var tile_number: int = int(player_state.get("tile", 0))
+		var stake: int = int(player_state.get("stake", 0))
+		var status: String = str(player_state.get("status", "active"))
+		var detail: String = ""
+		match status:
+			"failed":
+				detail = "FAILED AT %02d" % tile_number
+			"cashed_out":
+				detail = "BANKED $%s" % _format_currency(int(player_state.get("gross_return", 0)))
+			_:
+				detail = "READY" if tile_number <= 0 else "TILE %02d/%02d  %.1fX" % [
+					tile_number,
+					Rules.TILE_COUNT,
+					float(player_state.get("multiplier", 0.0))
+				]
+		lines.append("%s  BET $%s  %s" % [nickname, _format_currency(stake), detail])
+	return lines
+
+
+func _get_player_nickname(peer_id: int) -> String:
+	if is_instance_valid(_network) and _network.has_method("get_player_identity"):
+		var identity: Object = _network.call("get_player_identity", peer_id) as Object
+		if identity != null:
+			var nickname_value: Variant = identity.get("nickname")
+			if nickname_value is String and not str(nickname_value).strip_edges().is_empty():
+				return str(nickname_value)
+	return "PLAYER %d" % peer_id
+
+
+func _update_table_terminal_display() -> void:
 	var world_screen: Node = get_node_or_null("SlimWorldScreen/WorldScreen")
 	if world_screen == null or not world_screen.has_method("set_content"):
 		return
-	var tile_number: int = int(player_state.get("tile", 0))
-	var stake: int = int(player_state.get("stake", 0))
-	var status: String = str(player_state.get("status", "active"))
-	var header: String = "CHICKEN CROSS"
-	var body: String = ""
-	var prompt: String = ""
-	if status == "failed":
-		body = "TILE %02d / %02d\nCHICKEN LOST\nWAGER LOST" % [tile_number, Rules.TILE_COUNT]
-		prompt = "ROUND RESOLVED"
-	elif status == "cashed_out":
-		var multiplier: float = float(player_state.get("multiplier", 0.0))
-		var gross_return: int = int(player_state.get("gross_return", 0))
-		body = "SAFE AT TILE %02d / %02d\nRETURN %.1fX\nPAYOUT $%s" % [tile_number, Rules.TILE_COUNT, multiplier, _format_currency(gross_return)]
-		prompt = "CASH OUT COMPLETE"
-	elif tile_number <= 0:
-		body = "WAGER LOCKED\nREADY TO CROSS\n12 TILES AHEAD"
-		prompt = "CROSS TO BEGIN"
-	else:
-		var next_tile: int = mini(tile_number + 1, Rules.TILE_COUNT)
-		var risk: float = Rules.failure_chance_for_tile(next_tile) * 100.0
-		var multiplier: float = Rules.multiplier_for_tile(tile_number)
-		var gross_return: int = Rules.gross_return_for_stake(stake, tile_number)
-		body = "SAFE TILE %02d / %02d\nNEXT RISK %.0f%%\nCASH OUT %.1fX  $%s" % [tile_number, Rules.TILE_COUNT, risk, multiplier, _format_currency(gross_return)]
-		prompt = "CROSS FOR MORE  /  CASH OUT"
-	world_screen.call("set_content", header, body, prompt)
+	var lines: Array[String] = get_round_player_display_lines()
+	var body: String = "\n".join(lines)
+	var prompt: String = "CROSS TO ADVANCE  /  CASH OUT TO BANK"
+	if lines.is_empty():
+		body = "PLACE A WAGER TO JOIN THE ROUND"
+		prompt = "WAGER TERMINAL READY"
+	world_screen.call("set_content", "CHICKEN CROSS  |  PLAYERS %d" % lines.size(), body, prompt)
 
 func _format_currency(amount: int) -> String:
 	var raw: String = str(maxi(amount, 0))
@@ -347,6 +373,7 @@ func _format_currency(amount: int) -> String:
 
 @rpc("authority", "call_remote", "reliable")
 func _receive_player_state(peer_id: int, player_state: Dictionary) -> void:
-	# Each client receives authoritative state but renders only its own chicken.
+	_round_player_states[peer_id] = player_state.duplicate(true)
 	player_state_changed.emit(peer_id, player_state.duplicate(true))
 	_apply_local_player_presentation(peer_id, player_state)
+	_update_table_terminal_display()
