@@ -2,6 +2,7 @@ extends SceneTree
 
 const ChickenCrossTable = preload("res://casino/tables/chicken_cross/chicken_cross_table.gd")
 const ChickenVisual = preload("res://casino/tables/chicken_cross/chicken_cross_chicken.gd")
+const ChickenCrossScene = preload("res://casino/tables/chicken_cross/chicken_cross_table.tscn")
 var _failed: bool = false
 
 func _initialize() -> void:
@@ -11,6 +12,7 @@ func _run() -> void:
 	var wallet: Node = root.get_node("CasinoWallet")
 	_check_result(wallet.call("begin_run", 1000), true, "Initialize wallet for Chicken Cross table")
 	_test_chicken_visual_asset()
+	_test_physical_collisions()
 	_test_single_player_round(wallet)
 	_test_multi_player_round(wallet)
 	_test_duplicate_bettor_rejection(wallet)
@@ -19,6 +21,22 @@ func _run() -> void:
 		return
 	print("CHICKEN CROSS TABLE PASS")
 	quit(0)
+
+func _test_physical_collisions() -> void:
+	var table: Node3D = ChickenCrossScene.instantiate() as Node3D
+	root.add_child(table)
+	var table_body: StaticBody3D = table.get_node_or_null("ChickenCrossPhysicalBody") as StaticBody3D
+	_check(table_body != null, "Chicken Cross creates a physical table body")
+	if table_body != null:
+		_check(table_body.get_child_count() == 5, "Table collision covers the tabletop and all four legs")
+		for child: Node in table_body.get_children():
+			_check(child is CollisionShape3D and (child as CollisionShape3D).shape is BoxShape3D, "Table collision uses simple box shapes")
+	_check(table.get_node_or_null("SlimWorldScreen/ChickenCrossScreenCollision/ScreenHousing") is CollisionShape3D, "World screen housing blocks player movement")
+	_check(table.get_node_or_null("BettingKeypad/Housing/ChickenCrossHousingCollision/HousingShape") is CollisionShape3D, "Betting keypad housing blocks player movement")
+	_check(table.get_node_or_null("BettingKeypad/Key_1/InteractionBody/CollisionShape3D") is CollisionShape3D, "Keypad keys retain their individual interaction collisions")
+	_check(table.get_node_or_null("Controls/CrossButton/InteractionBody/CollisionShape3D") is CollisionShape3D, "Cross button retains its interaction collision")
+	_check(table.get_node_or_null("Controls/CashOutButton/InteractionBody/CollisionShape3D") is CollisionShape3D, "Cash Out button retains its interaction collision")
+	table.queue_free()
 
 func _test_chicken_visual_asset() -> void:
 	var chicken: Node3D = ChickenVisual.new()
