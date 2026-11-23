@@ -2,6 +2,8 @@
 ## Uses temporary in-memory worlds so no editor-authored scene files are modified.
 extends SceneTree
 
+const BaseTableScript = preload("res://casino/base_table.gd")
+
 func _initialize() -> void:
 	_run.call_deferred()
 
@@ -93,6 +95,19 @@ func _run() -> void:
 			main.queue_free()
 			_finish(false, "Casino HUD controls must ignore mouse input so FPS look events reach Player._unhandled_input.")
 			return
+	var feedback_table: BaseTable = BaseTableScript.new() as BaseTable
+	feedback_table.set("table_id", "hud_feedback_test")
+	feedback_table.set("game_id", "test_game")
+	main.add_child(feedback_table)
+	if not bool(feedback_table.call("report_player_feedback", 1, "TEST WAGER CONFIRMED", &"success")):
+		main.queue_free()
+		_finish(false, "BaseTable should publish local HUD feedback for its intended peer.")
+		return
+	var announcement_label: Label = casino_hud.get("_announcement_label") as Label if casino_hud != null else null
+	if announcement_label == null or announcement_label.text != "TEST WAGER CONFIRMED":
+		main.queue_free()
+		_finish(false, "Casino HUD should display peer-targeted feedback emitted by a BaseTable.")
+		return
 	var yaw_before_mouse_look: float = float(player.rotation.y)
 	var mouse_motion: InputEventMouseMotion = InputEventMouseMotion.new()
 	mouse_motion.relative = Vector2(10.0, 0.0)
