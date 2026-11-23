@@ -77,6 +77,7 @@ func _ready() -> void:
 	_apply_typography()
 	_connect_services()
 	_build_runtime_hud_sections()
+	_set_hud_controls_mouse_passthrough()
 	_connect_focus_sources()
 	_refresh_all()
 	call_deferred("_refresh_visibility")
@@ -358,8 +359,18 @@ func _build_runtime_hud_sections() -> void:
 	_announcement_label.modulate.a = 0.0
 	add_child(_announcement_label)
 
+## The HUD is visual-only. Even its full-screen MarginContainer must not consume
+## mouse motion, otherwise Player._unhandled_input never receives FPS look events.
+func _set_hud_controls_mouse_passthrough() -> void:
+	for node: Node in find_children("*", "Control", true, false):
+		var control: Control = node as Control
+		if is_instance_valid(control):
+			control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+
 func _make_runtime_label(label_text: String, size: int, alignment: int) -> Label:
 	var label: Label = Label.new()
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.text = label_text
 	label.horizontal_alignment = alignment
 	label.add_theme_font_size_override("font_size", size)
@@ -411,6 +422,7 @@ func _refresh_contribution_panel() -> void:
 		row.add_child(amount_label)
 		row.add_child(nickname_label)
 		_contribution_list.add_child(row)
+	_set_hud_controls_mouse_passthrough()
 
 
 func _format_signed_money(amount: int) -> String:
