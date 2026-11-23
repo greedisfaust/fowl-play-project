@@ -419,19 +419,22 @@ func _sync_chicken_visual(peer_id: int, player_state: Dictionary) -> void:
 		return
 	var chicken: ChickenCrossChicken = root.get_node_or_null("Chicken_%d" % peer_id) as ChickenCrossChicken
 	var is_new: bool = not is_instance_valid(chicken)
+	var status: String = str(player_state.get("status", "active"))
+	var previous_status: String = str(chicken.get_meta("display_status", "active")) if not is_new else "active"
+	if not is_new and status == "active" and previous_status in ["failed", "cashed_out"]:
+		root.remove_child(chicken)
+		chicken.queue_free()
+		chicken = null
+		is_new = true
 	if is_new:
 		chicken = ChickenVisualScript.new() as ChickenCrossChicken
 		chicken.name = "Chicken_%d" % peer_id
 		root.add_child(chicken)
 		chicken.scale = Vector3.ONE * 0.48
 		chicken.position = Vector3(-1.53, 1.25, _lane_z_for_peer(peer_id))
-		chicken.configure(peer_id, str(player_state.get("nickname", _get_player_nickname(peer_id))), int(player_state.get("color_index", _get_player_color_index(peer_id))))
-	else:
-		chicken.configure(peer_id, str(player_state.get("nickname", _get_player_nickname(peer_id))), int(player_state.get("color_index", _get_player_color_index(peer_id))))
+	chicken.configure(peer_id, str(player_state.get("nickname", _get_player_nickname(peer_id))), int(player_state.get("color_index", _get_player_color_index(peer_id))))
 	var tile_number: int = clampi(int(player_state.get("tile", 0)), 0, Rules.TILE_COUNT)
-	var previous_status: String = str(chicken.get_meta("display_status", "active"))
 	chicken.set_tile(tile_number, not is_new)
-	var status: String = str(player_state.get("status", "active"))
 	if not is_new and previous_status != status:
 		if status == "failed":
 			chicken.play_failure()
