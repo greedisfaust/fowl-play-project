@@ -35,6 +35,7 @@ var _day_label: Label
 var _wallet_label: Label
 var _quota_label: Label
 var _timer_label: Label
+var _timer_caption: Label
 var _run_manager: Node
 var _day_manager: Node
 var _wallet: Node
@@ -153,6 +154,8 @@ func _apply_typography() -> void:
 	_wallet_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_quota_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_timer_label.offset_top = 24.0
+	_timer_label.offset_bottom = 70.0
 	_day_label.add_theme_font_size_override("font_size", day_font_size)
 	_wallet_label.add_theme_font_override("font", BOLD_FONT)
 	_wallet_label.add_theme_font_size_override("font_size", wallet_font_size)
@@ -373,6 +376,19 @@ func _format_time(total_seconds: int) -> String:
 
 
 func _build_runtime_hud_sections() -> void:
+	# Timer caption stays centered above the countdown.
+	var top_center: Control = get_node_or_null("MarginContainer/LayoutRoot/TopCenter") as Control
+	if is_instance_valid(top_center):
+		_timer_caption = _make_runtime_label("DAY ENDS IN", 12, HORIZONTAL_ALIGNMENT_CENTER, true)
+		_timer_caption.anchor_left = 0.5
+		_timer_caption.anchor_right = 0.5
+		_timer_caption.offset_left = -130.0
+		_timer_caption.offset_top = 0.0
+		_timer_caption.offset_right = 130.0
+		_timer_caption.offset_bottom = 22.0
+		_timer_caption.add_theme_color_override("font_color", COLOR_MUTED)
+		top_center.add_child(_timer_caption)
+
 	# Top-right status placeholder. It stays visible as a reserved, intentionally empty readout.
 	_modifier_panel = _make_panel()
 	_modifier_panel.name = "ModifierStatusPanel"
@@ -594,8 +610,8 @@ func _connect_focus_sources() -> void:
 				carrier.carry_started.connect(_on_carry_started_for_prompt)
 			if carrier.has_signal("carry_ended") and not carrier.carry_ended.is_connected(_on_carry_ended_for_prompt):
 				carrier.carry_ended.connect(_on_carry_ended_for_prompt)
-			if carrier.is_holding():
-				_on_carry_started_for_prompt(carrier.held_item)
+			if bool(carrier.call("is_holding")):
+				_on_carry_started_for_prompt(carrier.get("held_item") as Node3D)
 		_refresh_action_prompt()
 		return
 
@@ -641,12 +657,9 @@ func _refresh_action_prompt() -> void:
 			lines.append({"text": "SPRINT — [SHIFT]", "indent": 0})
 			if grounded:
 				lines.append({"text": "JUMP — [SPACE]", "indent": 1})
-		else:
-			lines.append({"text": "MOVE — [W] [A] [S] [D]", "indent": 0})
-		if moving:
-			lines.append({"text": "MOVE — [W] [A] [S] [D]", "indent": 0})
 		lines.append({"text": "JAB / CHARGED PUNCH — [Q]", "indent": 1})
 		lines.append({"text": "PARRY — [F]", "indent": 1})
+		lines.append({"text": "MOVE — [W] [A] [S] [D]", "indent": 0})
 
 	var signature: String = JSON.stringify(lines)
 	if signature == _last_action_signature:
@@ -660,7 +673,7 @@ func _refresh_action_prompt() -> void:
 		var label: Label = _make_runtime_label(str(line["text"]), 13, HORIZONTAL_ALIGNMENT_LEFT, true)
 		label.add_theme_color_override("font_color", COLOR_TEXT if int(line["indent"]) == 0 else COLOR_MUTED)
 		if int(line["indent"]) > 0:
-			label.add_theme_constant_override("margin_left", 14)
+			label.text = "    " + label.text
 		_action_list.add_child(label)
 
 
