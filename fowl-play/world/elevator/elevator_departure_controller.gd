@@ -258,7 +258,7 @@ func _on_rest_occupant_exited(peer_id: int, _player: Node) -> void:
 	_rest_disembarked[peer_id] = true
 
 
-func is_rest_departure_unlocked() -> bool:
+func _is_rest_departure_unlocked() -> bool:
 	return not _rest_disembark_active or (_rest_disembark_initialized and _rest_disembark_pending.is_empty())
 
 
