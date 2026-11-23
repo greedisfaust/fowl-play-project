@@ -189,8 +189,9 @@ func _build_hallway_sconces(parent: Node3D, scene_root: Node) -> void:
 	shade.emission_enabled = true
 	shade.emission = Color(1.0, 0.45, 0.18)
 	shade.emission_energy_multiplier = 1.25
-	for index: int in range(6):
-		var z: float = -14.0 + float(index) * 5.6
+	var sconce_positions: Array[float] = [-14.0, -3.8, 3.8, 14.0]
+	for index: int in range(sconce_positions.size()):
+		var z: float = sconce_positions[index]
 		var sconce: Node3D = Node3D.new()
 		sconce.name = "Hallway_Wall_Sconce_%02d" % index
 		sconce.position = Vector3(-11.17, 2.15, z)
