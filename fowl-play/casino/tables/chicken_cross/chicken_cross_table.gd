@@ -435,10 +435,11 @@ func _sync_chicken_visual(peer_id: int, player_state: Dictionary) -> void:
 		chicken = ChickenVisualScript.new() as ChickenCrossChicken
 		chicken.name = "Chicken_%d" % peer_id
 		root.add_child(chicken)
-		chicken.scale = Vector3.ONE * 0.48
-		chicken.position = Vector3(-1.53, 1.25, _lane_z_for_peer(peer_id))
-	chicken.configure(peer_id, str(player_state.get("nickname", _get_player_nickname(peer_id))), int(player_state.get("color_index", _get_player_color_index(peer_id))))
+		chicken.scale = Vector3.ONE * 0.42
 	var tile_number: int = clampi(int(player_state.get("tile", 0)), 0, Rules.TILE_COUNT)
+	var lane_index: int = _lane_index_for_peer(peer_id)
+	chicken.position = _contestant_position(tile_number, lane_index, 0.16)
+	chicken.configure(peer_id, str(player_state.get("nickname", _get_player_nickname(peer_id))), int(player_state.get("color_index", _get_player_color_index(peer_id))))
 	chicken.set_tile(tile_number, not is_new)
 	if not is_new and previous_status != status:
 		if status == "failed":
@@ -462,9 +463,11 @@ func _sync_player_tile_marker(peer_id: int, player_state: Dictionary) -> void:
 		marker.mesh = marker_mesh
 		root.add_child(marker)
 	var tile_number: int = clampi(int(player_state.get("tile", 0)), 0, Rules.TILE_COUNT)
-	var marker_x: float = -1.53 + float(tile_number) * 0.25
-	var marker_z: float = _lane_z_for_peer(peer_id)
-	marker.position = Vector3(marker_x, 1.095, marker_z)
+	var marker_position: Vector3 = _contestant_position(tile_number, _lane_index_for_peer(peer_id), 0.008)
+	marker.position = marker_position
+	var marker_mesh: BoxMesh = marker.mesh as BoxMesh
+	if marker_mesh != null:
+		marker_mesh.size = Vector3(0.13, 0.008, 0.11)
 	var marker_color: Color = PlayerIdentity.color_for_index(int(player_state.get("color_index", _get_player_color_index(peer_id))))
 	var status: String = str(player_state.get("status", "active"))
 	if status == "failed":
@@ -488,21 +491,45 @@ func _reposition_chicken_visuals() -> void:
 		peer_ids.append(int(value))
 	peer_ids.sort()
 	for index: int in range(peer_ids.size()):
-		var chicken: Node3D = root.get_node_or_null("Chicken_%d" % peer_ids[index]) as Node3D
+		var peer_id: int = peer_ids[index]
+		var player_state: Dictionary = _round_player_states.get(peer_id, {})
+		var chicken: Node3D = root.get_node_or_null("Chicken_%d" % peer_id) as Node3D
 		if is_instance_valid(chicken):
-			chicken.position.z = -0.33 + float(mini(index, 3)) * 0.22
-			var player_state: Dictionary = _round_player_states.get(peer_ids[index], {})
-			_sync_player_tile_marker(peer_ids[index], player_state)
+			chicken.position = _contestant_position(int(player_state.get("tile", 0)), index, 0.16)
+		_sync_player_tile_marker(peer_id, player_state)
 
-func _lane_z_for_peer(peer_id: int) -> float:
+func _lane_index_for_peer(peer_id: int) -> int:
 	var peer_ids: Array[int] = []
 	for value: Variant in _round_player_states.keys():
 		peer_ids.append(int(value))
 	if not peer_ids.has(peer_id):
 		peer_ids.append(peer_id)
 	peer_ids.sort()
-	var lane_index: int = clampi(peer_ids.find(peer_id), 0, 3)
-	return -0.33 + float(lane_index) * 0.22
+	return clampi(peer_ids.find(peer_id), 0, 3)
+
+## Resolve contestant positions from the authored tile meshes instead of guessed
+## world coordinates, keeping chickens and markers aligned if the board is moved.
+func _contestant_position(tile_number: int, lane_index: int, height_offset: float) -> Vector3:
+	var visuals: Node3D = get_node_or_null("Visuals") as Node3D
+	if not is_instance_valid(visuals):
+		return Vector3.ZERO
+	var tile_index: int = clampi(tile_number, 1, Rules.TILE_COUNT)
+	var tile: MeshInstance3D = visuals.get_node_or_null("TileLane/Tile_%02d" % tile_index) as MeshInstance3D
+	if not is_instance_valid(tile) or tile.mesh == null:
+		return Vector3(-1.53 + float(tile_number) * 0.25, 1.09 + height_offset, -0.33 + float(lane_index) * 0.22)
+	var bounds: AABB = tile.mesh.get_aabb()
+	var local_center: Vector3 = bounds.position + bounds.size * 0.5
+	var lane_spacing: float = minf(0.22, bounds.size.z / 4.0)
+	var lane_offset: float = (float(lane_index) - 1.5) * lane_spacing
+	local_center.z += lane_offset
+	local_center.y = bounds.position.y + bounds.size.y
+	var surface_world: Vector3 = tile.to_global(local_center)
+	if tile_number == 0:
+		var next_tile: MeshInstance3D = visuals.get_node_or_null("TileLane/Tile_02") as MeshInstance3D
+		if is_instance_valid(next_tile):
+			var step: Vector3 = tile.global_position - next_tile.global_position
+			surface_world += step
+	return visuals.to_local(surface_world + Vector3.UP * height_offset)
 
 func _get_player_nickname(peer_id: int) -> String:
 	if is_instance_valid(_network) and _network.has_method("get_player_identity"):
