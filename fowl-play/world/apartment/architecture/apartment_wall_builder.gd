@@ -70,7 +70,7 @@ func _ready() -> void:
 		var generated: Node = get_node_or_null(GENERATED_ROOT_NAME)
 		if generated == null or (wall_set == WallSet.INTERIOR and generate_main_room_doorway and generated.get_node_or_null("Apartment_Double_Door") == null):
 			_rebuild_geometry()
-		elif wall_set == WallSet.INTERIOR and generated.find_child("Hallway_Wall_Sconce_00", true, false) == null:
+		elif wall_set == WallSet.INTERIOR and get_tree().edited_scene_root.find_child("Hallway_Wall_Sconce_00", true, false) == null:
 			_build_hallway_sconces(generated, get_tree().edited_scene_root)
 
 func _rebuild_geometry() -> void:
@@ -146,7 +146,7 @@ func _build_interior(parent: Node3D, material: Material, thickness: float, scene
 		generate_main_room_doorway, doorway_center_z + 9.5, doorway_width, 0.0, doorway_height)
 	if generate_main_room_doorway:
 		_build_double_door(parent, scene_root)
-	if parent.find_child("Hallway_Wall_Sconce_00", true, false) == null:
+	if scene_root.find_child("Hallway_Wall_Sconce_00", true, false) == null:
 		_build_hallway_sconces(parent, scene_root)
 
 func _build_segment(
