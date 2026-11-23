@@ -284,7 +284,7 @@ func _build_window_rain() -> void:
 func _build_exterior_mist() -> void:
 	var fog_volume := FogVolume.new()
 	fog_volume.name = "ExteriorRainMist"
-	fog_volume.shape = FogVolume.SHAPE_BOX
+	fog_volume.shape = RenderingServer.FOG_VOLUME_SHAPE_BOX
 	fog_volume.size = Vector3(74.0, 22.0, 34.0)
 	fog_volume.position = Vector3(0.0, 8.0, -47.0)
 	var fog_material := FogMaterial.new()
