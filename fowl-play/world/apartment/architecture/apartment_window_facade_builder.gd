@@ -51,13 +51,22 @@ const GENERATED_ROOT_NAME: String = "_GeneratedApartmentHallwayFacade"
 func _ready() -> void:
 	if not Engine.is_editor_hint():
 		return
+	# Wait until the editor has assigned the opened scene as edited_scene_root.
+	call_deferred("_ensure_saved_window_setup")
+
+func _ensure_saved_window_setup() -> void:
+	if not Engine.is_editor_hint():
+		return
+	var scene_root: Node = get_tree().edited_scene_root
+	if scene_root == null:
+		return
 	var generated: Node3D = get_node_or_null(GENERATED_ROOT_NAME) as Node3D
 	if generated == null:
 		_rebuild_geometry()
-	else:
-		_ensure_glass_collisions(generated, get_tree().edited_scene_root)
-		if generated.get_node_or_null("NightCityEnvironment") == null:
-			_add_night_city_environment(generated, get_tree().edited_scene_root)
+		return
+	_ensure_glass_collisions(generated, scene_root)
+	if generated.get_node_or_null("NightCityEnvironment") == null:
+		_add_night_city_environment(generated, scene_root)
 
 func _rebuild_geometry() -> void:
 	if not Engine.is_editor_hint():
