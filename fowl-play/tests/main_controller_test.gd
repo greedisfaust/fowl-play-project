@@ -85,6 +85,14 @@ func _run() -> void:
 		main.queue_free()
 		_finish(false, "Gameplay mouse should be captured again after the world transition fade completes, even with terminal movement locked.")
 		return
+	var casino_hud: CanvasLayer = main.get_node_or_null("CasinoHUD") as CanvasLayer
+	var hud_controls: Array[Node] = casino_hud.find_children("*", "Control", true, false) if casino_hud != null else []
+	for hud_node: Node in hud_controls:
+		var hud_control: Control = hud_node as Control
+		if hud_control.mouse_filter != Control.MOUSE_FILTER_IGNORE:
+			main.queue_free()
+			_finish(false, "Casino HUD controls must ignore mouse input so FPS look events reach Player._unhandled_input.")
+			return
 	var yaw_before_mouse_look: float = float(player.rotation.y)
 	player.call("_rotate_view", Vector2(10.0, 0.0))
 	if is_equal_approx(float(player.rotation.y), yaw_before_mouse_look):
