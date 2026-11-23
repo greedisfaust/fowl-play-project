@@ -93,6 +93,55 @@ func _rebuild_geometry() -> void:
 	if generate_downlights:
 		_build_downlights(generated_root, bronze_material, light_material, dark_detail_material, scene_root)
 
+	_build_grand_circular_fixture(generated_root, scene_root)
+
+func _build_grand_circular_fixture(parent: Node3D, scene_root: Node) -> void:
+	var center: Vector3 = Vector3(-8.0, ceiling_height - 0.20, -17.0)
+	var bronze: StandardMaterial3D = _make_material(Color(0.48, 0.30, 0.13, 1.0), 0.82, 0.20)
+	var dark_bronze: StandardMaterial3D = _make_material(Color(0.075, 0.045, 0.022, 1.0), 0.78, 0.25)
+	var luminous: StandardMaterial3D = _make_emissive_material(Color(1.0, 0.72, 0.43, 1.0), 3.0)
+	var soft_luminous: StandardMaterial3D = _make_emissive_material(Color(1.0, 0.88, 0.68, 1.0), 2.1)
+
+	_add_torus(parent, "GrandCasinoRing_OuterBronze", 3.42, 3.30, center, bronze, scene_root)
+	_add_torus(parent, "GrandCasinoRing_OuterLight", 3.27, 3.22, center + Vector3.DOWN * 0.035, luminous, scene_root)
+	_add_torus(parent, "GrandCasinoRing_InnerBronze", 2.62, 2.53, center + Vector3.DOWN * 0.025, dark_bronze, scene_root)
+	_add_torus(parent, "GrandCasinoRing_InnerLight", 2.51, 2.46, center + Vector3.DOWN * 0.055, soft_luminous, scene_root)
+
+	# Twelve repeating illuminated medallions make the ring read as a designed ceiling centerpiece.
+	for index: int in range(12):
+		var angle: float = TAU * float(index) / 12.0
+		var radial: Vector3 = Vector3(cos(angle), 0.0, sin(angle))
+		var medallion_position: Vector3 = center + radial * 2.95 + Vector3.DOWN * 0.105
+		_add_cylinder(parent, "GrandCasinoRing_MedallionBronze_%02d" % index, 0.205, 0.055, medallion_position, bronze, scene_root)
+		_add_cylinder(parent, "GrandCasinoRing_MedallionLens_%02d" % index, 0.145, 0.025, medallion_position + Vector3.DOWN * 0.04, soft_luminous, scene_root)
+		if index % 2 == 0:
+			var downlight: SpotLight3D = SpotLight3D.new()
+			downlight.name = "GrandCasinoRing_Downlight_%02d" % index
+			downlight.position = center + radial * 2.95 + Vector3.DOWN * 0.24
+			downlight.rotation.x = -PI * 0.5
+			downlight.light_color = Color(1.0, 0.78, 0.56, 1.0)
+			downlight.light_energy = 1.05
+			downlight.spot_range = 8.5
+			downlight.spot_angle = 48.0
+			downlight.shadow_enabled = false
+			parent.add_child(downlight)
+			downlight.owner = scene_root
+
+func _add_torus(parent: Node3D, node_name: String, outer_radius: float, inner_radius: float, center: Vector3, material: Material, scene_root: Node) -> void:
+	var mesh_instance: MeshInstance3D = MeshInstance3D.new()
+	mesh_instance.name = node_name
+	var torus: TorusMesh = TorusMesh.new()
+	torus.outer_radius = outer_radius
+	torus.inner_radius = inner_radius
+	torus.rings = 64
+	torus.ring_segments = 12
+	mesh_instance.mesh = torus
+	mesh_instance.material_override = material
+	mesh_instance.position = center
+	mesh_instance.rotation.x = PI * 0.5
+	parent.add_child(mesh_instance)
+	mesh_instance.owner = scene_root
+
 func _build_ceiling_slab(parent: Node3D, material: Material, scene_root: Node) -> void:
 	# Match the floor's CSGPolygon3D orientation: local polygon Y maps to world Z,
 	# and the extrusion points down from the 4.2m ceiling line.
