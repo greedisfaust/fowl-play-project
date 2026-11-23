@@ -209,6 +209,19 @@ func _validate_remote_action_sender() -> bool:
 	return bool(_network.call("validate_rpc"))
 
 func _handle_player_action(peer_id: int, advance_chicken: bool) -> Dictionary:
+	var result: Dictionary = _resolve_player_action(peer_id, advance_chicken)
+	var feedback_message: String = ""
+	var feedback_severity: StringName = &"error"
+	if bool(result.get("ok", false)):
+		feedback_message = "CHICKEN ADVANCED" if advance_chicken else "CASH OUT ACCEPTED"
+		feedback_severity = &"success"
+	else:
+		feedback_message = str(result.get("reason", "Chicken Cross action rejected."))
+	report_player_feedback(peer_id, feedback_message, feedback_severity)
+	return result
+
+
+func _resolve_player_action(peer_id: int, advance_chicken: bool) -> Dictionary:
 	if not _is_authority():
 		return _failure("Only the host can resolve Chicken Cross actions.")
 	if not _is_near_table(peer_id):
