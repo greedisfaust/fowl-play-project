@@ -58,7 +58,7 @@ var _wood_joint_material: StandardMaterial3D
 var _bronze_material: StandardMaterial3D
 
 func _ready() -> void:
-	if Engine.is_editor_hint():
+	if Engine.is_editor_hint() and get_node_or_null(GENERATED_ROOT_NAME) == null:
 		_rebuild_floor()
 
 func _rebuild_floor() -> void:
