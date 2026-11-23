@@ -51,7 +51,7 @@ func _setup_physical_collisions() -> void:
 		table_body.collision_layer = 1
 		table_body.collision_mask = 1
 		add_child(table_body)
-		_add_box_collision(table_body, "TableTop", Vector3(3.4, 0.16, 2.2), Vector3(0.0, 0.95, 0.0))
+		_add_box_collision(table_body, "TableTop", Vector3(3.4, 0.1975, 2.2), Vector3(0.0, 0.96875, 0.0))
 		_add_box_collision(table_body, "FrontLeftLeg", Vector3(0.22, 0.9, 0.22), Vector3(-1.48, 0.45, 0.88))
 		_add_box_collision(table_body, "FrontRightLeg", Vector3(0.22, 0.9, 0.22), Vector3(1.48, 0.45, 0.88))
 		_add_box_collision(table_body, "BackLeftLeg", Vector3(0.22, 0.9, 0.22), Vector3(-1.48, 0.45, -0.88))
@@ -65,6 +65,9 @@ func _setup_physical_collisions() -> void:
 		screen_body.collision_mask = 1
 		screen.add_child(screen_body)
 		_add_box_collision(screen_body, "ScreenHousing", Vector3(3.62, 1.72, 0.32), Vector3(0.0, 0.0, 0.0))
+
+	_add_button_housing_collision("Controls/CrossButton")
+	_add_button_housing_collision("Controls/CashOutButton")
 
 	var keypad_housing: Node3D = get_node_or_null("BettingKeypad/Housing") as Node3D
 	var housing_mesh: MeshInstance3D = get_node_or_null("BettingKeypad/Housing/MeshInstance3D") as MeshInstance3D
@@ -81,6 +84,26 @@ func _setup_physical_collisions() -> void:
 		housing_collision.shape = housing_shape
 		housing_collision.transform = housing_mesh.transform
 		keypad_body.add_child(housing_collision)
+
+func _add_button_housing_collision(button_path: NodePath) -> void:
+	var button: Node3D = get_node_or_null(button_path) as Node3D
+	if not is_instance_valid(button) or button.get_node_or_null("ChickenCrossHousingCollision") != null:
+		return
+	var housing: MeshInstance3D = button.get_node_or_null("Visuals/ButtonHousing") as MeshInstance3D
+	if not is_instance_valid(housing) or housing.mesh == null:
+		return
+	var body: StaticBody3D = StaticBody3D.new()
+	body.name = "ChickenCrossHousingCollision"
+	body.collision_layer = 1
+	body.collision_mask = 1
+	button.add_child(body)
+	var shape: BoxShape3D = BoxShape3D.new()
+	shape.size = housing.get_aabb().size
+	var collision: CollisionShape3D = CollisionShape3D.new()
+	collision.name = "HousingShape"
+	collision.shape = shape
+	collision.transform = housing.transform
+	body.add_child(collision)
 
 func _add_box_collision(parent: StaticBody3D, shape_name: String, size: Vector3, local_position: Vector3) -> void:
 	var shape: BoxShape3D = BoxShape3D.new()
