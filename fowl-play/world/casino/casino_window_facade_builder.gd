@@ -38,7 +38,7 @@ class_name CasinoWindowFacadeBuilder
 @export var generate_end_posts: bool = true
 
 @export_group("Materials")
-@export var glass_tint: Color = Color(0.72, 0.86, 0.94, 0.20)
+@export var glass_tint: Color = Color(0.94, 0.98, 1.0, 0.035)
 @export var bronze_color: Color = Color(0.36, 0.22, 0.105, 1.0)
 @export var sill_color: Color = Color(0.075, 0.082, 0.09, 1.0)
 
@@ -75,10 +75,12 @@ func _rebuild_geometry() -> void:
 	generated_root.owner = scene_root
 
 	var glass_material: StandardMaterial3D = StandardMaterial3D.new()
+	# Clear architectural glazing: almost no tint or opacity, with a
+	# smooth dielectric surface so the skyline and rain remain crisp.
 	glass_material.albedo_color = glass_tint
 	glass_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	glass_material.metallic = 0.28
-	glass_material.roughness = 0.10
+	glass_material.metallic = 0.0
+	glass_material.roughness = 0.025
 	glass_material.cull_mode = BaseMaterial3D.CULL_DISABLED
 
 	var bronze_material: StandardMaterial3D = StandardMaterial3D.new()
