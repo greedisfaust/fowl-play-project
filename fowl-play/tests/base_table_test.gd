@@ -11,7 +11,7 @@ func _initialize() -> void:
 func _run() -> void:
 	var wallet: Node = root.get_node("CasinoWallet")
 	_check_result(wallet.call("begin_run", 1000), true, "Initialize shared wallet")
-	var table: Node3D = BaseTableScript.new()
+	var table: BaseTable = BaseTableScript.new() as BaseTable
 	table.set("table_id", "test_table")
 	table.set("game_id", "test_game")
 	table.set("max_participants", 2)
