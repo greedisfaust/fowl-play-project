@@ -183,8 +183,6 @@ func _connect_services() -> void:
 		_wallet.wallet_changed.connect(_on_wallet_changed)
 	if _wallet.has_signal("wager_changed"):
 		_wallet.wager_changed.connect(_on_wager_changed)
-	if _day_manager.has_signal("day_finished"):
-		_day_manager.day_finished.connect(_on_day_finished)
 	_network = get_node_or_null("/root/Network")
 	if is_instance_valid(_network) and _network.has_signal("identity_roster_changed"):
 		_network.identity_roster_changed.connect(_on_identity_roster_changed)
@@ -200,7 +198,6 @@ func _disconnect_services() -> void:
 	_disconnect_signal(_day_manager, &"day_state_changed", _on_day_state_changed)
 	_disconnect_signal(_wallet, &"wallet_changed", _on_wallet_changed)
 	_disconnect_signal(_wallet, &"wager_changed", _on_wager_changed)
-	_disconnect_signal(_day_manager, &"day_finished", _on_day_finished)
 	_disconnect_signal(_network, &"identity_roster_changed", _on_identity_roster_changed)
 	_disconnect_signal(_players_root, &"child_entered_tree", _on_player_added)
 	_disconnect_signal(_main_controller, &"world_changed", _on_world_changed)
@@ -286,14 +283,25 @@ func _on_day_state_changed(snapshot: Dictionary) -> void:
 		_contributions.clear()
 		_counted_wagers.clear()
 		_refresh_contribution_panel()
+	var previous_result_recorded: bool = bool(_last_day_snapshot.get("day_result_recorded", false))
 	var quota_now: bool = bool(snapshot.get("quota_reached", false))
 	var quota_just_reached: bool = quota_now and not _last_quota_reached
+	var result_now_recorded: bool = bool(snapshot.get("day_result_recorded", false))
 	_last_quota_reached = quota_now
 	_last_day_snapshot = snapshot.duplicate(true)
 	_refresh_day_display(snapshot)
 	if quota_just_reached:
 		_show_announcement("DAILY QUOTA REACHED", COLOR_QUOTA_MET, 3, "EARLY DEPARTURE UNLOCKED")
 		_play_quota_glow_pulse()
+	if result_now_recorded and not previous_result_recorded:
+		var result_success: bool = bool(snapshot.get("day_success", false))
+		var result_day: int = int(snapshot.get("day_number", 0))
+		var final_wallet: int = int(snapshot.get("final_wallet_snapshot", 0))
+		var quota: int = int(snapshot.get("daily_quota", 0))
+		var result_text: String = "QUOTA MET" if result_success else "QUOTA MISSED"
+		var result_color: Color = COLOR_QUOTA_MET if result_success else COLOR_QUOTA_UNMET
+		_show_announcement("DAY %d — %s" % [result_day, result_text], result_color, 3,
+			"DAILY RESULT  ·  %s / %s" % [_format_money(final_wallet), _format_money(quota)])
 
 
 func _on_wallet_changed(available_balance: int, _reserved_total: int) -> void:
@@ -702,11 +710,6 @@ func _refresh_action_prompt() -> void:
 		label.add_theme_color_override("font_color", COLOR_TEXT)
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_action_list.add_child(label)
-
-func _on_day_finished(day: int, success: bool, final_wallet: int, quota: int) -> void:
-	var result_text: String = "QUOTA MET" if success else "QUOTA MISSED"
-	_show_announcement("DAY %d — %s" % [day, result_text], COLOR_QUOTA_MET if success else COLOR_QUOTA_UNMET, 3, "DAILY RESULT")
-
 
 func _show_announcement(message: String, text_color: Color = COLOR_TEXT, priority: int = -1, subtitle: String = "") -> void:
 	if not is_instance_valid(_announcement_feed) or message.strip_edges().is_empty():
