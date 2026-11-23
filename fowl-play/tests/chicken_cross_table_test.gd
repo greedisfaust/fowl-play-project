@@ -75,7 +75,12 @@ func _test_multi_player_round(wallet: Node) -> void:
 	var ready_lines: Array[String] = table.call("get_round_player_display_lines")
 	_check(ready_lines.size() == 2, "The multiplayer scoreboard lists both wagered players before the round starts")
 	_check(ready_lines[0].contains("RED") and ready_lines[1].contains("ORANGE"), "The scoreboard identifies each chicken by its assigned player color")
-	_check_result(table.call("start_round", 1), true, "Host locks both player wagers")
+	_check_result(table.call("enter_proximity", 3), true, "A nearby spectator enters without wagering")
+	_check_result(table.call("start_round", 3), false, "A non-wagering spectator cannot lock the Chicken Cross round")
+	_check(int(table.get("state")) == 1, "Rejected spectator start leaves the table open for wagers")
+	_check_result(table.call("_resolve_player_action", 1, false), false, "Cash Out cannot start an unopened round")
+	_check(int(table.get("state")) == 1, "Premature Cash Out leaves the table open")
+	_check_result(table.call("start_round", 1), true, "A wagered player locks the table and starts the round")
 	var model: RefCounted = table.get("_round_model") as RefCounted
 	_check(model != null, "Starting a round creates the Chicken Cross model")
 	if model != null:
