@@ -1,6 +1,7 @@
 extends SceneTree
 
 const ChickenCrossTable = preload("res://casino/tables/chicken_cross/chicken_cross_table.gd")
+const ChickenVisual = preload("res://casino/tables/chicken_cross/chicken_cross_chicken.gd")
 var _failed: bool = false
 
 func _initialize() -> void:
@@ -9,6 +10,7 @@ func _initialize() -> void:
 func _run() -> void:
 	var wallet: Node = root.get_node("CasinoWallet")
 	_check_result(wallet.call("begin_run", 1000), true, "Initialize wallet for Chicken Cross table")
+	_test_chicken_visual_asset()
 	_test_single_player_round(wallet)
 	_test_multi_player_round(wallet)
 	_test_duplicate_bettor_rejection(wallet)
@@ -17,6 +19,16 @@ func _run() -> void:
 		return
 	print("CHICKEN CROSS TABLE PASS")
 	quit(0)
+
+func _test_chicken_visual_asset() -> void:
+	var chicken: Node3D = ChickenVisual.new()
+	chicken.configure(2, "ORANGE", 1)
+	root.add_child(chicken)
+	_check(chicken.get_node_or_null("BodyPivot/PlumpBody") != null, "Procedural chicken has a visible body mesh")
+	_check(chicken.get_node_or_null("BodyPivot/HeadPivot/CombCrown_1") != null, "Procedural chicken has its signature comb")
+	_check(chicken.get_node_or_null("BodyPivot/LeftFoot") != null and chicken.get_node_or_null("BodyPivot/RightFoot") != null, "Procedural chicken has independently animated feet")
+	_check(chicken.get_node_or_null("BodyPivot/HeadPivot/Eye_1.0") != null, "Procedural chicken has expressive eyes")
+	chicken.queue_free()
 
 func _test_single_player_round(wallet: Node) -> void:
 	_check_result(wallet.call("begin_run", 1000), true, "Reset wallet for single-player table test")
