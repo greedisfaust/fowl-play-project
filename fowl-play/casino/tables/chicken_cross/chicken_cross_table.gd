@@ -438,7 +438,6 @@ func _sync_chicken_visual(peer_id: int, player_state: Dictionary) -> void:
 		chicken.scale = Vector3.ONE * 0.42
 	var tile_number: int = clampi(int(player_state.get("tile", 0)), 0, Rules.TILE_COUNT)
 	var lane_index: int = _lane_index_for_peer(peer_id)
-	chicken.position = _contestant_position(tile_number, lane_index, 0.16)
 	chicken.configure(peer_id, str(player_state.get("nickname", _get_player_nickname(peer_id))), int(player_state.get("color_index", _get_player_color_index(peer_id))))
 	chicken.set_board_position(_contestant_position(tile_number, lane_index, 0.16), not is_new)
 	if not is_new and previous_status != status:
@@ -495,7 +494,7 @@ func _reposition_chicken_visuals() -> void:
 		var player_state: Dictionary = _round_player_states.get(peer_id, {})
 		var chicken: Node3D = root.get_node_or_null("Chicken_%d" % peer_id) as Node3D
 		if is_instance_valid(chicken):
-			chicken.set_board_position(_contestant_position(int(player_state.get("tile", 0)), index, 0.16), false)
+			chicken.set_board_position(_contestant_position(int(player_state.get("tile", 0)), index, 0.16), true)
 		_sync_player_tile_marker(peer_id, player_state)
 
 func _lane_index_for_peer(peer_id: int) -> int:
