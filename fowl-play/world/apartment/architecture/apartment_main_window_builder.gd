@@ -40,7 +40,7 @@ class_name ApartmentMainWindowBuilder
 const GENERATED_ROOT_NAME: String = "_GeneratedApartmentMainPanoramicWindow"
 
 func _ready() -> void:
-	if Engine.is_editor_hint():
+	if Engine.is_editor_hint() and get_node_or_null(GENERATED_ROOT_NAME) == null:
 		_rebuild_geometry()
 
 func _rebuild_geometry() -> void:
