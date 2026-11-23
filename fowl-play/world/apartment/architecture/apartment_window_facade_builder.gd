@@ -36,7 +36,7 @@ class_name ApartmentWindowFacadeBuilder
 @export var generate_end_posts: bool = true
 
 @export_group("Materials")
-@export var glass_tint: Color = Color(0.72, 0.86, 0.94, 0.20)
+@export var glass_tint: Color = Color(0.98, 0.98, 0.96, 0.025)
 @export var bronze_color: Color = Color(0.36, 0.22, 0.105, 1.0)
 @export var sill_color: Color = Color(0.075, 0.082, 0.09, 1.0)
 
@@ -72,11 +72,24 @@ func _rebuild_geometry() -> void:
 	add_child(generated_root)
 	generated_root.owner = scene_root
 
+	# The hallway panorama faces west, so reverse its facade path to orient
+	# the shared city rig out from the glass rather than into the Apartment.
+	var city_node := Node3D.new()
+	city_node.name = "NightCityEnvironment"
+	city_node.set_script(load("res://world/casino/night_city_environment.gd"))
+	var outward_points := facade_points.duplicate()
+	outward_points.reverse()
+	city_node.set("facade_points", outward_points)
+	city_node.set("buildings_per_segment", 34)
+	city_node.set("rain_amount", 1800)
+	generated_root.add_child(city_node)
+	city_node.owner = scene_root
+
 	var glass_material: StandardMaterial3D = StandardMaterial3D.new()
 	glass_material.albedo_color = glass_tint
 	glass_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	glass_material.metallic = 0.28
-	glass_material.roughness = 0.10
+	glass_material.metallic = 0.0
+	glass_material.roughness = 0.025
 	glass_material.cull_mode = BaseMaterial3D.CULL_DISABLED
 
 	var bronze_material: StandardMaterial3D = StandardMaterial3D.new()
