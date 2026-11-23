@@ -38,7 +38,7 @@ class_name CasinoWindowFacadeBuilder
 @export var generate_end_posts: bool = true
 
 @export_group("Materials")
-@export var glass_tint: Color = Color(0.94, 0.98, 1.0, 0.035)
+@export var glass_tint: Color = Color(0.98, 0.98, 0.96, 0.025)
 @export var bronze_color: Color = Color(0.36, 0.22, 0.105, 1.0)
 @export var sill_color: Color = Color(0.075, 0.082, 0.09, 1.0)
 
