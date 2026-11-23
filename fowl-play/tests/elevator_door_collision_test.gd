@@ -1,6 +1,7 @@
 extends SceneTree
 
 const ELEVATOR_SCENE: PackedScene = preload("res://world/elevator/elevator.tscn")
+const PLAYER_SCENE: PackedScene = preload("res://player/player.tscn")
 const ELEVATOR_LAYER_BIT: int = 1 << 6
 
 func _initialize() -> void:
@@ -14,6 +15,15 @@ func _run() -> void:
 		return
 	root.add_child(elevator)
 	await process_frame
+
+	var player: CharacterBody3D = PLAYER_SCENE.instantiate() as CharacterBody3D
+	if player == null:
+		_finish(false, "Player scene could not be instantiated.")
+		return
+	if (player.collision_mask & ELEVATOR_LAYER_BIT) == 0:
+		_finish(false, "Player collision mask must include the ELEVATOR layer.")
+		return
+	player.queue_free()
 
 	var panel_names: Array[String] = [
 		"LeftOuterPanel",
