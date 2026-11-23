@@ -219,13 +219,12 @@ func _sync_rest_disembark_gate() -> void:
 			_rest_disembarked.erase(pending_peer)
 	var current_occupants: Array[int] = _occupancy.get_occupant_peer_ids()
 	for peer_id: int in expected_peer_ids:
-		if _rest_disembark_pending.has(peer_id):
+		if _rest_disembark_pending.has(peer_id) or _rest_disembarked.has(peer_id):
 			continue
-		if not _rest_disembarked.has(peer_id) and not _rest_players_seen_inside.has(peer_id) and not current_occupants.has(peer_id):
-			# A player joining after the gate was initialized starts outside and
-			# must still enter then leave before departure is enabled.
-			_rest_disembark_pending[peer_id] = true
-			continue
+		# A player joining after gate initialization must also be observed leaving.
+		_rest_disembark_pending[peer_id] = true
+		if current_occupants.has(peer_id):
+			_rest_players_seen_inside[peer_id] = true
 	_update_rest_disembark_progress()
 
 
