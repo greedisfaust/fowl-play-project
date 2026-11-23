@@ -14,6 +14,15 @@ func _run() -> void:
 		_finish(false, "Could not instantiate ElevatorDepartureController.")
 		return
 
+	if not is_equal_approx(float(controller.get("deadline_return_delay_seconds")), 3.0):
+		controller.free()
+		_finish(false, "Forced deadline return should hold the closed elevator for three seconds before fading.")
+		return
+	if not controller.has_method("_force_deadline_return") or not controller.has_method("_rpc_place_players_inside_elevator"):
+		controller.free()
+		_finish(false, "Elevator departure controller should expose its forced deadline-return sequence.")
+		return
+
 	var peers: Array[int] = [1, 2, 3]
 	var all_inside: Array[int] = [1, 2, 3]
 	var missing_one: Array[int] = [1, 3]
