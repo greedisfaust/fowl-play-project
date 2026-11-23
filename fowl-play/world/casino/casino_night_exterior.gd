@@ -226,8 +226,8 @@ func _build_rain_facade_segment(segment_index: int, total_length: float) -> void
 	# Keep the rain curtain parallel to each glass segment, on the city-facing
 	# side. The slight overlap at the angled corner prevents a visible gap.
 	var tangent: Vector3 = edge / edge_length
-	var outward: Vector3 = -tangent.cross(Vector3.UP).normalized()
-	var segment_basis: Basis = Basis(tangent, Vector3.UP, outward)
+	var inward_normal: Vector3 = tangent.cross(Vector3.UP).normalized()
+	var segment_basis: Basis = Basis(tangent, Vector3.UP, inward_normal)
 	var midpoint: Vector3 = (start + end) * 0.5
 	var half_length: float = edge_length * 0.5
 	var particles := GPUParticles3D.new()
@@ -239,7 +239,7 @@ func _build_rain_facade_segment(segment_index: int, total_length: float) -> void
 	particles.local_coords = true
 	particles.transform = Transform3D(
 		segment_basis,
-		midpoint + Vector3.UP * 13.0 + outward * RAIN_WINDOW_OFFSET
+		midpoint + Vector3.UP * 13.0 - inward_normal * RAIN_WINDOW_OFFSET
 	)
 	particles.visibility_aabb = AABB(
 		Vector3(-half_length - 2.0, -18.0, -RAIN_DEPTH - 1.0),
