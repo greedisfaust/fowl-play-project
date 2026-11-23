@@ -13,6 +13,7 @@
 [ext_resource type="Script" uid="uid://chj7lbwjtq3l0" path="res://world/casino/casino_table_spawn_point.gd" id="9_r5tfs"]
 
 [ext_resource type="Environment" path="res://world/casino/casino_night_environment.tres" id="10_night_env"]
+[ext_resource type="Script" path="res://world/casino/night_city_environment.gd" id="11_night_city"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_r5tfs"]
 albedo_color = Color(0.055, 0.062, 0.072, 1)
@@ -16956,3 +16957,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.65, 0, 0.45)
 
 [node name="Elevator" parent="." unique_id=1588872627 instance=ExtResource("1_78rjl")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.2, 0.205, 0)
+
+[node name="NightCityEnvironment" type="Node3D" parent="."]
+script = ExtResource("11_night_city")
