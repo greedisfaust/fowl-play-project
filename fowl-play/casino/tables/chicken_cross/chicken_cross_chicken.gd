@@ -63,13 +63,19 @@ func _process(delta: float) -> void:
 
 func set_tile(tile_number: int, animate: bool = true) -> void:
 	var target_x: float = -1.53 + float(clampi(tile_number, 0, 12)) * TILE_STEP
+	var target_position: Vector3 = position
+	target_position.x = target_x
+	set_board_position(target_position, animate)
+
+func set_board_position(target_position: Vector3, animate: bool = true) -> void:
+	_base_y = target_position.y
 	if not animate or not is_inside_tree():
-		position.x = target_x
+		position = target_position
 		return
 	var tween: Tween = create_tween()
 	tween.set_trans(Tween.TRANS_BACK)
 	tween.set_ease(Tween.EASE_OUT)
-	tween.tween_property(self, "position:x", target_x, 0.28)
+	tween.tween_property(self, "position", target_position, 0.28)
 
 func play_cash_out() -> void:
 	if _finished_animation:
