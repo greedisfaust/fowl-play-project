@@ -49,6 +49,7 @@ func _ready() -> void:
 	if generated == null:
 		_rebuild_geometry()
 	else:
+		_ensure_ceiling_collisions(generated, get_tree().edited_scene_root)
 		if get_tree().edited_scene_root.find_child("MainRoom_Grand_Circular_Fixture", true, false) == null:
 			_build_circular_fixture(generated, get_tree().edited_scene_root)
 		_setup_night_city_environment(get_tree().edited_scene_root)
@@ -99,6 +100,30 @@ func _rebuild_geometry() -> void:
 		_build_circular_fixture(generated_root, scene_root)
 	_setup_night_city_environment(scene_root)
 
+
+func _ensure_ceiling_collisions(generated: Node3D, scene_root: Node) -> void:
+	for child: Node in generated.get_children():
+		var visual: MeshInstance3D = child as MeshInstance3D
+		if visual == null or not visual.name.ends_with("CeilingSlab"):
+			continue
+		if generated.get_node_or_null(visual.name + "_Collision") != null:
+			continue
+		var box_mesh: BoxMesh = visual.mesh as BoxMesh
+		if box_mesh == null:
+			continue
+		var body: StaticBody3D = StaticBody3D.new()
+		body.name = visual.name + "_Collision"
+		body.collision_layer = 1
+		body.collision_mask = 1 << 4
+		generated.add_child(body)
+		body.owner = scene_root
+		var collision: CollisionShape3D = CollisionShape3D.new()
+		var shape: BoxShape3D = BoxShape3D.new()
+		shape.size = box_mesh.size
+		collision.shape = shape
+		collision.position = visual.position
+		body.add_child(collision)
+		collision.owner = scene_root
 
 func _build_circular_fixture(parent: Node3D, scene_root: Node) -> void:
 	var bronze: StandardMaterial3D = _make_material(bronze_color, 0.82, 0.22)
