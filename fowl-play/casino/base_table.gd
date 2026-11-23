@@ -20,6 +20,8 @@ signal participant_left_after_start(peer_id: int, table_id: String, round_id: St
 signal round_settled(table_id: String, round_id: String, settlement: Dictionary)
 signal round_cancelled(table_id: String, round_id: String, refund_total: int)
 signal round_auto_resolution_requested(table_id: String, round_id: String, reason: String)
+## Host-authoritative, peer-targeted feedback consumed by the persistent Casino HUD.
+signal player_feedback(peer_id: int, message: String, severity: StringName)
 
 @export var open_round_inactivity_seconds: float = 45.0
 @export var table_id: String = ""
@@ -114,6 +116,26 @@ func exit_proximity(peer_id: int) -> Dictionary:
 	_participants.erase(peer_id)
 	_emit_participants_changed()
 	return _success({"peer_id": peer_id, "participant_removed": true})
+
+## Sends a short, peer-targeted result to the shared HUD without coupling a game
+## implementation to a particular HUD scene or presentation layout.
+func report_player_feedback(peer_id: int, message: String, severity: StringName = &"info") -> bool:
+	if not _is_authority() or peer_id <= 0 or message.strip_edges().is_empty():
+		return false
+	_receive_player_feedback(peer_id, message, severity)
+	if multiplayer.multiplayer_peer != null:
+		_receive_player_feedback.rpc(peer_id, message, severity)
+	return true
+
+
+@rpc("authority", "call_remote", "reliable", 0)
+func _receive_player_feedback(peer_id: int, message: String, severity: StringName) -> void:
+	var network: Node = get_node_or_null("/root/Network")
+	if is_instance_valid(network) and network.get("peer") != null:
+		if not bool(network.call("validate_rpc", 1)):
+			return
+	player_feedback.emit(peer_id, message, severity)
+
 
 ## Opens a round. The opener does not have to join or place a wager.
 func open_round(peer_id: int) -> Dictionary:
