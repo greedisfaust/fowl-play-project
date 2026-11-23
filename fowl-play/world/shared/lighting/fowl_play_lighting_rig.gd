@@ -13,7 +13,8 @@ static func add_omni(
 	energy: float,
 	light_range: float,
 	scene_root: Node,
-	specular: float = 0.35
+	specular: float = 0.35,
+	shadows_enabled: bool = false
 ) -> OmniLight3D:
 	var light: OmniLight3D = OmniLight3D.new()
 	light.name = node_name
@@ -23,7 +24,7 @@ static func add_omni(
 	light.omni_range = light_range
 	light.omni_attenuation = 1.2
 	light.light_specular = specular
-	light.shadow_enabled = false
+	light.shadow_enabled = shadows_enabled
 	parent.add_child(light)
 	light.owner = scene_root
 	return light
