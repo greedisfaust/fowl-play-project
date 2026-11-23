@@ -102,6 +102,12 @@ func _build_environment() -> void:
 	var total_length := 0.0
 	for i in range(facade_points.size() - 1):
 		total_length += facade_points[i].distance_to(facade_points[i + 1])
+	var facade_center := Vector3.ZERO
+	for point in facade_points:
+		facade_center += Vector3(point.x, 0.0, point.y)
+	facade_center /= float(facade_points.size())
+	var first_edge := Vector3(facade_points[1].x - facade_points[0].x, 0.0, facade_points[1].y - facade_points[0].y).normalized()
+	var facade_outward := -first_edge.cross(Vector3.UP).normalized()
 	for segment_index in range(facade_points.size() - 1):
 		var a := Vector3(facade_points[segment_index].x, 0.0, facade_points[segment_index].y)
 		var b := Vector3(facade_points[segment_index + 1].x, 0.0, facade_points[segment_index + 1].y)
@@ -154,8 +160,8 @@ func _build_environment() -> void:
 		_add_window_batch(root, "PinkWindows", window_mesh, pink, window_batches[2])
 		_add_window_batch(root, "GoldWindows", window_mesh, gold, window_batches[3])
 		_build_rain_for_segment(root, midpoint, tangent, inward, length, segment_index, total_length)
-	_build_atmosphere(root)
-	_build_lightning(root)
+	_build_atmosphere(root, facade_center, facade_outward)
+	_build_lightning(root, facade_center, facade_outward)
 
 func _build_rain_for_segment(parent: Node3D, midpoint: Vector3, tangent: Vector3, inward: Vector3, length: float, segment_index: int, total_length: float) -> void:
 	var basis := Basis(tangent, Vector3.UP, inward)
@@ -195,12 +201,12 @@ func _build_rain_for_segment(parent: Node3D, midpoint: Vector3, tangent: Vector3
 		if Engine.is_editor_hint():
 			particles.owner = get_tree().edited_scene_root
 
-func _build_atmosphere(parent: Node3D) -> void:
+func _build_atmosphere(parent: Node3D, facade_center: Vector3, facade_outward: Vector3) -> void:
 	var fog := FogVolume.new()
 	fog.name = "CityRainHaze"
 	fog.shape = RenderingServer.FOG_VOLUME_SHAPE_BOX
 	fog.size = Vector3(92.0, 30.0, 90.0)
-	fog.position = Vector3(0.0, 9.0, -52.0)
+	fog.position = facade_center + facade_outward * 54.0 + Vector3.UP * 9.0
 	var material := FogMaterial.new()
 	material.density = 0.018
 	material.albedo = Color(0.24, 0.27, 0.32)
@@ -210,10 +216,10 @@ func _build_atmosphere(parent: Node3D) -> void:
 	if Engine.is_editor_hint():
 		fog.owner = get_tree().edited_scene_root
 
-func _build_lightning(parent: Node3D) -> void:
+func _build_lightning(parent: Node3D, facade_center: Vector3, facade_outward: Vector3) -> void:
 	_flash = OmniLight3D.new()
 	_flash.name = "DistantStormFlash"
-	_flash.position = Vector3(0.0, 20.0, -55.0)
+	_flash.position = facade_center + facade_outward * 55.0 + Vector3.UP * 20.0
 	_flash.light_color = Color(0.72, 0.80, 0.92)
 	_flash.light_energy = 0.0
 	_flash.omni_range = 105.0
