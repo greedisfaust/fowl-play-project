@@ -146,7 +146,8 @@ func _build_foot(node_name: String, z_offset: float, material: Material) -> Node
 func _spawn_tiny_car() -> void:
 	var car: Node3D = Node3D.new()
 	car.name = "ComedicImpactCar"
-	car.position = Vector3(0.0, 0.0, -0.86)
+	car.position = Vector3(0.0, -0.1, -0.86)
+	car.scale = Vector3.ONE * 1.8
 	add_child(car)
 	var paint: Material = _make_material(Color("#d63b2f"), 0.18, 0.32)
 	var glass: Material = _make_material(Color("#a9d8e8"), 0.0, 0.18)
