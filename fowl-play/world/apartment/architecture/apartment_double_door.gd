@@ -62,7 +62,7 @@ func _on_area_entered(area: Area3D) -> void:
 
 func _request_bump(direction: int) -> void:
 	if multiplayer.is_server():
-		rpc("apply_door_state", true, direction)
+		_publish_state(true, direction)
 	else:
 		rpc_id(1, "request_bump_open", direction)
 
