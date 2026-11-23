@@ -69,7 +69,7 @@ The wallet amount shown is the available shared balance, consistent with quota e
 - Wallet and quota after reached: gold.
 - Timer normally uses a light neutral color and turns warning red at 30 seconds or less.
 
-The controller creates the contribution, modifier placeholder, contextual control stack, timer caption, and announcer at runtime. The wallet and quota retain green/red colors until quota is reached; only then do both transition to warm gold and receive a soft text shader bloom. The quota transition also plays a short glow pulse. The shader is `res://ui/hud/quota_glow.gdshader`.
+The controller creates the contribution, modifier placeholder, contextual control stack, timer caption, and announcer at runtime. The wallet and quota retain green/red colors until quota is reached; only then do both transition to warm gold and receive a soft text shader bloom. The quota transition plays a one-time reward flare and sweeping highlight, then settles into a soft champagne halo with a restrained idle glint. The shader preserves the original green/red text colors until quota is reached. The announcer begins below the timer with a small visual gap. The shader is `res://ui/hud/quota_glow.gdshader`.
 
 ## Integration
 
@@ -106,14 +106,14 @@ Run the existing RunManager and Casino Day test runners after integration.
 4. Settle a losing wager. The same player's total should decrease by the net loss.
 5. Withdraw an unstarted wager or cancel an unstarted round. Confirm the contribution total does not change.
 6. Settle more than one wager for one player. Confirm the row accumulates the net results and does not double-count.
-7. Reach quota. Confirm every peer sees the announcement and wallet/quota transition to a smooth champagne-gold gradient with a soft bloom and one brief shimmer.
-8. Focus a USE target and a GRAB target. Confirm M1/E hints match the Interactable's accepted inputs and prompt text. Look away and confirm the target prompt clears.
+7. Reach quota. Confirm every peer sees the announcement and wallet/quota transition from green/red to a smooth champagne-gold gradient, with a one-time bright reward sweep followed by a soft idle glow.
+8. Confirm the center announcer has a comfortable small gap beneath the timer without moving too far down the screen.\n9. Focus a USE target and a GRAB target. Confirm M1/E hints match the Interactable's accepted inputs and prompt text. Look away and confirm the target prompt clears.
 9. Stand still and confirm the movement baseline sits at the bottom-right. Move and confirm Sprint/Jump appear above it; focus an interactable and confirm Interact appears; carry an item and confirm Drop/Throw replace combat actions.
 10. Finish a casino day and confirm every peer sees the day-result announcement with the actual final wallet and quota.
 11. Start a fresh run and confirm prior contribution rows are cleared.
 12. Confirm the Blessed/Watched placeholder remains visible without invented player assignments; calling `set_modifier_status` should only happen with real authoritative values.
 13. Confirm the unboxed announcer stacks up to three notices newest-first, fades them out, suppresses duplicates, and lets critical quota/day-result notices override lower-priority notices.
-14. Confirm wallet and quota have no gold treatment before quota, then transition to a clean champagne gradient, restrained bloom, and one brief shimmer when quota is reached.
+14. Confirm wallet remains green and quota remains red before quota. On quota, confirm a one-time bright golden flare/sweep, followed by a soft champagne halo and restrained idle glint.
 15. Confirm the contextual controls sit bottom-right, remain right-aligned and terminal-white, and update for movement, focus, carrying, and recovery.
 
 The current branch has no dedicated automated CasinoHUD test stage yet. Run the existing `tests/run_run_manager_checks.bat` and `tests/run_casino_day_checks.bat` checks, plus `tests/run_checks.ps1 -OnlyStage casino-wallet` from `fowl-play/`. The user must perform the rendered HUD and two-instance multiplayer checks above. The assistant has not run Godot in this environment.
