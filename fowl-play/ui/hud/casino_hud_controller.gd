@@ -73,6 +73,7 @@ var _connected_tables: Array[BaseTable] = []
 var _wallet_glow_material: ShaderMaterial
 var _quota_glow_material: ShaderMaterial
 var _glow_tween: Tween
+var _shimmer_tween: Tween
 var _quota_glow_enabled: bool = false
 
 
@@ -130,6 +131,8 @@ func _exit_tree() -> void:
 		_announcement_tween.kill()
 	if _glow_tween != null and _glow_tween.is_running():
 		_glow_tween.kill()
+	if _shimmer_tween != null and _shimmer_tween.is_running():
+		_shimmer_tween.kill()
 
 
 func _validate_display_nodes() -> bool:
@@ -360,8 +363,18 @@ func _play_quota_glow_pulse() -> void:
 	if _glow_tween != null and _glow_tween.is_running():
 		_glow_tween.kill()
 	_glow_tween = create_tween()
-	_glow_tween.tween_method(_set_glow_strength, 0.35, 1.65, 0.42)
-	_glow_tween.tween_method(_set_glow_strength, 1.65, 1.0, 0.8)
+	_glow_tween.tween_method(_set_glow_strength, 0.65, 1.15, 0.35)
+	_glow_tween.tween_method(_set_glow_strength, 1.15, 1.0, 0.65)
+	_shimmer_tween = create_tween()
+	_shimmer_tween.tween_method(_set_quota_shimmer, -0.2, 1.2, 1.05)
+	_shimmer_tween.tween_callback(func() -> void: _set_quota_shimmer(-1.0))
+
+
+func _set_quota_shimmer(position: float) -> void:
+	if is_instance_valid(_wallet_glow_material):
+		_wallet_glow_material.set_shader_parameter("shimmer_position", position)
+	if is_instance_valid(_quota_glow_material):
+		_quota_glow_material.set_shader_parameter("shimmer_position", position)
 
 
 func _set_glow_strength(value: float) -> void:
@@ -517,8 +530,9 @@ func _make_glow_material() -> ShaderMaterial:
 	var material: ShaderMaterial = ShaderMaterial.new()
 	material.shader = QUOTA_GLOW_SHADER
 	material.set_shader_parameter("glow_color", COLOR_QUOTA_MET)
-	material.set_shader_parameter("glow_radius", 4.0)
+	material.set_shader_parameter("glow_radius", 2.5)
 	material.set_shader_parameter("glow_strength", 0.0)
+	material.set_shader_parameter("shimmer_position", -1.0)
 	return material
 
 
