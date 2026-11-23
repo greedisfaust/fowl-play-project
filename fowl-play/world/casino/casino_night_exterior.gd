@@ -225,24 +225,19 @@ func _build_rain() -> void:
 	process.scale_max = 1.28
 	particles.process_material = process
 
-	# A slim capsule gives each streak a rounded, tapered silhouette instead
-	# of the hard rectangular blue dash used by the first pass.
-	var drop := CapsuleMesh.new()
-	drop.radius = 0.006
-	drop.height = 0.34
-	drop.radial_segments = 6
-	drop.rings = 3
-	var drop_material := StandardMaterial3D.new()
-	drop_material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
-	drop_material.albedo_color = Color(0.72, 0.79, 0.88, rain_opacity * 0.58)
-	drop_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	drop_material.roughness = 0.12
-	drop_material.metallic = 0.0
-	# Rain is reflective, not self-illuminating. Exterior lights and lightning
-	# should be responsible for making the streaks visible.
-	drop_material.emission_enabled = false
+	# A procedural tapered quad avoids the plastic capsule silhouette. The
+	# shader creates a soft, narrow streak and lets real exterior lighting reveal it.
+	var drop := QuadMesh.new()
+	drop.size = Vector2(0.018, 0.38)
+	var streak_shader := load("res://world/casino/shaders/rain_streak.gdshader") as Shader
+	if streak_shader == null:
+		push_warning("Rain streak shader could not be loaded.")
+	else:
+		var streak_material := ShaderMaterial.new()
+		streak_material.shader = streak_shader
+		streak_material.set_shader_parameter("streak_opacity", rain_opacity * 0.78)
+		particles.material_override = streak_material
 	particles.draw_pass_1 = drop
-	particles.material_override = drop_material
 	add_child(particles)
 
 func _build_window_rain() -> void:
