@@ -160,17 +160,25 @@ func get_active_world() -> Node3D:
 ## Rest days begin beside the Apartment elevator, ready for the next departure.
 ## Called on every peer after the authoritative RunManager state reaches REST.
 func _on_run_state_changed_for_spawn(snapshot: Dictionary) -> void:
-	if not _has_active_world or active_world != World.APARTMENT:
-		return
 	if int(snapshot.get("phase", -1)) != 3:
 		return
-	place_players_at_apartment_elevator.call_deferred()
+	_apply_rest_spawn_if_needed.call_deferred()
+
+
+func _apply_rest_spawn_if_needed() -> void:
+	var run_manager: Node = get_node_or_null("/root/RunManager")
+	if not is_instance_valid(run_manager) or int(run_manager.get("phase")) != 3:
+		return
+	if _has_active_world and active_world == World.APARTMENT:
+		place_players_at_apartment_elevator()
 
 
 func place_players_at_apartment_elevator() -> bool:
 	if not _has_active_world or active_world != World.APARTMENT or not is_instance_valid(_players):
 		return false
 	var elevator: Node3D = active_world_instance.get_node_or_null("Elevator") as Node3D
+	if elevator == null:
+		elevator = active_world_instance.find_child("Elevator", true, false) as Node3D
 	if elevator == null:
 		push_warning("Apartment is missing its root-level Elevator node; rest spawn remains at the normal Apartment spawn points.")
 		return false
@@ -278,6 +286,9 @@ func _perform_transition(destination: int, packed_scene: PackedScene) -> void:
 	_has_active_world = true
 	world_changed.emit(previous_world, active_world)
 	_refresh_players_for_world()
+	# The run-state RPC may arrive before or after this world transition on clients.
+	# Re-check the persistent phase after the normal spawn pass as well as on its signal.
+	_apply_rest_spawn_if_needed()
 
 	# Keep the destination world hidden behind black for a deliberate arrival pause.
 	if transition_hold_seconds > 0.0:
