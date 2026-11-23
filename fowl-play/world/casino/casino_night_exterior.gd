@@ -21,10 +21,6 @@ class_name CasinoNightExterior
 @export_range(4.0, 24.0, 0.5) var rain_fall_speed: float = 13.0
 @export_range(0.1, 1.0, 0.05) var rain_opacity: float = 0.62
 
-@export_group("Window Rain")
-@export var generate_window_rain: bool = true
-@export_range(0.1, 1.0, 0.05) var window_rain_opacity: float = 0.72
-
 @export_group("Exterior Atmosphere")
 @export var generate_exterior_mist: bool = true
 @export_range(0.001, 0.08, 0.001) var mist_density: float = 0.024
@@ -97,8 +93,6 @@ func _build_exterior() -> void:
 		_build_city()
 	if generate_rain:
 		_build_rain()
-	if generate_window_rain:
-		_build_window_rain()
 	if generate_exterior_mist:
 		_build_exterior_mist()
 	if generate_lightning:
@@ -239,42 +233,6 @@ func _build_rain() -> void:
 		particles.material_override = streak_material
 	particles.draw_pass_1 = drop
 	add_child(particles)
-
-func _build_window_rain() -> void:
-	var casino_root := get_parent()
-	if casino_root == null:
-		return
-	var facade := casino_root.get_node_or_null("Architecture/WindowFrames/_GeneratedPanoramicFacade")
-	if facade == null:
-		return
-
-	var rain_shader := load("res://world/casino/shaders/window_rain.gdshader") as Shader
-	if rain_shader == null:
-		push_warning("Window rain shader could not be loaded.")
-		return
-
-	for child: Node in facade.get_children():
-		if not child is MeshInstance3D or not child.name.ends_with("_Glass"):
-			continue
-		var glass := child as MeshInstance3D
-		var glass_box := glass.mesh as BoxMesh
-		if glass_box == null:
-			continue
-
-		var pane := MeshInstance3D.new()
-		pane.name = "%s_ExteriorWater" % glass.name
-		var quad := QuadMesh.new()
-		quad.size = Vector2(glass_box.size.x, glass_box.size.y)
-		pane.mesh = quad
-		var water_material := ShaderMaterial.new()
-		water_material.shader = rain_shader
-		water_material.set_shader_parameter("water_opacity", window_rain_opacity)
-		pane.material_override = water_material
-		pane.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		add_child(pane)
-		# The facade's local +Z normal faces into the casino; rain belongs on its exterior (-Z) face.
-		var surface_offset := Vector3(0.0, 0.0, -glass_box.size.z * 0.5 - 0.012)
-		pane.global_transform = Transform3D(glass.global_transform.basis, glass.global_transform * surface_offset)
 
 func _build_exterior_mist() -> void:
 	var fog_volume := FogVolume.new()
