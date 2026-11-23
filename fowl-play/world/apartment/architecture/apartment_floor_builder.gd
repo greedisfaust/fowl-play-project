@@ -32,6 +32,8 @@ class_name ApartmentFloorBuilder
 @export_range(0.3, 0.9, 0.05) var lobby_tile_width: float = 0.45
 
 @export_group("Metal Details")
+@export_range(0.8, 3.6, 0.05) var doorway_threshold_width: float = 2.8
+@export var doorway_threshold_center_z: float = -7.8
 @export var bronze_color: Color = Color(0.40, 0.245, 0.115, 1.0)
 @export_range(0.025, 0.12, 0.005) var transition_strip_width: float = 0.07
 @export var generate_lobby_perimeter_inlay: bool = true
