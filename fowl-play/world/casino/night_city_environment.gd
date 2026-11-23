@@ -77,7 +77,6 @@ func _build_environment() -> void:
 	if facade_points.size() < 2:
 		push_warning("NightCityEnvironment needs at least two facade points.")
 		return
-	_rng.seed = city_seed
 	var old := get_node_or_null(GENERATED_ROOT)
 	if old != null:
 		old.free()
@@ -196,4 +195,3 @@ func _build_lightning(parent: Node3D, facade_center: Vector3, facade_outward: Ve
 	parent.add_child(_flash)
 	if Engine.is_editor_hint():
 		_flash.owner = get_tree().edited_scene_root
-
