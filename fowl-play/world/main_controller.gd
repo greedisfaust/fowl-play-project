@@ -26,6 +26,7 @@ signal world_changed(previous_world: int, current_world: int)
 
 @export_group("Transition")
 @export_range(0.0, 2.0, 0.05) var fade_duration_seconds: float = 0.35
+@export_range(0.0, 10.0, 0.1) var transition_hold_seconds: float = 3.0
 @export var fade_color: Color = Color.BLACK
 
 var active_world: int = World.APARTMENT
@@ -228,6 +229,10 @@ func _perform_transition(destination: int, packed_scene: PackedScene) -> void:
 	_has_active_world = true
 	world_changed.emit(previous_world, active_world)
 	_refresh_players_for_world()
+
+	# Keep the destination world hidden behind black for a deliberate arrival pause.
+	if transition_hold_seconds > 0.0:
+		await get_tree().create_timer(transition_hold_seconds).timeout
 
 	await _fade_to(0.0)
 	_restore_local_gameplay_mouse_capture()
