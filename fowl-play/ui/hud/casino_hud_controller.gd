@@ -644,6 +644,7 @@ func _refresh_action_prompt() -> void:
 	elif carrying:
 		lines.append({"text": "THROW — [HOLD Q]", "indent": 0})
 		lines.append({"text": "DROP — [Q]", "indent": 1})
+		lines.append({"text": "MOVE — [W] [A] [S] [D]", "indent": 0})
 	elif not terminal_locked:
 		if is_instance_valid(_focused_interactable) and _focused_interactable.enabled:
 			var controls: PackedStringArray = PackedStringArray()
