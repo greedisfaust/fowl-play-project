@@ -586,7 +586,10 @@ func set_terminal_movement_locked(locked: bool) -> void:
 ## Re-captures the mouse after a gameplay world transition.
 ## Do not steal the cursor from an open console or active terminal text field.
 func restore_gameplay_mouse_capture() -> void:
-	if not is_local_player or is_limp or is_recovering or terminal_movement_locked:
+	# A terminal movement lock only disables walking; it must never disable mouse look.
+	# World transitions remove the old terminal UI, so restore the gameplay cursor
+	# independently of that movement-only state.
+	if not is_local_player or is_limp or is_recovering:
 		return
 	if is_instance_valid(debug_hub) and bool(debug_hub.call("is_console_open")):
 		return
