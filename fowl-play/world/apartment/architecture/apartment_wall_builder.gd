@@ -337,6 +337,12 @@ func _build_double_door(parent: Node3D, scene_root: Node) -> void:
 			Vector3(side * (leaf_depth * 0.5 + 0.045), leaf_height * 0.52, -side * 0.12), dark, scene_root)
 		_add_door_box(body, "Brass_Pull_Handle", Vector3(0.075, 0.19, 0.035),
 			Vector3(side * (leaf_depth * 0.5 + 0.075), leaf_height * 0.52, -side * 0.12), brass, scene_root)
+		_add_door_box(body, "Back_Raised_Center_Panel", Vector3(0.025, leaf_height * 0.66, leaf_width * 0.66),
+			Vector3(-side * (leaf_depth * 0.5 + 0.014), leaf_height * 0.52, -side * leaf_width * 0.5), inset, scene_root)
+		_add_door_box(body, "Back_Brass_Horizontal_Inlay", Vector3(0.018, 0.025, leaf_width * 0.82),
+			Vector3(-side * (leaf_depth * 0.5 + 0.03), leaf_height - 0.16, -side * leaf_width * 0.5), brass, scene_root)
+		_add_door_box(body, "Back_Brass_Pull_Handle", Vector3(0.075, 0.19, 0.035),
+			Vector3(-side * (leaf_depth * 0.5 + 0.075), leaf_height * 0.52, -side * 0.12), brass, scene_root)
 		for hinge_index: int in range(3):
 			var hinge: MeshInstance3D = MeshInstance3D.new()
 			hinge.name = "Brass_Hinge_%d" % hinge_index
