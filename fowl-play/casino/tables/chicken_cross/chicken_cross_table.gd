@@ -66,8 +66,8 @@ func _setup_physical_collisions() -> void:
 		screen.add_child(screen_body)
 		_add_box_collision(screen_body, "ScreenHousing", Vector3(3.62, 1.72, 0.32), Vector3(0.0, 0.0, 0.0))
 
-	_add_button_housing_collision("Controls/CrossButton")
-	_add_button_housing_collision("Controls/CashOutButton")
+	_add_button_housing_collision(NodePath("Controls/CrossButton"))
+	_add_button_housing_collision(NodePath("Controls/CashOutButton"))
 
 	var keypad_housing: Node3D = get_node_or_null("BettingKeypad/Housing") as Node3D
 	var housing_mesh: MeshInstance3D = get_node_or_null("BettingKeypad/Housing/MeshInstance3D") as MeshInstance3D
