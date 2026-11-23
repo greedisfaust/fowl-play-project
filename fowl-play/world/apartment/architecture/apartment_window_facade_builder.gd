@@ -49,8 +49,15 @@ class_name ApartmentWindowFacadeBuilder
 const GENERATED_ROOT_NAME: String = "_GeneratedApartmentHallwayFacade"
 
 func _ready() -> void:
-	if Engine.is_editor_hint() and get_node_or_null(GENERATED_ROOT_NAME) == null:
+	if not Engine.is_editor_hint():
+		return
+	var generated: Node3D = get_node_or_null(GENERATED_ROOT_NAME) as Node3D
+	if generated == null:
 		_rebuild_geometry()
+	else:
+		_ensure_glass_collisions(generated, get_tree().edited_scene_root)
+		if generated.get_node_or_null("NightCityEnvironment") == null:
+			_add_night_city_environment(generated, get_tree().edited_scene_root)
 
 func _rebuild_geometry() -> void:
 	if not Engine.is_editor_hint():
@@ -126,6 +133,39 @@ func _rebuild_geometry() -> void:
 			scene_root,
 			point_index
 		)
+
+func _ensure_glass_collisions(generated: Node3D, scene_root: Node) -> void:
+	for child: Node in generated.get_children():
+		var visual: MeshInstance3D = child as MeshInstance3D
+		if visual == null or not visual.name.ends_with("Glass"):
+			continue
+		if generated.get_node_or_null(visual.name + "_Collision") != null:
+			continue
+		var box_mesh: BoxMesh = visual.mesh as BoxMesh
+		if box_mesh == null:
+			continue
+		var body: StaticBody3D = StaticBody3D.new()
+		body.name = visual.name + "_Collision"
+		generated.add_child(body)
+		body.owner = scene_root
+		var collision: CollisionShape3D = CollisionShape3D.new()
+		var shape: BoxShape3D = BoxShape3D.new()
+		shape.size = box_mesh.size
+		collision.shape = shape
+		collision.transform = visual.transform
+		body.add_child(collision)
+		collision.owner = scene_root
+
+func _add_night_city_environment(parent: Node3D, scene_root: Node) -> void:
+	var city_node: Node3D = Node3D.new()
+	city_node.name = "NightCityEnvironment"
+	city_node.set_script(load("res://world/casino/night_city_environment.gd"))
+	var outward_points: PackedVector2Array = facade_points.duplicate()
+	outward_points.reverse()
+	city_node.set("facade_points", outward_points)
+	city_node.set("rain_amount", 1800)
+	parent.add_child(city_node)
+	city_node.owner = scene_root
 
 func _build_facade_segment(
 	parent: Node3D,
