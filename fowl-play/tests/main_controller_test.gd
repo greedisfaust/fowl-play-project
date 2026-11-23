@@ -20,6 +20,7 @@ func _run() -> void:
 	main.set("casino_scene", _make_world_scene(Vector3(-8.0, 0.0, 5.0), "PlayerSpawnPoints"))
 	main.set("initial_world", 0)
 	main.set("fade_duration_seconds", 0.0)
+	main.set("transition_hold_seconds", 0.1)
 	root.add_child(main)
 
 	await process_frame
@@ -67,6 +68,16 @@ func _run() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	main.call("transition_to", 1)
 	await process_frame
+	if int(main.get("active_world")) != 1:
+		main.queue_free()
+		_finish(false, "Destination world should be installed as soon as the screen reaches black.")
+		return
+	var transition_fade: ColorRect = main.get("_fade_rect") as ColorRect
+	if transition_fade == null or transition_fade.color.a < 0.99:
+		main.queue_free()
+		_finish(false, "Destination world must remain hidden behind a fully black screen during the arrival pause.")
+		return
+	await create_timer(0.12).timeout
 	await process_frame
 	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		main.queue_free()
