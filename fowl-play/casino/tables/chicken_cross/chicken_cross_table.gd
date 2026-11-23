@@ -3,6 +3,7 @@ extends BaseTable
 const RoundModel = preload("res://casino/tables/chicken_cross/chicken_cross_round.gd")
 const Rules = preload("res://casino/tables/chicken_cross/chicken_cross_rules.gd")
 const BettingKeypadControllerScript = preload("res://casino/terminals/components/betting_keypad_controller.gd")
+const ChickenVisualScript = preload("res://casino/tables/chicken_cross/chicken_cross_chicken.gd")
 
 signal player_state_changed(peer_id: int, player_state: Dictionary)
 signal round_finished(payouts: Dictionary, settlement: Dictionary)
@@ -66,6 +67,30 @@ func _exit_tree() -> void:
 		if _network.is_connected("roster_changed", roster_callback):
 			_network.disconnect("roster_changed", roster_callback)
 	super._exit_tree()
+
+func open_round(peer_id: int) -> Dictionary:
+	var result: Dictionary = super.open_round(peer_id)
+	if bool(result.get("ok", false)):
+		_round_player_states.clear()
+		_clear_chicken_visuals()
+		_update_table_terminal_display()
+	return result
+
+## A successful wager immediately creates that player's visible contestant on every peer.
+func place_wager(peer_id: int, amount: int, payload: Dictionary = {}) -> Dictionary:
+	var result: Dictionary = super.place_wager(peer_id, amount, payload)
+	if not bool(result.get("ok", false)):
+		return result
+	var player_state: Dictionary = {
+		"peer_id": peer_id,
+		"stake": amount,
+		"tile": 0,
+		"status": "active",
+		"multiplier": 0.0,
+		"gross_return": 0,
+	}
+	_publish_player_presentation(peer_id, player_state)
+	return result
 
 func start_round(peer_id: int) -> Dictionary:
 	if not _is_authority():
@@ -307,8 +332,16 @@ func _publish_player_state(peer_id: int) -> void:
 	var player_state: Dictionary = _round_model.call("get_player", peer_id)
 	if player_state.is_empty():
 		return
+	_publish_player_presentation(peer_id, player_state)
+
+func _publish_player_presentation(peer_id: int, source_state: Dictionary) -> void:
+	var player_state: Dictionary = source_state.duplicate(true)
+	player_state["peer_id"] = peer_id
+	player_state["nickname"] = _get_player_nickname(peer_id)
+	player_state["color_index"] = _get_player_color_index(peer_id)
 	_round_player_states[peer_id] = player_state.duplicate(true)
 	player_state_changed.emit(peer_id, player_state.duplicate(true))
+	_sync_chicken_visual(peer_id, player_state)
 	_apply_local_player_presentation(peer_id, player_state)
 	_update_table_terminal_display()
 	if multiplayer.multiplayer_peer != null:
@@ -334,6 +367,7 @@ func get_round_player_display_lines() -> Array[String]:
 	for peer_id: int in peer_ids:
 		var player_state: Dictionary = _round_player_states[peer_id]
 		var nickname: String = _get_player_nickname(peer_id)
+		var color_name: String = PlayerIdentity.color_name_for_index(int(player_state.get("color_index", _get_player_color_index(peer_id)))).to_upper()
 		var tile_number: int = int(player_state.get("tile", 0))
 		var stake: int = int(player_state.get("stake", 0))
 		var status: String = str(player_state.get("status", "active"))
@@ -349,9 +383,70 @@ func get_round_player_display_lines() -> Array[String]:
 					Rules.TILE_COUNT,
 					float(player_state.get("multiplier", 0.0))
 				]
-		lines.append("%s  BET $%s  %s" % [nickname, _format_currency(stake), detail])
+		lines.append("%s  %-16s  BET $%s  %s" % [color_name, nickname, _format_currency(stake), detail])
 	return lines
 
+
+func _get_player_color_index(peer_id: int) -> int:
+	if is_instance_valid(_network) and _network.has_method("get_player_identity"):
+		var identity: PlayerIdentity = _network.call("get_player_identity", peer_id) as PlayerIdentity
+		if identity != null:
+			return identity.color_index
+	return posmod(peer_id - 1, PlayerIdentity.palette_size())
+
+func _get_chicken_visual_root() -> Node3D:
+	var visuals: Node3D = get_node_or_null("Visuals") as Node3D
+	if not is_instance_valid(visuals):
+		return null
+	var root: Node3D = visuals.get_node_or_null("_ChickenCrossContestants") as Node3D
+	if not is_instance_valid(root):
+		root = Node3D.new()
+		root.name = "_ChickenCrossContestants"
+		visuals.add_child(root)
+	return root
+
+func _clear_chicken_visuals() -> void:
+	var root: Node = get_node_or_null("Visuals/_ChickenCrossContestants")
+	if not is_instance_valid(root):
+		return
+	for child: Node in root.get_children():
+		child.queue_free()
+
+func _sync_chicken_visual(peer_id: int, player_state: Dictionary) -> void:
+	var root: Node3D = _get_chicken_visual_root()
+	if not is_instance_valid(root):
+		return
+	var chicken: ChickenCrossChicken = root.get_node_or_null("Chicken_%d" % peer_id) as ChickenCrossChicken
+	var is_new: bool = not is_instance_valid(chicken)
+	if is_new:
+		chicken = ChickenVisualScript.new() as ChickenCrossChicken
+		chicken.name = "Chicken_%d" % peer_id
+		root.add_child(chicken)
+		chicken.scale = Vector3.ONE * 0.62
+		chicken.position = Vector3(-1.53, 1.115, _lane_z_for_peer(peer_id))
+		chicken.configure(peer_id, str(player_state.get("nickname", _get_player_nickname(peer_id))), int(player_state.get("color_index", _get_player_color_index(peer_id))))
+	else:
+		chicken.configure(peer_id, str(player_state.get("nickname", _get_player_nickname(peer_id))), int(player_state.get("color_index", _get_player_color_index(peer_id))))
+	var tile_number: int = clampi(int(player_state.get("tile", 0)), 0, Rules.TILE_COUNT)
+	var previous_state: Dictionary = _round_player_states.get(peer_id, {})
+	var previous_status: String = str(previous_state.get("status", "active"))
+	chicken.set_tile(tile_number, not is_new)
+	var status: String = str(player_state.get("status", "active"))
+	if not is_new and previous_status != status:
+		if status == "failed":
+			chicken.play_failure()
+		elif status == "cashed_out":
+			chicken.play_cash_out()
+
+func _lane_z_for_peer(peer_id: int) -> float:
+	var peer_ids: Array[int] = []
+	for value: Variant in _round_player_states.keys():
+		peer_ids.append(int(value))
+	if not peer_ids.has(peer_id):
+		peer_ids.append(peer_id)
+	peer_ids.sort()
+	var lane_index: int = clampi(peer_ids.find(peer_id), 0, 3)
+	return -0.33 + float(lane_index) * 0.22
 
 func _get_player_nickname(peer_id: int) -> String:
 	if is_instance_valid(_network) and _network.has_method("get_player_identity"):
@@ -386,7 +481,4 @@ func _format_currency(amount: int) -> String:
 
 @rpc("authority", "call_remote", "reliable")
 func _receive_player_state(peer_id: int, player_state: Dictionary) -> void:
-	_round_player_states[peer_id] = player_state.duplicate(true)
-	player_state_changed.emit(peer_id, player_state.duplicate(true))
-	_apply_local_player_presentation(peer_id, player_state)
-	_update_table_terminal_display()
+	_publish_player_presentation(peer_id, player_state)
