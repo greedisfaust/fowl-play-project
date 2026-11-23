@@ -16,6 +16,7 @@ var _left_foot: Node3D
 var _right_foot: Node3D
 var _body_pivot: Node3D
 var _base_y: float = 0.0
+var _base_scale: Vector3 = Vector3.ONE
 var _finished_animation: bool = false
 var _body_material: StandardMaterial3D
 var _wing_material: StandardMaterial3D
@@ -25,12 +26,14 @@ var _eye_base_scales: Array[Vector3] = []
 func _ready() -> void:
 	_build_character()
 	_base_y = position.y
+	_base_scale = scale
 
 func configure(owner_peer_id: int, owner_name: String, owner_color_index: int) -> void:
 	peer_id = owner_peer_id
 	display_name = owner_name
 	color_index = owner_color_index
 	if is_inside_tree():
+		_base_scale = scale
 		_rebuild_character_material()
 
 func _process(delta: float) -> void:
@@ -72,8 +75,8 @@ func play_cash_out() -> void:
 	var tween: Tween = create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(self, "rotation:z", -0.18, 0.18)
-	tween.tween_property(self, "scale", Vector3.ONE * 1.12, 0.18)
-	tween.chain().tween_property(self, "scale", Vector3.ONE, 0.22)
+	tween.tween_property(self, "scale", _base_scale * 1.12, 0.18)
+	tween.chain().tween_property(self, "scale", _base_scale, 0.22)
 	tween.parallel().tween_property(self, "rotation:z", 0.0, 0.22)
 	tween.tween_callback(func() -> void: _finished_animation = false)
 
@@ -89,8 +92,8 @@ func play_failure() -> void:
 	impact.tween_property(self, "rotation:z", 1.45, 0.16)
 	impact.parallel().tween_property(self, "position:y", position.y + 0.22, 0.16)
 	impact.tween_property(self, "rotation:z", 4.8, 0.42)
-	impact.parallel().tween_property(self, "scale", Vector3(1.25, 0.32, 1.25), 0.2)
-	impact.tween_property(self, "scale", Vector3(0.01, 0.01, 0.01), 0.18)
+	impact.parallel().tween_property(self, "scale", _base_scale * Vector3(1.25, 0.32, 1.25), 0.2)
+	impact.tween_property(self, "scale", _base_scale * 0.01, 0.18)
 	impact.tween_callback(queue_free)
 
 func _build_character() -> void:
