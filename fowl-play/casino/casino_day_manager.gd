@@ -109,8 +109,8 @@ func begin_casino_day(requested_day: int, wallet_at_day_start: int) -> Dictionar
 	day_success = false
 	final_wallet_snapshot = 0
 	_last_published_second = ceili(seconds_remaining)
-	if quota_reached:
-		_set_departure_allowed(true)
+	# Departure permission always mirrors the current wallet, including a fresh day.
+	_set_departure_allowed(quota_reached)
 	_publish_state()
 	_log("Day %d started: wallet %d, quota %d, timer %.0fs." % [day_number, starting_wallet, daily_quota, seconds_remaining])
 	return _success(get_snapshot())
@@ -216,12 +216,20 @@ func start_casino_day_after_disembark() -> Dictionary:
 	return result
 
 func _evaluate_quota(current_balance: int) -> void:
-	if not day_active or quota_reached or current_balance < daily_quota:
+	if not day_active:
 		return
-	quota_reached = true
-	_set_departure_allowed(true)
-	_publish_state()
-	_log("Day %d quota reached at wallet %d (target %d). Early departure is unlocked; play may continue." % [day_number, current_balance, daily_quota])
+	var quota_is_currently_met: bool = current_balance >= daily_quota
+	if quota_is_currently_met == quota_reached:
+		return
+
+	# Quota is a live condition, not a permanent achievement flag. If a later
+	# wager drops the available wallet below target, lock departure again.
+	quota_reached = quota_is_currently_met
+	_set_departure_allowed(quota_reached)
+	if quota_reached:
+		_log("Day %d quota reached at wallet %d (target %d). Early departure is unlocked; play may continue." % [day_number, current_balance, daily_quota])
+	else:
+		_log("Day %d wallet fell below quota (%d / %d). Early departure is locked again." % [day_number, current_balance, daily_quota])
 
 
 func _finish_at_deadline(current_balance: int) -> void:
@@ -243,12 +251,27 @@ func _finish_at_deadline(current_balance: int) -> void:
 func finish_early_departure(final_wallet_override: int = -1) -> Dictionary:
 	if not _is_authority():
 		return _failure("Only the host can end a casino day.")
-	if not day_active or not quota_reached:
-		return _failure("Early departure requires an active day whose quota has been reached.")
+	if not day_active:
+		return _failure("Early departure requires an active casino day.")
+
+	# Re-read the wallet at the point of departure. Never trust the cached
+	# quota flag: a wager may have lowered the balance since it was unlocked.
+	var departure_balance: int = final_wallet_override if final_wallet_override >= 0 else _get_current_wallet_balance()
+	current_wallet_balance = departure_balance
+	_evaluate_quota(departure_balance)
+	if not quota_reached or departure_balance < daily_quota:
+		_publish_state()
+		return _failure("Early departure is locked: current wallet %s is below the required quota %s." % [str(departure_balance), str(daily_quota)])
+
 	_cleanup_tables("early_departure")
+	# Table cleanup can settle/refund wagers, so validate the final live balance again.
 	final_wallet_snapshot = final_wallet_override if final_wallet_override >= 0 else _get_current_wallet_balance()
 	current_wallet_balance = final_wallet_snapshot
-	day_success = final_wallet_snapshot >= daily_quota
+	_evaluate_quota(final_wallet_snapshot)
+	if not quota_reached or final_wallet_snapshot < daily_quota:
+		_publish_state()
+		return _failure("Early departure cancelled: final wallet no longer meets the daily quota.")
+	day_success = true
 	day_result_recorded = true
 	day_active = false
 	seconds_remaining = 0.0
