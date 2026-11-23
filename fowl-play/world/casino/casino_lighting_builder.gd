@@ -23,6 +23,13 @@ class_name CasinoLightingBuilder
 @export_range(0.0, 2.0, 0.05) var window_fill_energy: float = 0.35
 @export_range(2.0, 12.0, 0.5) var window_fill_range: float = 6.0
 
+@export_group("Neon Accents")
+@export var generate_neon_accents: bool = true
+@export var cyan_neon_color: Color = Color(0.20, 0.72, 1.0, 1.0)
+@export var magenta_neon_color: Color = Color(0.92, 0.24, 0.68, 1.0)
+@export_range(0.05, 1.5, 0.05) var neon_light_energy: float = 0.42
+@export_range(2.0, 9.0, 0.5) var neon_light_range: float = 5.5
+
 @export_group("Generation")
 @export var rebuild_lighting: bool = false:
 	set(value):
@@ -63,6 +70,13 @@ func _rebuild_lighting() -> void:
 	if generate_window_fill:
 		_add_omni(generated_root, "Window_Cool_Fill_01", Vector3(-19.0, 2.4, -18.0), window_fill_color, window_fill_energy, window_fill_range, scene_root)
 		_add_omni(generated_root, "Window_Cool_Fill_02", Vector3(-4.0, 2.4, -27.0), window_fill_color, window_fill_energy, window_fill_range, scene_root)
+
+	if generate_neon_accents:
+		# Low-energy colored pools support neon signage without overpowering the practical casino lights.
+		_add_omni(generated_root, "Neon_Cyan_Gaming_01", Vector3(-18.0, 2.65, -17.0), cyan_neon_color, neon_light_energy, neon_light_range, scene_root)
+		_add_omni(generated_root, "Neon_Magenta_Gaming_01", Vector3(-5.0, 2.65, -13.0), magenta_neon_color, neon_light_energy * 0.82, neon_light_range, scene_root)
+		_add_omni(generated_root, "Neon_Cyan_Window_01", Vector3(-18.0, 2.5, -25.0), cyan_neon_color, neon_light_energy * 0.72, neon_light_range, scene_root)
+		_add_omni(generated_root, "Neon_Magenta_Bar_01", Vector3(7.0, 2.65, -18.0), magenta_neon_color, neon_light_energy * 0.88, neon_light_range, scene_root)
 
 func _add_omni(
 	parent: Node3D,
