@@ -122,16 +122,16 @@ func _build_environment() -> void:
 		var midpoint := (a + b) * 0.5
 		var segment_buildings := maxi(8, roundi(float(buildings_per_segment) * length / maxf(1.0, total_length)))
 		for layer in range(3):
-			var depth_from_glass := [27.0, 51.0, 79.0][layer]
-			var layer_count := int(ceil(float(segment_buildings) * [1.0, 0.82, 0.68][layer]))
+			var depth_from_glass: float = [27.0, 51.0, 79.0][layer]
+			var layer_count: int = int(ceil(float(segment_buildings) * [1.0, 0.82, 0.68][layer]))
 			for index in range(layer_count):
 				var along := -length * 0.5 + (float(index) + _rng.randf_range(-0.34, 0.34)) * length / float(layer_count)
-				var width := _rng.randf_range(2.6, 7.0) * [1.0, 1.18, 1.35][layer]
-				var depth := _rng.randf_range(4.0, 8.5)
-				var height := _rng.randf_range(12.0, 31.0) * [1.0, 0.82, 0.65][layer]
+				var width: float = _rng.randf_range(2.6, 7.0) * [1.0, 1.18, 1.35][layer]
+				var depth: float = _rng.randf_range(4.0, 8.5)
+				var height: float = _rng.randf_range(12.0, 31.0) * [1.0, 0.82, 0.65][layer]
 				if _rng.randf() < 0.13:
 					height *= 1.42
-				var center := midpoint + tangent * along + outward * depth_from_glass + Vector3.UP * (height * 0.5 - 2.1)
+				var center: Vector3 = midpoint + tangent * along + outward * depth_from_glass + Vector3.UP * (height * 0.5 - 2.1)
 				var tower := MeshInstance3D.new()
 				tower.name = "Tower_%d_%02d_%02d" % [segment_index, layer, index]
 				var tower_mesh := BoxMesh.new()
@@ -148,9 +148,9 @@ func _build_environment() -> void:
 					for column in range(columns):
 						if _rng.randf() > window_lit_ratio:
 							continue
-						var x := -width * 0.5 + 0.48 + float(column) * (width - 0.9) / float(maxi(1, columns - 1))
-						var y := -height * 0.5 + 0.95 + float(row) * 1.42
-						var z := depth * 0.5 + 0.026
+						var x: float = -width * 0.5 + 0.48 + float(column) * (width - 0.9) / float(maxi(1, columns - 1))
+						var y: float = -height * 0.5 + 0.95 + float(row) * 1.42
+						var z: float = depth * 0.5 + 0.026
 						var transform := Transform3D(basis, center + basis * Vector3(x, y, z))
 						var choice := _rng.randi_range(0, 19)
 						var batch := 0 if choice < 10 else (1 if choice < 15 else (2 if choice < 19 else 3))
