@@ -181,7 +181,7 @@ func _build_rain_for_segment(parent: Node3D, midpoint: Vector3, tangent: Vector3
 		particles.emitting = true
 		particles.local_coords = true
 		particles.transform = Transform3D(basis, midpoint + Vector3.UP * 15.0 - inward * (glass_clearance + RAIN_LAYERS[layer]))
-		particles.visibility_aabb = AABB(Vector3(-length * 0.5 - 3.0, -19.0, -2.2), Vector3(length + 6.0, 38.0, 4.4))
+		particles.visibility_aabb = AABB(Vector3(-length * 0.5 - 3.0, -34.0, -2.2), Vector3(length + 6.0, 38.0, 4.4))
 		var process := ParticleProcessMaterial.new()
 		process.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
 		process.emission_box_extents = Vector3(length * 0.5, 0.4, 1.7)
