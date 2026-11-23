@@ -74,6 +74,7 @@ func play_cash_out() -> void:
 	tween.tween_property(self, "rotation:z", -0.18, 0.18)
 	tween.tween_property(self, "scale", Vector3.ONE * 1.12, 0.18)
 	tween.chain().tween_property(self, "scale", Vector3.ONE, 0.22)
+	tween.parallel().tween_property(self, "rotation:z", 0.0, 0.22)
 	tween.tween_callback(func() -> void: _finished_animation = false)
 
 func play_failure() -> void:
