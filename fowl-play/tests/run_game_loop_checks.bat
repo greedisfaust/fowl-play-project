@@ -35,7 +35,7 @@ if not exist "%GODOT%" goto invalid_godot
 echo Using Godot: "%GODOT%"
 echo Project: "%PROJECT%"
 echo.
-echo [1/10] Importing project resources...
+echo [1/11] Importing project resources...
 "%GODOT%" --headless --editor --path "%PROJECT%" --import
 if errorlevel 1 goto failed
 
@@ -58,6 +58,7 @@ if errorlevel 1 goto failed
 call :run_test res://tests/elevator_departure_test.gd "Elevator all-player departure gate"
 if errorlevel 1 goto failed
 call :run_test res://tests/elevator_occupancy_test.gd "Elevator occupant and carried-player tracking"
+if errorlevel 1 goto failed
 call :run_test res://tests/elevator_door_collision_test.gd "Elevator door panel collision"
 if errorlevel 1 goto failed
 
