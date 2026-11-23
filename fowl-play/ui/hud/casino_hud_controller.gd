@@ -71,6 +71,7 @@ var _connected_tables: Array[BaseTable] = []
 var _wallet_glow_material: ShaderMaterial
 var _quota_glow_material: ShaderMaterial
 var _glow_tween: Tween
+var _quota_glow_enabled: bool = false
 
 
 func _ready() -> void:
@@ -263,13 +264,13 @@ func _on_day_state_changed(snapshot: Dictionary) -> void:
 		_counted_wagers.clear()
 		_refresh_contribution_panel()
 	var quota_now: bool = bool(snapshot.get("quota_reached", false))
-	if quota_now and not _last_quota_reached:
-		_show_announcement("DAILY QUOTA REACHED", COLOR_QUOTA_MET, 3, "EARLY DEPARTURE UNLOCKED")
-		if is_instance_valid(_wallet_glow_material):
-			_play_quota_glow_pulse()
+	var quota_just_reached: bool = quota_now and not _last_quota_reached
 	_last_quota_reached = quota_now
 	_last_day_snapshot = snapshot.duplicate(true)
 	_refresh_day_display(snapshot)
+	if quota_just_reached:
+		_show_announcement("DAILY QUOTA REACHED", COLOR_QUOTA_MET, 3, "EARLY DEPARTURE UNLOCKED")
+		_play_quota_glow_pulse()
 
 
 func _on_wallet_changed(available_balance: int, _reserved_total: int) -> void:
@@ -325,8 +326,9 @@ func _refresh_quota_colors() -> void:
 
 
 func _set_quota_glow(enabled: bool) -> void:
-	if _wallet_glow_material == null or _quota_glow_material == null:
+	if _wallet_glow_material == null or _quota_glow_material == null or enabled == _quota_glow_enabled:
 		return
+	_quota_glow_enabled = enabled
 	if _glow_tween != null and _glow_tween.is_running():
 		_glow_tween.kill()
 	var target: float = 1.0 if enabled else 0.0
