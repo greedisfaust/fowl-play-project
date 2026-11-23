@@ -38,6 +38,21 @@ func _run() -> void:
 		main.queue_free()
 		_finish(false, "Offline host player was not created with peer ID 1.")
 		return
+
+	# Rest-phase spawn must override the Apartment's normal lobby spawn and use its elevator.
+	main.call("_on_run_state_changed_for_spawn", {"phase": 3})
+	await process_frame
+	var apartment_elevator: Node3D = main.get_active_world().get_node_or_null("Elevator") as Node3D
+	if apartment_elevator == null:
+		main.queue_free()
+		_finish(false, "Temporary Apartment test world must contain its elevator spawn anchor.")
+		return
+	var expected_rest_spawn: Vector3 = apartment_elevator.global_position + Vector3(-0.45, 0.0, -0.45)
+	if player.global_position.distance_to(expected_rest_spawn) > 0.01:
+		main.queue_free()
+		_finish(false, "Rest-phase players should spawn beside the Apartment elevator.")
+		return
+	main.call("_refresh_players_for_world")
 	if not bool(main.call("can_transition_to", 1)):
 		main.queue_free()
 		_finish(false, "Main should accept an assigned, different destination.")
@@ -221,6 +236,11 @@ func _make_world_scene(spawn_position: Vector3, spawn_container_name: String, in
 		marker.position = spawn_position + Vector3(float(index) * 2.0, 0.0, 0.0)
 		spawn_points.add_child(marker)
 		marker.owner = world
+	var elevator: Node3D = Node3D.new()
+	elevator.name = "Elevator"
+	elevator.position = spawn_position + Vector3(20.0, 0.0, 20.0)
+	world.add_child(elevator)
+	elevator.owner = world
 	var packed: PackedScene = PackedScene.new()
 	var error: Error = packed.pack(world)
 	world.free()
