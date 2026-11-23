@@ -43,7 +43,7 @@ const LightingRig = preload("res://world/shared/lighting/fowl_play_lighting_rig.
 const GENERATED_ROOT_NAME: String = "_GeneratedApartmentLighting"
 
 func _ready() -> void:
-	if Engine.is_editor_hint():
+	if Engine.is_editor_hint() and get_node_or_null(GENERATED_ROOT_NAME) == null:
 		_rebuild_lighting()
 
 func _rebuild_lighting() -> void:
@@ -56,6 +56,14 @@ func _rebuild_lighting() -> void:
 	if old_root != null:
 		old_root.free()
 
+	var world_environment: WorldEnvironment = scene_root.find_child("WorldEnvironment", true, false) as WorldEnvironment
+	if world_environment == null:
+		world_environment = WorldEnvironment.new()
+		world_environment.name = "WorldEnvironment"
+		scene_root.add_child(world_environment)
+		world_environment.owner = scene_root
+	world_environment.environment = load("res://world/casino/casino_night_environment.tres") as Environment
+
 	var generated_root: Node3D = Node3D.new()
 	generated_root.name = GENERATED_ROOT_NAME
 	add_child(generated_root)
@@ -63,8 +71,10 @@ func _rebuild_lighting() -> void:
 
 	if generate_main_room_lights:
 		_build_main_room_lights(generated_root, scene_root)
+		_build_circular_fixture(generated_root, scene_root)
 	if generate_hallway_lights:
 		_build_hallway_lights(generated_root, scene_root)
+		_build_hallway_sconces(generated_root, scene_root)
 	if generate_lobby_lights:
 		_build_lobby_lights(generated_root, scene_root)
 
@@ -119,6 +129,103 @@ func _build_lobby_lights(parent: Node3D, scene_root: Node) -> void:
 		lobby_light_color, lobby_light_energy * 0.48,
 		3.5, scene_root
 	)
+
+
+func _build_circular_fixture(parent: Node3D, scene_root: Node) -> void:
+	var bronze: StandardMaterial3D = StandardMaterial3D.new()
+	bronze.albedo_color = Color(0.34, 0.20, 0.095)
+	bronze.metallic = 0.82
+	bronze.roughness = 0.22
+	var diffuser: StandardMaterial3D = StandardMaterial3D.new()
+	diffuser.albedo_color = Color(1.0, 0.78, 0.52)
+	diffuser.emission_enabled = true
+	diffuser.emission = Color(1.0, 0.52, 0.22)
+	diffuser.emission_energy_multiplier = 1.7
+	var fixture: Node3D = Node3D.new()
+	fixture.name = "MainRoom_Grand_Circular_Fixture"
+	fixture.position = Vector3(0.0, 3.70, 0.0)
+	parent.add_child(fixture)
+	fixture.owner = scene_root
+	for ring_index: int in range(2):
+		var ring: MeshInstance3D = MeshInstance3D.new()
+		ring.name = "Bronze_Ring_%d" % ring_index
+		var torus: TorusMesh = TorusMesh.new()
+		torus.inner_radius = 1.05 + float(ring_index) * 0.62
+		torus.outer_radius = torus.inner_radius + 0.045
+		ring.mesh = torus
+		ring.material_override = bronze
+		fixture.add_child(ring)
+		ring.owner = scene_root
+	var diffuser_ring: MeshInstance3D = MeshInstance3D.new()
+	diffuser_ring.name = "Warm_Diffuser_Ring"
+	var diffuser_mesh: TorusMesh = TorusMesh.new()
+	diffuser_mesh.inner_radius = 1.34
+	diffuser_mesh.outer_radius = 1.47
+	diffuser_ring.mesh = diffuser_mesh
+	diffuser_ring.material_override = diffuser
+	fixture.add_child(diffuser_ring)
+	diffuser_ring.owner = scene_root
+	for index: int in range(8):
+		var angle: float = TAU * float(index) / 8.0
+		var spot: SpotLight3D = SpotLight3D.new()
+		spot.name = "Fixture_Downlight_%02d" % index
+		spot.position = Vector3(cos(angle) * 2.0, -0.18, sin(angle) * 2.0)
+		spot.rotation = Vector3(-PI * 0.5, 0.0, 0.0)
+		spot.light_color = Color(1.0, 0.78, 0.57)
+		spot.light_energy = 1.15
+		spot.spot_range = 7.0
+		spot.spot_angle = 62.0
+		spot.shadow_enabled = false
+		fixture.add_child(spot)
+		spot.owner = scene_root
+
+func _build_hallway_sconces(parent: Node3D, scene_root: Node) -> void:
+	var brass: StandardMaterial3D = StandardMaterial3D.new()
+	brass.albedo_color = Color(0.42, 0.27, 0.13)
+	brass.metallic = 0.82
+	brass.roughness = 0.24
+	var shade: StandardMaterial3D = StandardMaterial3D.new()
+	shade.albedo_color = Color(1.0, 0.72, 0.45)
+	shade.emission_enabled = true
+	shade.emission = Color(1.0, 0.45, 0.18)
+	shade.emission_energy_multiplier = 1.25
+	for index: int in range(6):
+		var z: float = -14.0 + float(index) * 5.6
+		var sconce: Node3D = Node3D.new()
+		sconce.name = "Hallway_Wall_Sconce_%02d" % index
+		sconce.position = Vector3(-11.17, 2.15, z)
+		parent.add_child(sconce)
+		sconce.owner = scene_root
+		var plate: MeshInstance3D = MeshInstance3D.new()
+		plate.name = "Bronze_Backplate"
+		var plate_mesh: CylinderMesh = CylinderMesh.new()
+		plate_mesh.top_radius = 0.12
+		plate_mesh.bottom_radius = 0.12
+		plate_mesh.height = 0.035
+		plate.mesh = plate_mesh
+		plate.material_override = brass
+		plate.rotation = Vector3(0.0, 0.0, PI * 0.5)
+		sconce.add_child(plate)
+		plate.owner = scene_root
+		var diffuser: MeshInstance3D = MeshInstance3D.new()
+		diffuser.name = "Frosted_Diffuser"
+		var capsule: CapsuleMesh = CapsuleMesh.new()
+		capsule.radius = 0.09
+		capsule.height = 0.52
+		diffuser.mesh = capsule
+		diffuser.material_override = shade
+		diffuser.position = Vector3(0.10, 0.0, 0.0)
+		sconce.add_child(diffuser)
+		diffuser.owner = scene_root
+		var light: OmniLight3D = OmniLight3D.new()
+		light.name = "Warm_Wall_Wash"
+		light.position = Vector3(0.20, -0.03, 0.0)
+		light.light_color = Color(1.0, 0.70, 0.48)
+		light.light_energy = 1.15
+		light.omni_range = 5.8
+		light.shadow_enabled = false
+		sconce.add_child(light)
+		light.owner = scene_root
 
 func _add_omni_light(
 	parent: Node3D,
