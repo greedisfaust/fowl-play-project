@@ -45,14 +45,23 @@ const GENERATED_ROOT_NAME: String = "_GeneratedApartmentCeiling"
 func _ready() -> void:
 	if not Engine.is_editor_hint():
 		return
+	# Defer editor-scene repair until edited_scene_root and ownership are ready.
+	call_deferred("_ensure_saved_ceiling_setup")
+
+func _ensure_saved_ceiling_setup() -> void:
+	if not Engine.is_editor_hint():
+		return
+	var scene_root: Node = get_tree().edited_scene_root
+	if scene_root == null:
+		return
 	var generated: Node3D = get_node_or_null(GENERATED_ROOT_NAME) as Node3D
 	if generated == null:
 		_rebuild_geometry()
-	else:
-		_ensure_ceiling_collisions(generated, get_tree().edited_scene_root)
-		if get_tree().edited_scene_root.find_child("MainRoom_Grand_Circular_Fixture", true, false) == null:
-			_build_circular_fixture(generated, get_tree().edited_scene_root)
-		_setup_night_city_environment(get_tree().edited_scene_root)
+		return
+	_ensure_ceiling_collisions(generated, scene_root)
+	if scene_root.find_child("MainRoom_Grand_Circular_Fixture", true, false) == null:
+		_build_circular_fixture(generated, scene_root)
+	_setup_night_city_environment(scene_root)
 
 func _rebuild_geometry() -> void:
 	if not Engine.is_editor_hint():
