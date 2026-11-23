@@ -31,6 +31,9 @@ class_name ApartmentCeilingBuilder
 @export var bronze_color: Color = Color(0.36, 0.22, 0.105, 1.0)
 @export var warm_light_color: Color = Color(1.0, 0.55, 0.28, 1.0)
 
+@export_group("Collision")
+@export var generate_ceiling_collision: bool = true
+
 @export_group("Generation")
 @export var rebuild_geometry: bool = false:
 	set(value):
@@ -40,7 +43,7 @@ class_name ApartmentCeilingBuilder
 const GENERATED_ROOT_NAME: String = "_GeneratedApartmentCeiling"
 
 func _ready() -> void:
-	if Engine.is_editor_hint():
+	if Engine.is_editor_hint() and get_node_or_null(GENERATED_ROOT_NAME) == null:
 		_rebuild_geometry()
 
 func _rebuild_geometry() -> void:
@@ -190,6 +193,20 @@ func _add_box(
 	instance.position = box_position
 	parent.add_child(instance)
 	instance.owner = scene_root
+	if generate_ceiling_collision and node_name.ends_with("CeilingSlab"):
+		var body: StaticBody3D = StaticBody3D.new()
+		body.name = node_name + "_Collision"
+		body.collision_layer = 1
+		body.collision_mask = 1 << 4
+		parent.add_child(body)
+		body.owner = scene_root
+		var collision: CollisionShape3D = CollisionShape3D.new()
+		var shape: BoxShape3D = BoxShape3D.new()
+		shape.size = box_size
+		collision.shape = shape
+		collision.position = box_position
+		body.add_child(collision)
+		collision.owner = scene_root
 
 func _make_material(color: Color, metallic_value: float, roughness_value: float) -> StandardMaterial3D:
 	var material: StandardMaterial3D = StandardMaterial3D.new()
