@@ -52,6 +52,7 @@ var _watched_label: Label
 var _action_prompt: Label
 var _announcement_label: Label
 var _announcement_tween: Tween
+var _connected_tables: Array[BaseTable] = []
 
 
 func _ready() -> void:
@@ -74,16 +75,26 @@ func _ready() -> void:
 		visible = false
 		return
 
+	add_to_group("casino_hud")
+	get_tree().node_added.connect(_on_tree_node_added)
 	_apply_typography()
 	_connect_services()
 	_build_runtime_hud_sections()
 	_set_hud_controls_mouse_passthrough()
+	for table_node: Node in get_tree().get_nodes_in_group("casino_tables"):
+		_connect_table_feedback_source(table_node)
 	_connect_focus_sources()
 	_refresh_all()
 	call_deferred("_refresh_visibility")
 
 
 func _exit_tree() -> void:
+	if get_tree().node_added.is_connected(_on_tree_node_added):
+		get_tree().node_added.disconnect(_on_tree_node_added)
+	for table: BaseTable in _connected_tables:
+		if is_instance_valid(table) and table.player_feedback.is_connected(_on_table_feedback):
+			table.player_feedback.disconnect(_on_table_feedback)
+	_connected_tables.clear()
 	_disconnect_services()
 
 
@@ -177,6 +188,41 @@ func _disconnect_services() -> void:
 	if is_instance_valid(_main_controller) and _main_controller.has_signal("world_changed"):
 		if _main_controller.world_changed.is_connected(_on_world_changed):
 			_main_controller.world_changed.disconnect(_on_world_changed)
+
+
+func _on_tree_node_added(node: Node) -> void:
+	_connect_table_feedback_source(node)
+
+
+func _connect_table_feedback_source(node: Node) -> void:
+	var table: BaseTable = node as BaseTable
+	if not is_instance_valid(table) or _connected_tables.has(table):
+		return
+	if not table.player_feedback.is_connected(_on_table_feedback):
+		table.player_feedback.connect(_on_table_feedback)
+	_connected_tables.append(table)
+
+
+func _on_table_feedback(peer_id: int, message: String, severity: StringName) -> void:
+	if peer_id != _get_local_peer_id():
+		return
+	var feedback_color: Color = COLOR_TIMER_NORMAL
+	match severity:
+		&"success":
+			feedback_color = COLOR_WALLET
+		&"warning":
+			feedback_color = COLOR_QUOTA_MET
+		&"error":
+			feedback_color = COLOR_QUOTA_UNMET
+	_show_announcement(message, feedback_color)
+
+
+func _get_local_peer_id() -> int:
+	if is_instance_valid(_local_player):
+		var peer_id: int = int(_local_player.get("input_peer_id"))
+		if peer_id > 0:
+			return peer_id
+	return multiplayer.get_unique_id()
 
 
 func _on_run_state_changed(snapshot: Dictionary) -> void:
@@ -504,9 +550,10 @@ func _on_day_finished(day: int, success: bool, final_wallet: int, quota: int) ->
 	_show_announcement("DAY %d — %s  |  WALLET %s / %s" % [day, result_text, _format_money(final_wallet), _format_money(quota)])
 
 
-func _show_announcement(message: String) -> void:
+func _show_announcement(message: String, text_color: Color = COLOR_TIMER_NORMAL) -> void:
 	if not is_instance_valid(_announcement_label):
 		return
+	_announcement_label.add_theme_color_override("font_color", text_color)
 	_announcement_label.text = message
 	if _announcement_tween != null and _announcement_tween.is_running():
 		_announcement_tween.kill()
