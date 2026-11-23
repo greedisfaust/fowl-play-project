@@ -20,6 +20,7 @@ var daily_quota: int = 0
 var seconds_remaining: float = 0.0
 var quota_reached: bool = false
 var day_result_recorded: bool = false
+var day_start_pending: bool = false
 var day_success: bool = false
 var final_wallet_snapshot: int = 0
 
@@ -96,6 +97,7 @@ func begin_casino_day(requested_day: int, wallet_at_day_start: int) -> Dictionar
 		return _failure("A casino day is already active.")
 	if day_result_recorded and requested_day == day_number:
 		return _failure("This casino day has already been recorded.")
+	day_start_pending = false
 	day_number = requested_day
 	starting_wallet = wallet_at_day_start
 	current_wallet_balance = wallet_at_day_start
@@ -157,6 +159,7 @@ func _on_wallet_changed(available_balance: int, _reserved_total: int) -> void:
 func _on_run_state_changed(snapshot: Dictionary) -> void:
 	var run_is_active: bool = bool(snapshot.get("run_active", false))
 	if not run_is_active:
+		day_start_pending = false
 		day_active = false
 		day_number = 0
 		starting_wallet = 0
@@ -173,17 +176,35 @@ func _on_run_state_changed(snapshot: Dictionary) -> void:
 	if not _is_authority():
 		return
 	var phase_value: int = int(snapshot.get("phase", -1))
-	if not run_is_active or phase_value != 2:
+	if phase_value != 2:
+		day_start_pending = false
 		return
 	var incoming_day: int = int(snapshot.get("current_day", 0))
 	if day_active and day_number == incoming_day:
 		return
 	if day_result_recorded and day_number == incoming_day:
 		return
-	var result: Dictionary = begin_casino_day(incoming_day, _get_current_wallet_balance())
-	if not bool(result.get("ok", false)):
-		_log("Could not initialize casino day: %s" % str(result.get("reason", "")))
+	# World arrival only arms the day. The elevator confirms the first player has
+	# physically disembarked before the five-minute clock begins.
+	day_start_pending = true
+	_log("Day %d is waiting for the first player to leave the elevator." % incoming_day)
 
+
+## Called by the host's destination elevator after any player physically exits.
+func start_casino_day_after_disembark() -> Dictionary:
+	if not _is_authority():
+		return _failure("Only the host can start the casino day.")
+	if not day_start_pending or day_active:
+		return _failure("The casino day is not waiting for its first disembark.")
+	if not is_instance_valid(_run_manager) or int(_run_manager.get("phase")) != 2:
+		return _failure("The run is no longer in the Casino phase.")
+	var requested_day: int = int(_run_manager.get("current_day"))
+	var result: Dictionary = begin_casino_day(requested_day, _get_current_wallet_balance())
+	if not bool(result.get("ok", false)):
+		_log("Could not start casino day after disembark: %s" % str(result.get("reason", "")))
+		return result
+	_log("Day %d timer started after the first player left the elevator." % requested_day)
+	return result
 
 func _evaluate_quota(current_balance: int) -> void:
 	if not day_active or quota_reached or current_balance < daily_quota:
