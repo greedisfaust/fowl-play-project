@@ -25,8 +25,8 @@ const CITY_Z: float = -66.0
 const CITY_START_X: float = -43.0
 const CITY_WIDTH: float = 86.0
 const CITY_BASE_Y: float = -2.0
-const RAIN_ORIGIN: Vector3 = Vector3(0.0, 13.0, -38.0)
-const RAIN_EXTENTS: Vector3 = Vector3(35.0, 0.5, 15.0)
+const RAIN_ORIGIN: Vector3 = Vector3(0.0, 13.0, -42.0)
+const RAIN_EXTENTS: Vector3 = Vector3(35.0, 0.5, 8.0)
 
 var _built: bool = false
 
