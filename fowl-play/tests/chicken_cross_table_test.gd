@@ -35,6 +35,8 @@ func _test_physical_collisions() -> void:
 	_check(table.get_node_or_null("BettingKeypad/Housing/ChickenCrossHousingCollision/HousingShape") is CollisionShape3D, "Betting keypad housing blocks player movement")
 	_check(table.get_node_or_null("BettingKeypad/Key_1/InteractionBody/CollisionShape3D") is CollisionShape3D, "Keypad keys retain their individual interaction collisions")
 	_check(table.get_node_or_null("Controls/CrossButton/InteractionBody/CollisionShape3D") is CollisionShape3D, "Cross button retains its interaction collision")
+	_check(table.get_node_or_null("Controls/CrossButton/ChickenCrossHousingCollision/HousingShape") is CollisionShape3D, "Cross button housing blocks player movement")
+	_check(table.get_node_or_null("Controls/CashOutButton/ChickenCrossHousingCollision/HousingShape") is CollisionShape3D, "Cash Out button housing blocks player movement")
 	_check(table.get_node_or_null("Controls/CashOutButton/InteractionBody/CollisionShape3D") is CollisionShape3D, "Cash Out button retains its interaction collision")
 	table.queue_free()
 
