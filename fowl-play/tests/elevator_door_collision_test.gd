@@ -34,7 +34,7 @@ func _run() -> void:
 			_finish(false, "%s must synchronize its animated transform with physics." % panel_name)
 			return
 		var collision_shape: CollisionShape3D = body.get_node_or_null("CollisionShape3D") as CollisionShape3D
-		if collision_shape == null or not collision_shape.shape is BoxShape3D:
+		if collision_shape == null or not (collision_shape.shape is BoxShape3D):
 			_finish(false, "%s needs a BoxShape3D matching its door leaf." % panel_name)
 			return
 		collision_bodies.append(body)
