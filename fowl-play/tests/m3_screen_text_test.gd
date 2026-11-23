@@ -14,10 +14,28 @@ func _run() -> void:
 	await process_frame
 	_check(terminal.horizontal_alignment == HORIZONTAL_ALIGNMENT_LEFT, "Terminal text must stay left-aligned")
 	_check(terminal.text_direction == Control.TEXT_DIRECTION_LTR, "Terminal text must read left-to-right")
+	_check(terminal.autowrap_mode == TextServer.AUTOWRAP_ARBITRARY, "Long unbroken text must wrap within the screen width")
+	_check(terminal.clip_contents, "Screen text must be clipped to the viewport rectangle")
+	terminal.terminal_font_size = 106
+	terminal.content_padding_ratio = 0.7
+	terminal.size = Vector2(3226.0, 1382.0)
+	for row_index: int in range(16):
+		terminal.append_paragraph("LAYOUT TEST ROW %02d" % row_index)
+	terminal.fit_font_size_to_columns(75)
+	_check(terminal.get_effective_font_size() < 106, "Wide two-column layouts should reduce the rendered font size to fit the screen")
+	_check(terminal.get_effective_font_size() >= 8, "Auto-fit font size should respect its minimum")
+	_check(terminal.terminal_font_size == 106, "Auto-fit must preserve the Inspector-configured design font size")
+	var first_fitted_size: int = terminal.get_effective_font_size()
+	terminal.fit_font_size_to_columns(75)
+	_check(terminal.get_effective_font_size() == first_fitted_size, "Repeated fitting must not progressively shrink the rendered font")
+
 	_check(terminal.bbcode_enabled, "Terminal must support per-line header/body colors")
 	_check(terminal.background_color == ScreenText.DEFAULT_BACKGROUND, "Terminal should use the dark blue-black backing by default")
 	_check(terminal.header_color == ScreenText.DEFAULT_HEADER, "Terminal should use gold headers by default")
 	_check(terminal.body_color == ScreenText.DEFAULT_BODY, "Terminal should use bright body text by default")
+	terminal.append_centered_header("BETTING TERMINAL")
+	_check(terminal.get_total_character_count() > 0, "Centered headers should append visible text using RichTextLabel alignment")
+	terminal.clear_screen()
 	terminal.append_header("REGISTRATION SYSTEM")
 	terminal.append_paragraph("Welcome, player.")
 	terminal.append_prompt("C:\\FOWLPLAY> _")

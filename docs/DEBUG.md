@@ -406,6 +406,13 @@ The test arena has an editor-authored `WorldEnvironment` with restrained Glow en
 - Keyboard/gamepad and physical USE routing are deferred to Registration Terminal integration to prevent inactive screens stealing player controls.
 
 
+## Lobby Devices
+- Lobby Host / Join uses a dedicated `ScreenHit/Interactable` on the SLIM screen; the controller resolves the sibling screen, sensor, and interaction component before connecting.
+- Its text scale is reduced for the portrait display and prompts are split into short lines to avoid oversized single-line wrapping.
+- Player Color Panel behavior is attached by MainController to the scene-authored `ColorPanelController` node. Each physical button uses the existing `TerminalButton` and `Interactable` path.
+- The host updates identity from the peer ID on the authoritative button activation. Occupied colors are disabled and visibly dimmed on every peer; changing color releases the old choice. The host identity allocator remains the final race/uniqueness guard.
+- Focused check: `player-color-panel` stage in `tests/run_checks.ps1`.
+
 ## Registration Terminal
 
 - USER VERIFIED: the terminal interaction/registration flow and the fixes to its wake/session/proximity behavior are working. Keep the checks below as regression guidance.
@@ -699,3 +706,18 @@ The local first-person camera adds a restrained velocity-driven bob while walkin
 - Mouse-look offsets should remain usable during recovery. Once the rig completes its get-up animation, expect only a short 0.16-second alignment into the authored FPS camera mount.
 - Test face-up and face-down recovery, including charged/parry launches, and verify there is no visible snap when normal camera parenting resumes. FOV should remain the normal gameplay FOV throughout.
 - Run the focused m10-ragdoll-camera test stage from fowl-play. These checks and in-game behavior have not been run by the assistant.
+
+
+## Casino table controller
+
+The generic table lifecycle controller registers these watches per configured table ID:
+
+- `casino_table/<table_id>/state` — idle/open/running/resolving/closed.
+- `casino_table/<table_id>/participants` — current participant count.
+- `casino_table/<table_id>/round_id` — active round identifier, or empty when idle.
+
+Lifecycle decisions are logged through the existing `wallet` category and include the table ID. There are no gameplay-changing debug commands; table actions must use the same host-authoritative controller API as normal gameplay.
+
+## Temporary local multiplayer hotkeys
+
+For the current elevator/world-building playtests, the Network autoload also accepts **H** to host and **J** to join `127.0.0.1` from a second local game instance. These are temporary development-only shortcuts; see `fowl-play/docs/TEMPORARY_DEV_SHORTCUTS.md` for setup and the mandatory pre-release removal checklist. The existing `net_host`, `net_join`, and `net_disconnect` console commands remain available.

@@ -1,0 +1,66 @@
+[gd_scene format=3 uid="uid://dckbpatdy1odv"]
+
+[ext_resource type="Script" uid="uid://blb8tbauq31wv" path="res://ui/hud/casino_hud_controller.gd" id="1_po08v"]
+[ext_resource type="FontFile" uid="uid://ws0yv8acsgcw" path="res://assets/fonts/JetBrainsMonoNL-Regular.ttf" id="2_7saje"]
+[ext_resource type="FontFile" uid="uid://ce6dhjlvwl0od" path="res://assets/fonts/JetBrainsMono-Bold.ttf" id="3_24mn7"]
+
+[node name="CasinoHUD" type="CanvasLayer" unique_id=753540955]
+layer = 10
+script = ExtResource("1_po08v")
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=574332436]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 32
+
+[node name="LayoutRoot" type="Control" parent="MarginContainer" unique_id=1561046760]
+layout_mode = 2
+
+[node name="TopLeft" type="Control" parent="MarginContainer/LayoutRoot" unique_id=1792761673]
+anchors_preset = 0
+offset_right = 1152.0
+offset_bottom = 648.0
+
+[node name="WalletStack" type="VBoxContainer" parent="MarginContainer/LayoutRoot/TopLeft" unique_id=1095535746]
+custom_minimum_size = Vector2(360, 0)
+layout_mode = 1
+offset_right = 360.0
+offset_bottom = 131.0
+
+[node name="DayLabel" type="Label" parent="MarginContainer/LayoutRoot/TopLeft/WalletStack" unique_id=150184857]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_7saje")
+
+[node name="WalletLabel" type="Label" parent="MarginContainer/LayoutRoot/TopLeft/WalletStack" unique_id=626041835]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_24mn7")
+theme_override_font_sizes/font_size = 42
+
+[node name="QuotaLabel" type="Label" parent="MarginContainer/LayoutRoot/TopLeft/WalletStack" unique_id=821352388]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_7saje")
+theme_override_font_sizes/font_size = 30
+
+[node name="TopCenter" type="Control" parent="MarginContainer/LayoutRoot" unique_id=850902476]
+anchors_preset = 0
+offset_right = 1152.0
+offset_bottom = 648.0
+
+[node name="TimerLabel" type="Label" parent="MarginContainer/LayoutRoot/TopCenter" unique_id=2011330953]
+custom_minimum_size = Vector2(260, 0)
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -130.0
+offset_right = 130.0
+offset_bottom = 50.0
+grow_horizontal = 2
+theme_override_fonts/font = ExtResource("3_24mn7")
+theme_override_font_sizes/font_size = 36

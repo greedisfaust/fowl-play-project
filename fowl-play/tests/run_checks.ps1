@@ -1,27 +1,18 @@
 param(
 	[string]$OnlyStage = "all"
 )
-
 $ErrorActionPreference = "Stop"
-
 $godot = $env:FOWL_PLAY_GODOT
 if ([string]::IsNullOrWhiteSpace($godot)) {
 	$godotCommand = Get-Command godot -ErrorAction SilentlyContinue
-	if ($null -ne $godotCommand) {
-		$godot = $godotCommand.Source
-	} else {
-		$godot = "C:\Program Files (x86)\Steam\steamapps\common\Godot Engine\godot.windows.opt.tools.64.exe"
-	}
+	if ($null -ne $godotCommand) { $godot = $godotCommand.Source }
+	else { $godot = "C:\Program Files (x86)\Steam\steamapps\common\Godot Engine\godot.windows.opt.tools.64.exe" }
 }
-if (-not (Test-Path -LiteralPath $godot)) {
-	throw "Godot executable not found. Set FOWL_PLAY_GODOT or add godot to PATH."
-}
+if (-not (Test-Path -LiteralPath $godot)) { throw "Godot executable not found. Set FOWL_PLAY_GODOT or add godot to PATH." }
 $project = Join-Path $PSScriptRoot ".."
-$stages = @("import", "d0", "m1", "m1-cursor", "m2", "m2-arm-ik", "m7-jab", "m3", "m3-interaction", "m4-handoff", "m6", "procedural-legs", "movement-presentation", "m10-camera", "m10-owner-view", "m10-camera-collision", "m10-ragdoll-camera", "m9-lifecycle", "identity", "identity-presentation", "physical-button", "screen-text", "world-screen", "slim-world-screen", "fat-world-screen", "screen-menu", "registration-terminal", "interactive-terminal")
+$stages = @("import", "d0", "m1", "m1-cursor", "m2", "m2-arm-ik", "m7-jab", "m3", "m3-interaction", "m4-handoff", "m6", "procedural-legs", "movement-presentation", "m10-camera", "m10-owner-view", "m10-camera-collision", "m10-ragdoll-camera", "m9-lifecycle", "identity", "identity-presentation", "physical-button", "screen-text", "world-screen", "slim-world-screen", "fat-world-screen", "screen-menu", "registration-terminal", "player-color-panel", "interactive-terminal", "casino-wallet", "base-table", "chicken-cross", "chicken-cross-table", "betting-keypad", "main-controller")
 if ($OnlyStage -ne "all") {
-	if ($stages -notcontains $OnlyStage) {
-		throw "Unknown test stage '$OnlyStage'. Available stages: $($stages -join ', ')"
-	}
+	if ($stages -notcontains $OnlyStage) { throw "Unknown test stage '$OnlyStage'. Available stages: $($stages -join ', ')" }
 	$stages = @($OnlyStage)
 }
 foreach ($stage in $stages) {
@@ -54,19 +45,22 @@ foreach ($stage in $stages) {
 	elseif ($stage -eq "fat-world-screen") { $arguments += @("--script", "res://tests/m3_fat_world_screen_test.gd") }
 	elseif ($stage -eq "screen-menu") { $arguments += @("--script", "res://tests/m3_screen_menu_test.gd") }
 	elseif ($stage -eq "registration-terminal") { $arguments += @("--script", "res://tests/m3_registration_terminal_test.gd") }
+	elseif ($stage -eq "player-color-panel") { $arguments += @("--script", "res://tests/m3_player_color_panel_test.gd") }
 	elseif ($stage -eq "interactive-terminal") { $arguments += @("--script", "res://tests/m3_interactive_terminal_test.gd") }
+	elseif ($stage -eq "casino-wallet") { $arguments += @("--script", "res://tests/casino_wallet_test.gd") }
+	elseif ($stage -eq "base-table") { $arguments += @("--script", "res://tests/base_table_test.gd") }
+	elseif ($stage -eq "chicken-cross") { $arguments += @("--script", "res://tests/chicken_cross_rules_test.gd") }
+	elseif ($stage -eq "chicken-cross-table") { $arguments += @("--script", "res://tests/chicken_cross_table_test.gd") }
+	elseif ($stage -eq "betting-keypad") { $arguments += @("--script", "res://tests/betting_keypad_test.gd") }
+	elseif ($stage -eq "main-controller") { $arguments += @("--script", "res://tests/main_controller_test.gd") }
 	else { $arguments += @("--script", "res://tests/m3_movement_test.gd") }
 	try {
 		$checkProcess = Start-Process -FilePath $godot -ArgumentList $arguments -WindowStyle Hidden -Wait -PassThru -RedirectStandardOutput $checkStdout -RedirectStandardError $checkStderr
 		$exitCode = $checkProcess.ExitCode
 		$output = @(Get-Content -LiteralPath $checkStdout, $checkStderr)
-	} finally {
-		Remove-Item -LiteralPath $checkStdout, $checkStderr -Force
-	}
+	} finally { Remove-Item -LiteralPath $checkStdout, $checkStderr -Force }
 	$output | ForEach-Object { Write-Output $_ }
-	if ($exitCode -ne 0 -or ($output -join "`n") -match "ERROR:|SCRIPT ERROR:") {
-		throw "Godot $stage failed (exit code: $exitCode)."
-	}
+	if ($exitCode -ne 0 -or ($output -join "`n") -match "ERROR:|SCRIPT ERROR:") { throw "Godot $stage failed (exit code: $exitCode)." }
 }
 if ($OnlyStage -eq "all") {
 	& (Join-Path $PSScriptRoot "run_m0_checks.ps1") -GodotExecutable $godot

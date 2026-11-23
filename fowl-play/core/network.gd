@@ -65,12 +65,40 @@ var ragdoll_settled_sent: int = 0
 var ragdoll_settled_received: int = 0
 
 func _ready() -> void:
+	set_process_unhandled_key_input(true)
 	multiplayer.peer_connected.connect(_on_peer_connected)
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 	multiplayer.connected_to_server.connect(_on_connected_to_server)
 	multiplayer.connection_failed.connect(_on_connection_failed)
 	multiplayer.server_disconnected.connect(_on_server_disconnected)
 	_bootstrap.call_deferred()
+
+
+## TEMPORARY DEVELOPMENT SHORTCUTS.
+## H starts a host; J joins the local machine at 127.0.0.1.
+## Remove this handler before the production multiplayer menu is finalized.
+func _unhandled_key_input(event: InputEvent) -> void:
+	if not event is InputEventKey:
+		return
+	var key_event: InputEventKey = event as InputEventKey
+	if not key_event.pressed or key_event.echo:
+		return
+	if key_event.ctrl_pressed or key_event.alt_pressed or key_event.meta_pressed:
+		return
+	if key_event.shift_pressed:
+		return
+	if peer != null or _switching_session:
+		return
+
+	match key_event.physical_keycode:
+		KEY_H:
+			get_viewport().set_input_as_handled()
+			_debug_log("Temporary shortcut H: starting local host.")
+			_request_session(true, "")
+		KEY_J:
+			get_viewport().set_input_as_handled()
+			_debug_log("Temporary shortcut J: joining 127.0.0.1.")
+			_request_session(false, "127.0.0.1")
 
 func _bootstrap() -> void:
 	var hub: Node = get_node("/root/DebugHub")

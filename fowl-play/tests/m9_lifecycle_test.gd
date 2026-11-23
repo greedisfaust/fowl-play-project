@@ -83,22 +83,42 @@ func _run() -> void:
 	var interaction_times: Dictionary = network.get("_interaction_times")
 	var carry_times: Dictionary = network.get("_carry_times")
 	var ragdoll_epochs: Dictionary = network.get("_ragdoll_epochs")
+	var pending_ragdoll_starts: Dictionary = network.get("_pending_ragdoll_starts")
 	var jab_ready_times: Dictionary = network.get("_combat_jab_ready_times")
 	var charged_ready_times: Dictionary = network.get("_charged_punch_ready_times")
+	var pending_player_states_for_cleanup: Dictionary = network.get("_pending_player_states")
+	var combat_press_times: Dictionary = network.get("_combat_press_times")
+	var charged_presses_for_cleanup: Dictionary = network.get("_combat_charged_presses")
+	var active_lunges_for_cleanup: Dictionary = network.get("_active_lunges")
+	var action_locks_for_cleanup: Dictionary = network.get("_combat_action_lock_until")
 	interaction_times[5] = 1.0
 	carry_times[5] = 1.0
 	ragdoll_epochs[5] = 7
+	pending_ragdoll_starts[5] = {"epoch": 7}
+	pending_player_states_for_cleanup[5] = {"sequence": 2}
 	jab_ready_times[5] = 10.0
 	charged_ready_times[5] = 10.0
 	parry_ready_times[5] = 10.0
+	combat_press_times[5] = 1.0
+	charged_presses_for_cleanup[5] = true
 	active_jabs[5] = {"elapsed": 0.01, "hit": false}
+	active_lunges_for_cleanup[5] = {"elapsed": 0.01}
+	active_parries[5] = {"expires_at": 10.0}
+	action_locks_for_cleanup[5] = 10.0
 	tracked_player.queue_free()
 	await process_frame
 	check(not network.get("movement_players").has(5), "removing a recovering Player unregisters its movement registration")
 	check(not interaction_times.has(5) and not carry_times.has(5), "unregister clears interaction and carry timing state")
-	check(not ragdoll_epochs.has(5), "unregister clears the departed Player ragdoll epoch")
-	check(not jab_ready_times.has(5) and not charged_ready_times.has(5) and not parry_ready_times.has(5), "unregister clears combat cooldown state")
-	check(not active_jabs.has(5), "unregister clears active combat actions")
+	check(not ragdoll_epochs.has(5) and not pending_ragdoll_starts.has(5), "unregister clears ragdoll epochs and pending ragdoll starts")
+	check(not pending_player_states_for_cleanup.has(5), "unregister clears pending player snapshots")
+	check(
+		not jab_ready_times.has(5) and not charged_ready_times.has(5)
+		and not parry_ready_times.has(5) and not combat_press_times.has(5)
+		and not charged_presses_for_cleanup.has(5) and not action_locks_for_cleanup.has(5)
+		and not active_parries.has(5),
+		"unregister clears every combat cooldown and held-input entry"
+	)
+	check(not active_jabs.has(5) and not active_lunges_for_cleanup.has(5), "unregister clears active combat actions")
 
 	# Session shutdown must clear every peer-owned cache, even when no
 	# transport disconnect event runs for the current local session.

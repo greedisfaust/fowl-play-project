@@ -1,13 +1,13 @@
 # Fowl Play — Project State
 
-**Status:** Combat, Procedural Movement & Multiplayer Lifecycle is active on `features/combat-and-procedural-movement`. M7 combat, M8 coordinated movement, and M9 multiplayer lifecycle hardening are committed; the user reports the latest M9 build works correctly. A focused carry-hand and pointing-reach polish pass is now added ahead of M10.
+**Status:** Casino Foundation & World Gameplay Loop is active on `environment/world-building-and-gameplay-loop`. The host-authoritative wallet, BaseTable lifecycle, Chicken Cross rules/round model/table adapter, and wager keypad are implemented. Run/day progression now connects the five-minute timer, quota, early departure, carried wallet, one-time House continuation, Day 10 replay, victory and game over. The casino spawner has a one-table Chicken Cross development fallback while the 12-game roster is incomplete. CasinoHUD has been refined to the user's terminal-style specification. New/expanded headless checks are authored but await user execution in Godot 4.7.2; no scene files were edited.
 
-## Last updated (2026-11-20; carry-hand and pointing-reach polish)
+## Last updated (2026-11-22; casino inner/outer loop integration)
 
-- Current branch: `features/combat-and-procedural-movement` (based on merged `main` commit `1506c03746e158c74ffcd2da5df042b20435db25`). Read-only rig and combat integration audits are complete; initial procedural gait, M7.1 jab gameplay and M7.2 jab presentation slices are committed and awaiting Godot verification.
+- Current branch: `environment/world-building-and-gameplay-loop`. Latest Chicken Cross rules/model commit: `6b4ce2b7ca39c117835bc5337bdb6fc6f9e01521`. Shared wallet and BaseTable scripts/tests exist; physical casino scenes remain editor-authored and have not started.
 - Godot 4.7 project: `fowl-play/`, using Jolt Physics, Forward+, and D3D12.
-- `fowl-play/project.godot` contains the project settings, input actions, and four autoload entries.
-- Foundation scripts exist in `fowl-play/core/`: `layers.gd`, `tuning.gd`, `network.gd`, and `debug_hub.gd`.
+- `fowl-play/project.godot` contains the project settings, input actions, and five autoload entries, including the `CasinoWallet` service.
+- Foundation scripts exist in `fowl-play/core/`: `layers.gd`, `tuning.gd`, `network.gd`, and `debug_hub.gd`. The shared casino wallet is `fowl-play/casino/shared_wallet.gd`.
 - Debug-console work is committed as `762c00f`; M0 is committed as `017f1cb`.
 - D0, M1, M2 hand checks, and M0 network checks pass with Godot 4.7.2. Prop/profile and hand scripts import cleanly.
 - Console command arguments are implemented and user-playtested. Player watch/command cleanup is headless verified, including network disconnects; manual disconnect checks are user-verified.
@@ -34,15 +34,15 @@
 | M10 Camera + owner view | Responsive first-person motion, impact feedback, owner legs, ragdoll/recovery comfort, wall avoidance | COMPLETE — M10.1–M10.4 implemented; user confirmed camera motion, owner-view visibility, camera collision, and live-head recovery camera in-game. |
 | M11 Hardening | Cleanup matrix, weak-laptop target, four-player stability | COMPLETE — user confirmed both focused M6 and M9 lifecycle test stages passed. M11.1 cleanup regression coverage is verified by the user's test run. M11.2 practical multiplayer movement, physics, and combat scenarios were user-reported smooth; no speculative optimization was needed. M11.3 extended 10–15 minute soak remains explicitly deferred due to the user's 8 GB RAM limit, not passed. M11.4 documentation and verification closeout complete. |
 
-## Open decisions (from PROJECT_OVERVIEW.md §24)
+## Remaining player/combat decisions
 
-1. Skeleton authoring resolved: manual Godot editor authoring, with humanoid legs.
-2. Dedicated wall-slam feedback beyond the approved general combat impact presentation.
-3. Final lobby/connection presentation beyond the implemented Registration Terminal identity flow.
-4. Per-bone ragdoll masses (M4 spike).
-5. Rebuilding the casino/economy layer, and when.
+1. Dedicated wall-slam feedback beyond the approved general combat impact presentation.
+2. Final lobby/connection presentation beyond the implemented Registration Terminal identity flow.
+3. Per-bone ragdoll masses (M4 spike).
 
 Late join is decided: allowed during the rest of a day, not during casino/elevator gameplay. Throw power is decided: fixed full power with auto-fire at one second.
+
+Casino foundation decisions and open questions are tracked in [the active casino session](sessions/environment-world-building-and-gameplay-loop.md), [Casino Foundation Design](CASINO_FOUNDATION_DESIGN.md), and [Chicken Cross rules](CASINO_CHICKEN_CROSS.md).
 
 ## Known limitations
 
@@ -64,7 +64,7 @@ Late join is decided: allowed during the rest of a day, not during casino/elevat
 
 The user also confirmed the latest player-color implementation works in-game. This is user verification, not a claim that the assistant ran Godot tests. Existing automated test stages and any unconfirmed WorldScreen visual checks remain recorded as pending rather than being silently marked passed.
 
-**Active feature:** Combat & Procedural Legs (Movement), branch `features/combat-and-procedural-movement`. Read-only rig audit completed; the gait controller, world-space foot target tracker, per-foot ground probes, and first two-bone IK integration are implemented. Next visually verify and tune the IK in Godot, then address owner-view leg visibility and terrain adaptation while preserving the scene hierarchy, movement stream, and ragdoll/recovery ownership. See [the active feature session](sessions/features-combat-and-procedural-movement.md).
+**Active feature:** Casino Foundation & World Gameplay Loop, branch `environment/world-building-and-gameplay-loop`. Chicken Cross is the reference playable table and can now spawn alone as a development fallback. Run/day outcomes, continuation policy, shared wallet replication, and HUD integration are in source. Run fowl-play/tests/run_game_loop_checks.bat and complete the two-instance in-game loop verification. Physical scene construction remains editor-authored. See [the active feature session](sessions/environment-world-building-and-gameplay-loop.md).
 
 ## Historical verification notes
 
@@ -352,6 +352,14 @@ The latest user-authored FAT and SLIM scenes were inspected at commit `61409bf`.
 - Added `fowl-play/tests/m3_screen_menu_test.gd` and registered the `screen-menu` runner stage. Updated the screen guide and debug reference.
 - No scenes or global InputMap actions changed. Keyboard/gamepad/physical USE routing is deferred to the Registration Terminal input owner. Godot tests and rendered verification have not been run by the assistant.
 
+
+## Lobby device runtime integration
+
+- Lobby Host / Join now has a physical `ScreenHit/Interactable` on its SLIM WorldScreen, using the existing Focus/Interactable interaction path.
+- Its portrait display uses reduced text scale and compact, explicitly line-broken prompts to keep menu copy readable.
+- The Apartment's existing `PlayerColorPanel/ColorPanelController` node receives its runtime controller from MainController. Its ten authored TerminalButtons submit color selection through host-authoritative identity assignment.
+- Occupied colors are dimmed and disabled on every peer. A color becomes available again when its owner changes color or disconnects; late joiners receive the next free palette color.
+- Added `tests/m3_player_color_panel_test.gd` and the `player-color-panel` test stage. Godot execution and live host/client panel verification remain user-run.
 
 ## Registration Terminal foundation
 
@@ -686,3 +694,12 @@ Foot planting now records both a world-space target and, when the ground hit bel
 - M11.2 practical multiplayer movement, physics-heavy play, and combat/parry scenarios were previously user-reported smooth. No measured 60 FPS guarantee or long-session memory result is claimed.
 - M11.3 extended 10–15 minute soak remains DEFERRED because four instances are too demanding for the user's 8 GB RAM system. This is a documented scope limitation, not a failed test and not a passed test.
 - M11.4 closeout is complete. M11 is marked COMPLETE with the soak limitation explicitly retained.
+
+
+## Casino foundation update — 2026-11-21
+
+- Shared wallet transaction service is implemented (reservation, edit, withdrawal, round lock/cancel, gross-return settlement).
+- Generic `BaseTable` controller is implemented as a script-only component for editor-authored table scenes. It coordinates proximity, participants, round lifecycle, wallet calls, and pre-start proximity refunds; post-start departures are signaled to game-specific auto-resolution logic.
+- USER VERIFIED: `fowl-play/tests/run_casino_checks.bat` completed successfully in Godot 4.7.2. Output included `CASINO WALLET PASS`, `BASE TABLE PASS`, and `ALL CASINO CHECKS PASSED`. Import emitted two non-fatal Jolt cone-twist warnings; neither test failed.
+- This verifies the current headless wallet/BaseTable tests only. Multiplayer RPC integration, editor-authored physical table scenes, and game-specific gameplay are not yet verified or implemented.
+- Open policy gates remain: 45-second inactivity timeout behavior, early-departure refund scope for already-started rounds, and timer-expiry visual/settlement cleanup.

@@ -11,16 +11,20 @@ config_version=5
 [application]
 
 config/name="fowl-play"
-run/main_scene="uid://ctr8im3lpy4pn"
+run/main_scene="uid://jg5nsgddpev2"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
 
-Layers="res://core/layers.gd"
-Tuning="res://core/tuning.gd"
-Network="res://core/network.gd"
-DebugHub="res://core/debug_hub.gd"
+Layers="*res://core/layers.gd"
+Tuning="*res://core/tuning.gd"
+Network="*res://core/network.gd"
+DebugHub="*uid://y1b2pggxhllw"
+CasinoWallet="*res://casino/shared_wallet.gd"
+RunManager="*res://core/run_manager.gd"
+CasinoDayManager="*res://casino/casino_day_manager.gd"
+CasinoManager="*res://casino/casino_manager.gd"
 
 [display]
 

@@ -1,0 +1,136 @@
+extends RefCounted
+
+const Rules = preload("res://casino/tables/chicken_cross/chicken_cross_rules.gd")
+const PLAYER_ACTIVE: String = "active"
+const PLAYER_CASHED_OUT: String = "cashed_out"
+const PLAYER_FAILED: String = "failed"
+var _players: Dictionary = {}
+
+func begin(wagers: Array[Dictionary]) -> Dictionary:
+	if not _players.is_empty():
+		return _failure("This Chicken Cross round has already been initialized.")
+	if wagers.is_empty():
+		return _failure("Chicken Cross requires at least one participant wager.")
+	var pending_players: Dictionary = {}
+	var seen_wagers: Dictionary = {}
+	for wager: Dictionary in wagers:
+		var peer_id: int = int(wager.get("peer_id", 0))
+		var wager_id: String = str(wager.get("wager_id", ""))
+		var stake: int = int(wager.get("stake", 0))
+		if peer_id <= 0 or wager_id.is_empty() or stake <= 0:
+			return _failure("Every participant needs a valid peer ID, wager ID, and positive stake.")
+		if str(wager.get("status", "")) != "locked":
+			return _failure("Chicken Cross can only begin with locked wagers.")
+		if pending_players.has(peer_id):
+			return _failure("A player may have only one Chicken Cross wager per round.")
+		if seen_wagers.has(wager_id):
+			return _failure("Wager IDs must be unique.")
+		pending_players[peer_id] = {"peer_id": peer_id, "wager_id": wager_id, "stake": stake, "tile": 0, "status": PLAYER_ACTIVE, "multiplier": 0.0, "gross_return": 0, "finish_reason": ""}
+		seen_wagers[wager_id] = true
+	_players = pending_players
+	return _success({"participant_count": _players.size()})
+
+func advance(peer_id: int, roll: float) -> Dictionary:
+	if not _players.has(peer_id):
+		return _failure("Player is not part of this Chicken Cross round.")
+	var player: Dictionary = _players[peer_id]
+	if str(player["status"]) != PLAYER_ACTIVE:
+		return _failure("Only an active chicken can advance.")
+	var next_tile: int = int(player["tile"]) + 1
+	if next_tile > Rules.TILE_COUNT:
+		return _failure("The chicken has already reached the final tile.")
+	if roll < 0.0 or roll >= 1.0:
+		return _failure("The host roll must be in the range [0, 1).")
+	var failure_chance: float = Rules.failure_chance_for_tile(next_tile)
+	player["tile"] = next_tile
+	if Rules.roll_failed(next_tile, roll):
+		player["status"] = PLAYER_FAILED
+		player["finish_reason"] = "tile_failure"
+		player["multiplier"] = 0.0
+		player["gross_return"] = 0
+		_players[peer_id] = player
+		return _success({"peer_id": peer_id, "tile": next_tile, "failed": true, "failure_chance": failure_chance, "status": PLAYER_FAILED})
+	player["multiplier"] = Rules.multiplier_for_tile(next_tile)
+	if next_tile == Rules.TILE_COUNT:
+		player["status"] = PLAYER_CASHED_OUT
+		player["finish_reason"] = "final_tile"
+		player["gross_return"] = Rules.gross_return_for_stake(int(player["stake"]), next_tile)
+	_players[peer_id] = player
+	return _success({"peer_id": peer_id, "tile": next_tile, "failed": false, "failure_chance": failure_chance, "multiplier": float(player["multiplier"]), "gross_return": int(player["gross_return"]), "status": str(player["status"])})
+
+func cash_out(peer_id: int) -> Dictionary:
+	if not _players.has(peer_id):
+		return _failure("Player is not part of this Chicken Cross round.")
+	var player: Dictionary = _players[peer_id]
+	if str(player["status"]) != PLAYER_ACTIVE:
+		return _failure("Only an active chicken can cash out.")
+	var tile_number: int = int(player["tile"])
+	if tile_number < 1:
+		return _failure("A chicken must reach at least tile 1 before cashing out.")
+	player["status"] = PLAYER_CASHED_OUT
+	player["finish_reason"] = "player_cashout"
+	player["multiplier"] = Rules.multiplier_for_tile(tile_number)
+	player["gross_return"] = Rules.gross_return_for_stake(int(player["stake"]), tile_number)
+	_players[peer_id] = player
+	return _success({"peer_id": peer_id, "tile": tile_number, "multiplier": float(player["multiplier"]), "gross_return": int(player["gross_return"]), "status": PLAYER_CASHED_OUT})
+
+func auto_resolve(peer_id: int, reason: String) -> Dictionary:
+	if not _players.has(peer_id):
+		return _failure("Player is not part of this Chicken Cross round.")
+	if reason.strip_edges().is_empty():
+		return _failure("An automatic-resolution reason is required.")
+	var player: Dictionary = _players[peer_id]
+	if str(player["status"]) != PLAYER_ACTIVE:
+		return _failure("Only an active chicken needs automatic resolution.")
+	var tile_number: int = int(player["tile"])
+	player["finish_reason"] = reason
+	if tile_number >= 1:
+		player["status"] = PLAYER_CASHED_OUT
+		player["multiplier"] = Rules.multiplier_for_tile(tile_number)
+		player["gross_return"] = Rules.gross_return_for_stake(int(player["stake"]), tile_number)
+	else:
+		player["status"] = PLAYER_FAILED
+		player["multiplier"] = 0.0
+		player["gross_return"] = 0
+	_players[peer_id] = player
+	return _success({"peer_id": peer_id, "tile": tile_number, "status": str(player["status"]), "gross_return": int(player["gross_return"]), "finish_reason": reason})
+
+func is_complete() -> bool:
+	if _players.is_empty():
+		return false
+	for player_value: Variant in _players.values():
+		var player: Dictionary = player_value
+		if str(player["status"]) == PLAYER_ACTIVE:
+			return false
+	return true
+
+func build_payouts() -> Dictionary:
+	if not is_complete():
+		return {}
+	var payouts: Dictionary = {}
+	for player_value: Variant in _players.values():
+		var player: Dictionary = player_value
+		payouts[str(player["wager_id"])] = int(player["gross_return"])
+	return payouts
+
+func get_player(peer_id: int) -> Dictionary:
+	if not _players.has(peer_id):
+		return {}
+	var player: Dictionary = _players[peer_id]
+	return player.duplicate(true)
+
+func get_players() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for player_value: Variant in _players.values():
+		var player: Dictionary = player_value
+		result.append(player.duplicate(true))
+	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["peer_id"]) < int(b["peer_id"]))
+	return result
+
+func _success(data: Dictionary = {}) -> Dictionary:
+	var result: Dictionary = {"ok": true, "reason": ""}
+	result.merge(data, true)
+	return result
+
+func _failure(reason: String) -> Dictionary:
+	return {"ok": false, "reason": reason}

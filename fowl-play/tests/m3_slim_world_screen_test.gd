@@ -64,6 +64,22 @@ func _run() -> void:
 	if _failed:
 		quit(1)
 		return
+	# Simulate a parent scene that saved already-resized child transforms.
+	var nested_parent: Node3D = Node3D.new()
+	var nested_instance: SlimWorldScreen = packed.instantiate() as SlimWorldScreen
+	nested_instance.display_size = Vector2(3.0, 1.6875)
+	var nested_top_rail: Node3D = nested_instance.get_node("Chassis/Bezel/TopRail") as Node3D
+	var nested_left_rail: Node3D = nested_instance.get_node("Chassis/Bezel/LeftRail") as Node3D
+	nested_top_rail.position.y = 0.87625
+	nested_left_rail.position.x = -1.5325
+	root.add_child(nested_parent)
+	nested_parent.add_child(nested_instance)
+	await process_frame
+	_check(is_equal_approx(nested_top_rail.position.y, 0.87625), "Nested SLIM top rail should not apply the saved height offset twice")
+	_check(is_equal_approx(nested_left_rail.position.x, -1.5325), "Nested SLIM side rail should not apply the saved width offset twice")
+	nested_parent.queue_free()
+	await process_frame
+
 	print("SLIM WORLD SCREEN PASS")
 	quit(0)
 

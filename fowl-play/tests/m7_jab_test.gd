@@ -245,7 +245,7 @@ func _check_world_hit_and_recoil() -> void:
 			_fail("A jab should apply a physical impulse to an already-limp body")
 		if (hit_bone.linear_velocity - before_velocity).dot(Vector3(0.0, 0.0, -1.0)) <= 1.0:
 			_fail("The struck limp physical bone should receive a forward velocity change")
-		var charged_before: Vector3 = hit_bone.linear_velocity
+		var charged_velocity_before: Vector3 = hit_bone.linear_velocity
 		var charged_applied: bool = bool(rig.call(
 			"apply_combat_impulse",
 			Vector3(0.0, 0.0, -1.0),
@@ -255,7 +255,7 @@ func _check_world_hit_and_recoil() -> void:
 		))
 		if not charged_applied:
 			_fail("A charged punch should apply its enhanced launch impulse to an already-limp body")
-		var charged_delta: Vector3 = hit_bone.linear_velocity - charged_before
+		var charged_delta: Vector3 = hit_bone.linear_velocity - charged_velocity_before
 		if charged_delta.y < TUNING.CHARGED_PUNCH_LAUNCH_SPEED_MPS * TUNING.COMBAT_LAUNCH_VERTICAL_BONUS_RATIO * 0.9:
 			_fail("Charged punch should add a distinct upward velocity component without replacing horizontal knockback")
 		if not is_equal_approx(float(target.get("_limp_elapsed_s")), limp_elapsed_before):

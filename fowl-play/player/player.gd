@@ -120,6 +120,7 @@ func _ready() -> void:
 		rig.visible = true
 		if is_local_player:
 			rig.call("set_owner_view_visibility", true, 0.0)
+	set_process_input(is_local_player)
 	set_process_unhandled_input(is_local_player)
 	set_physics_process(is_local_player)
 	if focus != null:
@@ -188,6 +189,18 @@ func _ready() -> void:
 		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	network.call("apply_pending_ragdoll_start", input_peer_id, self)
 	network.call("apply_pending_player_state", input_peer_id, self)
+
+## Move a standing player to the active world's authored spawn marker.
+## Ragdoll/carry cleanup belongs to the elevator transition before this is called.
+func place_at_world_spawn(at: Transform3D) -> bool:
+	if not at.is_finite() or is_limp or is_recovering or is_carried() or is_carrying():
+		return false
+	global_transform = at
+	velocity = Vector3.ZERO
+	accepted_position = global_position
+	_movement.reset(global_position, Time.get_ticks_msec() / 1000.0)
+	_send_elapsed = 0.0
+	return true
 
 func _exit_tree() -> void:
 	_combat_controller.call("abandon")
@@ -570,6 +583,19 @@ func set_terminal_movement_locked(locked: bool) -> void:
 		velocity.x = 0.0
 		velocity.z = 0.0
 
+
+## Re-captures the mouse after a gameplay world transition.
+## Do not steal the cursor from an open console or active terminal text field.
+func restore_gameplay_mouse_capture() -> void:
+	# A terminal movement lock only disables walking; it must never disable mouse look.
+	# World transitions remove the old terminal UI, so restore the gameplay cursor
+	# independently of that movement-only state.
+	if not is_local_player or is_limp or is_recovering:
+		return
+	if is_instance_valid(debug_hub) and bool(debug_hub.call("is_console_open")):
+		return
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+
 func correct_movement(at: Vector3) -> void:
 	if is_limp or is_recovering:
 		return
@@ -578,15 +604,21 @@ func correct_movement(at: Vector3) -> void:
 	velocity = Vector3.ZERO
 	debug_hub.call("log", &"net", "Movement corrected for player %s" % name)
 
+## Mouse look runs in _input, before GUI Controls can consume mouse motion.
+## Keyboard/gameplay actions remain unhandled-input so focused UI can own them.
+func _input(event: InputEvent) -> void:
+	if not is_local_player or bool(debug_hub.call("is_console_open")):
+		return
+	if event is InputEventMouseMotion:
+		_rotate_view((event as InputEventMouseMotion).relative)
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if bool(debug_hub.call("is_console_open")):
 		if event.is_action_released("punch") or event.is_action_released("parry"):
 			_combat_controller.call("cancel")
 		return
-	if event is InputEventMouseMotion:
-		var mouse_event: InputEventMouseMotion = event
-		_rotate_view(mouse_event.relative)
-	elif event.is_action_pressed("ui_cancel"):
+	if event.is_action_pressed("ui_cancel"):
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	elif event.is_action_pressed("parry") or event.is_action_released("parry"):
 		if is_carrying():

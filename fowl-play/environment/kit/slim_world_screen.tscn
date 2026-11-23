@@ -92,40 +92,40 @@ metallic = 0.9
 roughness = 0.26
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_06iho"]
-albedo_color = Color(0.8509804, 0.6039216, 0.27058825, 1)
+albedo_color = Color(0.8509804, 0.7254902, 0.27058825, 1)
 emission_enabled = true
-emission = Color(1, 0.6039216, 0.27058825, 1)
-emission_energy_multiplier = 3.4
+emission = Color(0.8509804, 0.7254902, 0.27058825, 1)
+emission_energy_multiplier = 2.8
 
 [sub_resource type="BoxMesh" id="BoxMesh_dmq02"]
 material = SubResource("StandardMaterial3D_06iho")
 size = Vector3(1.45, 0.018, 0.012)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_d8ej8"]
-albedo_color = Color(0.8509804, 0.6039216, 0.27058825, 1)
+albedo_color = Color(0.8509804, 0.7254902, 0.27058825, 1)
 emission_enabled = true
-emission = Color(1, 0.6039216, 0.27058825, 1)
-emission_energy_multiplier = 3.4
+emission = Color(0.8509804, 0.7254902, 0.27058825, 1)
+emission_energy_multiplier = 2.8
 
 [sub_resource type="BoxMesh" id="BoxMesh_1ov40"]
 material = SubResource("StandardMaterial3D_d8ej8")
 size = Vector3(1.45, 0.018, 0.012)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_04ntv"]
-albedo_color = Color(0.8509804, 0.6039216, 0.27058825, 1)
+albedo_color = Color(0.8509804, 0.7254902, 0.27058825, 1)
 emission_enabled = true
-emission = Color(1, 0.6039216, 0.27058825, 1)
-emission_energy_multiplier = 3.4
+emission = Color(0.8509804, 0.7254902, 0.27058825, 1)
+emission_energy_multiplier = 2.8
 
 [sub_resource type="BoxMesh" id="BoxMesh_o623r"]
 material = SubResource("StandardMaterial3D_04ntv")
 size = Vector3(0.018, 0.9, 0.012)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jvh8a"]
-albedo_color = Color(0.8509804, 0.6039216, 0.27058825, 1)
+albedo_color = Color(0.8509804, 0.7254902, 0.27058825, 1)
 emission_enabled = true
-emission = Color(1, 0.6039216, 0.27058825, 1)
-emission_energy_multiplier = 3.4
+emission = Color(0.8509804, 0.7254902, 0.27058825, 1)
+emission_energy_multiplier = 2.8
 
 [sub_resource type="BoxMesh" id="BoxMesh_f8t3f"]
 material = SubResource("StandardMaterial3D_jvh8a")
