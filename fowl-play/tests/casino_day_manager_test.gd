@@ -23,7 +23,7 @@ func _run() -> void:
 
 	manager.set("casino_day_duration_seconds", 300.0)
 	var day_finished_callback: Callable = Callable(self, "_on_day_finished")
-	manager.day_finished.connect(day_finished_callback)
+	manager.connect("day_finished", day_finished_callback)
 	var day_one: Dictionary = manager.call("begin_casino_day", 1, 1000)
 	if not bool(day_one.get("ok", false)):
 		_finish(false, "Day 1 should initialize: %s" % str(day_one.get("reason", "")))
@@ -63,7 +63,7 @@ func _run() -> void:
 	_check(int(snapshot.get("final_wallet_snapshot", 0)) == 3559, "Deadline snapshots wallet before table cleanup")
 	_check(int(snapshot.get("seconds_remaining", -1)) == 0, "Deadline stops the timer")
 	_check(_day_finished_count == 2, "Five-minute deadline emits day-finished for the forced elevator return")
-	manager.day_finished.disconnect(day_finished_callback)
+	manager.disconnect("day_finished", day_finished_callback)
 
 	if _failed:
 		quit(1)
