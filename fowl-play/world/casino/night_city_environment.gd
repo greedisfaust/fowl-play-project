@@ -35,7 +35,11 @@ var _flash_energy := 0.0
 var _built := false
 
 func _ready() -> void:
-	if not _built:
+	# Keep the serialized rain/moon/haze setup intact when the scene is reopened.
+	# Only generate it when this scene instance has no saved generated root yet.
+	if get_node_or_null(GENERATED_ROOT) != null:
+		_built = true
+	elif not _built:
 		_build_environment()
 		_built = true
 	if not Engine.is_editor_hint():
