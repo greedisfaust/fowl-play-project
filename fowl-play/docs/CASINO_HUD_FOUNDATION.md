@@ -94,8 +94,8 @@ Run the existing RunManager and Casino Day test runners after integration.
 - `CasinoWallet.wager_changed` is observed, but only the `settled` status is counted. The controller reads the settled wager record and adds its `net_result` to the total for that wager's `peer_id`. Reserved, locked, withdrawn, and refunded wagers are not counted. A wager ID is counted once only.
 - Player nicknames and row colors come from the existing Network identity roster. If an identity is not available, the row falls back to `PLAYER <peer_id>`.
 - Contribution totals reset when a new run begins or the casino day number changes.
-- The bottom-right contextual control stack listens to the local Player's existing `Focus.focus_target_changed` signal, Carrier signals, and movement/recovery state. It shows Interact only when the focused Interactable accepts M1 or E; carrying replaces combat actions with Drop/Throw. Movement stays at the bottom, with secondary actions indented above it.
-- Quota-reached and day-finished signals drive high-priority announcements. Local table feedback is filtered by peer ID. The announcer queues messages by priority and never changes progression state.
+- The bottom-right contextual control stack listens to the local Player's existing `Focus.focus_target_changed` signal, Carrier signals, and movement/recovery state. It shows Interact only when the focused Interactable accepts M1 or E; carrying replaces combat actions with Drop/Throw. All entries use bright terminal-white, right-aligned, with no indentation.
+- Quota-reached and day-result announcements are derived from CasinoDayManager's synchronized state, so every peer sees the same result. BaseTable exposes a host-authoritative `global_announcement` RPC for shared gameplay events; Chicken Cross uses it for round start and successful cash-out. Peer-targeted table feedback remains private to its intended player. The announcer is an unboxed floating feed: up to three notices stack newest-first, fade after a short lifetime, suppress duplicates, and allow critical notices to clear lower-priority entries. It never changes progression state.
 - Blessed/Watched currently has no authoritative modifier service to read. The panel is a visible placeholder with empty values. `set_modifier_status(blessed_player, watched_player)` remains the future integration point; only call it with real authoritative assignments.
 
 ## Updated playtest checklist
@@ -106,14 +106,14 @@ Run the existing RunManager and Casino Day test runners after integration.
 4. Settle a losing wager. The same player's total should decrease by the net loss.
 5. Withdraw an unstarted wager or cancel an unstarted round. Confirm the contribution total does not change.
 6. Settle more than one wager for one player. Confirm the row accumulates the net results and does not double-count.
-7. Reach quota. Confirm the announcement appears and wallet/quota colors turn gold.
+7. Reach quota. Confirm every peer sees the announcement and wallet/quota transition to a smooth champagne-gold gradient with a soft bloom and one brief shimmer.
 8. Focus a USE target and a GRAB target. Confirm M1/E hints match the Interactable's accepted inputs and prompt text. Look away and confirm the target prompt clears.
 9. Stand still and confirm the movement baseline sits at the bottom-right. Move and confirm Sprint/Jump appear above it; focus an interactable and confirm Interact appears; carry an item and confirm Drop/Throw replace combat actions.
-10. Finish a casino day and confirm the day-result announcement contains the actual final wallet and quota.
+10. Finish a casino day and confirm every peer sees the day-result announcement with the actual final wallet and quota.
 11. Start a fresh run and confirm prior contribution rows are cleared.
 12. Confirm the Blessed/Watched placeholder remains visible without invented player assignments; calling `set_modifier_status` should only happen with real authoritative values.
-13. Confirm the announcer queues back-to-back table feedback and that quota/day-result announcements take priority.
-14. Confirm wallet and quota have no gold treatment before quota, then transition to a soft gold bloom and brief pulse when quota is reached.
-15. Confirm the contextual controls sit bottom-right, remain left-aligned, and update for movement, focus, carrying, and recovery.
+13. Confirm the unboxed announcer stacks up to three notices newest-first, fades them out, suppresses duplicates, and lets critical quota/day-result notices override lower-priority notices.
+14. Confirm wallet and quota have no gold treatment before quota, then transition to a clean champagne gradient, restrained bloom, and one brief shimmer when quota is reached.
+15. Confirm the contextual controls sit bottom-right, remain right-aligned and terminal-white, and update for movement, focus, carrying, and recovery.
 
 The current branch has no dedicated automated CasinoHUD test stage yet. Run the existing `tests/run_run_manager_checks.bat` and `tests/run_casino_day_checks.bat` checks, plus `tests/run_checks.ps1 -OnlyStage casino-wallet` from `fowl-play/`. The user must perform the rendered HUD and two-instance multiplayer checks above. The assistant has not run Godot in this environment.
