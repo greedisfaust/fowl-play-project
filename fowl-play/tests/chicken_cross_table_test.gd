@@ -25,6 +25,9 @@ func _test_chicken_visual_asset() -> void:
 	chicken.configure(2, "ORANGE", 1)
 	root.add_child(chicken)
 	_check(chicken.get_node_or_null("BodyPivot/PlumpBody") != null, "Procedural chicken has a visible body mesh")
+	var body_mesh: MeshInstance3D = chicken.get_node_or_null("BodyPivot/PlumpBody") as MeshInstance3D
+	var body_material: StandardMaterial3D = body_mesh.material_override as StandardMaterial3D
+	_check(body_material.albedo_color.is_equal_approx(PlayerIdentity.color_for_index(1)), "Procedural chicken body uses its owner's assigned color")
 	_check(chicken.get_node_or_null("BodyPivot/HeadPivot/CombCrown_1") != null, "Procedural chicken has its signature comb")
 	_check(chicken.get_node_or_null("BodyPivot/LeftFoot") != null and chicken.get_node_or_null("BodyPivot/RightFoot") != null, "Procedural chicken has independently animated feet")
 	_check(chicken.get_node_or_null("BodyPivot/HeadPivot/Eye_1.0") != null, "Procedural chicken has expressive eyes")
