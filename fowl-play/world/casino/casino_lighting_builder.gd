@@ -45,7 +45,9 @@ const LightingRig = preload("res://world/shared/lighting/fowl_play_lighting_rig.
 const GENERATED_ROOT_NAME: String = "_GeneratedCasinoLighting"
 
 func _ready() -> void:
-	if Engine.is_editor_hint():
+	# Generated children are serialized into the scene. Preserve editor-authored
+	# tweaks on reopen; the inspector rebuild toggle remains the explicit reset.
+	if Engine.is_editor_hint() and get_node_or_null(GENERATED_ROOT_NAME) == null:
 		_rebuild_lighting()
 
 func _rebuild_lighting() -> void:
