@@ -230,7 +230,21 @@ func _perform_transition(destination: int, packed_scene: PackedScene) -> void:
 	_refresh_players_for_world()
 
 	await _fade_to(0.0)
+	_restore_local_gameplay_mouse_capture()
 	_transition_in_progress = false
+
+
+## Persistent player nodes do not run _ready() again when worlds are swapped.
+## Restore the local FPS cursor after the fade so mouse look resumes on arrival.
+func _restore_local_gameplay_mouse_capture() -> void:
+	if not is_instance_valid(_players):
+		return
+	for player: Node in _players.get_children():
+		if not bool(player.get("is_local_player")):
+			continue
+		if player.has_method("restore_gameplay_mouse_capture"):
+			player.call("restore_gameplay_mouse_capture")
+		return
 
 
 ## The world owns only its spawn markers. Main owns every player instance.
