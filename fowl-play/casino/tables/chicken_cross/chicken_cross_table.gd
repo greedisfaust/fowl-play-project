@@ -428,8 +428,7 @@ func _sync_chicken_visual(peer_id: int, player_state: Dictionary) -> void:
 	else:
 		chicken.configure(peer_id, str(player_state.get("nickname", _get_player_nickname(peer_id))), int(player_state.get("color_index", _get_player_color_index(peer_id))))
 	var tile_number: int = clampi(int(player_state.get("tile", 0)), 0, Rules.TILE_COUNT)
-	var previous_state: Dictionary = _round_player_states.get(peer_id, {})
-	var previous_status: String = str(previous_state.get("status", "active"))
+	var previous_status: String = str(chicken.get_meta("display_status", "active"))
 	chicken.set_tile(tile_number, not is_new)
 	var status: String = str(player_state.get("status", "active"))
 	if not is_new and previous_status != status:
@@ -437,6 +436,7 @@ func _sync_chicken_visual(peer_id: int, player_state: Dictionary) -> void:
 			chicken.play_failure()
 		elif status == "cashed_out":
 			chicken.play_cash_out()
+	chicken.set_meta("display_status", status)
 
 func _lane_z_for_peer(peer_id: int) -> float:
 	var peer_ids: Array[int] = []
