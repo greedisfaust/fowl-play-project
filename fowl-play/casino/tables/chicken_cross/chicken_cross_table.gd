@@ -348,7 +348,7 @@ func _resolve_player_action(peer_id: int, advance_chicken: bool) -> Dictionary:
 	if round_just_started:
 		report_global_announcement("CHICKEN CROSS STARTED", "CHICKEN CROSS", 2)
 	if not advance_chicken:
-		report_global_announcement("PLAYER %d CASHED OUT" % peer_id, "CASH OUT", 2)
+		report_global_announcement("%s CASHED OUT" % _get_player_nickname(peer_id), "CASH OUT", 2)
 	_publish_player_state(peer_id)
 	_try_settle_completed_round()
 	return result
