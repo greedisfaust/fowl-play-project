@@ -64,11 +64,6 @@ var _last_action_signature: String = ""
 var _announcement_panel: Control
 var _announcement_feed: VBoxContainer
 var _announcement_entries: Array[Dictionary] = []
-var _announcement_label: Label
-var _announcement_subtitle: Label
-var _announcement_queue: Array[Dictionary] = []
-var _announcement_tween: Tween
-var _announcement_active: bool = false
 var _connected_tables: Array[BaseTable] = []
 var _wallet_glow_material: ShaderMaterial
 var _quota_glow_material: ShaderMaterial
@@ -127,8 +122,6 @@ func _exit_tree() -> void:
 				table.global_announcement.disconnect(_on_global_announcement)
 	_connected_tables.clear()
 	_disconnect_services()
-	if _announcement_tween != null and _announcement_tween.is_running():
-		_announcement_tween.kill()
 	if _glow_tween != null and _glow_tween.is_running():
 		_glow_tween.kill()
 	if _shimmer_tween != null and _shimmer_tween.is_running():
