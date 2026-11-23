@@ -120,6 +120,7 @@ func _ready() -> void:
 		rig.visible = true
 		if is_local_player:
 			rig.call("set_owner_view_visibility", true, 0.0)
+	set_process_input(is_local_player)
 	set_process_unhandled_input(is_local_player)
 	set_physics_process(is_local_player)
 	if focus != null:
@@ -603,15 +604,21 @@ func correct_movement(at: Vector3) -> void:
 	velocity = Vector3.ZERO
 	debug_hub.call("log", &"net", "Movement corrected for player %s" % name)
 
+## Mouse look runs in _input, before GUI Controls can consume mouse motion.
+## Keyboard/gameplay actions remain unhandled-input so focused UI can own them.
+func _input(event: InputEvent) -> void:
+	if not is_local_player or bool(debug_hub.call("is_console_open")):
+		return
+	if event is InputEventMouseMotion:
+		_rotate_view((event as InputEventMouseMotion).relative)
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if bool(debug_hub.call("is_console_open")):
 		if event.is_action_released("punch") or event.is_action_released("parry"):
 			_combat_controller.call("cancel")
 		return
-	if event is InputEventMouseMotion:
-		var mouse_event: InputEventMouseMotion = event
-		_rotate_view(mouse_event.relative)
-	elif event.is_action_pressed("ui_cancel"):
+	if event.is_action_pressed("ui_cancel"):
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	elif event.is_action_pressed("parry") or event.is_action_released("parry"):
 		if is_carrying():
