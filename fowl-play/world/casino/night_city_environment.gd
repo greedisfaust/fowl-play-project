@@ -150,7 +150,7 @@ func _build_environment() -> void:
 							continue
 						var x := -width * 0.5 + 0.48 + float(column) * (width - 0.9) / float(maxi(1, columns - 1))
 						var y := -height * 0.5 + 0.95 + float(row) * 1.42
-						var z := -depth * 0.5 - 0.026
+						var z := depth * 0.5 + 0.026
 						var transform := Transform3D(basis, center + basis * Vector3(x, y, z))
 						var choice := _rng.randi_range(0, 19)
 						var batch := 0 if choice < 10 else (1 if choice < 15 else (2 if choice < 19 else 3))
@@ -160,6 +160,7 @@ func _build_environment() -> void:
 		_add_window_batch(root, "PinkWindows", window_mesh, pink, window_batches[2])
 		_add_window_batch(root, "GoldWindows", window_mesh, gold, window_batches[3])
 		_build_rain_for_segment(root, midpoint, tangent, inward, length, segment_index, total_length)
+	_build_moon(root, facade_center, facade_outward)
 	_build_atmosphere(root, facade_center, facade_outward)
 	_build_lightning(root, facade_center, facade_outward)
 
@@ -200,6 +201,27 @@ func _build_rain_for_segment(parent: Node3D, midpoint: Vector3, tangent: Vector3
 		parent.add_child(particles)
 		if Engine.is_editor_hint():
 			particles.owner = get_tree().edited_scene_root
+
+func _build_moon(parent: Node3D, facade_center: Vector3, facade_outward: Vector3) -> void:
+	var moon := MeshInstance3D.new()
+	moon.name = "DistantMoon"
+	var sphere := SphereMesh.new()
+	sphere.radius = 3.4
+	sphere.height = 6.8
+	sphere.radial_segments = 32
+	sphere.rings = 16
+	moon.mesh = sphere
+	moon.position = facade_center + facade_outward * 112.0 + Vector3.UP * 34.0
+	var material := StandardMaterial3D.new()
+	material.albedo_color = Color(0.78, 0.82, 0.86)
+	material.emission_enabled = true
+	material.emission = Color(0.28, 0.30, 0.32)
+	material.emission_energy_multiplier = 0.55
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	moon.material_override = material
+	parent.add_child(moon)
+	if Engine.is_editor_hint():
+		moon.owner = get_tree().edited_scene_root
 
 func _build_atmosphere(parent: Node3D, facade_center: Vector3, facade_outward: Vector3) -> void:
 	var fog := FogVolume.new()
