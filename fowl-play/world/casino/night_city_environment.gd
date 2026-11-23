@@ -12,11 +12,6 @@ class_name NightCityEnvironment
 ])
 @export_range(0.5, 5.0, 0.1) var glass_clearance: float = 1.55
 
-@export_group("City")
-@export_range(12, 72, 1) var buildings_per_segment: int = 38
-@export_range(0.65, 1.0, 0.01) var window_lit_ratio: float = 0.78
-@export var city_seed: int = 7319
-
 @export_group("Rain")
 @export_range(300, 3600, 100) var rain_amount: int = 2100
 @export_range(12.0, 30.0, 0.5) var rain_speed: float = 21.0
@@ -91,14 +86,6 @@ func _build_environment() -> void:
 	add_child(root)
 	if Engine.is_editor_hint():
 		root.owner = get_tree().edited_scene_root
-	var building_material := _material(Color(0.012, 0.019, 0.034), 0.0)
-	var warm := _emissive(Color(1.0, 0.48, 0.19), 1.65)
-	var cyan := _emissive(Color(0.16, 0.66, 0.92), 1.5)
-	var pink := _emissive(Color(0.92, 0.19, 0.53), 1.55)
-	var gold := _emissive(Color(1.0, 0.72, 0.32), 1.8)
-	var window_mesh := BoxMesh.new()
-	window_mesh.size = Vector3(0.38, 0.56, 0.045)
-	var window_batches: Array = [[], [], [], []]
 	var total_length := 0.0
 	for i in range(facade_points.size() - 1):
 		total_length += facade_points[i].distance_to(facade_points[i + 1])
@@ -117,49 +104,8 @@ func _build_environment() -> void:
 			continue
 		var tangent := edge / length
 		var inward := tangent.cross(Vector3.UP).normalized()
-		var outward := -inward
-		var basis := Basis(tangent, Vector3.UP, inward)
 		var midpoint := (a + b) * 0.5
-		var segment_buildings := maxi(8, roundi(float(buildings_per_segment) * length / maxf(1.0, total_length)))
-		for layer in range(3):
-			var depth_from_glass: float = [27.0, 51.0, 79.0][layer]
-			var layer_count: int = int(ceil(float(segment_buildings) * [1.0, 0.82, 0.68][layer]))
-			for index in range(layer_count):
-				var along := -length * 0.5 + (float(index) + _rng.randf_range(-0.34, 0.34)) * length / float(layer_count)
-				var width: float = _rng.randf_range(2.6, 7.0) * [1.0, 1.18, 1.35][layer]
-				var depth: float = _rng.randf_range(4.0, 8.5)
-				var height: float = _rng.randf_range(12.0, 31.0) * [1.0, 0.82, 0.65][layer]
-				if _rng.randf() < 0.13:
-					height *= 1.42
-				var center: Vector3 = midpoint + tangent * along + outward * depth_from_glass + Vector3.UP * (height * 0.5 - 2.1)
-				var tower := MeshInstance3D.new()
-				tower.name = "Tower_%d_%02d_%02d" % [segment_index, layer, index]
-				var tower_mesh := BoxMesh.new()
-				tower_mesh.size = Vector3(width, height, depth)
-				tower.mesh = tower_mesh
-				tower.material_override = building_material
-				tower.transform = Transform3D(basis, center)
-				root.add_child(tower)
-				if Engine.is_editor_hint():
-					tower.owner = get_tree().edited_scene_root
-				var columns := maxi(2, int(width / 0.92))
-				var rows := maxi(3, int(height / 1.45))
-				for row in range(rows):
-					for column in range(columns):
-						if _rng.randf() > window_lit_ratio:
-							continue
-						var x: float = -width * 0.5 + 0.48 + float(column) * (width - 0.9) / float(maxi(1, columns - 1))
-						var y: float = -height * 0.5 + 0.95 + float(row) * 1.42
-						var z: float = depth * 0.5 + 0.026
-						var transform := Transform3D(basis, center + basis * Vector3(x, y, z))
-						var choice := _rng.randi_range(0, 19)
-						var batch := 0 if choice < 10 else (1 if choice < 15 else (2 if choice < 19 else 3))
-						window_batches[batch].append(transform)
 		_build_rain_for_segment(root, midpoint, tangent, inward, length, segment_index, total_length)
-	_add_window_batch(root, "WarmWindows", window_mesh, warm, window_batches[0])
-	_add_window_batch(root, "CyanWindows", window_mesh, cyan, window_batches[1])
-	_add_window_batch(root, "PinkWindows", window_mesh, pink, window_batches[2])
-	_add_window_batch(root, "GoldWindows", window_mesh, gold, window_batches[3])
 	_build_moon(root, facade_center, facade_outward)
 	_build_atmosphere(root, facade_center, facade_outward)
 	_build_lightning(root, facade_center, facade_outward)
@@ -251,35 +197,3 @@ func _build_lightning(parent: Node3D, facade_center: Vector3, facade_outward: Ve
 	if Engine.is_editor_hint():
 		_flash.owner = get_tree().edited_scene_root
 
-func _add_window_batch(parent: Node3D, node_name: String, mesh: Mesh, material: Material, transforms: Array) -> void:
-	if transforms.is_empty():
-		return
-	var multi := MultiMesh.new()
-	multi.transform_format = MultiMesh.TRANSFORM_3D
-	multi.mesh = mesh
-	multi.instance_count = transforms.size()
-	for i in range(transforms.size()):
-		multi.set_instance_transform(i, transforms[i])
-	var instance := MultiMeshInstance3D.new()
-	instance.name = node_name
-	instance.multimesh = multi
-	instance.material_override = material
-	parent.add_child(instance)
-	if Engine.is_editor_hint():
-		instance.owner = get_tree().edited_scene_root
-
-func _material(color: Color, metallic: float) -> StandardMaterial3D:
-	var result := StandardMaterial3D.new()
-	result.albedo_color = color
-	result.metallic = metallic
-	result.roughness = 0.88
-	return result
-
-func _emissive(color: Color, energy: float) -> StandardMaterial3D:
-	var result := StandardMaterial3D.new()
-	result.albedo_color = color
-	result.emission_enabled = true
-	result.emission = color
-	result.emission_energy_multiplier = energy
-	result.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	return result
