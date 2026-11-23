@@ -33,9 +33,9 @@ func _run() -> void:
 	]
 	var collision_bodies: Array[AnimatableBody3D] = []
 	for panel_name: String in panel_names:
-		var body: AnimatableBody3D = elevator.get_node_or_null("DoorAssembly/%s/DoorCollision" % panel_name) as AnimatableBody3D
+		var body: AnimatableBody3D = elevator.get_node_or_null("DoorAssembly/%s" % panel_name) as AnimatableBody3D
 		if body == null:
-			_finish(false, "%s is missing its moving door collision body." % panel_name)
+			_finish(false, "%s must be an AnimatableBody3D so collision follows the animated panel." % panel_name)
 			return
 		if (body.collision_layer & ELEVATOR_LAYER_BIT) == 0:
 			_finish(false, "%s collision must use the ELEVATOR layer." % panel_name)
