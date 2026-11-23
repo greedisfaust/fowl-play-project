@@ -18,6 +18,9 @@ var _body_pivot: Node3D
 var _base_y: float = 0.0
 var _finished_animation: bool = false
 var _body_material: StandardMaterial3D
+var _wing_material: StandardMaterial3D
+var _eye_meshes: Array[MeshInstance3D] = []
+var _eye_base_scales: Array[Vector3] = []
 
 func _ready() -> void:
 	_build_character()
@@ -44,6 +47,13 @@ func _process(delta: float) -> void:
 		_left_foot.rotation.z = sin(_clock * 4.0) * 0.12
 	if is_instance_valid(_right_foot):
 		_right_foot.rotation.z = -sin(_clock * 4.0) * 0.12
+	var blink_phase: float = fposmod(_clock + float(peer_id) * 0.37, 3.8)
+	var blink_scale: float = 0.12 if blink_phase < 0.13 else 1.0
+	for eye_index: int in range(_eye_meshes.size()):
+		var eye: MeshInstance3D = _eye_meshes[eye_index]
+		if is_instance_valid(eye):
+			var eye_scale: Vector3 = _eye_base_scales[eye_index]
+			eye.scale = Vector3(eye_scale.x, eye_scale.y * blink_scale, eye_scale.z)
 
 func set_tile(tile_number: int, animate: bool = true) -> void:
 	var target_x: float = -1.53 + float(clampi(tile_number, 0, 12)) * TILE_STEP
@@ -88,7 +98,7 @@ func _build_character() -> void:
 	add_child(_body_pivot)
 	_body_material = _make_material(PlayerIdentity.color_for_index(color_index), 0.0, 0.48)
 	var belly_material: StandardMaterial3D = _make_material(Color("#f5e7c9"), 0.0, 0.72)
-	var wing_material: StandardMaterial3D = _make_material(PlayerIdentity.color_for_index(color_index).darkened(0.16), 0.0, 0.55)
+	_wing_material = _make_material(PlayerIdentity.color_for_index(color_index).darkened(0.16), 0.0, 0.55)
 	var comb_material: StandardMaterial3D = _make_material(Color("#d93435"), 0.0, 0.42)
 	var beak_material: StandardMaterial3D = _make_material(Color("#f4a62a"), 0.0, 0.48)
 	var foot_material: StandardMaterial3D = _make_material(Color("#e88b24"), 0.0, 0.55)
@@ -98,9 +108,9 @@ func _build_character() -> void:
 	_add_sphere(_body_pivot, "PlumpBody", Vector3(0.34, 0.29, 0.26), Vector3.ZERO, _body_material)
 	_add_sphere(_body_pivot, "CreamBib", Vector3(0.205, 0.205, 0.205), Vector3(0.15, -0.055, 0.0), belly_material)
 	for side: float in [-1.0, 1.0]:
-		_add_sphere(_body_pivot, "Wing_%s" % str(side), Vector3(0.12, 0.17, 0.065), Vector3(-0.015, 0.015, side * 0.235), wing_material)
+		_add_sphere(_body_pivot, "Wing_%s" % str(side), Vector3(0.12, 0.17, 0.065), Vector3(-0.015, 0.015, side * 0.235), _wing_material)
 		for feather: int in range(3):
-			_add_sphere(_body_pivot, "TailFeather_%s_%d" % [str(side), feather], Vector3(0.105, 0.07, 0.055), Vector3(-0.25 - float(feather) * 0.025, 0.15 + float(feather) * 0.045, side * (0.07 + float(feather) * 0.045)), wing_material)
+			_add_sphere(_body_pivot, "TailFeather_%s_%d" % [str(side), feather], Vector3(0.105, 0.07, 0.055), Vector3(-0.25 - float(feather) * 0.025, 0.15 + float(feather) * 0.045, side * (0.07 + float(feather) * 0.045)), _wing_material)
 
 	_head_pivot = Node3D.new()
 	_head_pivot.name = "HeadPivot"
@@ -113,8 +123,12 @@ func _build_character() -> void:
 	_add_sphere(_head_pivot, "Wattle", Vector3(0.045, 0.075, 0.045), Vector3(0.17, -0.09, 0.0), comb_material)
 	_add_sphere(_head_pivot, "Beak", Vector3(0.105, 0.065, 0.075), Vector3(0.205, 0.015, 0.0), beak_material)
 	for side: float in [-1.0, 1.0]:
-		_add_sphere(_head_pivot, "EyeWhite_%s" % str(side), Vector3(0.035, 0.045, 0.03), Vector3(0.105, 0.105, side * 0.145), white_material)
-		_add_sphere(_head_pivot, "Eye_%s" % str(side), Vector3(0.018, 0.027, 0.018), Vector3(0.128, 0.105, side * 0.165), eye_material)
+		var eye_white: MeshInstance3D = _add_sphere(_head_pivot, "EyeWhite_%s" % str(side), Vector3(0.035, 0.045, 0.03), Vector3(0.105, 0.105, side * 0.145), white_material)
+		var eye_pupil: MeshInstance3D = _add_sphere(_head_pivot, "Eye_%s" % str(side), Vector3(0.018, 0.027, 0.018), Vector3(0.128, 0.105, side * 0.165), eye_material)
+		_eye_meshes.append(eye_white)
+		_eye_base_scales.append(eye_white.scale)
+		_eye_meshes.append(eye_pupil)
+		_eye_base_scales.append(eye_pupil.scale)
 
 	_left_foot = _build_foot("LeftFoot", -0.105, foot_material)
 	_right_foot = _build_foot("RightFoot", 0.105, foot_material)
@@ -164,7 +178,9 @@ func _spawn_feather_burst() -> void:
 		tween.tween_callback(feather.queue_free)
 
 func _rebuild_character_material() -> void:
-	_body_material.albedo_color = PlayerIdentity.color_for_index(color_index)
+	var assigned_color: Color = PlayerIdentity.color_for_index(color_index)
+	_body_material.albedo_color = assigned_color
+	_wing_material.albedo_color = assigned_color.darkened(0.16)
 
 func eye_dark_material() -> Material:
 	return _make_material(Color("#25282d"), 0.0, 0.3)
