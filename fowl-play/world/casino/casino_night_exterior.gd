@@ -19,7 +19,7 @@ class_name CasinoNightExterior
 @export var generate_rain: bool = true
 @export_range(100, 2000, 50) var rain_amount: int = 900
 @export_range(4.0, 24.0, 0.5) var rain_fall_speed: float = 13.0
-@export_range(0.1, 1.0, 0.05) var rain_opacity: float = 0.62
+@export_range(0.1, 1.0, 0.05) var rain_opacity: float = 0.78
 
 @export_group("Exterior Atmosphere")
 @export var generate_exterior_mist: bool = true
@@ -116,10 +116,10 @@ func _build_moon() -> void:
 	moon.mesh = sphere
 	moon.position = moon_position
 	var material := StandardMaterial3D.new()
-	material.albedo_color = Color(0.72, 0.82, 1.0)
+	material.albedo_color = Color(0.94, 0.93, 0.89)
 	material.emission_enabled = true
-	material.emission = Color(0.52, 0.68, 1.0)
-	material.emission_energy_multiplier = 1.35
+	material.emission = Color(0.34, 0.33, 0.29)
+	material.emission_energy_multiplier = 0.8
 	material.roughness = 1.0
 	moon.material_override = material
 	add_child(moon)
@@ -281,8 +281,8 @@ func _build_exterior_mist() -> void:
 	fog_volume.size = Vector3(74.0, 22.0, 34.0)
 	fog_volume.position = Vector3(0.0, 8.0, -47.0)
 	var fog_material := FogMaterial.new()
-	fog_material.density = mist_density
-	fog_material.albedo = Color(0.24, 0.31, 0.46)
+	fog_material.density = mist_density * 0.58
+	fog_material.albedo = Color(0.17, 0.18, 0.20)
 	fog_material.height_falloff = 0.18
 	fog_volume.material = fog_material
 	add_child(fog_volume)
