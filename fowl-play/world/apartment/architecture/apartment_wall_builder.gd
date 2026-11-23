@@ -35,7 +35,7 @@ enum WallSet {
 
 @export_group("Main Room Doorway")
 @export var generate_main_room_doorway: bool = true
-@export_range(0.8, 3.0, 0.05) var doorway_width: float = 1.8
+@export_range(0.8, 3.6, 0.05) var doorway_width: float = 2.8
 @export_range(1.8, 3.0, 0.05) var doorway_height: float = 2.3
 @export_range(-9.0, 9.0, 0.05) var doorway_center_z: float = -7.8
 
@@ -67,7 +67,9 @@ const GENERATED_ROOT_NAME: String = "_GeneratedApartmentWalls"
 
 func _ready() -> void:
 	if Engine.is_editor_hint():
-		_rebuild_geometry()
+		var generated: Node = get_node_or_null(GENERATED_ROOT_NAME)
+		if generated == null or generated.get_node_or_null("Apartment_Double_Door") == null:
+			_rebuild_geometry()
 
 func _rebuild_geometry() -> void:
 	if not Engine.is_editor_hint():
@@ -231,6 +233,109 @@ func _add_wall_box(
 		collision.position = box_center
 		body.add_child(collision)
 		collision.owner = scene_root
+
+
+func _build_double_door(parent: Node3D, scene_root: Node) -> void:
+	var door_root: Node3D = Node3D.new()
+	door_root.name = "Apartment_Double_Door"
+	door_root.position = Vector3(-11.0, floor_level, doorway_center_z)
+	door_root.set_script(load("res://world/apartment/architecture/apartment_double_door.gd"))
+	parent.add_child(door_root)
+	door_root.owner = scene_root
+
+	var wood: StandardMaterial3D = _make_material(Color(0.105, 0.052, 0.028, 1.0), 0.08, 0.34)
+	var inset: StandardMaterial3D = _make_material(Color(0.16, 0.085, 0.043, 1.0), 0.04, 0.42)
+	var brass: StandardMaterial3D = _make_material(Color(0.58, 0.36, 0.13, 1.0), 0.86, 0.2)
+	var dark: StandardMaterial3D = _make_material(Color(0.035, 0.026, 0.018, 1.0), 0.25, 0.3)
+	var leaf_width: float = doorway_width * 0.5 - 0.055
+	var leaf_height: float = doorway_height - 0.035
+	var leaf_depth: float = 0.105
+	for side_index: int in range(2):
+		var side: float = -1.0 if side_index == 0 else 1.0
+		var pivot: Node3D = Node3D.new()
+		pivot.name = "Left_Hinge" if side_index == 0 else "Right_Hinge"
+		pivot.position = Vector3(0.0, 0.0, side * doorway_width * 0.5)
+		door_root.add_child(pivot)
+		pivot.owner = scene_root
+		var body: AnimatableBody3D = AnimatableBody3D.new()
+		body.name = "DoorLeaf"
+		body.sync_to_physics = true
+		body.collision_layer = 1
+		body.collision_mask = 1 << 4
+		pivot.add_child(body)
+		body.owner = scene_root
+		var collision: CollisionShape3D = CollisionShape3D.new()
+		var box_shape: BoxShape3D = BoxShape3D.new()
+		box_shape.size = Vector3(leaf_depth, leaf_height, leaf_width)
+		collision.shape = box_shape
+		collision.position = Vector3(0.0, leaf_height * 0.5, -side * leaf_width * 0.5)
+		body.add_child(collision)
+		collision.owner = scene_root
+		_add_door_box(body, "Walnut_Leaf", Vector3(leaf_depth, leaf_height, leaf_width),
+			Vector3(0.0, leaf_height * 0.5, -side * leaf_width * 0.5), wood, scene_root)
+		_add_door_box(body, "Raised_Center_Panel", Vector3(0.025, leaf_height * 0.66, leaf_width * 0.66),
+			Vector3(side * (leaf_depth * 0.5 + 0.014), leaf_height * 0.52, -side * leaf_width * 0.5), inset, scene_root)
+		for rail_y: float in [0.18, leaf_height - 0.16]:
+			_add_door_box(body, "Brass_Horizontal_Inlay", Vector3(0.018, 0.025, leaf_width * 0.82),
+				Vector3(side * (leaf_depth * 0.5 + 0.03), rail_y, -side * leaf_width * 0.5), brass, scene_root)
+		for rail_z: float in [-leaf_width * 0.40, leaf_width * 0.40]:
+			_add_door_box(body, "Brass_Vertical_Inlay", Vector3(0.018, leaf_height * 0.72, 0.025),
+				Vector3(side * (leaf_depth * 0.5 + 0.03), leaf_height * 0.52, -side * leaf_width * 0.5 + rail_z), brass, scene_root)
+		_add_door_box(body, "Handle_Backplate", Vector3(0.035, 0.25, 0.11),
+			Vector3(side * (leaf_depth * 0.5 + 0.045), leaf_height * 0.52, -side * 0.12), dark, scene_root)
+		_add_door_box(body, "Brass_Pull_Handle", Vector3(0.075, 0.19, 0.035),
+			Vector3(side * (leaf_depth * 0.5 + 0.075), leaf_height * 0.52, -side * 0.12), brass, scene_root)
+		for hinge_index: int in range(3):
+			var hinge: MeshInstance3D = MeshInstance3D.new()
+			hinge.name = "Brass_Hinge_%d" % hinge_index
+			var cylinder: CylinderMesh = CylinderMesh.new()
+			cylinder.top_radius = 0.035
+			cylinder.bottom_radius = 0.035
+			cylinder.height = 0.13
+			hinge.mesh = cylinder
+			hinge.material_override = brass
+			hinge.position = Vector3(0.0, 0.30 + float(hinge_index) * (leaf_height - 0.6) * 0.5, 0.0)
+			pivot.add_child(hinge)
+			hinge.owner = scene_root
+
+	var frame: StandardMaterial3D = _make_material(Color(0.075, 0.043, 0.024, 1.0), 0.12, 0.38)
+	_add_door_box(door_root, "Door_Frame_Left", Vector3(0.20, doorway_height + 0.12, 0.16),
+		Vector3(0.0, (doorway_height + 0.12) * 0.5, -doorway_width * 0.5 - 0.04), frame, scene_root)
+	_add_door_box(door_root, "Door_Frame_Right", Vector3(0.20, doorway_height + 0.12, 0.16),
+		Vector3(0.0, (doorway_height + 0.12) * 0.5, doorway_width * 0.5 + 0.04), frame, scene_root)
+	_add_door_box(door_root, "Door_Frame_Header", Vector3(0.20, 0.16, doorway_width + 0.24),
+		Vector3(0.0, doorway_height + 0.02, 0.0), frame, scene_root)
+	var interactable: Interactable = Interactable.new()
+	interactable.name = "Interactable"
+	interactable.kind = Interactable.InteractionKind.USE
+	interactable.prompt_text = "Push Double Doors"
+	door_root.add_child(interactable)
+	interactable.owner = scene_root
+	var bump_area: Area3D = Area3D.new()
+	bump_area.name = "Doorway_Bump_Area"
+	bump_area.collision_layer = 0
+	bump_area.collision_mask = (1 << 4) | (1 << (8 - 1))
+	bump_area.position = Vector3(0.0, doorway_height * 0.5, 0.0)
+	var bump_shape: CollisionShape3D = CollisionShape3D.new()
+	var bump_box: BoxShape3D = BoxShape3D.new()
+	bump_box.size = Vector3(1.4, doorway_height, doorway_width + 0.35)
+	bump_shape.shape = bump_box
+	bump_area.add_child(bump_shape)
+	bump_shape.owner = scene_root
+	door_root.add_child(bump_area)
+	bump_area.owner = scene_root
+
+func _add_door_box(parent: Node3D, node_name: String, size: Vector3, position: Vector3, material: Material, scene_root: Node) -> void:
+	var instance: MeshInstance3D = MeshInstance3D.new()
+	instance.name = node_name
+	var mesh: BoxMesh = BoxMesh.new()
+	mesh.size = size
+	instance.mesh = mesh
+	instance.material_override = material
+	instance.position = position
+	parent.add_child(instance)
+	instance.owner = scene_root
+
 
 func _build_wainscoting(
 	parent: Node3D,
