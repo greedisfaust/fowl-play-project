@@ -68,7 +68,7 @@ const GENERATED_ROOT_NAME: String = "_GeneratedApartmentWalls"
 func _ready() -> void:
 	if Engine.is_editor_hint():
 		var generated: Node = get_node_or_null(GENERATED_ROOT_NAME)
-		if generated == null or generated.get_node_or_null("Apartment_Double_Door") == null:
+		if generated == null or (wall_set == WallSet.INTERIOR and generated.get_node_or_null("Apartment_Double_Door") == null):
 			_rebuild_geometry()
 
 func _rebuild_geometry() -> void:
