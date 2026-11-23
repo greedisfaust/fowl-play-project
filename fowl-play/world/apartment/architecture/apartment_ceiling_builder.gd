@@ -49,7 +49,7 @@ func _ready() -> void:
 	if generated == null:
 		_rebuild_geometry()
 	else:
-		if generated.find_child("MainRoom_Grand_Circular_Fixture", true, false) == null:
+		if get_tree().edited_scene_root.find_child("MainRoom_Grand_Circular_Fixture", true, false) == null:
 			_build_circular_fixture(generated, get_tree().edited_scene_root)
 		_setup_night_city_environment(get_tree().edited_scene_root)
 
@@ -95,7 +95,7 @@ func _rebuild_geometry() -> void:
 		_build_hallway_detail(generated_root, walnut_material, bronze_material, light_material, scene_root)
 	if generate_lobby_frame:
 		_build_lobby_frame(generated_root, walnut_material, bronze_material, light_material, scene_root)
-	if generated_root.find_child("MainRoom_Grand_Circular_Fixture", true, false) == null:
+	if scene_root.find_child("MainRoom_Grand_Circular_Fixture", true, false) == null:
 		_build_circular_fixture(generated_root, scene_root)
 	_setup_night_city_environment(scene_root)
 
