@@ -90,6 +90,7 @@ func _rebuild_floor() -> void:
 		_build_lobby_stone(generated, scene_root)
 	if generate_transition_details:
 		_build_transitions(generated, scene_root)
+	_add_main_room_perimeter_inlay(generated, scene_root)
 
 func _add_main_room_perimeter_inlay(parent: Node3D, scene_root: Node) -> void:
 	var group: Node3D = Node3D.new()
