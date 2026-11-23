@@ -23,6 +23,23 @@ func _run() -> void:
 		_finish(false, "Elevator departure controller should expose its forced deadline-return sequence.")
 		return
 
+	if not controller.has_method("is_rest_departure_unlocked"):
+		controller.free()
+		_finish(false, "Elevator controller should expose the REST disembark gate state.")
+		return
+	if bool(controller.call("can_departure_during_rest", true, false)):
+		controller.free()
+		_finish(false, "REST departure must remain locked until every player disembarks.")
+		return
+	if not bool(controller.call("can_departure_during_rest", true, true)):
+		controller.free()
+		_finish(false, "REST departure should unlock after every player disembarks.")
+		return
+	if not bool(controller.call("can_departure_during_rest", false, false)):
+		controller.free()
+		_finish(false, "Non-REST phases must not be affected by the disembark gate.")
+		return
+
 	var peers: Array[int] = [1, 2, 3]
 	var all_inside: Array[int] = [1, 2, 3]
 	var missing_one: Array[int] = [1, 3]
@@ -59,7 +76,7 @@ func _run() -> void:
 		return
 
 	controller.free()
-	_finish(true, "full-team occupancy, empty-session rejection, occupant authorization, and missing-player rejection")
+	_finish(true, "full-team occupancy, REST disembark gate, occupant authorization, and missing-player rejection")
 
 func _finish(passed: bool, message: String) -> void:
 	if passed:
