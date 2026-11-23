@@ -58,8 +58,13 @@ var _wood_joint_material: StandardMaterial3D
 var _bronze_material: StandardMaterial3D
 
 func _ready() -> void:
-	if Engine.is_editor_hint() and get_node_or_null(GENERATED_ROOT_NAME) == null:
+	if not Engine.is_editor_hint():
+		return
+	var generated: Node3D = get_node_or_null(GENERATED_ROOT_NAME) as Node3D
+	if generated == null:
 		_rebuild_floor()
+	elif generated.find_child("MainRoom_Bronze_Perimeter_Inlay", true, false) == null:
+		_add_main_room_perimeter_inlay(generated, get_tree().edited_scene_root)
 
 func _rebuild_floor() -> void:
 	if not Engine.is_editor_hint():
@@ -85,6 +90,36 @@ func _rebuild_floor() -> void:
 		_build_lobby_stone(generated, scene_root)
 	if generate_transition_details:
 		_build_transitions(generated, scene_root)
+
+func _add_main_room_perimeter_inlay(parent: Node3D, scene_root: Node) -> void:
+	var group: Node3D = Node3D.new()
+	group.name = "MainRoom_Bronze_Perimeter_Inlay"
+	parent.add_child(group)
+	group.owner = scene_root
+	var bronze: StandardMaterial3D = _make_material(bronze_color, 0.82, 0.24)
+	var dark_reveal: StandardMaterial3D = _make_material(Color(0.055, 0.058, 0.06), 0.12, 0.56)
+	var inset: float = 0.30
+	var line_y: float = FLOOR_TOP_Y + 0.012
+	var outer_width: float = 0.042
+	var inner_width: float = 0.018
+	# A restrained double pinstripe frames the limestone field without occupying table footprints.
+	_add_box(group, "Outer_North_Bronze", Vector3(22.0 - inset * 2.0, 0.012, outer_width),
+		Vector3(0.0, line_y, -9.5 + inset), bronze, scene_root)
+	_add_box(group, "Outer_South_Bronze", Vector3(22.0 - inset * 2.0, 0.012, outer_width),
+		Vector3(0.0, line_y, 9.5 - inset), bronze, scene_root)
+	_add_box(group, "Outer_West_Bronze", Vector3(outer_width, 0.012, 19.0 - inset * 2.0),
+		Vector3(-11.0 + inset, line_y, 0.0), bronze, scene_root)
+	_add_box(group, "Outer_East_Bronze", Vector3(outer_width, 0.012, 19.0 - inset * 2.0),
+		Vector3(11.0 - inset, line_y, 0.0), bronze, scene_root)
+	var inner_inset: float = inset + 0.12
+	_add_box(group, "Inner_North_Reveal", Vector3(22.0 - inner_inset * 2.0, 0.008, inner_width),
+		Vector3(0.0, line_y + 0.002, -9.5 + inner_inset), dark_reveal, scene_root)
+	_add_box(group, "Inner_South_Reveal", Vector3(22.0 - inner_inset * 2.0, 0.008, inner_width),
+		Vector3(0.0, line_y + 0.002, 9.5 - inner_inset), dark_reveal, scene_root)
+	_add_box(group, "Inner_West_Reveal", Vector3(inner_width, 0.008, 19.0 - inner_inset * 2.0),
+		Vector3(-11.0 + inner_inset, line_y + 0.002, 0.0), dark_reveal, scene_root)
+	_add_box(group, "Inner_East_Reveal", Vector3(inner_width, 0.008, 19.0 - inner_inset * 2.0),
+		Vector3(11.0 - inner_inset, line_y + 0.002, 0.0), dark_reveal, scene_root)
 
 func _create_materials() -> void:
 	_stone_materials.clear()
