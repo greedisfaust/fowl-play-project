@@ -342,6 +342,7 @@ func _publish_player_presentation(peer_id: int, source_state: Dictionary) -> voi
 	_round_player_states[peer_id] = player_state.duplicate(true)
 	player_state_changed.emit(peer_id, player_state.duplicate(true))
 	_sync_chicken_visual(peer_id, player_state)
+	_reposition_chicken_visuals()
 	_apply_local_player_presentation(peer_id, player_state)
 	_update_table_terminal_display()
 	if multiplayer.multiplayer_peer != null:
@@ -438,6 +439,19 @@ func _sync_chicken_visual(peer_id: int, player_state: Dictionary) -> void:
 			chicken.play_cash_out()
 	chicken.set_meta("display_status", status)
 
+func _reposition_chicken_visuals() -> void:
+	var root: Node = get_node_or_null("Visuals/_ChickenCrossContestants")
+	if not is_instance_valid(root):
+		return
+	var peer_ids: Array[int] = []
+	for value: Variant in _round_player_states.keys():
+		peer_ids.append(int(value))
+	peer_ids.sort()
+	for index: int in range(peer_ids.size()):
+		var chicken: Node3D = root.get_node_or_null("Chicken_%d" % peer_ids[index]) as Node3D
+		if is_instance_valid(chicken):
+			chicken.position.z = -0.33 + float(mini(index, 3)) * 0.22
+
 func _lane_z_for_peer(peer_id: int) -> float:
 	var peer_ids: Array[int] = []
 	for value: Variant in _round_player_states.keys():
@@ -481,4 +495,11 @@ func _format_currency(amount: int) -> String:
 
 @rpc("authority", "call_remote", "reliable")
 func _receive_player_state(peer_id: int, player_state: Dictionary) -> void:
-	_publish_player_presentation(peer_id, player_state)
+	var received_state: Dictionary = player_state.duplicate(true)
+	received_state["peer_id"] = peer_id
+	_round_player_states[peer_id] = received_state
+	player_state_changed.emit(peer_id, received_state.duplicate(true))
+	_sync_chicken_visual(peer_id, received_state)
+	_reposition_chicken_visuals()
+	_apply_local_player_presentation(peer_id, received_state)
+	_update_table_terminal_display()
