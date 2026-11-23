@@ -67,6 +67,8 @@ const GENERATED_ROOT_NAME: String = "_GeneratedApartmentWalls"
 
 func _ready() -> void:
 	if Engine.is_editor_hint():
+		if wall_set == WallSet.INTERIOR and generate_main_room_doorway:
+			doorway_width = maxf(doorway_width, 2.8)
 		var generated: Node = get_node_or_null(GENERATED_ROOT_NAME)
 		if generated == null or (wall_set == WallSet.INTERIOR and generate_main_room_doorway and generated.get_node_or_null("Apartment_Double_Door") == null):
 			_rebuild_geometry()
