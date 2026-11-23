@@ -94,6 +94,74 @@ func _rebuild_geometry() -> void:
 			scene_root
 		)
 
+	_build_wall_sconces(generated_root, scene_root)
+
+func _build_wall_sconces(parent: Node3D, scene_root: Node) -> void:
+	var brass: StandardMaterial3D = _make_material(Color(0.48, 0.29, 0.12, 1.0), 0.78, 0.22)
+	var dark_brass: StandardMaterial3D = _make_material(Color(0.12, 0.075, 0.035, 1.0), 0.72, 0.28)
+	var glass: StandardMaterial3D = StandardMaterial3D.new()
+	glass.albedo_color = Color(1.0, 0.78, 0.48, 1.0)
+	glass.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	glass.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	glass.emission_enabled = true
+	glass.emission = Color(1.0, 0.66, 0.34, 1.0)
+	glass.emission_energy_multiplier = 2.2
+
+	for segment_index: int in range(SOLID_WALL_PATH.size() - 1):
+		var start: Vector3 = Vector3(SOLID_WALL_PATH[segment_index].x, 0.0, SOLID_WALL_PATH[segment_index].y)
+		var end: Vector3 = Vector3(SOLID_WALL_PATH[segment_index + 1].x, 0.0, SOLID_WALL_PATH[segment_index + 1].y)
+		var edge: Vector3 = end - start
+		var edge_length: float = edge.length()
+		var tangent: Vector3 = edge.normalized()
+		var inward: Vector3 = tangent.cross(Vector3.UP).normalized()
+		var basis: Basis = Basis(tangent, Vector3.UP, inward)
+		var lamp_distances: Array[float] = []
+		var spacing_count: int = maxi(1, int(floor(edge_length / 6.5)))
+		for lamp_index: int in range(spacing_count):
+			var distance: float = edge_length * (float(lamp_index) + 0.5) / float(spacing_count)
+			if segment_index == 1 and absf(distance - elevator_opening_center_distance) < elevator_opening_width * 0.5 + 1.0:
+				continue
+			lamp_distances.append(distance)
+		for distance: float in lamp_distances:
+			var wall_point: Vector3 = start + tangent * distance
+			var center: Vector3 = wall_point + Vector3.UP * 2.45 + inward * (wall_thickness * 0.5 + 0.055)
+			_add_sconce_box(parent, "WallSconce_Backplate_%02d_%02d" % [segment_index, int(distance)], Vector3(0.48, 0.72, 0.10), Transform3D(basis, center), dark_brass, scene_root)
+			_add_sconce_box(parent, "WallSconce_Crown_%02d_%02d" % [segment_index, int(distance)], Vector3(0.58, 0.075, 0.16), Transform3D(basis, center + Vector3.UP * 0.34 + inward * 0.045), brass, scene_root)
+			_add_sconce_box(parent, "WallSconce_Base_%02d_%02d" % [segment_index, int(distance)], Vector3(0.58, 0.075, 0.16), Transform3D(basis, center - Vector3.UP * 0.34 + inward * 0.045), brass, scene_root)
+			var diffuser: MeshInstance3D = MeshInstance3D.new()
+			diffuser.name = "WallSconce_FrostedGlass_%02d_%02d" % [segment_index, int(distance)]
+			var diffuser_mesh: CylinderMesh = CylinderMesh.new()
+			diffuser_mesh.top_radius = 0.105
+			diffuser_mesh.bottom_radius = 0.105
+			diffuser_mesh.height = 0.48
+			diffuser_mesh.radial_segments = 20
+			diffuser.mesh = diffuser_mesh
+			diffuser.material_override = glass
+			diffuser.position = center + inward * 0.105
+			parent.add_child(diffuser)
+			diffuser.owner = scene_root
+			var lamp: OmniLight3D = OmniLight3D.new()
+			lamp.name = "WallSconce_WarmLight_%02d_%02d" % [segment_index, int(distance)]
+			lamp.position = center + inward * 0.34
+			lamp.light_color = Color(1.0, 0.69, 0.42, 1.0)
+			lamp.light_energy = 2.35
+			lamp.omni_range = 7.5
+			lamp.omni_attenuation = 1.15
+			lamp.light_specular = 0.42
+			parent.add_child(lamp)
+			lamp.owner = scene_root
+
+func _add_sconce_box(parent: Node3D, node_name: String, box_size: Vector3, box_transform: Transform3D, material: Material, scene_root: Node) -> void:
+	var mesh_instance: MeshInstance3D = MeshInstance3D.new()
+	mesh_instance.name = node_name
+	var box_mesh: BoxMesh = BoxMesh.new()
+	box_mesh.size = box_size
+	mesh_instance.mesh = box_mesh
+	mesh_instance.material_override = material
+	mesh_instance.transform = box_transform
+	parent.add_child(mesh_instance)
+	mesh_instance.owner = scene_root
+
 func _build_wall_segment(
 	parent: Node3D,
 	start_2d: Vector2,
