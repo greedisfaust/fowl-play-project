@@ -40,6 +40,21 @@ func _run() -> void:
 	_check(bool(snapshot.get("day_active", false)), "Reaching quota does not automatically end the day")
 	_check(int(snapshot.get("seconds_remaining", 0)) == 299, "Timer continues after quota is reached")
 
+	# A later wager can reduce the available wallet after the quota was met.
+	manager.call("advance_day_timer", 1.0, 1280)
+	snapshot = manager.call("get_snapshot")
+	_check(not bool(snapshot.get("quota_reached", true)), "Dropping below quota revokes the reached state")
+	_check(int(snapshot.get("wallet_balance", 0)) == 1280, "Wallet snapshot reflects the later loss")
+	var rejected_departure: Dictionary = manager.call("finish_early_departure", 1280)
+	_check(not bool(rejected_departure.get("ok", true)), "Early departure is rejected when the current wallet is below quota")
+	_check(bool(manager.get("day_active")), "Rejected departure leaves the casino day active")
+	_check(not bool(manager.get("day_result_recorded")), "Rejected departure does not record a day result")
+
+	# Reaching the target again should unlock departure again.
+	manager.call("advance_day_timer", 1.0, 1780)
+	snapshot = manager.call("get_snapshot")
+	_check(bool(snapshot.get("quota_reached", false)), "Regaining the quota unlocks early departure again")
+
 	var early_result: Dictionary = manager.call("finish_early_departure", 1800)
 	_check(bool(early_result.get("ok", false)), "Early departure succeeds after quota is reached")
 	snapshot = manager.call("get_snapshot")
@@ -68,7 +83,7 @@ func _run() -> void:
 	if _failed:
 		quit(1)
 		return
-	print("CASINO DAY PASS: dynamic quota, carried wallet, five-minute timer, early quota unlock, and deadline snapshot")
+	print("CASINO DAY PASS: dynamic quota, live quota revocation, re-unlock, carried wallet, five-minute timer, early departure, and deadline snapshot")
 	quit(0)
 
 
