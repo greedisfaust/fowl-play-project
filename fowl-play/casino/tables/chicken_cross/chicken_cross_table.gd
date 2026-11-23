@@ -438,6 +438,38 @@ func _sync_chicken_visual(peer_id: int, player_state: Dictionary) -> void:
 		elif status == "cashed_out":
 			chicken.play_cash_out()
 	chicken.set_meta("display_status", status)
+	_sync_player_tile_marker(peer_id, player_state)
+
+func _sync_player_tile_marker(peer_id: int, player_state: Dictionary) -> void:
+	var root: Node3D = _get_chicken_visual_root()
+	if not is_instance_valid(root):
+		return
+	var marker_name: String = "PlayerTileMarker_%d" % peer_id
+	var marker: MeshInstance3D = root.get_node_or_null(marker_name) as MeshInstance3D
+	if not is_instance_valid(marker):
+		marker = MeshInstance3D.new()
+		marker.name = marker_name
+		var marker_mesh: BoxMesh = BoxMesh.new()
+		marker_mesh.size = Vector3(0.205, 0.009, 0.17)
+		marker.mesh = marker_mesh
+		root.add_child(marker)
+	var tile_number: int = clampi(int(player_state.get("tile", 0)), 0, Rules.TILE_COUNT)
+	var marker_x: float = -1.53 + float(tile_number) * 0.25
+	var marker_z: float = _lane_z_for_peer(peer_id)
+	marker.position = Vector3(marker_x, 1.095, marker_z)
+	var marker_color: Color = PlayerIdentity.color_for_index(int(player_state.get("color_index", _get_player_color_index(peer_id))))
+	var status: String = str(player_state.get("status", "active"))
+	if status == "failed":
+		marker_color = Color("#e53935")
+	elif status == "cashed_out":
+		marker_color = Color("#ffc45b")
+	var material: StandardMaterial3D = StandardMaterial3D.new()
+	material.albedo_color = marker_color
+	material.emission_enabled = true
+	material.emission = marker_color
+	material.emission_energy_multiplier = 0.85
+	material.roughness = 0.32
+	marker.material_override = material
 
 func _reposition_chicken_visuals() -> void:
 	var root: Node = get_node_or_null("Visuals/_ChickenCrossContestants")
@@ -451,6 +483,8 @@ func _reposition_chicken_visuals() -> void:
 		var chicken: Node3D = root.get_node_or_null("Chicken_%d" % peer_ids[index]) as Node3D
 		if is_instance_valid(chicken):
 			chicken.position.z = -0.33 + float(mini(index, 3)) * 0.22
+			var player_state: Dictionary = _round_player_states.get(peer_ids[index], {})
+			_sync_player_tile_marker(peer_ids[index], player_state)
 
 func _lane_z_for_peer(peer_id: int) -> float:
 	var peer_ids: Array[int] = []
