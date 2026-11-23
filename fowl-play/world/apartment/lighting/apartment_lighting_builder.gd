@@ -69,11 +69,13 @@ func _rebuild_lighting() -> void:
 	add_child(generated_root)
 	generated_root.owner = scene_root
 
-	if generate_main_room_lights:
+	if generate_main_room_lights and scene_root.find_child("MainRoom_Warm_Fill_-6.5_-4.8", true, false) == null:
 		_build_main_room_lights(generated_root, scene_root)
+	if scene_root.find_child("MainRoom_Grand_Circular_Fixture", true, false) == null:
 		_build_circular_fixture(generated_root, scene_root)
 	if generate_hallway_lights:
 		_build_hallway_lights(generated_root, scene_root)
+	if scene_root.find_child("Hallway_Wall_Sconce_00", true, false) == null:
 		_build_hallway_sconces(generated_root, scene_root)
 	if generate_lobby_lights:
 		_build_lobby_lights(generated_root, scene_root)
