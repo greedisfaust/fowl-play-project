@@ -129,4 +129,4 @@ func _add_omni_light(
 	range_value: float,
 	scene_root: Node
 ) -> void:
-	LightingRig.add_omni(parent, node_name, light_position, color, energy, range_value, scene_root, light_specular)
+	LightingRig.add_omni(parent, node_name, light_position, color, energy, range_value, scene_root, light_specular, enable_shadows)
