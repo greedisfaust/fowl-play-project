@@ -142,6 +142,9 @@ func _build_interior(parent: Node3D, material: Material, thickness: float, scene
 		Vector2(-11.0, -9.5), Vector2(-11.0, 9.5),
 		material, thickness, scene_root,
 		generate_main_room_doorway, doorway_center_z + 9.5, doorway_width, 0.0, doorway_height)
+	if generate_main_room_doorway:
+		_build_double_door(parent, scene_root)
+	_build_hallway_sconces(parent, scene_root)
 
 func _build_segment(
 	parent: Node3D,
@@ -234,6 +237,52 @@ func _add_wall_box(
 		body.add_child(collision)
 		collision.owner = scene_root
 
+
+
+func _build_hallway_sconces(parent: Node3D, scene_root: Node) -> void:
+	var brass: StandardMaterial3D = _make_material(Color(0.42, 0.27, 0.13), 0.82, 0.24)
+	var diffuser: StandardMaterial3D = StandardMaterial3D.new()
+	diffuser.albedo_color = Color(1.0, 0.72, 0.45)
+	diffuser.emission_enabled = true
+	diffuser.emission = Color(1.0, 0.45, 0.18)
+	diffuser.emission_energy_multiplier = 1.25
+	var positions: Array[float] = [-14.0, -3.8, 3.8, 14.0]
+	for index: int in range(positions.size()):
+		var sconce: Node3D = Node3D.new()
+		sconce.name = "Hallway_Wall_Sconce_%02d" % index
+		sconce.position = Vector3(-11.17, 2.15, positions[index])
+		parent.add_child(sconce)
+		sconce.owner = scene_root
+		var plate: MeshInstance3D = MeshInstance3D.new()
+		plate.name = "Bronze_Backplate"
+		var plate_mesh: CylinderMesh = CylinderMesh.new()
+		plate_mesh.top_radius = 0.12
+		plate_mesh.bottom_radius = 0.12
+		plate_mesh.height = 0.035
+		plate.mesh = plate_mesh
+		plate.material_override = brass
+		plate.rotation = Vector3(0.0, 0.0, PI * 0.5)
+		sconce.add_child(plate)
+		plate.owner = scene_root
+		var shade: MeshInstance3D = MeshInstance3D.new()
+		shade.name = "Frosted_Diffuser"
+		var capsule: CapsuleMesh = CapsuleMesh.new()
+		capsule.radius = 0.09
+		capsule.height = 0.52
+		shade.mesh = capsule
+		shade.material_override = diffuser
+		shade.position = Vector3(0.10, 0.0, 0.0)
+		sconce.add_child(shade)
+		shade.owner = scene_root
+		var light: OmniLight3D = OmniLight3D.new()
+		light.name = "Warm_Wall_Wash"
+		light.position = Vector3(0.20, -0.03, 0.0)
+		light.light_color = Color(1.0, 0.70, 0.48)
+		light.light_energy = 1.15
+		light.omni_range = 5.8
+		light.shadow_enabled = false
+		sconce.add_child(light)
+		light.owner = scene_root
 
 func _build_double_door(parent: Node3D, scene_root: Node) -> void:
 	var door_root: Node3D = Node3D.new()
