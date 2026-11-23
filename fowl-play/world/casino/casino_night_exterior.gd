@@ -151,22 +151,35 @@ func _build_rain() -> void:
 	var process := ParticleProcessMaterial.new()
 	process.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
 	process.emission_box_extents = RAIN_EXTENTS
-	process.direction = Vector3(0.015, -1.0, -0.025)
-	process.spread = 3.0
-	process.initial_velocity_min = rain_fall_speed * 0.82
-	process.initial_velocity_max = rain_fall_speed * 1.18
-	process.gravity = Vector3(0.0, -1.5, 0.0)
-	process.scale_min = 0.8
-	process.scale_max = 1.2
+	# A slight diagonal fall and crosswind keep the rain from reading as a
+	# perfectly vertical particle curtain. Align-Y makes the long mesh follow
+	# each particle's velocity rather than facing the camera like a billboard.
+	process.direction = Vector3(0.055, -1.0, -0.035)
+	process.spread = 6.0
+	process.initial_velocity_min = rain_fall_speed * 0.86
+	process.initial_velocity_max = rain_fall_speed * 1.16
+	process.gravity = Vector3(1.15, -1.5, 0.45)
+	process.particle_flag_align_y = true
+	process.scale_min = 0.72
+	process.scale_max = 1.28
 	particles.process_material = process
 
-	var drop := BoxMesh.new()
-	drop.size = Vector3(0.012, 0.48, 0.012)
+	# A slim capsule gives each streak a rounded, tapered silhouette instead
+	# of the hard rectangular blue dash used by the first pass.
+	var drop := CapsuleMesh.new()
+	drop.radius = 0.006
+	drop.height = 0.34
+	drop.radial_segments = 6
+	drop.rings = 3
 	var drop_material := StandardMaterial3D.new()
-	drop_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	drop_material.albedo_color = Color(0.48, 0.72, 1.0, rain_opacity)
+	drop_material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+	drop_material.albedo_color = Color(0.66, 0.77, 0.9, rain_opacity * 0.72)
 	drop_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	drop_material.roughness = 0.25
+	drop_material.roughness = 0.16
+	drop_material.metallic = 0.04
+	drop_material.emission_enabled = true
+	drop_material.emission = Color(0.16, 0.24, 0.36)
+	drop_material.emission_energy_multiplier = 0.18
 	particles.draw_pass_1 = drop
 	particles.material_override = drop_material
 	add_child(particles)
