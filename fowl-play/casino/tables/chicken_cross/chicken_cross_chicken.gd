@@ -33,6 +33,9 @@ func configure(owner_peer_id: int, owner_name: String, owner_color_index: int) -
 	display_name = owner_name
 	color_index = owner_color_index
 	if is_inside_tree():
+		# The table assigns the contestant's position immediately after add_child(),
+		# so refresh the idle baseline here rather than keeping _ready()'s origin.
+		_base_y = position.y
 		_base_scale = scale
 		_rebuild_character_material()
 
