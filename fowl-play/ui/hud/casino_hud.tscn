@@ -1,6 +1,8 @@
 [gd_scene format=3 uid="uid://dckbpatdy1odv"]
 
 [ext_resource type="Script" uid="uid://blb8tbauq31wv" path="res://ui/hud/casino_hud_controller.gd" id="1_po08v"]
+[ext_resource type="FontFile" uid="uid://ws0yv8acsgcw" path="res://assets/fonts/JetBrainsMonoNL-Regular.ttf" id="2_7saje"]
+[ext_resource type="FontFile" uid="uid://ce6dhjlvwl0od" path="res://assets/fonts/JetBrainsMono-Bold.ttf" id="3_24mn7"]
 
 [node name="CasinoHUD" type="CanvasLayer" unique_id=753540955]
 layer = 10
@@ -33,13 +35,16 @@ offset_bottom = 131.0
 
 [node name="DayLabel" type="Label" parent="MarginContainer/LayoutRoot/TopLeft/WalletStack" unique_id=150184857]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("2_7saje")
 
 [node name="WalletLabel" type="Label" parent="MarginContainer/LayoutRoot/TopLeft/WalletStack" unique_id=626041835]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("3_24mn7")
 theme_override_font_sizes/font_size = 42
 
 [node name="QuotaLabel" type="Label" parent="MarginContainer/LayoutRoot/TopLeft/WalletStack" unique_id=821352388]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("2_7saje")
 theme_override_font_sizes/font_size = 30
 
 [node name="TopCenter" type="Control" parent="MarginContainer/LayoutRoot" unique_id=850902476]
@@ -57,4 +62,5 @@ offset_left = -130.0
 offset_right = 130.0
 offset_bottom = 50.0
 grow_horizontal = 2
+theme_override_fonts/font = ExtResource("3_24mn7")
 theme_override_font_sizes/font_size = 36

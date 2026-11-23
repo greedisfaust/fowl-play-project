@@ -106,6 +106,9 @@ size = Vector3(0.56, 2.8, 0.16)
 [sub_resource type="BoxShape3D" id="BoxShape3D_g2fi5"]
 size = Vector3(2.4, 0.6, 0.18)
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_door_leaf"]
+size = Vector3(0.61, 2.18, 0.12)
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8gmu5"]
 albedo_color = Color(0.06666667, 0.07058824, 0.08627451, 1)
 metallic = 0.3
@@ -218,27 +221,27 @@ size = Vector3(0.025, 2.12, 0.11)
 material = SubResource("StandardMaterial3D_86gd4")
 size = Vector3(0.025, 2.12, 0.11)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mq0e3"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_aqtr0"]
 albedo_color = Color(0.12835406, 0.17184411, 0.2347951, 1)
 texture_filter = 1
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_qhl0x"]
-material = SubResource("StandardMaterial3D_mq0e3")
+[sub_resource type="PlaneMesh" id="PlaneMesh_mq0e3"]
+material = SubResource("StandardMaterial3D_aqtr0")
 size = Vector2(1.25, 0.695)
 
-[sub_resource type="ViewportTexture" id="ViewportTexture_0s22n"]
+[sub_resource type="ViewportTexture" id="ViewportTexture_qhl0x"]
 viewport_path = NodePath("InteriorDetails/SlimWorldScreen/WorldScreen/SubViewport")
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_07dvn"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_oxia1"]
 transparency = 1
 shading_mode = 0
-albedo_texture = SubResource("ViewportTexture_0s22n")
+albedo_texture = SubResource("ViewportTexture_qhl0x")
 texture_filter = 1
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_8gmu5"]
+[sub_resource type="PlaneMesh" id="PlaneMesh_07dvn"]
 size = Vector2(1.25, 0.695)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_6i8tm"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_8gmu5"]
 shader = ExtResource("3_nrb4d")
 shader_parameter/hdr_boost = 3.6
 shader_parameter/led_matrix_enabled = true
@@ -246,41 +249,14 @@ shader_parameter/led_dot_size = 3.0
 shader_parameter/led_gap = 0.1
 shader_parameter/led_softness = 0.08
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_g2fi5"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6i8tm"]
 albedo_color = Color(0.14117648, 0.17254902, 0.20784314, 1)
 metallic = 0.75
 roughness = 0.32
 
-[sub_resource type="BoxMesh" id="BoxMesh_e4efw"]
-material = SubResource("StandardMaterial3D_g2fi5")
-size = Vector3(1.67, 0.99, 0.14)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_aqtr0"]
-albedo_color = Color(0.22352941, 0.27450982, 0.3254902, 1)
-metallic = 0.85
-roughness = 0.28
-
-[sub_resource type="BoxMesh" id="BoxMesh_0s22n"]
-material = SubResource("StandardMaterial3D_aqtr0")
-size = Vector3(1.43, 0.065, 0.055)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_oxia1"]
-albedo_color = Color(0.22352941, 0.27450982, 0.3254902, 1)
-metallic = 0.85
-roughness = 0.28
-
-[sub_resource type="BoxMesh" id="BoxMesh_8gmu5"]
-material = SubResource("StandardMaterial3D_oxia1")
-size = Vector3(1.43, 0.065, 0.055)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6i8tm"]
-albedo_color = Color(0.22352941, 0.27450982, 0.3254902, 1)
-metallic = 0.85
-roughness = 0.28
-
 [sub_resource type="BoxMesh" id="BoxMesh_eo5mv"]
 material = SubResource("StandardMaterial3D_6i8tm")
-size = Vector3(0.065, 0.69, 0.055)
+size = Vector3(1.67, 0.99, 0.14)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nhsmn"]
 albedo_color = Color(0.22352941, 0.27450982, 0.3254902, 1)
@@ -289,34 +265,34 @@ roughness = 0.28
 
 [sub_resource type="BoxMesh" id="BoxMesh_86gd4"]
 material = SubResource("StandardMaterial3D_nhsmn")
-size = Vector3(0.065, 0.69, 0.055)
+size = Vector3(1.43, 0.065, 0.055)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mpjn2"]
-albedo_color = Color(0.09803922, 0.13725491, 0.1764706, 1)
-metallic = 0.9
-roughness = 0.3
+albedo_color = Color(0.22352941, 0.27450982, 0.3254902, 1)
+metallic = 0.85
+roughness = 0.28
 
 [sub_resource type="BoxMesh" id="BoxMesh_jaux6"]
 material = SubResource("StandardMaterial3D_mpjn2")
-size = Vector3(1.59, 0.09, 0.08)
+size = Vector3(1.43, 0.065, 0.055)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vum7t"]
-albedo_color = Color(0.09803922, 0.13725491, 0.1764706, 1)
-metallic = 0.9
-roughness = 0.3
+albedo_color = Color(0.22352941, 0.27450982, 0.3254902, 1)
+metallic = 0.85
+roughness = 0.28
 
 [sub_resource type="BoxMesh" id="BoxMesh_fjkp6"]
 material = SubResource("StandardMaterial3D_vum7t")
-size = Vector3(1.59, 0.09, 0.08)
+size = Vector3(0.065, 0.69, 0.055)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_el31q"]
-albedo_color = Color(0.09803922, 0.13725491, 0.1764706, 1)
-metallic = 0.9
-roughness = 0.3
+albedo_color = Color(0.22352941, 0.27450982, 0.3254902, 1)
+metallic = 0.85
+roughness = 0.28
 
 [sub_resource type="BoxMesh" id="BoxMesh_pgc2i"]
 material = SubResource("StandardMaterial3D_el31q")
-size = Vector3(0.09, 0.8, 0.08)
+size = Vector3(0.065, 0.69, 0.055)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xbdth"]
 albedo_color = Color(0.09803922, 0.13725491, 0.1764706, 1)
@@ -325,37 +301,34 @@ roughness = 0.3
 
 [sub_resource type="BoxMesh" id="BoxMesh_c5yn8"]
 material = SubResource("StandardMaterial3D_xbdth")
-size = Vector3(0.09, 0.8, 0.08)
+size = Vector3(1.59, 0.09, 0.08)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rtcwm"]
-albedo_color = Color(0.8509804, 0.7254902, 0.27058825, 1)
-emission_enabled = true
-emission = Color(0.8509804, 0.7254902, 0.27058825, 1)
-emission_energy_multiplier = 2.8
+albedo_color = Color(0.09803922, 0.13725491, 0.1764706, 1)
+metallic = 0.9
+roughness = 0.3
 
 [sub_resource type="BoxMesh" id="BoxMesh_8babh"]
 material = SubResource("StandardMaterial3D_rtcwm")
-size = Vector3(0.90625, 0.018, 0.012)
+size = Vector3(1.59, 0.09, 0.08)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xqsq4"]
-albedo_color = Color(0.8509804, 0.7254902, 0.27058825, 1)
-emission_enabled = true
-emission = Color(0.8509804, 0.7254902, 0.27058825, 1)
-emission_energy_multiplier = 2.8
+albedo_color = Color(0.09803922, 0.13725491, 0.1764706, 1)
+metallic = 0.9
+roughness = 0.3
 
 [sub_resource type="BoxMesh" id="BoxMesh_joubp"]
 material = SubResource("StandardMaterial3D_xqsq4")
-size = Vector3(0.90625, 0.018, 0.012)
+size = Vector3(0.09, 0.8, 0.08)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1pm44"]
-albedo_color = Color(0.8509804, 0.7254902, 0.27058825, 1)
-emission_enabled = true
-emission = Color(0.8509804, 0.7254902, 0.27058825, 1)
-emission_energy_multiplier = 2.8
+albedo_color = Color(0.09803922, 0.13725491, 0.1764706, 1)
+metallic = 0.9
+roughness = 0.3
 
 [sub_resource type="BoxMesh" id="BoxMesh_38n3m"]
 material = SubResource("StandardMaterial3D_1pm44")
-size = Vector3(0.018, 0.556, 0.012)
+size = Vector3(0.09, 0.8, 0.08)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xnrdb"]
 albedo_color = Color(0.8509804, 0.7254902, 0.27058825, 1)
@@ -365,43 +338,37 @@ emission_energy_multiplier = 2.8
 
 [sub_resource type="BoxMesh" id="BoxMesh_obevw"]
 material = SubResource("StandardMaterial3D_xnrdb")
-size = Vector3(0.018, 0.556, 0.012)
+size = Vector3(0.90625, 0.018, 0.012)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0eahv"]
-albedo_color = Color(0.5372549, 0.5764706, 0.6117647, 1)
-metallic = 0.9
-roughness = 0.28
+albedo_color = Color(0.8509804, 0.7254902, 0.27058825, 1)
+emission_enabled = true
+emission = Color(0.8509804, 0.7254902, 0.27058825, 1)
+emission_energy_multiplier = 2.8
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_llw7d"]
+[sub_resource type="BoxMesh" id="BoxMesh_llw7d"]
 material = SubResource("StandardMaterial3D_0eahv")
-top_radius = 0.028
-bottom_radius = 0.028
-height = 0.012
-radial_segments = 12
+size = Vector3(0.90625, 0.018, 0.012)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_uepbx"]
-albedo_color = Color(0.5372549, 0.5764706, 0.6117647, 1)
-metallic = 0.9
-roughness = 0.28
+albedo_color = Color(0.8509804, 0.7254902, 0.27058825, 1)
+emission_enabled = true
+emission = Color(0.8509804, 0.7254902, 0.27058825, 1)
+emission_energy_multiplier = 2.8
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_kmdg4"]
+[sub_resource type="BoxMesh" id="BoxMesh_kmdg4"]
 material = SubResource("StandardMaterial3D_uepbx")
-top_radius = 0.028
-bottom_radius = 0.028
-height = 0.012
-radial_segments = 12
+size = Vector3(0.018, 0.556, 0.012)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_50l48"]
-albedo_color = Color(0.5372549, 0.5764706, 0.6117647, 1)
-metallic = 0.9
-roughness = 0.28
+albedo_color = Color(0.8509804, 0.7254902, 0.27058825, 1)
+emission_enabled = true
+emission = Color(0.8509804, 0.7254902, 0.27058825, 1)
+emission_energy_multiplier = 2.8
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_csaw3"]
+[sub_resource type="BoxMesh" id="BoxMesh_csaw3"]
 material = SubResource("StandardMaterial3D_50l48")
-top_radius = 0.028
-bottom_radius = 0.028
-height = 0.012
-radial_segments = 12
+size = Vector3(0.018, 0.556, 0.012)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7kwhw"]
 albedo_color = Color(0.5372549, 0.5764706, 0.6117647, 1)
@@ -416,57 +383,63 @@ height = 0.012
 radial_segments = 12
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fa6j0"]
+albedo_color = Color(0.5372549, 0.5764706, 0.6117647, 1)
+metallic = 0.9
+roughness = 0.28
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_o55fe"]
+material = SubResource("StandardMaterial3D_fa6j0")
+top_radius = 0.028
+bottom_radius = 0.028
+height = 0.012
+radial_segments = 12
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_75br6"]
+albedo_color = Color(0.5372549, 0.5764706, 0.6117647, 1)
+metallic = 0.9
+roughness = 0.28
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_47nyc"]
+material = SubResource("StandardMaterial3D_75br6")
+top_radius = 0.028
+bottom_radius = 0.028
+height = 0.012
+radial_segments = 12
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ydey5"]
+albedo_color = Color(0.5372549, 0.5764706, 0.6117647, 1)
+metallic = 0.9
+roughness = 0.28
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_10mjd"]
+material = SubResource("StandardMaterial3D_ydey5")
+top_radius = 0.028
+bottom_radius = 0.028
+height = 0.012
+radial_segments = 12
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1b1s3"]
 albedo_color = Color(0.1882353, 0.23137255, 0.27450982, 1)
 metallic = 0.85
 roughness = 0.3
 
-[sub_resource type="BoxMesh" id="BoxMesh_o55fe"]
-material = SubResource("StandardMaterial3D_fa6j0")
+[sub_resource type="BoxMesh" id="BoxMesh_aw0r7"]
+material = SubResource("StandardMaterial3D_1b1s3")
 size = Vector3(0.62, 0.085, 0.018)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_75br6"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kun45"]
 metallic = 0.65
 emission_enabled = true
 emission = Color(1, 1, 1, 1)
 emission_energy_multiplier = 1.7
 
-[sub_resource type="TextMesh" id="TextMesh_47nyc"]
-material = SubResource("StandardMaterial3D_75br6")
+[sub_resource type="TextMesh" id="TextMesh_oo8wn"]
+material = SubResource("StandardMaterial3D_kun45")
 text = "T-HOUSE / TERMINAL"
 font = ExtResource("3_wg3ab")
 font_size = 32
 pixel_size = 0.0012
 depth = 0.0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ydey5"]
-albedo_color = Color(0.8509804, 0.6039216, 0.27058825, 1)
-emission_enabled = true
-emission = Color(1, 0.6039216, 0.27058825, 1)
-emission_energy_multiplier = 1.2
-
-[sub_resource type="BoxMesh" id="BoxMesh_10mjd"]
-material = SubResource("StandardMaterial3D_ydey5")
-size = Vector3(0.025, 0.1, 0.012)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1b1s3"]
-albedo_color = Color(0.8509804, 0.6039216, 0.27058825, 1)
-emission_enabled = true
-emission = Color(1, 0.6039216, 0.27058825, 1)
-emission_energy_multiplier = 1.2
-
-[sub_resource type="BoxMesh" id="BoxMesh_aw0r7"]
-material = SubResource("StandardMaterial3D_1b1s3")
-size = Vector3(0.025, 0.1, 0.012)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kun45"]
-albedo_color = Color(0.8509804, 0.6039216, 0.27058825, 1)
-emission_enabled = true
-emission = Color(1, 0.6039216, 0.27058825, 1)
-emission_energy_multiplier = 1.2
-
-[sub_resource type="BoxMesh" id="BoxMesh_oo8wn"]
-material = SubResource("StandardMaterial3D_kun45")
-size = Vector3(0.025, 0.1, 0.012)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gg47j"]
 albedo_color = Color(0.8509804, 0.6039216, 0.27058825, 1)
@@ -539,52 +512,82 @@ material = SubResource("StandardMaterial3D_gd2jk")
 size = Vector3(0.025, 0.1, 0.012)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ym2e4"]
+albedo_color = Color(0.8509804, 0.6039216, 0.27058825, 1)
+emission_enabled = true
+emission = Color(1, 0.6039216, 0.27058825, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_1u5k4"]
+material = SubResource("StandardMaterial3D_ym2e4")
+size = Vector3(0.025, 0.1, 0.012)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fhijc"]
+albedo_color = Color(0.8509804, 0.6039216, 0.27058825, 1)
+emission_enabled = true
+emission = Color(1, 0.6039216, 0.27058825, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_5kw33"]
+material = SubResource("StandardMaterial3D_fhijc")
+size = Vector3(0.025, 0.1, 0.012)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bnhsa"]
+albedo_color = Color(0.8509804, 0.6039216, 0.27058825, 1)
+emission_enabled = true
+emission = Color(1, 0.6039216, 0.27058825, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_yvyii"]
+material = SubResource("StandardMaterial3D_bnhsa")
+size = Vector3(0.025, 0.1, 0.012)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ww6li"]
 albedo_color = Color(0.09803922, 0.13725491, 0.1764706, 1)
 metallic = 0.85
 roughness = 0.3
 
-[sub_resource type="BoxMesh" id="BoxMesh_1u5k4"]
-material = SubResource("StandardMaterial3D_ym2e4")
+[sub_resource type="BoxMesh" id="BoxMesh_1mqpt"]
+material = SubResource("StandardMaterial3D_ww6li")
 size = Vector3(0.42, 0.16, 0.035)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fhijc"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_q03xb"]
 albedo_color = Color(0.8117647, 0, 0, 1)
 emission_enabled = true
 emission = Color(0.8117647, 0, 0, 1)
 emission_energy_multiplier = 6.7
 
-[sub_resource type="SphereMesh" id="SphereMesh_5kw33"]
-material = SubResource("StandardMaterial3D_fhijc")
+[sub_resource type="SphereMesh" id="SphereMesh_r7net"]
+material = SubResource("StandardMaterial3D_q03xb")
 radius = 0.025
 height = 0.05
 radial_segments = 12
 rings = 6
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bnhsa"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_q2mo6"]
 emission_enabled = true
 emission = Color(1, 1, 1, 1)
 emission_energy_multiplier = 2.7
 
-[sub_resource type="SphereMesh" id="SphereMesh_yvyii"]
-material = SubResource("StandardMaterial3D_bnhsa")
+[sub_resource type="SphereMesh" id="SphereMesh_qm46d"]
+material = SubResource("StandardMaterial3D_q2mo6")
 radius = 0.025
 height = 0.05
 radial_segments = 12
 rings = 6
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ww6li"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4r2e6"]
 emission_enabled = true
 emission = Color(1, 1, 1, 1)
 emission_energy_multiplier = 2.7
 
-[sub_resource type="SphereMesh" id="SphereMesh_1mqpt"]
-material = SubResource("StandardMaterial3D_ww6li")
+[sub_resource type="SphereMesh" id="SphereMesh_jnmk0"]
+material = SubResource("StandardMaterial3D_4r2e6")
 radius = 0.025
 height = 0.05
 radial_segments = 12
 rings = 6
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_q03xb"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_o3v54"]
 render_priority = 0
 shader = ExtResource("4_4hgic")
 shader_parameter/reflection_color = Color(0.72, 0.86, 1, 1)
@@ -592,7 +595,7 @@ shader_parameter/reflection_strength = 0.55
 shader_parameter/edge_highlight_strength = 0.28
 shader_parameter/highlight_opacity = 0.035
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_r7net"]
+[sub_resource type="PlaneMesh" id="PlaneMesh_u467a"]
 size = Vector2(1.25, 0.695)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jaux6"]
@@ -689,7 +692,7 @@ albedo_color = Color(0.09803922, 0.101960786, 0.11372549, 1)
 metallic = 0.25
 roughness = 0.32
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_yitlv"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_dv4ku"]
 _surfaces = [{
 "aabb": AABB(-0.06, -0.0225, -0.06, 0.12, 0.045, 0.12),
 "format": 34359738375,
@@ -708,7 +711,7 @@ emission_enabled = true
 emission = Color(1, 0.8352941, 0.5411765, 1)
 emission_energy_multiplier = 1.3
 
-[sub_resource type="TextMesh" id="TextMesh_4hgic"]
+[sub_resource type="TextMesh" id="TextMesh_uyurs"]
 material = SubResource("StandardMaterial3D_1ca6i")
 text = "DEPART"
 font = ExtResource("3_wg3ab")
@@ -734,9 +737,6 @@ size = Vector3(2.15, 0.025, 0.035)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_g4v7s"]
 size = Vector3(3, 2.8, 2.6)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_door_leaf"]
-size = Vector3(0.61, 2.18, 0.12)
 
 [node name="Elevator" type="Node3D" unique_id=1588872627]
 script = ExtResource("1_dig3d")
@@ -840,12 +840,10 @@ shape = SubResource("BoxShape3D_g2fi5")
 
 [node name="LeftOuterPanel" type="AnimatableBody3D" parent="DoorAssembly" unique_id=2111764368]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9, 1.1, -1.48)
-
 collision_layer = 64
 collision_mask = 0
-sync_to_physics = true
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="DoorAssembly/LeftOuterPanel"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DoorAssembly/LeftOuterPanel" unique_id=89677799]
 shape = SubResource("BoxShape3D_door_leaf")
 
 [node name="GeneratedPanel" type="Node3D" parent="DoorAssembly/LeftOuterPanel" unique_id=2088324559]
@@ -875,12 +873,10 @@ mesh = SubResource("BoxMesh_26x8w")
 
 [node name="LeftInnerPanel" type="AnimatableBody3D" parent="DoorAssembly" unique_id=1797549903]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 1.1, -1.48)
-
 collision_layer = 64
 collision_mask = 0
-sync_to_physics = true
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="DoorAssembly/LeftInnerPanel"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DoorAssembly/LeftInnerPanel" unique_id=290295500]
 shape = SubResource("BoxShape3D_door_leaf")
 
 [node name="GeneratedPanel" type="Node3D" parent="DoorAssembly/LeftInnerPanel" unique_id=1902405446]
@@ -910,12 +906,10 @@ mesh = SubResource("BoxMesh_1rjdd")
 
 [node name="RightOuterPanel" type="AnimatableBody3D" parent="DoorAssembly" unique_id=2082332386]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9, 1.1, -1.48)
-
 collision_layer = 64
 collision_mask = 0
-sync_to_physics = true
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="DoorAssembly/RightOuterPanel"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DoorAssembly/RightOuterPanel" unique_id=929990379]
 shape = SubResource("BoxShape3D_door_leaf")
 
 [node name="GeneratedPanel" type="Node3D" parent="DoorAssembly/RightOuterPanel" unique_id=2097001629]
@@ -945,12 +939,10 @@ mesh = SubResource("BoxMesh_n6gjj")
 
 [node name="RightInnerPanel" type="AnimatableBody3D" parent="DoorAssembly" unique_id=1991166949]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 1.1, -1.48)
-
 collision_layer = 64
 collision_mask = 0
-sync_to_physics = true
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="DoorAssembly/RightInnerPanel"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DoorAssembly/RightInnerPanel" unique_id=59339593]
 shape = SubResource("BoxShape3D_door_leaf")
 
 [node name="GeneratedPanel" type="Node3D" parent="DoorAssembly/RightInnerPanel" unique_id=1837321183]
@@ -988,54 +980,54 @@ display_size = Vector2(1.25, 0.695)
 display_size = Vector2(1.25, 0.695)
 
 [node name="Display" parent="InteriorDetails/SlimWorldScreen/WorldScreen" index="0" unique_id=541727026]
-mesh = SubResource("PlaneMesh_qhl0x")
+mesh = SubResource("PlaneMesh_mq0e3")
 
 [node name="TextDisplay" parent="InteriorDetails/SlimWorldScreen/WorldScreen" index="1" unique_id=1949290712]
-material_override = SubResource("StandardMaterial3D_07dvn")
-mesh = SubResource("PlaneMesh_8gmu5")
+material_override = SubResource("StandardMaterial3D_oxia1")
+mesh = SubResource("PlaneMesh_07dvn")
 
 [node name="SubViewport" parent="InteriorDetails/SlimWorldScreen/WorldScreen" index="2" unique_id=73501419]
 size = Vector2i(1280, 712)
 
 [node name="ScreenText" parent="InteriorDetails/SlimWorldScreen/WorldScreen/SubViewport" index="0" unique_id=374298792]
-material = SubResource("ShaderMaterial_6i8tm")
+material = SubResource("ShaderMaterial_8gmu5")
 terminal_font_size = 54
 content_padding_ratio = 0.7
 
 [node name="MainBody" parent="InteriorDetails/SlimWorldScreen/Chassis" parent_id_path=PackedInt32Array(1216012003, 1959559203) index="0" unique_id=445705412]
-mesh = SubResource("BoxMesh_e4efw")
+mesh = SubResource("BoxMesh_eo5mv")
 
 [node name="TopRail" parent="InteriorDetails/SlimWorldScreen/Chassis/Bezel" parent_id_path=PackedInt32Array(1216012003, 171374440) index="0" unique_id=1246501883]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38000003, 0)
-mesh = SubResource("BoxMesh_0s22n")
+mesh = SubResource("BoxMesh_86gd4")
 
 [node name="BottomRail" parent="InteriorDetails/SlimWorldScreen/Chassis/Bezel" parent_id_path=PackedInt32Array(1216012003, 171374440) index="1" unique_id=529395729]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.38000003, 0)
-mesh = SubResource("BoxMesh_8gmu5")
+mesh = SubResource("BoxMesh_jaux6")
 
 [node name="LeftRail" parent="InteriorDetails/SlimWorldScreen/Chassis/Bezel" parent_id_path=PackedInt32Array(1216012003, 171374440) index="2" unique_id=2062474396]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6575, 0, 0)
-mesh = SubResource("BoxMesh_eo5mv")
+mesh = SubResource("BoxMesh_fjkp6")
 
 [node name="RightRail" parent="InteriorDetails/SlimWorldScreen/Chassis/Bezel" parent_id_path=PackedInt32Array(1216012003, 171374440) index="3" unique_id=2009704563]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6575, 0, 0)
-mesh = SubResource("BoxMesh_86gd4")
+mesh = SubResource("BoxMesh_pgc2i")
 
 [node name="TopArmor" parent="InteriorDetails/SlimWorldScreen/Chassis/OuterArmor" parent_id_path=PackedInt32Array(1216012003, 1988279397) index="0" unique_id=2007127682]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45000002, 0.045)
-mesh = SubResource("BoxMesh_jaux6")
+mesh = SubResource("BoxMesh_c5yn8")
 
 [node name="BottomArmor" parent="InteriorDetails/SlimWorldScreen/Chassis/OuterArmor" parent_id_path=PackedInt32Array(1216012003, 1988279397) index="1" unique_id=870104392]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.45000002, 0.045)
-mesh = SubResource("BoxMesh_fjkp6")
+mesh = SubResource("BoxMesh_8babh")
 
 [node name="LeftArmor" parent="InteriorDetails/SlimWorldScreen/Chassis/OuterArmor" parent_id_path=PackedInt32Array(1216012003, 1988279397) index="2" unique_id=1142344315]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.76, 0, 0.045)
-mesh = SubResource("BoxMesh_pgc2i")
+mesh = SubResource("BoxMesh_joubp")
 
 [node name="RightArmor" parent="InteriorDetails/SlimWorldScreen/Chassis/OuterArmor" parent_id_path=PackedInt32Array(1216012003, 1988279397) index="3" unique_id=910149781]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.76, 0, 0.045)
-mesh = SubResource("BoxMesh_c5yn8")
+mesh = SubResource("BoxMesh_38n3m")
 
 [node name="TopLeft" parent="InteriorDetails/SlimWorldScreen/Chassis/OuterArmor/CornerArmor" parent_id_path=PackedInt32Array(1216012003, 1607964421) index="0" unique_id=479288640]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.79499996, 0.30499998, 0.105)
@@ -1051,99 +1043,99 @@ transform = Transform3D(-1, 8.742278e-08, 0, -8.742278e-08, -1, 0, 0, 0, 1, 0.79
 
 [node name="TopChannel" parent="InteriorDetails/SlimWorldScreen/Chassis/LightChannels" parent_id_path=PackedInt32Array(1216012003, 304301459) index="0" unique_id=795897414]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.336, 0.13)
-mesh = SubResource("BoxMesh_8babh")
+mesh = SubResource("BoxMesh_obevw")
 
 [node name="BottomChannel" parent="InteriorDetails/SlimWorldScreen/Chassis/LightChannels" parent_id_path=PackedInt32Array(1216012003, 304301459) index="1" unique_id=1635130420]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.336, 0.13)
-mesh = SubResource("BoxMesh_joubp")
+mesh = SubResource("BoxMesh_llw7d")
 
 [node name="LeftChannel" parent="InteriorDetails/SlimWorldScreen/Chassis/LightChannels" parent_id_path=PackedInt32Array(1216012003, 304301459) index="2" unique_id=1732197135]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.625, 0, 0.13)
-mesh = SubResource("BoxMesh_38n3m")
+mesh = SubResource("BoxMesh_kmdg4")
 
 [node name="RightChannel" parent="InteriorDetails/SlimWorldScreen/Chassis/LightChannels" parent_id_path=PackedInt32Array(1216012003, 304301459) index="3" unique_id=2113685950]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.625, 0, 0.13)
-mesh = SubResource("BoxMesh_obevw")
+mesh = SubResource("BoxMesh_csaw3")
 
 [node name="TopLeftFastener" parent="InteriorDetails/SlimWorldScreen/Chassis/Fasteners" parent_id_path=PackedInt32Array(1216012003, 1402364939) index="0" unique_id=1824092259]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, -0.745, 0.255, 0.17)
-mesh = SubResource("CylinderMesh_llw7d")
+mesh = SubResource("CylinderMesh_tf2on")
 
 [node name="TopRightFastener" parent="InteriorDetails/SlimWorldScreen/Chassis/Fasteners" parent_id_path=PackedInt32Array(1216012003, 1402364939) index="1" unique_id=1831619208]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0.745, 0.255, 0.17)
-mesh = SubResource("CylinderMesh_kmdg4")
+mesh = SubResource("CylinderMesh_o55fe")
 
 [node name="BottomLeftFastener" parent="InteriorDetails/SlimWorldScreen/Chassis/Fasteners" parent_id_path=PackedInt32Array(1216012003, 1402364939) index="2" unique_id=393256260]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, -0.745, -0.255, 0.17)
-mesh = SubResource("CylinderMesh_csaw3")
+mesh = SubResource("CylinderMesh_47nyc")
 
 [node name="BottomRightFastener" parent="InteriorDetails/SlimWorldScreen/Chassis/Fasteners" parent_id_path=PackedInt32Array(1216012003, 1402364939) index="3" unique_id=1062634282]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0.745, -0.255, 0.17)
-mesh = SubResource("CylinderMesh_tf2on")
+mesh = SubResource("CylinderMesh_10mjd")
 
 [node name="PlateMesh" parent="InteriorDetails/SlimWorldScreen/Chassis/IdentificationPlate" parent_id_path=PackedInt32Array(1216012003, 590047429) index="0" unique_id=2129291837]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.45000002, 0.145)
-mesh = SubResource("BoxMesh_o55fe")
+mesh = SubResource("BoxMesh_aw0r7")
 
 [node name="EngravedText" parent="InteriorDetails/SlimWorldScreen/Chassis/IdentificationPlate" parent_id_path=PackedInt32Array(1216012003, 590047429) index="1" unique_id=63490371]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.45000002, 0.156)
-mesh = SubResource("TextMesh_47nyc")
+mesh = SubResource("TextMesh_oo8wn")
 
 [node name="LeftVent" parent="InteriorDetails/SlimWorldScreen/Chassis/SideDetails" parent_id_path=PackedInt32Array(1216012003, 1650939085) index="0" unique_id=212796233]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.79499996, 0, 0.06717404)
 
 [node name="Vent1" parent="InteriorDetails/SlimWorldScreen/Chassis/SideDetails/LeftVent" index="0" unique_id=1425977855]
-mesh = SubResource("BoxMesh_10mjd")
-
-[node name="Vent2" parent="InteriorDetails/SlimWorldScreen/Chassis/SideDetails/LeftVent" index="1" unique_id=1643704083]
-mesh = SubResource("BoxMesh_aw0r7")
-
-[node name="Vent3" parent="InteriorDetails/SlimWorldScreen/Chassis/SideDetails/LeftVent" index="2" unique_id=1644295944]
-mesh = SubResource("BoxMesh_oo8wn")
-
-[node name="Vent4" parent="InteriorDetails/SlimWorldScreen/Chassis/SideDetails/LeftVent" index="3" unique_id=1717863330]
 mesh = SubResource("BoxMesh_mj3fa")
 
-[node name="Vent5" parent="InteriorDetails/SlimWorldScreen/Chassis/SideDetails/LeftVent" index="4" unique_id=1134812271]
+[node name="Vent2" parent="InteriorDetails/SlimWorldScreen/Chassis/SideDetails/LeftVent" index="1" unique_id=1643704083]
 mesh = SubResource("BoxMesh_scn7p")
+
+[node name="Vent3" parent="InteriorDetails/SlimWorldScreen/Chassis/SideDetails/LeftVent" index="2" unique_id=1644295944]
+mesh = SubResource("BoxMesh_877hx")
+
+[node name="Vent4" parent="InteriorDetails/SlimWorldScreen/Chassis/SideDetails/LeftVent" index="3" unique_id=1717863330]
+mesh = SubResource("BoxMesh_bddbk")
+
+[node name="Vent5" parent="InteriorDetails/SlimWorldScreen/Chassis/SideDetails/LeftVent" index="4" unique_id=1134812271]
+mesh = SubResource("BoxMesh_1q87r")
 
 [node name="RightVent" parent="InteriorDetails/SlimWorldScreen/Chassis/SideDetails" parent_id_path=PackedInt32Array(1216012003, 1650939085) index="1" unique_id=1066370155]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.79499996, 0, 0.067)
 
 [node name="Vent6" parent="InteriorDetails/SlimWorldScreen/Chassis/SideDetails/RightVent" index="0" unique_id=1692906905]
-mesh = SubResource("BoxMesh_877hx")
-
-[node name="Vent7" parent="InteriorDetails/SlimWorldScreen/Chassis/SideDetails/RightVent" index="1" unique_id=1333896953]
-mesh = SubResource("BoxMesh_bddbk")
-
-[node name="Vent8" parent="InteriorDetails/SlimWorldScreen/Chassis/SideDetails/RightVent" index="2" unique_id=2034740130]
-mesh = SubResource("BoxMesh_1q87r")
-
-[node name="Vent9" parent="InteriorDetails/SlimWorldScreen/Chassis/SideDetails/RightVent" index="3" unique_id=1220600448]
 mesh = SubResource("BoxMesh_pbpsk")
 
-[node name="Vent10" parent="InteriorDetails/SlimWorldScreen/Chassis/SideDetails/RightVent" index="4" unique_id=223178877]
+[node name="Vent7" parent="InteriorDetails/SlimWorldScreen/Chassis/SideDetails/RightVent" index="1" unique_id=1333896953]
 mesh = SubResource("BoxMesh_06s80")
+
+[node name="Vent8" parent="InteriorDetails/SlimWorldScreen/Chassis/SideDetails/RightVent" index="2" unique_id=2034740130]
+mesh = SubResource("BoxMesh_1u5k4")
+
+[node name="Vent9" parent="InteriorDetails/SlimWorldScreen/Chassis/SideDetails/RightVent" index="3" unique_id=1220600448]
+mesh = SubResource("BoxMesh_5kw33")
+
+[node name="Vent10" parent="InteriorDetails/SlimWorldScreen/Chassis/SideDetails/RightVent" index="4" unique_id=223178877]
+mesh = SubResource("BoxMesh_yvyii")
 
 [node name="PanelBody" parent="InteriorDetails/SlimWorldScreen/Chassis/ControlPanel" parent_id_path=PackedInt32Array(1216012003, 732082707) index="0" unique_id=1830250239]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.76, -0.45000002, 0.15)
-mesh = SubResource("BoxMesh_1u5k4")
+mesh = SubResource("BoxMesh_1mqpt")
 
 [node name="IndicatorGroup" parent="InteriorDetails/SlimWorldScreen/Chassis/ControlPanel" parent_id_path=PackedInt32Array(1216012003, 732082707) index="1" unique_id=743148763]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.76, -0.45000002, 0.174)
 
 [node name="PowerIndicator" parent="InteriorDetails/SlimWorldScreen/Chassis/ControlPanel/IndicatorGroup" index="0" unique_id=995904300]
-mesh = SubResource("SphereMesh_5kw33")
+mesh = SubResource("SphereMesh_r7net")
 
 [node name="NetworkIndicator" parent="InteriorDetails/SlimWorldScreen/Chassis/ControlPanel/IndicatorGroup" index="1" unique_id=296957607]
-mesh = SubResource("SphereMesh_yvyii")
+mesh = SubResource("SphereMesh_qm46d")
 
 [node name="ActivityIndicator" parent="InteriorDetails/SlimWorldScreen/Chassis/ControlPanel/IndicatorGroup" index="2" unique_id=1937828614]
-mesh = SubResource("SphereMesh_1mqpt")
+mesh = SubResource("SphereMesh_jnmk0")
 
 [node name="Glass" parent="InteriorDetails/SlimWorldScreen" index="2" unique_id=403770130]
-material_override = SubResource("ShaderMaterial_q03xb")
-mesh = SubResource("PlaneMesh_r7net")
+material_override = SubResource("ShaderMaterial_o3v54")
+mesh = SubResource("PlaneMesh_u467a")
 
 [node name="GeneratedInterior" type="Node3D" parent="InteriorDetails" unique_id=396840105]
 
@@ -1220,11 +1212,11 @@ transform = Transform3D(-8.742278e-08, -2, 0, -8.742278e-08, 3.821371e-15, -2, 2
 display_text = "DEPART"
 
 [node name="KeyMesh" parent="InteriorDetails/TerminalButton/Visuals/ButtonKey" parent_id_path=PackedInt32Array(354275653, 1669914177) index="0" unique_id=1470809806]
-mesh = SubResource("ArrayMesh_yitlv")
+mesh = SubResource("ArrayMesh_dv4ku")
 
 [node name="ButtonLabel" parent="InteriorDetails/TerminalButton/Visuals/ButtonKey" parent_id_path=PackedInt32Array(354275653, 1669914177) index="1" unique_id=654358772]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -8.748323e-09, -0.046530962, -0.120607495)
-mesh = SubResource("TextMesh_4hgic")
+mesh = SubResource("TextMesh_uyurs")
 
 [node name="Lighting" type="Node3D" parent="." unique_id=1582050092]
 
