@@ -17,7 +17,7 @@ RunManager.begin_new_run() initializes CasinoWallet to the starting run wallet o
 
 When the Network session ends, MainController tells RunManager to clear the local run state after Network has switched to OfflineMultiplayerPeer. RunManager clears the wallet ledger, and the run-state notification resets CasinoDayManager and CasinoManager on that peer. This is a session teardown, not a day transition: any outstanding wagers are discarded because the disconnected run cannot continue.
 
-When RunManager commits arrival into the Casino, CasinoDayManager reads the actual available shared wallet and starts that day. The full remaining wallet carries forward; the wallet is never reset to 1,000 between successful days.
+When RunManager commits arrival into the Casino, CasinoDayManager arms the day start but does not begin counting down yet. The destination ElevatorDepartureController listens to the existing ElevatorOccupancy signal; when the first player physically leaves the elevator, the host snapshots the actual available shared wallet and starts that day. This avoids spending the opening seconds during world loading and player disembarkation. The full remaining wallet carries forward; the wallet is never reset to 1,000 between successful days.
 
 ## Dynamic quota formula
 
@@ -50,7 +50,7 @@ The quota is a threshold, not a cap. Reaching it unlocks early departure, but do
 
 ## Timer and deadline rules
 
-- Each casino day starts with **300 seconds (five minutes)**.
+- Each casino day starts with **300 seconds (five minutes)**, but only after the first player exits the destination Casino elevator.
 - The host advances the timer and publishes its state to clients.
 - When the available wallet first reaches the quota, the quota flag becomes true and RunManager unlocks Casino departure. The timer continues.
 - At the hard deadline, the manager snapshots the available wallet and determines success/failure **before** asking tables to clean up.
