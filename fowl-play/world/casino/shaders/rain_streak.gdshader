@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode blend_mix, cull_disabled;
+render_mode blend_mix, cull_disabled, unshaded;
 
 uniform float streak_opacity : hint_range(0.0, 1.0) = 0.42;
 
@@ -12,8 +12,8 @@ void fragment() {
 	float edge_glint = 1.0 - smoothstep(0.02, 0.18, abs(centerline - taper * 0.68));
 	float alpha = body * head_fade * tail_fade * streak_opacity;
 
-	ALBEDO = mix(vec3(0.48, 0.58, 0.72), vec3(0.86, 0.92, 1.0), edge_glint * 0.32);
-	ROUGHNESS = 0.14;
+	ALBEDO = mix(vec3(0.68, 0.71, 0.75), vec3(0.98, 0.99, 1.0), edge_glint * 0.42);
+	ROUGHNESS = 0.32;
 	METALLIC = 0.0;
 	ALPHA = alpha;
 }
