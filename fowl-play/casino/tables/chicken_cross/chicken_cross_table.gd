@@ -19,6 +19,7 @@ var _round_player_states: Dictionary = {}
 
 func _ready() -> void:
 	super._ready()
+	_setup_physical_collisions()
 	participant_left_after_start.connect(_on_participant_left_after_start)
 	round_auto_resolution_requested.connect(_on_round_auto_resolution_requested)
 	if is_instance_valid(proximity_area):
@@ -40,6 +41,55 @@ func _ready() -> void:
 		if not _network.is_connected("roster_changed", roster_callback):
 			_network.connect("roster_changed", roster_callback)
 	_setup_betting_keypad()
+
+## Add simple, stable primitive collision to the authored table and its mounted devices.
+## The chicken contestants remain visual-only so they never obstruct players or each other.
+func _setup_physical_collisions() -> void:
+	if get_node_or_null("ChickenCrossPhysicalBody") == null:
+		var table_body: StaticBody3D = StaticBody3D.new()
+		table_body.name = "ChickenCrossPhysicalBody"
+		table_body.collision_layer = 1
+		table_body.collision_mask = 1
+		add_child(table_body)
+		_add_box_collision(table_body, "TableTop", Vector3(3.4, 0.16, 2.2), Vector3(0.0, 0.95, 0.0))
+		_add_box_collision(table_body, "FrontLeftLeg", Vector3(0.22, 0.9, 0.22), Vector3(-1.48, 0.45, 0.88))
+		_add_box_collision(table_body, "FrontRightLeg", Vector3(0.22, 0.9, 0.22), Vector3(1.48, 0.45, 0.88))
+		_add_box_collision(table_body, "BackLeftLeg", Vector3(0.22, 0.9, 0.22), Vector3(-1.48, 0.45, -0.88))
+		_add_box_collision(table_body, "BackRightLeg", Vector3(0.22, 0.9, 0.22), Vector3(1.48, 0.45, -0.88))
+
+	var screen: Node3D = get_node_or_null("SlimWorldScreen") as Node3D
+	if is_instance_valid(screen) and screen.get_node_or_null("ChickenCrossScreenCollision") == null:
+		var screen_body: StaticBody3D = StaticBody3D.new()
+		screen_body.name = "ChickenCrossScreenCollision"
+		screen_body.collision_layer = 1
+		screen_body.collision_mask = 1
+		screen.add_child(screen_body)
+		_add_box_collision(screen_body, "ScreenHousing", Vector3(3.62, 1.72, 0.32), Vector3(0.0, 0.0, 0.0))
+
+	var keypad_housing: Node3D = get_node_or_null("BettingKeypad/Housing") as Node3D
+	var housing_mesh: MeshInstance3D = get_node_or_null("BettingKeypad/Housing/MeshInstance3D") as MeshInstance3D
+	if is_instance_valid(keypad_housing) and is_instance_valid(housing_mesh) and keypad_housing.get_node_or_null("ChickenCrossHousingCollision") == null:
+		var keypad_body: StaticBody3D = StaticBody3D.new()
+		keypad_body.name = "ChickenCrossHousingCollision"
+		keypad_body.collision_layer = 1
+		keypad_body.collision_mask = 1
+		keypad_housing.add_child(keypad_body)
+		var housing_shape: BoxShape3D = BoxShape3D.new()
+		housing_shape.size = housing_mesh.get_aabb().size
+		var housing_collision: CollisionShape3D = CollisionShape3D.new()
+		housing_collision.name = "HousingShape"
+		housing_collision.shape = housing_shape
+		housing_collision.transform = housing_mesh.transform
+		keypad_body.add_child(housing_collision)
+
+func _add_box_collision(parent: StaticBody3D, shape_name: String, size: Vector3, local_position: Vector3) -> void:
+	var shape: BoxShape3D = BoxShape3D.new()
+	shape.size = size
+	var collision: CollisionShape3D = CollisionShape3D.new()
+	collision.name = shape_name
+	collision.shape = shape
+	collision.position = local_position
+	parent.add_child(collision)
 
 ## Adds the reusable controller at runtime without changing the editor-authored keypad scene.
 func _setup_betting_keypad() -> void:
