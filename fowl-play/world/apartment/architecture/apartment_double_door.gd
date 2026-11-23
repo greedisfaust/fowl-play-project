@@ -39,10 +39,13 @@ func _setup_door() -> void:
 func _on_interacted(actor: Node, action: StringName) -> void:
 	if action != &"use" or not multiplayer.is_server():
 		return
+	var actor_3d: Node3D = actor as Node3D
+	if actor_3d == null:
+		return
 	if _is_open:
 		_publish_state(false, _open_direction)
 	else:
-		var direction: int = -1 if actor.global_position.x > _door_plane_x else 1
+		var direction: int = -1 if actor_3d.global_position.x > _door_plane_x else 1
 		_publish_state(true, direction)
 
 func _on_body_entered(body: Node3D) -> void:
