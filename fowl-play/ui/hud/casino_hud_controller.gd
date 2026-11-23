@@ -49,7 +49,7 @@ var _contribution_list: VBoxContainer
 var _modifier_panel: HBoxContainer
 var _blessed_label: Label
 var _watched_label: Label
-var _action_prompt: VBoxContainer
+var _action_prompt: Label
 var _announcement_label: Label
 var _announcement_tween: Tween
 
@@ -302,93 +302,53 @@ func _format_time(total_seconds: int) -> String:
 
 
 func _build_runtime_hud_sections() -> void:
-	# Build the complete visual layer from code. The scene only needs this script;
-	# all panels, spacing, typography, and contextual rows are generated here.
-	var layout_root: Control = get_node_or_null("MarginContainer/LayoutRoot") as Control
-	var top_left: Control = get_node_or_null("MarginContainer/LayoutRoot/TopLeft") as Control
-	var top_center: Control = get_node_or_null("MarginContainer/LayoutRoot/TopCenter") as Control
-
-	var wallet_stack: VBoxContainer = get_node_or_null("MarginContainer/LayoutRoot/TopLeft/WalletStack") as VBoxContainer
-	if is_instance_valid(wallet_stack) and is_instance_valid(top_left):
-		var wallet_panel: PanelContainer = _make_panel()
-		wallet_panel.name = "WalletPanel"
-		wallet_panel.position = Vector2.ZERO
-		wallet_panel.custom_minimum_size = Vector2(360.0, 0.0)
-		top_left.add_child(wallet_panel)
-		wallet_stack.reparent(wallet_panel)
-		wallet_stack.add_theme_constant_override("separation", 2)
-		wallet_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
-	var timer_panel: PanelContainer = _make_panel()
-	timer_panel.name = "TimerPanel"
-	timer_panel.anchor_left = 0.5
-	timer_panel.anchor_right = 0.5
-	timer_panel.offset_left = -130.0
-	timer_panel.offset_top = 0.0
-	timer_panel.offset_right = 130.0
-	timer_panel.offset_bottom = 58.0
-	if is_instance_valid(top_center):
-		top_center.add_child(timer_panel)
-	if is_instance_valid(_timer_label):
-		_timer_label.reparent(timer_panel)
-		_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		_timer_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		_timer_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
-	var right_stack: VBoxContainer = VBoxContainer.new()
-	right_stack.name = "RightStatusStack"
-	right_stack.anchor_left = 1.0
-	right_stack.anchor_right = 1.0
-	right_stack.offset_left = -420.0
-	right_stack.offset_top = 32.0
-	right_stack.offset_right = -32.0
-	right_stack.offset_bottom = 330.0
-	right_stack.add_theme_constant_override("separation", 8)
-	add_child(right_stack)
-
-	var modifier_panel: PanelContainer = _make_panel()
-	modifier_panel.name = "ModifierPanel"
-	right_stack.add_child(modifier_panel)
+	# Compact terminal readout: Blessed on the left, Watched on the right.
 	_modifier_panel = HBoxContainer.new()
+	_modifier_panel.name = "ModifierStatusPanel"
+	_modifier_panel.anchor_left = 1.0
+	_modifier_panel.anchor_right = 1.0
+	_modifier_panel.offset_left = -420.0
+	_modifier_panel.offset_top = 32.0
+	_modifier_panel.offset_right = -32.0
+	_modifier_panel.offset_bottom = 58.0
 	_modifier_panel.add_theme_constant_override("separation", 12)
-	modifier_panel.add_child(_modifier_panel)
-	_blessed_label = _make_runtime_label("BLESSED —", 14, HORIZONTAL_ALIGNMENT_LEFT)
-	_watched_label = _make_runtime_label("WATCHED —", 14, HORIZONTAL_ALIGNMENT_RIGHT)
+	add_child(_modifier_panel)
+	_blessed_label = _make_runtime_label("BLESSED —", 15, HORIZONTAL_ALIGNMENT_LEFT)
+	_watched_label = _make_runtime_label("WATCHED —", 15, HORIZONTAL_ALIGNMENT_RIGHT)
 	_blessed_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_watched_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_modifier_panel.add_child(_blessed_label)
 	_modifier_panel.add_child(_watched_label)
+	_modifier_panel.visible = true
 
-	var contribution_panel: PanelContainer = _make_panel()
-	contribution_panel.name = "ContributionPanel"
-	right_stack.add_child(contribution_panel)
 	var contribution_root: VBoxContainer = VBoxContainer.new()
-	contribution_root.add_theme_constant_override("separation", 6)
-	contribution_panel.add_child(contribution_root)
+	contribution_root.name = "ContributionPanel"
+	contribution_root.anchor_left = 1.0
+	contribution_root.anchor_right = 1.0
+	contribution_root.offset_left = -420.0
+	contribution_root.offset_top = 82.0
+	contribution_root.offset_right = -32.0
+	contribution_root.offset_bottom = 330.0
+	contribution_root.add_theme_constant_override("separation", 5)
+	add_child(contribution_root)
 	var heading: Label = _make_runtime_label("TODAY'S CONTRIBUTIONS", 13, HORIZONTAL_ALIGNMENT_LEFT)
-	heading.add_theme_color_override("font_color", COLOR_QUOTA_MET)
 	contribution_root.add_child(heading)
 	_contribution_list = VBoxContainer.new()
-	_contribution_list.add_theme_constant_override("separation", 4)
+	_contribution_list.add_theme_constant_override("separation", 3)
 	contribution_root.add_child(_contribution_list)
 	_refresh_contribution_panel()
 
-	var action_panel: PanelContainer = _make_panel()
-	action_panel.name = "ContextualActionPanel"
-	action_panel.anchor_top = 1.0
-	action_panel.anchor_bottom = 1.0
-	action_panel.offset_left = 32.0
-	action_panel.offset_top = -218.0
-	action_panel.offset_right = 390.0
-	action_panel.offset_bottom = -32.0
-	add_child(action_panel)
-	var action_stack: VBoxContainer = VBoxContainer.new()
-	action_stack.name = "ActionList"
-	action_stack.add_theme_constant_override("separation", 7)
-	action_panel.add_child(action_stack)
-	_action_prompt = action_stack
+	_action_prompt = _make_runtime_label("", 16, HORIZONTAL_ALIGNMENT_LEFT)
+	_action_prompt.anchor_top = 1.0
+	_action_prompt.anchor_bottom = 1.0
+	_action_prompt.offset_left = 32.0
+	_action_prompt.offset_top = -88.0
+	_action_prompt.offset_right = 720.0
+	_action_prompt.offset_bottom = -32.0
+	_action_prompt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	add_child(_action_prompt)
 
-	_announcement_label = _make_runtime_label("", 20, HORIZONTAL_ALIGNMENT_CENTER)
+	_announcement_label = _make_runtime_label("", 22, HORIZONTAL_ALIGNMENT_CENTER)
 	_announcement_label.anchor_left = 0.5
 	_announcement_label.anchor_right = 0.5
 	_announcement_label.offset_left = -360.0
@@ -397,22 +357,6 @@ func _build_runtime_hud_sections() -> void:
 	_announcement_label.offset_bottom = 154.0
 	_announcement_label.modulate.a = 0.0
 	add_child(_announcement_label)
-	_refresh_action_prompt()
-
-
-func _make_panel() -> PanelContainer:
-	var panel: PanelContainer = PanelContainer.new()
-	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.025, 0.035, 0.035, 0.88)
-	style.border_color = Color(0.22, 0.36, 0.31, 0.85)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(5)
-	style.content_margin_left = 14.0
-	style.content_margin_top = 10.0
-	style.content_margin_right = 14.0
-	style.content_margin_bottom = 10.0
-	panel.add_theme_stylebox_override("panel", style)
-	return panel
 
 func _make_runtime_label(label_text: String, size: int, alignment: int) -> Label:
 	var label: Label = Label.new()
@@ -420,12 +364,10 @@ func _make_runtime_label(label_text: String, size: int, alignment: int) -> Label
 	label.horizontal_alignment = alignment
 	label.add_theme_font_size_override("font_size", size)
 	label.add_theme_color_override("font_color", COLOR_TIMER_NORMAL)
-	label.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.35))
-	label.add_theme_constant_override("shadow_offset_x", 1)
-	label.add_theme_constant_override("shadow_offset_y", 1)
 	if terminal_font != null:
 		label.add_theme_font_override("font", terminal_font)
 	return label
+
 
 func _on_wager_changed(wager_id: String, status: String) -> void:
 	if status != "settled" or _counted_wagers.has(wager_id) or not is_instance_valid(_wallet):
@@ -529,44 +471,21 @@ func _on_focus_target_changed(target: Interactable) -> void:
 func _refresh_action_prompt() -> void:
 	if not is_instance_valid(_action_prompt):
 		return
-	for child: Node in _action_prompt.get_children():
-		_action_prompt.remove_child(child)
-		child.queue_free()
-
-	var heading: Label = _make_runtime_label("AVAILABLE ACTIONS", 12, HORIZONTAL_ALIGNMENT_LEFT)
-	heading.add_theme_color_override("font_color", COLOR_QUOTA_MET)
-	_action_prompt.add_child(heading)
-
-	var carrying: bool = is_instance_valid(_local_player) and _local_player.has_method("is_carrying") and bool(_local_player.call("is_carrying"))
-	var carried: bool = is_instance_valid(_local_player) and _local_player.has_method("is_carried") and bool(_local_player.call("is_carried"))
-	var incapacitated: bool = is_instance_valid(_local_player) and (bool(_local_player.get("is_limp")) or bool(_local_player.get("is_recovering")) or carried)
-	if carrying:
-		_add_action_row("Q", "TAP TO DROP")
-		_add_action_row("HOLD Q", "CHARGE & AUTO-THROW")
-	elif not incapacitated:
-		_add_action_row("Q", "JAB")
-		_add_action_row("HOLD Q", "CHARGED PUNCH")
-		_add_action_row("F", "PARRY")
-
+	var prompt_parts: PackedStringArray = PackedStringArray()
 	if is_instance_valid(_focused_interactable) and _focused_interactable.enabled:
-		var prompt: String = _focused_interactable.prompt_text.strip_edges()
+		var controls: PackedStringArray = PackedStringArray()
 		if _focused_interactable.action_for_input(&"primary") != &"":
-			_add_action_row("M1", prompt)
+			controls.append("M1")
 		if _focused_interactable.action_for_input(&"interact") != &"":
-			_add_action_row("E", prompt)
+			controls.append("E")
+		if not controls.is_empty():
+			prompt_parts.append("%s — %s" % [", ".join(controls), _focused_interactable.prompt_text])
+	if is_instance_valid(_local_player) and _local_player.has_method("is_carrying") and bool(_local_player.call("is_carrying")):
+		prompt_parts.append("Q — DROP  |  HOLD Q — THROW")
+	else:
+		prompt_parts.append("Q — PUNCH  |  F — PARRY")
+	_action_prompt.text = "\n".join(prompt_parts)
 
-
-func _add_action_row(key_text: String, action_text: String) -> void:
-	var row: HBoxContainer = HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
-	var key_label: Label = _make_runtime_label(key_text, 14, HORIZONTAL_ALIGNMENT_LEFT)
-	key_label.custom_minimum_size.x = 78.0
-	key_label.add_theme_color_override("font_color", COLOR_QUOTA_MET)
-	var action_label: Label = _make_runtime_label(action_text, 14, HORIZONTAL_ALIGNMENT_LEFT)
-	action_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(key_label)
-	row.add_child(action_label)
-	_action_prompt.add_child(row)
 
 func _on_day_finished(day: int, success: bool, final_wallet: int, quota: int) -> void:
 	var result_text: String = "QUOTA MET" if success else "QUOTA MISSED"
