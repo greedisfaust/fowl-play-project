@@ -23,9 +23,10 @@ func _run() -> void:
 	)
 	_check(bool(table.call("report_player_feedback", 1, "WAGER CONFIRMED", &"success")), "Host can publish peer-targeted table feedback")
 	_check(feedback_events.size() == 1, "Table feedback emits exactly once locally")
-	_check(int(feedback_events[0].get("peer_id", 0)) == 1, "Table feedback targets the intended peer")
-	_check(str(feedback_events[0].get("message", "")) == "WAGER CONFIRMED", "Table feedback preserves its message")
-	_check(StringName(feedback_events[0].get("severity", &"")) == &"success", "Table feedback preserves its severity")
+	if feedback_events.size() == 1:
+		_check(int(feedback_events[0].get("peer_id", 0)) == 1, "Table feedback targets the intended peer")
+		_check(str(feedback_events[0].get("message", "")) == "WAGER CONFIRMED", "Table feedback preserves its message")
+		_check(StringName(feedback_events[0].get("severity", &"")) == &"success", "Table feedback preserves its severity")
 	_check(not bool(table.call("report_player_feedback", 0, "INVALID", &"error")), "Table feedback rejects invalid peer IDs")
 
 	_check_result(table.call("enter_proximity", 1), true, "First player enters proximity")
