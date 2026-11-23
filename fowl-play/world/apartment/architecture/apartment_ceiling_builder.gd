@@ -140,17 +140,18 @@ func _build_circular_fixture(parent: Node3D, scene_root: Node) -> void:
 		spot.shadow_enabled = false
 		fixture.add_child(spot)
 		spot.owner = scene_root
-	for x: float in [-6.5, 0.0, 6.5]:
-		for z: float in [-4.8, 4.8]:
-			var fill: OmniLight3D = OmniLight3D.new()
-			fill.name = "MainRoom_Warm_Fill_%s_%s" % [str(x), str(z)]
-			fill.position = Vector3(x, ceiling_height - 0.52, z)
-			fill.light_color = Color(1.0, 0.82, 0.66)
-			fill.light_energy = 0.62
-			fill.omni_range = 9.0
-			fill.shadow_enabled = false
-			parent.add_child(fill)
-			fill.owner = scene_root
+	if scene_root.find_child("MainRoom_Ceiling_1_1", true, false) == null:
+		for x: float in [-6.5, 0.0, 6.5]:
+			for z: float in [-4.8, 4.8]:
+				var fill: OmniLight3D = OmniLight3D.new()
+				fill.name = "MainRoom_Warm_Fill_%s_%s" % [str(x), str(z)]
+				fill.position = Vector3(x, ceiling_height - 0.52, z)
+				fill.light_color = Color(1.0, 0.82, 0.66)
+				fill.light_energy = 0.62
+				fill.omni_range = 9.0
+				fill.shadow_enabled = false
+				parent.add_child(fill)
+				fill.owner = scene_root
 
 func _setup_night_city_environment(scene_root: Node) -> void:
 	var world_environment: WorldEnvironment = scene_root.find_child("WorldEnvironment", true, false) as WorldEnvironment
