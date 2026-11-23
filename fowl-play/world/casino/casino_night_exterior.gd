@@ -21,6 +21,19 @@ class_name CasinoNightExterior
 @export_range(4.0, 24.0, 0.5) var rain_fall_speed: float = 13.0
 @export_range(0.1, 1.0, 0.05) var rain_opacity: float = 0.62
 
+@export_group("Window Rain")
+@export var generate_window_rain: bool = true
+@export_range(0.1, 1.0, 0.05) var window_rain_opacity: float = 0.72
+
+@export_group("Exterior Atmosphere")
+@export var generate_exterior_mist: bool = true
+@export_range(0.001, 0.08, 0.001) var mist_density: float = 0.024
+
+@export_group("Lightning")
+@export var generate_lightning: bool = true
+@export_range(6.0, 40.0, 1.0) var lightning_interval_min: float = 12.0
+@export_range(8.0, 60.0, 1.0) var lightning_interval_max: float = 27.0
+
 const CITY_Z: float = -66.0
 const CITY_START_X: float = -43.0
 const CITY_WIDTH: float = 86.0
@@ -29,11 +42,53 @@ const RAIN_ORIGIN: Vector3 = Vector3(0.0, 13.0, -42.0)
 const RAIN_EXTENTS: Vector3 = Vector3(35.0, 0.5, 8.0)
 
 var _built: bool = false
+var _lightning: OmniLight3D
+var _lightning_cooldown: float = 0.0
+var _lightning_phase: int = 0
+var _lightning_phase_time: float = 0.0
 
 func _ready() -> void:
 	if not _built:
 		_build_exterior()
 		_built = true
+	_lightning_cooldown = randf_range(lightning_interval_min, lightning_interval_max)
+
+func _process(delta: float) -> void:
+	if Engine.is_editor_hint() or not generate_lightning or _lightning == null:
+		return
+	_update_lightning(delta)
+
+func _update_lightning(delta: float) -> void:
+	if _lightning_phase == 0:
+		_lightning_cooldown -= delta
+		if _lightning_cooldown <= 0.0:
+			_lightning_phase = 1
+			_lightning_phase_time = 0.0
+			_lightning.light_energy = randf_range(1.8, 2.8)
+		return
+
+	_lightning_phase_time += delta
+	match _lightning_phase:
+		1:
+			if _lightning_phase_time >= 0.075:
+				_lightning.light_energy = 0.0
+				_lightning_phase = 2
+				_lightning_phase_time = 0.0
+		2:
+			if _lightning_phase_time >= 0.10:
+				_lightning.light_energy = randf_range(0.9, 1.55)
+				_lightning_phase = 3
+				_lightning_phase_time = 0.0
+		3:
+			if _lightning_phase_time >= 0.13:
+				_lightning.light_energy = 0.35
+				_lightning_phase = 4
+				_lightning_phase_time = 0.12
+		4:
+			_lightning.light_energy = move_toward(_lightning.light_energy, 0.0, delta * 4.5)
+			if _lightning.light_energy <= 0.01:
+				_lightning_phase = 0
+				_lightning_cooldown = randf_range(lightning_interval_min, lightning_interval_max)
 
 func _build_exterior() -> void:
 	if generate_moon:
@@ -42,6 +97,12 @@ func _build_exterior() -> void:
 		_build_city()
 	if generate_rain:
 		_build_rain()
+	if generate_window_rain:
+		_build_window_rain()
+	if generate_exterior_mist:
+		_build_exterior_mist()
+	if generate_lightning:
+		_build_lightning()
 
 func _build_moon() -> void:
 	var moon := MeshInstance3D.new()
@@ -173,16 +234,75 @@ func _build_rain() -> void:
 	drop.rings = 3
 	var drop_material := StandardMaterial3D.new()
 	drop_material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
-	drop_material.albedo_color = Color(0.66, 0.77, 0.9, rain_opacity * 0.72)
+	drop_material.albedo_color = Color(0.72, 0.79, 0.88, rain_opacity * 0.58)
 	drop_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	drop_material.roughness = 0.16
-	drop_material.metallic = 0.04
-	drop_material.emission_enabled = true
-	drop_material.emission = Color(0.16, 0.24, 0.36)
-	drop_material.emission_energy_multiplier = 0.18
+	drop_material.roughness = 0.12
+	drop_material.metallic = 0.0
+	# Rain is reflective, not self-illuminating. Exterior lights and lightning
+	# should be responsible for making the streaks visible.
+	drop_material.emission_enabled = false
 	particles.draw_pass_1 = drop
 	particles.material_override = drop_material
 	add_child(particles)
+
+func _build_window_rain() -> void:
+	var casino_root := get_parent()
+	if casino_root == null:
+		return
+	var facade := casino_root.get_node_or_null("Architecture/WindowFrames/_GeneratedPanoramicFacade")
+	if facade == null:
+		return
+
+	var rain_shader := load("res://world/casino/shaders/window_rain.gdshader") as Shader
+	if rain_shader == null:
+		push_warning("Window rain shader could not be loaded.")
+		return
+
+	for child: Node in facade.get_children():
+		if not child is MeshInstance3D or not child.name.ends_with("_Glass"):
+			continue
+		var glass := child as MeshInstance3D
+		var glass_box := glass.mesh as BoxMesh
+		if glass_box == null:
+			continue
+
+		var pane := MeshInstance3D.new()
+		pane.name = "%s_ExteriorWater" % glass.name
+		var quad := QuadMesh.new()
+		quad.size = Vector2(glass_box.size.x, glass_box.size.y)
+		pane.mesh = quad
+		var water_material := ShaderMaterial.new()
+		water_material.shader = rain_shader
+		water_material.set_shader_parameter("water_opacity", window_rain_opacity)
+		pane.material_override = water_material
+		pane.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(pane)
+		var surface_offset := Vector3(0.0, 0.0, glass_box.size.z * 0.5 + 0.012)
+		pane.global_transform = Transform3D(glass.global_transform.basis, glass.global_transform * surface_offset)
+
+func _build_exterior_mist() -> void:
+	var fog_volume := FogVolume.new()
+	fog_volume.name = "ExteriorRainMist"
+	fog_volume.shape = FogVolume.SHAPE_BOX
+	fog_volume.size = Vector3(74.0, 22.0, 34.0)
+	fog_volume.position = Vector3(0.0, 8.0, -47.0)
+	var fog_material := FogMaterial.new()
+	fog_material.density = mist_density
+	fog_material.albedo = Color(0.24, 0.31, 0.46)
+	fog_material.height_falloff = 0.18
+	fog_volume.material = fog_material
+	add_child(fog_volume)
+
+func _build_lightning() -> void:
+	_lightning = OmniLight3D.new()
+	_lightning.name = "ExteriorStormFlash"
+	_lightning.position = Vector3(0.0, 17.0, -58.0)
+	_lightning.light_color = Color(0.68, 0.78, 1.0)
+	_lightning.light_energy = 0.0
+	_lightning.omni_range = 38.0
+	_lightning.omni_attenuation = 1.35
+	_lightning.shadow_enabled = false
+	add_child(_lightning)
 
 func _make_emissive_material(color: Color, energy: float) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
