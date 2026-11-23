@@ -367,7 +367,7 @@ func get_round_player_display_lines() -> Array[String]:
 	peer_ids.sort()
 	for peer_id: int in peer_ids:
 		var player_state: Dictionary = _round_player_states[peer_id]
-		var nickname: String = _get_player_nickname(peer_id)
+		var nickname: String = str(player_state.get("nickname", "PLAYER %d" % peer_id))
 		var color_name: String = PlayerIdentity.color_name_for_index(int(player_state.get("color_index", _get_player_color_index(peer_id)))).to_upper()
 		var tile_number: int = int(player_state.get("tile", 0))
 		var stake: int = int(player_state.get("stake", 0))
