@@ -16,6 +16,7 @@ signal departure_requested(actor_peer_id: int)
 @export_group("Departure Sequence")
 @export_range(1.0, 15.0, 0.5) var recovery_timeout_seconds: float = 8.0
 @export_range(1.0, 8.0, 0.5) var door_timeout_seconds: float = 4.0
+@export_range(0.0, 10.0, 0.5) var deadline_return_delay_seconds: float = 3.0
 
 var _button: Node
 var _interactable: Interactable
@@ -28,6 +29,8 @@ var _network: Node
 var _request_pending: bool = false
 var _departure_in_progress: bool = false
 var _debug_hub: Node
+var _casino_day_manager: Node
+var _deadline_forced_departure: bool = false
 
 
 func _ready() -> void:
@@ -38,6 +41,11 @@ func _ready() -> void:
 	_network = get_node_or_null("/root/Network")
 	_run_manager = get_node_or_null("/root/RunManager")
 	_main_controller = get_node_or_null(main_controller_path) as MainController
+	_casino_day_manager = get_node_or_null("/root/CasinoDayManager")
+	if is_instance_valid(_casino_day_manager) and _casino_day_manager.has_signal("day_finished"):
+		var day_finished_callback: Callable = Callable(self, "_on_casino_day_finished")
+		if not _casino_day_manager.is_connected("day_finished", day_finished_callback):
+			_casino_day_manager.connect("day_finished", day_finished_callback)
 
 	if not is_instance_valid(_run_manager):
 		push_error("ElevatorDepartureController requires the RunManager autoload.")
@@ -83,6 +91,10 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+	if is_instance_valid(_casino_day_manager) and _casino_day_manager.has_signal("day_finished"):
+		var day_finished_callback: Callable = Callable(self, "_on_casino_day_finished")
+		if _casino_day_manager.is_connected("day_finished", day_finished_callback):
+			_casino_day_manager.disconnect("day_finished", day_finished_callback)
 	if is_instance_valid(_interactable) and _interactable.availability_check == Callable(self, "_can_interact"):
 		_interactable.availability_check = Callable()
 	if is_instance_valid(_button) and _button.has_signal("button_activated"):
@@ -92,6 +104,67 @@ func _exit_tree() -> void:
 		_debug_hub.call("unwatch", &"elevator/departure_ready")
 		_debug_hub.call("unwatch", &"elevator/departure_request_pending")
 		_debug_hub.call("unwatch", &"elevator/departure_in_progress")
+
+
+## The five-minute deadline overrides normal occupancy: gather the whole team and return them.
+func _on_casino_day_finished(_day_number: int, _success: bool, _final_wallet: int, _quota: int) -> void:
+	if not _is_network_authority() or _main_controller == null:
+		return
+	if _main_controller.active_world != MainController.World.CASINO:
+		return
+	_force_deadline_return.call_deferred()
+
+
+func _force_deadline_return() -> void:
+	if _request_pending or _departure_in_progress or not is_instance_valid(_run_manager):
+		return
+	var destination_world: int = int(_run_manager.call("get_departure_destination", MainController.World.CASINO))
+	if destination_world != MainController.World.APARTMENT:
+		_log_rejection("Deadline return could not resolve the Apartment destination.")
+		return
+	_request_pending = true
+	_departure_in_progress = true
+	_deadline_forced_departure = true
+	if not await _prepare_players_for_transition():
+		_abort_departure("could not prepare every player for the forced deadline return")
+		return
+	if not await _wait_for_all_players_recovered():
+		_abort_departure("a player did not recover before the forced deadline return")
+		return
+	# call_local makes every peer reposition its replicated player set consistently.
+	rpc("_rpc_place_players_inside_elevator")
+	await get_tree().physics_frame
+	await _execute_departure_sequence(destination_world)
+
+
+@rpc("authority", "call_local", "reliable")
+func _rpc_place_players_inside_elevator() -> void:
+	var elevator: Node3D = get_parent() as Node3D
+	if elevator == null:
+		return
+	var players: Dictionary = _network.get("movement_players") if is_instance_valid(_network) else {}
+	var ordered_players: Array[Node] = []
+	for value: Variant in players.values():
+		var player: Node = value as Node
+		if is_instance_valid(player):
+			ordered_players.append(player)
+	ordered_players.sort_custom(func(a: Node, b: Node) -> bool: return int(a.get("input_peer_id")) < int(b.get("input_peer_id")))
+	var offsets: Array[Vector3] = [
+		Vector3(-0.42, 0.0, -0.42),
+		Vector3(0.42, 0.0, -0.42),
+		Vector3(-0.42, 0.0, 0.42),
+		Vector3(0.42, 0.0, 0.42),
+	]
+	for index: int in range(ordered_players.size()):
+		var player: Node = ordered_players[index]
+		var target: Transform3D = Transform3D(
+			elevator.global_basis,
+			elevator.global_position + elevator.global_basis * offsets[index % offsets.size()]
+		)
+		if player.has_method("place_at_world_spawn"):
+			player.call("place_at_world_spawn", target)
+		else:
+			player.global_transform = target
 
 
 ## Returns true only when every connected player is inside the elevator.
@@ -206,6 +279,8 @@ func _execute_departure_sequence(destination_world: int) -> void:
 		elif not bool(casino_day_manager.get("day_result_recorded")):
 			_abort_departure("casino day has no recorded deadline or early-departure result")
 			return
+	if _deadline_forced_departure and deadline_return_delay_seconds > 0.0:
+		await get_tree().create_timer(deadline_return_delay_seconds).timeout
 	_request_pending = false
 	if is_instance_valid(_debug_hub):
 		_debug_hub.call("log", &"net", "Elevator departure approved; transitioning to world %d." % destination_world)
@@ -272,6 +347,7 @@ func _wait_for_all_players_recovered() -> bool:
 func _abort_departure(reason: String) -> void:
 	_request_pending = false
 	_departure_in_progress = false
+	_deadline_forced_departure = false
 	if is_instance_valid(_door_proximity) and _door_proximity.has_method("cancel_departure_closure"):
 		_door_proximity.call("cancel_departure_closure")
 	elif is_instance_valid(_door_controller) and not _door_controller.are_doors_open() and not _door_controller.are_doors_moving():
@@ -292,6 +368,7 @@ func reject_departure_request(reason: String = "") -> void:
 func finish_departure_request() -> void:
 	_request_pending = false
 	_departure_in_progress = false
+	_deadline_forced_departure = false
 
 
 func is_departure_request_pending() -> bool:
