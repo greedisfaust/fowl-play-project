@@ -424,7 +424,7 @@ func _sync_chicken_visual(peer_id: int, player_state: Dictionary) -> void:
 		chicken.name = "Chicken_%d" % peer_id
 		root.add_child(chicken)
 		chicken.scale = Vector3.ONE * 0.48
-		chicken.position = Vector3(-1.53, 1.115, _lane_z_for_peer(peer_id))
+		chicken.position = Vector3(-1.53, 1.25, _lane_z_for_peer(peer_id))
 		chicken.configure(peer_id, str(player_state.get("nickname", _get_player_nickname(peer_id))), int(player_state.get("color_index", _get_player_color_index(peer_id))))
 	else:
 		chicken.configure(peer_id, str(player_state.get("nickname", _get_player_nickname(peer_id))), int(player_state.get("color_index", _get_player_color_index(peer_id))))
