@@ -9,10 +9,10 @@ const OPEN_ANGLE: float = 1.42
 const AUTO_CLOSE_SECONDS: float = 3.2
 const MIN_BUMP_SPEED: float = 1.25
 
-@onready var interactable: Interactable = $Interactable
-@onready var bump_area: Area3D = $Doorway_Bump_Area
-@onready var left_hinge: Node3D = $Left_Hinge
-@onready var right_hinge: Node3D = $Right_Hinge
+var interactable: Interactable
+var bump_area: Area3D
+var left_hinge: Node3D
+var right_hinge: Node3D
 
 var _is_open: bool = false
 var _open_direction: int = 1
@@ -22,6 +22,16 @@ var _door_plane_x: float
 
 func _ready() -> void:
 	_door_plane_x = global_position.x
+	call_deferred("_setup_door")
+
+func _setup_door() -> void:
+	interactable = get_node_or_null("Interactable") as Interactable
+	bump_area = get_node_or_null("Doorway_Bump_Area") as Area3D
+	left_hinge = get_node_or_null("Left_Hinge") as Node3D
+	right_hinge = get_node_or_null("Right_Hinge") as Node3D
+	if interactable == null or bump_area == null or left_hinge == null or right_hinge == null:
+		push_warning("ApartmentDoubleDoor: generated door components are incomplete.")
+		return
 	interactable.interacted.connect(_on_interacted)
 	bump_area.body_entered.connect(_on_body_entered)
 	bump_area.area_entered.connect(_on_area_entered)
