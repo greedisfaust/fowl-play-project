@@ -277,7 +277,8 @@ func _build_window_rain() -> void:
 		pane.material_override = water_material
 		pane.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		add_child(pane)
-		var surface_offset := Vector3(0.0, 0.0, glass_box.size.z * 0.5 + 0.012)
+		# The facade's local +Z normal faces into the casino; rain belongs on its exterior (-Z) face.
+		var surface_offset := Vector3(0.0, 0.0, -glass_box.size.z * 0.5 - 0.012)
 		pane.global_transform = Transform3D(glass.global_transform.basis, glass.global_transform * surface_offset)
 
 func _build_exterior_mist() -> void:
