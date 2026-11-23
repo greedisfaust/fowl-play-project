@@ -65,6 +65,8 @@ func _run() -> void:
 		return
 
 	# Simulate the cursor being released during the elevator interaction.
+	# A terminal text-entry movement lock must not prevent mouse-look restoration.
+	player.call("set_terminal_movement_locked", true)
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	main.call("transition_to", 1)
 	await process_frame
@@ -81,7 +83,13 @@ func _run() -> void:
 	await process_frame
 	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		main.queue_free()
-		_finish(false, "Gameplay mouse should be captured again after the world transition fade completes.")
+		_finish(false, "Gameplay mouse should be captured again after the world transition fade completes, even with terminal movement locked.")
+		return
+	var yaw_before_mouse_look: float = float(player.rotation.y)
+	player.call("_rotate_view", Vector2(10.0, 0.0))
+	if is_equal_approx(float(player.rotation.y), yaw_before_mouse_look):
+		main.queue_free()
+		_finish(false, "Mouse look should remain responsive while terminal movement is locked.")
 		return
 	if players.get_child_count() != 1 or players.get_node_or_null("1") != player:
 		main.queue_free()
