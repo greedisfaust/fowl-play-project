@@ -248,6 +248,9 @@ func _on_button_activated(button_id: StringName, peer_id: int) -> void:
 	if is_instance_valid(_debug_hub):
 		_debug_hub.call("log", &"wallet", "Received physical keypad input '%s' from peer %d." % [String(button_id), peer_id])
 	var result: Dictionary = handle_button_input(button_id, peer_id)
+	if action in ["CONFIRM", "ENTER", "OK", "SUBMIT"] and is_instance_valid(table):
+		var feedback_severity: StringName = &"success" if bool(result.get("ok", false)) else &"error"
+		table.call("report_player_feedback", peer_id, _last_confirmation_status, feedback_severity)
 	if is_instance_valid(_debug_hub) and not bool(result.get("ok", false)):
 		_debug_hub.call("log", &"wallet", "Keypad button '%s' rejected for peer %d: %s" % [String(button_id), peer_id, str(result.get("reason", "unknown error"))])
 
