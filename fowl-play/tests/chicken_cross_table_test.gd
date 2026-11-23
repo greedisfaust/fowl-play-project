@@ -55,6 +55,11 @@ func _test_multi_player_round(wallet: Node) -> void:
 		_check_result(table.call("join_table", peer_id), true, "Peer %d joins Chicken Cross" % peer_id)
 	_check_result(table.call("place_wager", 1, 100, {}), true, "Peer 1 reserves their own wager")
 	_check_result(table.call("place_wager", 2, 200, {}), true, "Peer 2 reserves their own wager")
+	var ready_states: Dictionary = table.get("_round_player_states")
+	_check(ready_states.has(1) and ready_states.has(2), "Each successful wager publishes an individual ready chicken state")
+	var ready_lines: Array[String] = table.call("get_round_player_display_lines")
+	_check(ready_lines.size() == 2, "The multiplayer scoreboard lists both wagered players before the round starts")
+	_check(ready_lines[0].contains("RED") and ready_lines[1].contains("ORANGE"), "The scoreboard identifies each chicken by its assigned player color")
 	_check_result(table.call("start_round", 1), true, "Host locks both player wagers")
 	var model: RefCounted = table.get("_round_model") as RefCounted
 	_check(model != null, "Starting a round creates the Chicken Cross model")
