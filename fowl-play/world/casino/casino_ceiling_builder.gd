@@ -156,7 +156,7 @@ func _build_ceiling_slab(parent: Node3D, material: Material, scene_root: Node) -
 	slab.name = "Ceiling_SculptedFootprint"
 	slab.polygon = _get_ceiling_footprint()
 	slab.depth = ceiling_thickness
-	slab.use_collision = false
+	slab.use_collision = true
 	slab.material = material
 	slab.transform = Transform3D(ceiling_basis, Vector3(0.0, ceiling_height, 0.0))
 	parent.add_child(slab)
