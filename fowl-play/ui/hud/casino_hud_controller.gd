@@ -68,7 +68,6 @@ var _connected_tables: Array[BaseTable] = []
 var _wallet_glow_material: ShaderMaterial
 var _quota_glow_material: ShaderMaterial
 var _glow_tween: Tween
-var _shimmer_tween: Tween
 var _quota_glow_enabled: bool = false
 
 
@@ -124,8 +123,6 @@ func _exit_tree() -> void:
 	_disconnect_services()
 	if _glow_tween != null and _glow_tween.is_running():
 		_glow_tween.kill()
-	if _shimmer_tween != null and _shimmer_tween.is_running():
-		_shimmer_tween.kill()
 
 
 func _validate_display_nodes() -> bool:
@@ -350,40 +347,48 @@ func _refresh_quota_colors() -> void:
 
 
 func _set_quota_glow(enabled: bool) -> void:
-	if _wallet_glow_material == null or _quota_glow_material == null or enabled == _quota_glow_enabled:
+	if _wallet_glow_material == null or _quota_glow_material == null:
+		return
+	if enabled == _quota_glow_enabled:
 		return
 	_quota_glow_enabled = enabled
-	if _glow_tween != null and _glow_tween.is_running():
-		_glow_tween.kill()
 	var target: float = 1.0 if enabled else 0.0
-	_wallet_glow_material.set_shader_parameter("glow_strength", target)
-	_quota_glow_material.set_shader_parameter("glow_strength", target)
-
+	for material: ShaderMaterial in [_wallet_glow_material, _quota_glow_material]:
+		material.set_shader_parameter("quota_active", target)
+		material.set_shader_parameter("glow_strength", 0.82 if enabled else 0.0)
+		material.set_shader_parameter("reward_flash", 0.0)
+		material.set_shader_parameter("flash_position", -0.2)
 
 func _play_quota_glow_pulse() -> void:
+	if not _quota_glow_enabled:
+		return
 	if _glow_tween != null and _glow_tween.is_running():
 		_glow_tween.kill()
 	_glow_tween = create_tween()
-	_glow_tween.tween_method(_set_glow_strength, 0.65, 1.15, 0.35)
-	_glow_tween.tween_method(_set_glow_strength, 1.15, 1.0, 0.65)
-	_shimmer_tween = create_tween()
-	_shimmer_tween.tween_method(_set_quota_shimmer, -0.2, 1.2, 1.05)
-	_shimmer_tween.tween_callback(func() -> void: _set_quota_shimmer(-1.0))
-
-
-func _set_quota_shimmer(position: float) -> void:
-	if is_instance_valid(_wallet_glow_material):
-		_wallet_glow_material.set_shader_parameter("shimmer_position", position)
-	if is_instance_valid(_quota_glow_material):
-		_quota_glow_material.set_shader_parameter("shimmer_position", position)
-
+	_glow_tween.tween_method(_set_glow_strength, 0.82, 2.6, 0.16)
+	_glow_tween.tween_method(_set_glow_strength, 2.6, 0.82, 0.95)
+	var flash_tween: Tween = create_tween()
+	flash_tween.set_parallel(true)
+	flash_tween.tween_method(_set_reward_flash, 0.0, 1.0, 0.42)
+	flash_tween.tween_method(_set_flash_position, -0.2, 1.2, 0.72)
+	flash_tween.chain().tween_callback(func() -> void: _set_reward_flash(0.0))
 
 func _set_glow_strength(value: float) -> void:
-	if is_instance_valid(_wallet_glow_material):
-		_wallet_glow_material.set_shader_parameter("glow_strength", value)
-	if is_instance_valid(_quota_glow_material):
-		_quota_glow_material.set_shader_parameter("glow_strength", value)
+	for material: ShaderMaterial in [_wallet_glow_material, _quota_glow_material]:
+		if is_instance_valid(material):
+			material.set_shader_parameter("glow_strength", value)
 
+
+func _set_reward_flash(value: float) -> void:
+	for material: ShaderMaterial in [_wallet_glow_material, _quota_glow_material]:
+		if is_instance_valid(material):
+			material.set_shader_parameter("reward_flash", value)
+
+
+func _set_flash_position(value: float) -> void:
+	for material: ShaderMaterial in [_wallet_glow_material, _quota_glow_material]:
+		if is_instance_valid(material):
+			material.set_shader_parameter("flash_position", value)
 
 func _refresh_visibility() -> void:
 	var in_casino: bool = false
@@ -486,9 +491,9 @@ func _build_runtime_hud_sections() -> void:
 	_announcement_panel.anchor_left = 0.5
 	_announcement_panel.anchor_right = 0.5
 	_announcement_panel.offset_left = -330.0
-	_announcement_panel.offset_top = 104.0
+	_announcement_panel.offset_top = 122.0
 	_announcement_panel.offset_right = 330.0
-	_announcement_panel.offset_bottom = 300.0
+	_announcement_panel.offset_bottom = 318.0
 	_announcement_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_announcement_panel)
 	_announcement_feed = VBoxContainer.new()
@@ -531,9 +536,11 @@ func _make_glow_material() -> ShaderMaterial:
 	var material: ShaderMaterial = ShaderMaterial.new()
 	material.shader = QUOTA_GLOW_SHADER
 	material.set_shader_parameter("glow_color", COLOR_QUOTA_MET)
-	material.set_shader_parameter("glow_radius", 2.5)
+	material.set_shader_parameter("glow_radius", 5.0)
 	material.set_shader_parameter("glow_strength", 0.0)
-	material.set_shader_parameter("shimmer_position", -1.0)
+	material.set_shader_parameter("quota_active", 0.0)
+	material.set_shader_parameter("reward_flash", 0.0)
+	material.set_shader_parameter("flash_position", -0.2)
 	return material
 
 
