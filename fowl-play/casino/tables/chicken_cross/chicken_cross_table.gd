@@ -384,7 +384,7 @@ func get_round_player_display_lines() -> Array[String]:
 					Rules.TILE_COUNT,
 					float(player_state.get("multiplier", 0.0))
 				]
-		lines.append("%s  %-16s  BET $%s  %s" % [color_name, nickname, _format_currency(stake), detail])
+		lines.append("%s  %s  BET $%s  %s" % [color_name, nickname, _format_currency(stake), detail])
 	return lines
 
 
@@ -423,7 +423,7 @@ func _sync_chicken_visual(peer_id: int, player_state: Dictionary) -> void:
 		chicken = ChickenVisualScript.new() as ChickenCrossChicken
 		chicken.name = "Chicken_%d" % peer_id
 		root.add_child(chicken)
-		chicken.scale = Vector3.ONE * 0.62
+		chicken.scale = Vector3.ONE * 0.48
 		chicken.position = Vector3(-1.53, 1.115, _lane_z_for_peer(peer_id))
 		chicken.configure(peer_id, str(player_state.get("nickname", _get_player_nickname(peer_id))), int(player_state.get("color_index", _get_player_color_index(peer_id))))
 	else:
