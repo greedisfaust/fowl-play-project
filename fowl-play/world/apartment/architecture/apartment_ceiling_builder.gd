@@ -88,6 +88,70 @@ func _rebuild_geometry() -> void:
 		_build_hallway_detail(generated_root, walnut_material, bronze_material, light_material, scene_root)
 	if generate_lobby_frame:
 		_build_lobby_frame(generated_root, walnut_material, bronze_material, light_material, scene_root)
+	_build_circular_fixture(generated_root, scene_root)
+	_setup_night_city_environment(scene_root)
+
+
+func _build_circular_fixture(parent: Node3D, scene_root: Node) -> void:
+	var bronze: StandardMaterial3D = _make_material(bronze_color, 0.82, 0.22)
+	var diffuser: StandardMaterial3D = _make_emissive_material(warm_light_color, 1.7)
+	var fixture: Node3D = Node3D.new()
+	fixture.name = "MainRoom_Grand_Circular_Fixture"
+	fixture.position = Vector3(0.0, ceiling_height - 0.30, 0.0)
+	parent.add_child(fixture)
+	fixture.owner = scene_root
+	for ring_index: int in range(2):
+		var ring: MeshInstance3D = MeshInstance3D.new()
+		ring.name = "Bronze_Ring_%d" % ring_index
+		var torus: TorusMesh = TorusMesh.new()
+		torus.inner_radius = 1.05 + float(ring_index) * 0.62
+		torus.outer_radius = torus.inner_radius + 0.045
+		ring.mesh = torus
+		ring.material_override = bronze
+		fixture.add_child(ring)
+		ring.owner = scene_root
+	var diffuser_ring: MeshInstance3D = MeshInstance3D.new()
+	diffuser_ring.name = "Warm_Diffuser_Ring"
+	var diffuser_mesh: TorusMesh = TorusMesh.new()
+	diffuser_mesh.inner_radius = 1.34
+	diffuser_mesh.outer_radius = 1.47
+	diffuser_ring.mesh = diffuser_mesh
+	diffuser_ring.material_override = diffuser
+	fixture.add_child(diffuser_ring)
+	diffuser_ring.owner = scene_root
+	for index: int in range(8):
+		var angle: float = TAU * float(index) / 8.0
+		var spot: SpotLight3D = SpotLight3D.new()
+		spot.name = "Fixture_Downlight_%02d" % index
+		spot.position = Vector3(cos(angle) * 2.0, -0.16, sin(angle) * 2.0)
+		spot.rotation = Vector3(-PI * 0.5, 0.0, 0.0)
+		spot.light_color = Color(1.0, 0.78, 0.57)
+		spot.light_energy = 1.15
+		spot.spot_range = 7.0
+		spot.spot_angle = 62.0
+		spot.shadow_enabled = false
+		fixture.add_child(spot)
+		spot.owner = scene_root
+	for x: float in [-6.5, 0.0, 6.5]:
+		for z: float in [-4.8, 4.8]:
+			var fill: OmniLight3D = OmniLight3D.new()
+			fill.name = "MainRoom_Warm_Fill_%s_%s" % [str(x), str(z)]
+			fill.position = Vector3(x, ceiling_height - 0.52, z)
+			fill.light_color = Color(1.0, 0.82, 0.66)
+			fill.light_energy = 0.62
+			fill.omni_range = 9.0
+			fill.shadow_enabled = false
+			parent.add_child(fill)
+			fill.owner = scene_root
+
+func _setup_night_city_environment(scene_root: Node) -> void:
+	var world_environment: WorldEnvironment = scene_root.find_child("WorldEnvironment", true, false) as WorldEnvironment
+	if world_environment == null:
+		world_environment = WorldEnvironment.new()
+		world_environment.name = "WorldEnvironment"
+		scene_root.add_child(world_environment)
+		world_environment.owner = scene_root
+	world_environment.environment = load("res://world/casino/casino_night_environment.tres") as Environment
 
 func _build_main_room_tray(
 	parent: Node3D,
