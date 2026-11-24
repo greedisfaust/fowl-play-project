@@ -2,6 +2,7 @@
 extends BaseTable
 
 const Rules = preload("res://casino/tables/cluckpot/cluckpot_rules.gd")
+const LAYERS = preload("res://core/layers.gd")
 const KeypadControllerScript = preload("res://casino/terminals/components/betting_keypad_controller.gd")
 const KeypadScene: PackedScene = preload("res://casino/terminals/components/betting_keypad.tscn")
 const Profile: BettingTerminalProfile = preload("res://casino/tables/cluckpot/cluckpot_profile.tres")
@@ -290,7 +291,7 @@ func _build_machine() -> void:
 	_proximity = Area3D.new()
 	_proximity.name = "ProximityArea"
 	_proximity.collision_layer = 0
-	_proximity.collision_mask = 1
+	_proximity.collision_mask = (1 << (LAYERS.HEALTHY_PLAYERS - 1)) | (1 << (LAYERS.LIMP_BODIES - 1))
 	var proximity_shape := CollisionShape3D.new()
 	var sphere := SphereShape3D.new()
 	sphere.radius = 2.5
@@ -302,8 +303,8 @@ func _build_machine() -> void:
 	_proximity.body_exited.connect(_on_body_exited)
 	var spin_body := StaticBody3D.new()
 	spin_body.name = "SpinInteractable"
-	spin_body.collision_layer = 1
-	spin_body.collision_mask = 1
+	spin_body.collision_layer = 1 << (LAYERS.DEVICES - 1)
+	spin_body.collision_mask = 0
 	var interactable := Interactable.new()
 	interactable.name = "Interactable"
 	interactable.prompt_text = "PULL LEVER / SPIN"
