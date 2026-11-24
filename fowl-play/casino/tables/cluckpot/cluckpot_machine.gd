@@ -138,6 +138,7 @@ func _handle_spin(peer_id: int) -> Dictionary:
 		"line_wins": outcome["line_wins"],
 		"payout": payout,
 		"spin_duration": spin_duration,
+		"visual_seed": _rng.randi(),
 		"sequence": sequence,
 	}
 	_active_spin = record
@@ -174,8 +175,11 @@ func _play_spin_visual(record: Dictionary) -> void:
 		return
 	# Install the host-rolled result on the actual symbol ring before any rotation.
 	# The visible center/top/bottom faces are therefore the same symbols that settle.
+	var visual_seed: int = int(record.get("visual_seed", 1))
+	var visual_rng := RandomNumberGenerator.new()
+	visual_rng.seed = visual_seed
 	for reel_index: int in range(3):
-		builder.set_reel_outcome(reel_index, columns[reel_index])
+		builder.set_reel_outcome(reel_index, columns[reel_index], visual_seed + reel_index * 1013)
 	_set_status("REELS IN MOTION", "WAGER %s  /  GOOD LUCK" % _format_money(int(record.get("stake", 0))))
 	_flash_win(false)
 	_reels_stopped = 0
@@ -184,7 +188,7 @@ func _play_spin_visual(record: Dictionary) -> void:
 		var drum: Node3D = _reel_drums[reel_index]
 		# Randomize the starting phase, but always finish at an exact whole revolution.
 		# Eight turns gives a recognizable mechanical spin rather than symbol shuffling.
-		var start_phase: float = _rng.randf_range(0.0, TAU)
+		var start_phase: float = visual_rng.randf_range(0.0, TAU)
 		drum.rotation.x = start_phase
 		var reel_duration: float = duration - float(2 - reel_index) * 0.42
 		var acceleration_end: float = start_phase + TAU * 0.65
