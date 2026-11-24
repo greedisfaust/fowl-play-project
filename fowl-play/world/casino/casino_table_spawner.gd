@@ -9,6 +9,7 @@ class_name CasinoTableSpawner
 @export_node_path("Node3D") var spawned_tables_path: NodePath = ^"SpawnedTables"
 @export var spawn_on_ready: bool = true
 @export var allow_single_chicken_cross_test_table: bool = true
+@export_enum("Chicken Cross:chicken_cross", "Egg Plinko:egg_plinko") var development_test_game_id: StringName = &"chicken_cross"
 
 var _spawned_slot_ids: Dictionary = {}
 var _spawned_day_number: int = 0
@@ -67,7 +68,7 @@ func spawn_tables() -> Dictionary:
 			if int(run_snapshot.get("phase", -1)) == 2:
 				day_number = int(run_snapshot.get("current_day", 0))
 	if definitions.is_empty() and allow_single_chicken_cross_test_table and day_number > 0:
-		var test_definition: CasinoGameDefinition = _casino_manager.call("get_game_definition", &"chicken_cross") as CasinoGameDefinition
+		var test_definition: CasinoGameDefinition = _casino_manager.call("get_game_definition", development_test_game_id) as CasinoGameDefinition
 		if is_instance_valid(test_definition):
 			return spawn_single_test_table(day_number, test_definition)
 	if day_number < 1 or definitions.is_empty():
@@ -87,10 +88,10 @@ func spawn_tables() -> Dictionary:
 func spawn_single_test_table(day_number: int, definition: CasinoGameDefinition) -> Dictionary:
 	if day_number < 1 or not is_instance_valid(definition):
 		return _failure("A valid day and test game definition are required.")
-	if String(definition.game_id) != "chicken_cross":
-		return _failure("The incomplete-roster fallback is reserved for Chicken Cross.")
+	if String(definition.game_id) != String(development_test_game_id):
+		return _failure("The incomplete-roster fallback must match the selected development test game.")
 	if not is_instance_valid(definition.table_scene) or not definition.table_scene.can_instantiate():
-		return _failure("Chicken Cross has no instantiable table scene.")
+		return _failure("%s has no instantiable table scene." % definition.display_name)
 	if _spawned_day_number != 0 and _spawned_day_number != day_number:
 		_clear_spawned_tables()
 	if _spawned_day_number == day_number and not _spawned_slot_ids.is_empty():
@@ -116,25 +117,26 @@ func spawn_single_test_table(day_number: int, definition: CasinoGameDefinition) 
 	var slot: CasinoTableSpawnPoint = enabled_slots[0]
 	if slot.slot_id.strip_edges().is_empty():
 		return _failure("The first enabled Chicken Cross test slot needs a slot_id.")
-	var table_id: String = "day_%02d_chicken_cross_test" % day_number
+	var game_id: String = String(definition.game_id)
+	var table_id: String = "day_%02d_%s_test" % [day_number, game_id]
 	var table_instance: Node = definition.table_scene.instantiate()
 	if not table_instance is Node3D:
 		if is_instance_valid(table_instance):
 			table_instance.free()
 		return _failure("Chicken Cross table scene must have a Node3D root.")
 	var table_node: Node3D = table_instance as Node3D
-	table_node.name = "%s_ChickenCrossTest" % slot.slot_id
+	table_node.name = "%s_%s_Test" % [slot.slot_id, game_id.capitalize()]
 	table_node.set_meta("casino_table_id", table_id)
-	table_node.set_meta("casino_game_id", "chicken_cross")
+	table_node.set_meta("casino_game_id", game_id)
 	if table_node is BaseTable:
 		var base_table: BaseTable = table_node as BaseTable
 		base_table.table_id = table_id
-		base_table.game_id = "chicken_cross"
+		base_table.game_id = game_id
 	spawned_tables.add_child(table_node)
 	table_node.global_transform = slot.global_transform
 	_spawned_slot_ids[table_id] = table_node
 	_spawned_day_number = day_number
-	_log_test_fallback(day_number, slot.slot_id)
+	_log_test_fallback(day_number, slot.slot_id, game_id)
 	return {
 		"ok": true,
 		"pending": false,
@@ -150,7 +152,7 @@ func spawn_tables_for_definitions(day_number: int, definitions: Array[CasinoGame
 		return _failure("A valid casino day number is required.")
 	if definitions.is_empty():
 		return _failure("The daily game selection is empty.")
-	if _spawned_day_number == day_number and _spawned_slot_ids.size() == definitions.size() and not _spawned_slot_ids.has("day_%02d_chicken_cross_test" % day_number):
+	if _spawned_day_number == day_number and _spawned_slot_ids.size() == definitions.size() and not _spawned_slot_ids.has("day_%02d_%s_test" % [day_number, String(development_test_game_id)]):
 		return {
 			"ok": true,
 			"pending": false,
@@ -236,9 +238,9 @@ func spawn_tables_for_definitions(day_number: int, definitions: Array[CasinoGame
 		"total_spawned": _spawned_slot_ids.size(),
 	}
 
-func _log_test_fallback(day_number: int, slot_id: String) -> void:
+func _log_test_fallback(day_number: int, slot_id: String, game_id: String) -> void:
 	if is_instance_valid(_debug_hub):
-		_debug_hub.call("warn", &"casino_games", "Development fallback spawned Chicken Cross in slot '%s' for Day %d; remaining table slots are intentionally empty until the game roster is complete." % [slot_id, day_number])
+		_debug_hub.call("warn", &"casino_games", "Development fallback spawned %s in slot '%s' for Day %d; remaining table slots are intentionally empty until the game roster is complete." % [game_id, slot_id, day_number])
 
 
 func get_spawned_table_count() -> int:
