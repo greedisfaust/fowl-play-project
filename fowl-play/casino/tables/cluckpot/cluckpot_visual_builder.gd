@@ -101,6 +101,19 @@ func build(parent: Node3D, number: int = 1) -> void:
 		barrel.rotation.z = PI * 0.5
 		barrel.material_override = _mat(Color("#d9cbb0"), 0.16, 0.28)
 		drum.add_child(barrel)
+		for side: int in [-1, 1]:
+			var end_cap := MeshInstance3D.new()
+			end_cap.name = "ReelEndCap_%d" % side
+			var cap_mesh := CylinderMesh.new()
+			cap_mesh.top_radius = 0.485
+			cap_mesh.bottom_radius = 0.485
+			cap_mesh.height = 0.028
+			cap_mesh.radial_segments = 48
+			end_cap.mesh = cap_mesh
+			end_cap.rotation.z = PI * 0.5
+			end_cap.position.x = float(side) * 0.205
+			end_cap.material_override = bright_brass
+			drum.add_child(end_cap)
 		var axle := _cylinder(drum, "Axle", 0.075, 0.54, Vector3.ZERO, dark_brass)
 		axle.rotation.z = PI * 0.5
 		var cells: Array[Node3D] = []
