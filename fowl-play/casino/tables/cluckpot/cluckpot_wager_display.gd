@@ -1,4 +1,4 @@
-## Compact, high-contrast wager and result readout for the Cluckpot cabinet.
+## Large, high-contrast cabinet readout for Cluckpot's keypad wager and spin result.
 extends Node
 
 @export var profile: BettingTerminalProfile
@@ -16,7 +16,7 @@ func set_pending_wager_amount(amount: int) -> void:
 	_status_header = "WAGER CHECK"
 	_status_detail = ""
 	var limits: Dictionary = _get_limits()
-	_status_valid = pending_wager_amount >= int(limits.get("minimum", 0)) and pending_wager_amount <= int(limits.get("maximum", 0)) and pending_wager_amount > 0
+	_status_valid = pending_wager_amount > 0 and pending_wager_amount >= int(limits.get("minimum", 0)) and pending_wager_amount <= int(limits.get("maximum", 0))
 	refresh_display()
 
 
@@ -41,32 +41,30 @@ func refresh_display() -> void:
 	var minimum: int = int(limits.get("minimum", profile.get_effective_minimum() if profile != null else 0))
 	var maximum: int = int(limits.get("maximum", profile.get_effective_maximum() if profile != null else 0))
 	var wager_valid: bool = pending_wager_amount > 0 and pending_wager_amount >= minimum and pending_wager_amount <= maximum
-	var state_valid: bool = wager_valid if _status_header == "WAGER CHECK" else _status_valid
-	var state_color: String = "#54e58b" if state_valid else "#ff525c"
-	var muted_color: String = "#d8c7a4"
-	var white_color: String = "#f4eee2"
 	var header: String = _status_header
 	var detail: String = _status_detail
-	if header == "READY" or header == "WAGER CHECK":
-		header = "CLUCKPOT"
-		detail = "MIN  $%s     MAX  $%s\nWAGER  $%s" % [
-			_format_money(minimum),
-			_format_money(maximum),
-			_format_money(pending_wager_amount) if pending_wager_amount > 0 else "--",
-		]
-		state_color = "#54e58b" if wager_valid else "#ff525c"
+	var state_color: String = "#54e58b" if _status_valid else "#ff525c"
+	var title_color: String = "#e7d5ad"
 	screen_text.clear_screen()
 	screen_text.scroll_active = false
 	screen_text.scroll_following = false
-	screen_text.append_text("[center][color=%s][font_size=34][b]%s[/b][/font_size][/color][/center]\n" % [muted_color, _escape(header)])
+	if header == "READY" or header == "WAGER CHECK" or header == "WAGER SELECTED":
+		header = "CLUCKPOT"
+		state_color = "#54e58b" if wager_valid else "#ff525c"
+		screen_text.append_text("[center][color=%s][font_size=62][b]CLUCKPOT[/b][/font_size][/color][/center]\n" % title_color)
+		screen_text.append_text("[center][color=#f4eee2][font_size=54]MIN  $%s     MAX  $%s[/font_size][/color][/center]\n" % [_format_money(minimum), _format_money(maximum)])
+		var wager_text: String = _format_money(pending_wager_amount) if pending_wager_amount > 0 else "--"
+		screen_text.append_text("[center][color=%s][font_size=112][b]WAGER  $%s[/b][/font_size][/color][/center]\n" % [state_color, wager_text])
+		screen_text.append_text("[center][color=%s][font_size=42][b]%s[/b][/font_size][/color]" % [state_color, "VALID WAGER" if wager_valid else "INVALID / SET WAGER"])
+		return
+	screen_text.append_text("[center][color=%s][font_size=68][b]%s[/b][/font_size][/color][/center]\n" % [title_color, _escape(header)])
 	if not detail.is_empty():
 		var detail_lines: PackedStringArray = detail.split("\n")
-		for line_index: int in range(detail_lines.size()):
-			var line: String = _escape(detail_lines[line_index])
-			var line_color: String = state_color if line.begins_with("WAGER") or header != "CLUCKPOT" else white_color
-			var font_size: int = 48 if line.begins_with("WAGER") else 38
-			screen_text.append_text("[center][color=%s][font_size=%d][b]%s[/b][/font_size][/color][/center]\n" % [line_color, font_size, line])
-	screen_text.append_text("[center][color=%s][font_size=24]%s[/font_size][/color]" % [state_color, "VALID WAGER" if state_valid else "INVALID / SET WAGER"])
+		for line: String in detail_lines:
+			var safe_line: String = _escape(line)
+			var line_color: String = state_color if header.begins_with("WIN") or header.begins_with("GOLDEN") else "#f4eee2"
+			var font_size: int = 68 if line.begins_with("WAGER") or line.begins_with("STAKE") else 58
+			screen_text.append_text("[center][color=%s][font_size=%d][b]%s[/b][/font_size][/color][/center]\n" % [line_color, font_size, safe_line])
 
 
 func clear_network_snapshot() -> void:
