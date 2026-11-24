@@ -57,6 +57,11 @@ func build(parent: Node3D, machine_number: int = 1) -> void:
 	reels.name = "Reels"
 	cabinet.add_child(reels)
 	reel_labels.clear()
+	var idle_symbols: Array[Array] = [
+		["ROOSTER", "CHICK", "EGG"],
+		["CORN", "SEVEN", "FEATHER"],
+		["EGG", "WILD", "ROOSTER"],
+	]
 	for reel_index: int in range(3):
 		var reel := Node3D.new()
 		reel.name = "Reel_%d" % reel_index
@@ -70,7 +75,9 @@ func build(parent: Node3D, machine_number: int = 1) -> void:
 			reel.add_child(cell)
 			var cell_panel := _box(cell, "CellPanel", Vector3(0.39, 0.285, 0.025), Vector3(0, 0, 0), ivory)
 			cell_panel.position = Vector3(0, 0, 0)
-			var label := _text(cell, "Symbol", "7", 0.18, Vector3(0, 0, 0.025), _mat(Color(1.0, 0.72, 0.12), 0.1, 0.25, Color(1.0, 0.42, 0.05), 0.6))
+			var symbol_name: String = str(idle_symbols[reel_index][row_index])
+			var symbol_text: String = "7" if symbol_name == "SEVEN" else symbol_name
+			var label := _text(cell, "Symbol", symbol_text, 0.18, Vector3(0, 0, 0.025), _mat(Color(1.0, 0.72, 0.12), 0.1, 0.25, Color(1.0, 0.42, 0.05), 0.6))
 			label.position = Vector3(0, 0, 0.03)
 			cell.position = Vector3(x, y - 1.47, 0.72)
 			reel_cells.append(label)
