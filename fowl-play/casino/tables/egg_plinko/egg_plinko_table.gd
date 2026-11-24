@@ -200,8 +200,6 @@ func _handle_plinko_drop(peer_id: int) -> Dictionary:
 	var limits: Dictionary = get_wager_limits()
 	if stake < int(limits["minimum"]) or stake > int(limits["maximum"]):
 		return _reject_drop(peer_id, "Your selected wager is no longer within the live limits.")
-	if stake > int(limits["spendable_balance"]):
-		return _reject_drop(peer_id, "The shared wallet safety reserve prevents this wager.")
 
 	var egg_sequence: int = _egg_sequence
 	_egg_sequence += 1
