@@ -147,7 +147,7 @@ func _handle_spin(peer_id: int) -> Dictionary:
 		_rpc_play_spin.rpc(record)
 	spin_started.emit(record.duplicate(true))
 	report_player_feedback(peer_id, "CLUCKPOT SPIN  /  %s" % _format_money(stake), &"success")
-	return _success({"round_id": round_id, "stake": stake, "payout": payout, "line_wins": outcome["line_wins"]})
+	return _success({"round_id": round_id, "wager_id": str(reserved.get("wager_id", "")), "stake": stake, "payout": payout, "line_wins": outcome["line_wins"]})
 
 
 func _reject_spin(peer_id: int, message: String) -> Dictionary:
