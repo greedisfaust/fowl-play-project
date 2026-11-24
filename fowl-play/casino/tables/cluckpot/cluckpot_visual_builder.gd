@@ -3,8 +3,26 @@
 class_name CluckpotVisualBuilder
 extends Node3D
 
+@export var machine_number: int = 1
+@export var rebuild_visuals: bool = false:
+	set(value):
+		rebuild_visuals = false
+		if value and is_inside_tree():
+			_rebuild()
+
 var reel_labels: Array[Array] = []
 var status_label: MeshInstance3D
+
+
+func _ready() -> void:
+	_rebuild()
+
+
+func _rebuild() -> void:
+	for child: Node in get_children():
+		if child.name == "Cabinet":
+			child.free()
+	build(self, machine_number)
 
 
 func build(parent: Node3D, machine_number: int = 1) -> void:
@@ -80,6 +98,7 @@ func build(parent: Node3D, machine_number: int = 1) -> void:
 	light.light_energy = 0.75
 	light.omni_range = 2.4
 	cabinet.add_child(light)
+	_set_owner_recursive(cabinet)
 
 
 func _box(parent: Node3D, node_name: String, size: Vector3, position: Vector3, material: Material) -> MeshInstance3D:
@@ -157,3 +176,12 @@ func _mat(color: Color, metallic: float, roughness: float, emission: Color = Col
 		material.emission = emission
 		material.emission_energy_multiplier = energy
 	return material
+
+
+func _set_owner_recursive(node: Node) -> void:
+	if Engine.is_editor_hint():
+		var scene_root: Node = get_tree().edited_scene_root
+		if is_instance_valid(scene_root) and node != scene_root:
+			node.owner = scene_root
+	for child: Node in node.get_children():
+		_set_owner_recursive(child)
