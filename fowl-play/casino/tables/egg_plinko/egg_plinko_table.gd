@@ -135,6 +135,49 @@ func get_round_wagers() -> Array[Dictionary]:
 	return result
 
 
+## Plinko keeps BaseTable's round state idle because each egg owns its own wallet round.
+## Resolve every airborne egg explicitly when the casino day ends or the team departs.
+func request_day_end_cleanup(reason: String) -> Dictionary:
+	if not _is_authority():
+		return _failure("Only the host can clean up Egg Plinko.")
+	if reason.strip_edges().is_empty():
+		return _failure("A cleanup reason is required.")
+	var egg_ids: Array[String] = []
+	for egg_id_value: Variant in _active_eggs.keys():
+		egg_ids.append(str(egg_id_value))
+	var settled_count: int = 0
+	var failed_ids: Array[String] = []
+	for egg_id: String in egg_ids:
+		if not _active_eggs.has(egg_id):
+			continue
+		var record: Dictionary = _active_eggs[egg_id]
+		var payouts: Dictionary = {str(record["wager_id"]): int(record["gross_return"])}
+		var settlement: Dictionary = _wallet.call("settle_round", table_id, str(record["round_id"]), payouts)
+		if not bool(settlement.get("ok", false)):
+			failed_ids.append(egg_id)
+			push_error("Egg Plinko day-end settlement failed for %s: %s" % [egg_id, str(settlement.get("reason", ""))])
+			continue
+		var result_record: Dictionary = record.duplicate(true)
+		result_record["status"] = "settled"
+		result_record["finish_reason"] = reason
+		_recent_results.append(result_record)
+		while _recent_results.size() > 8:
+			_recent_results.pop_front()
+		egg_settled.emit(result_record, settlement.duplicate(true))
+		_active_eggs.erase(egg_id)
+		var egg_node: Node = _egg_nodes.get(egg_id) as Node
+		if is_instance_valid(egg_node):
+			egg_node.queue_free()
+		_egg_nodes.erase(egg_id)
+		settled_count += 1
+	_selected_wagers.clear()
+	_publish_keypad_snapshot()
+	_update_terminal_status()
+	if not failed_ids.is_empty():
+		return _failure("Could not settle airborne eggs: %s" % ", ".join(failed_ids))
+	return _success({"round_id": "", "action": "settled_in_flight", "settled_count": settled_count})
+
+
 func get_active_egg_records() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	for record_value: Variant in _active_eggs.values():
