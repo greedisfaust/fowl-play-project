@@ -25,13 +25,15 @@ static func build_path(rng: RandomNumberGenerator, start_position: Vector3 = Vec
 	var current_x: float = 0.0
 	for row_index: int in range(ROW_COUNT):
 		var peg_y: float = BOARD_TOP_Y - float(row_index) * ROW_SPACING
-		# Approach each row above the peg currently in this lane.
-		path.append(Vector3(current_x, peg_y + ROW_SPACING * 0.42, -0.015))
+		var safe_height: float = ROW_SPACING * 0.48
+		# Approach above the current peg, then shift sideways while still above it.
+		path.append(Vector3(current_x, peg_y + safe_height, -0.015))
 		var direction: int = -1 if rng.randi_range(0, 1) == 0 else 1
-		# Exit below the peg into the gap between the next row's pegs.
 		current_x += float(direction) * STEP_X * 0.5
 		horizontal_steps += direction
-		path.append(Vector3(current_x, peg_y - ROW_SPACING * 0.42, -0.015))
+		# Drop through the gap between the next row's pegs.
+		path.append(Vector3(current_x, peg_y + safe_height, -0.015))
+		path.append(Vector3(current_x, peg_y - safe_height, -0.015))
 	var slot_index: int = clampi(roundi(float(horizontal_steps + ROW_COUNT) * 0.5), 0, SLOT_MULTIPLIERS.size() - 1)
 	var slot_width: float = 0.19
 	var slot_x: float = (float(slot_index) - float(SLOT_MULTIPLIERS.size() - 1) * 0.5) * slot_width
