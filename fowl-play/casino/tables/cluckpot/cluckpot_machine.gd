@@ -249,7 +249,8 @@ func request_day_end_cleanup(reason: String) -> Dictionary:
 	_spin_locked = false
 	_selected_wagers.clear()
 	_set_status("DAY CLOSED")
-	_rpc_clear_spin.rpc() if multiplayer.multiplayer_peer != null else null
+	if multiplayer.multiplayer_peer != null:
+		_rpc_clear_spin.rpc()
 	return _success({"round_id": str(record.get("round_id", "")), "action": "settled_in_flight", "payout": int(record.get("payout", 0))})
 
 
@@ -262,15 +263,19 @@ func _rpc_clear_spin() -> void:
 
 
 func _build_machine() -> void:
-	_visuals = Node3D.new()
-	_visuals.name = "Visuals"
-	add_child(_visuals)
-	var builder := VisualBuilder.new()
-	builder.name = "CluckpotVisualBuilder"
-	_visuals.add_child(builder)
-	builder.build(_visuals, machine_number)
-	_reel_labels = builder.reel_labels
-	_status_label = builder.status_label
+	_visuals = get_node_or_null("Visuals") as Node3D
+	if not is_instance_valid(_visuals):
+		_visuals = Node3D.new()
+		_visuals.name = "Visuals"
+		add_child(_visuals)
+	var builder: CluckpotVisualBuilder = _visuals as CluckpotVisualBuilder
+	if is_instance_valid(builder):
+		builder.machine_number = machine_number
+		builder.call("_rebuild")
+		_reel_labels = builder.reel_labels
+		_status_label = builder.status_label
+	else:
+		push_warning("CluckpotMachine requires a CluckpotVisualBuilder child named Visuals.")
 	_proximity = Area3D.new()
 	_proximity.name = "ProximityArea"
 	_proximity.collision_layer = 0
@@ -320,14 +325,16 @@ func _setup_keypad() -> void:
 	add_child(_display)
 	if _keypad.get_node_or_null("BettingKeypadController") != null:
 		return
-	var controller: Node = KeypadControllerScript.new()
-	controller.name = "BettingKeypadController"
+	var controller: Node = _keypad.get_node_or_null("BettingKeypadController")
+	if not is_instance_valid(controller):
+		controller = KeypadControllerScript.new()
+		controller.name = "BettingKeypadController"
+		_keypad.add_child(controller)
 	controller.set("table", self)
 	controller.set("display", _display)
 	controller.set("profile", Profile)
 	controller.set("selection_only", true)
 	controller.set("one_wager_per_player", false)
-	_keypad.add_child(controller)
 
 
 func _on_body_entered(body: Node3D) -> void:
