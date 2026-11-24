@@ -80,9 +80,9 @@ func build(parent: Node3D, number: int = 1) -> void:
 	cabinet.add_child(reels)
 	reel_cells.clear()
 	var idle: Array[Array] = [
-		["CHERRY", "SEVEN", "EGG"],
-		["ROOSTER", "SEVEN", "CORN"],
-		["LEMON", "SEVEN", "CHICK"],
+		["WINGS", "SEVEN", "EGG"],
+		["ROOSTER", "WILD", "CORN"],
+		["CHICK", "SEVEN", "WINGS"],
 	]
 	for reel_index: int in range(3):
 		var drum := Node3D.new()
@@ -154,68 +154,49 @@ func build(parent: Node3D, number: int = 1) -> void:
 
 
 func set_symbol_icon(cell: Node3D, symbol: String) -> void:
-	for child in cell.get_children():
+	for child: Node in cell.get_children():
 		if child.name == "SymbolIcon":
 			child.free()
-	var icon := Node3D.new()
-	icon.name = "SymbolIcon"
-	cell.add_child(icon)
+	var texture_path: String = ""
 	match symbol:
 		"SEVEN":
-			var seven := _text(icon, "GoldenSeven", "7", 0.29, Vector3(0, 0, 0.055), _mat(Color("#e4bd70"), 0.68, 0.23))
-			seven.rotation.x = 0
-		"ROOSTER", "WILD":
-			var gold := symbol == "WILD"
-			var body_mat := _mat(Color("#f0b83d") if gold else Color("#b72d24"), 0.35, 0.25, Color("#e99b2f") if gold else Color("#7d1718"), 0.45)
-			_sphere(icon, "Body", 0.105, Vector3(0, -0.015, 0.07), body_mat).scale = Vector3(1.25, 0.82, 0.72)
-			_sphere(icon, "Breast", 0.075, Vector3(-0.055, -0.045, 0.12), body_mat)
-			_sphere(icon, "Head", 0.067, Vector3(0.07, 0.09, 0.08), body_mat)
-			_cone(icon, "Beak", 0.035, 0.075, Vector3(0.13, 0.075, 0.09), _mat(Color("#f4a52f"), 0.25, 0.3))
-			_sphere(icon, "Comb", 0.035, Vector3(0.055, 0.16, 0.08), _mat(Color("#c51e25"), 0.2, 0.25))
-			_sphere(icon, "Eye", 0.012, Vector3(0.102, 0.105, 0.14), black_material())
-			for feather_index: int in range(3):
-				var tail := _sphere(icon, "TailFeather", 0.045, Vector3(-0.13, 0.055 + feather_index * 0.035, 0.045), body_mat)
-				tail.scale = Vector3(0.65, 1.8, 0.55)
-			_box(icon, "Feet", Vector3(0.13, 0.018, 0.025), Vector3(0, -0.13, 0.08), _mat(Color("#e89a29"), 0.25, 0.3))
+			texture_path = "res://assets/images/cluckpot/seven.png"
+		"WILD":
+			texture_path = "res://assets/images/cluckpot/gold_chicken.png"
+		"ROOSTER":
+			texture_path = "res://assets/images/cluckpot/normal_chicken.png"
 		"CHICK":
-			var chick_mat := _mat(Color("#ffd45c"), 0.12, 0.3, Color("#d99c27"), 0.3)
-			_sphere(icon, "ChickBody", 0.115, Vector3(0, -0.025, 0.07), chick_mat).scale = Vector3(1.0, 0.9, 0.72)
-			_sphere(icon, "ChickHead", 0.082, Vector3(0.035, 0.09, 0.08), chick_mat)
-			_cone(icon, "ChickBeak", 0.03, 0.06, Vector3(0.105, 0.075, 0.13), _mat(Color("#e58b21"), 0.2, 0.3))
-			_sphere(icon, "ChickEye", 0.012, Vector3(0.075, 0.105, 0.145), black_material())
-			_sphere(icon, "ChickWing", 0.052, Vector3(-0.06, -0.015, 0.13), _mat(Color("#f2bb42"), 0.1, 0.35))
+			texture_path = "res://assets/images/cluckpot/baby_chicken.png"
 		"EGG":
-			var egg := _sphere(icon, "SpeckledEgg", 0.12, Vector3(0, 0, 0.07), _mat(Color("#f4e7c8"), 0.05, 0.24))
-			egg.scale = Vector3(0.78, 1.18, 0.62)
-			for spot: int in range(5):
-				_sphere(icon, "EggSpeckle", 0.009, Vector3(-0.05 + float(spot % 3) * 0.045, -0.035 + float(spot / 3) * 0.07, 0.145), _mat(Color("#bd9871"), 0.0, 0.5))
+			texture_path = "res://assets/images/cluckpot/egg.png"
 		"CORN":
-			_cylinder(icon, "CornCob", 0.072, 0.25, Vector3(0, 0, 0.07), _mat(Color("#f5c83d"), 0.1, 0.28))
-			for row: int in range(4):
-				for col: int in range(3):
-					_sphere(icon, "Kernel", 0.027, Vector3(-0.045 + col * 0.045, -0.085 + row * 0.055, 0.135), _mat(Color("#ffdf54"), 0.08, 0.23))
-			_cone(icon, "Husk", 0.07, 0.18, Vector3(-0.09, -0.07, 0.05), _mat(Color("#3d8b42"), 0.05, 0.35))
-		"CHERRY":
-			var cherry_mat := _mat(Color("#c91528"), 0.18, 0.18, Color("#5c0714"), 0.35)
-			_sphere(icon, "CherryLeft", 0.075, Vector3(-0.065, -0.045, 0.08), cherry_mat)
-			_sphere(icon, "CherryRight", 0.075, Vector3(0.065, -0.045, 0.08), cherry_mat)
-			_cylinder(icon, "CherryStemLeft", 0.009, 0.19, Vector3(-0.035, 0.07, 0.08), _mat(Color("#39834b"), 0.0, 0.4))
-			_cylinder(icon, "CherryStemRight", 0.009, 0.19, Vector3(0.035, 0.07, 0.08), _mat(Color("#39834b"), 0.0, 0.4))
-			_sphere(icon, "Leaf", 0.045, Vector3(0.035, 0.15, 0.08), _mat(Color("#3c9b4e"), 0.0, 0.3)).scale = Vector3(1.5, 0.5, 0.4)
-		"LEMON":
-			var lemon := _sphere(icon, "Lemon", 0.105, Vector3(0, 0, 0.07), _mat(Color("#ffdc36"), 0.08, 0.22))
-			lemon.scale = Vector3(1.35, 0.78, 0.72)
-			_sphere(icon, "LemonTipLeft", 0.026, Vector3(-0.14, 0, 0.07), _mat(Color("#f1bf28"), 0.05, 0.25))
-			_sphere(icon, "LemonTipRight", 0.026, Vector3(0.14, 0, 0.07), _mat(Color("#f1bf28"), 0.05, 0.25))
-		"FEATHER":
-			var feather_mat := _mat(Color("#e8e5d9"), 0.12, 0.26)
-			var shaft := _cylinder(icon, "Quill", 0.009, 0.28, Vector3(0, 0, 0.08), _mat(Color("#bcae8e"), 0.15, 0.3))
-			shaft.rotation.z = deg_to_rad(-28)
-			for barb: int in range(5):
-				var vane := _sphere(icon, "Vane", 0.025, Vector3(-0.035 + barb * 0.018, -0.07 + barb * 0.035, 0.08), feather_mat)
-				vane.scale = Vector3(1.6, 0.55, 0.35)
+			texture_path = "res://assets/images/cluckpot/corn.png"
+		"WINGS":
+			texture_path = "res://assets/images/cluckpot/chickenwings.png"
 		_:
-			_text(icon, "FallbackSeven", "7", 0.25, Vector3(0, 0, 0.05), bright_material())
+			push_warning("Unknown Cluckpot symbol: %s" % symbol)
+			return
+	var texture: Texture2D = load(texture_path) as Texture2D
+	if texture == null:
+		push_warning("Cluckpot symbol texture could not be loaded: %s" % texture_path)
+		return
+	var icon := Sprite3D.new()
+	icon.name = "SymbolIcon"
+	icon.texture = texture
+	icon.pixel_size = 0.00046
+	icon.position = Vector3(0, 0, 0.055)
+	icon.modulate = Color.WHITE
+	icon.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
+	icon.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+	icon.alpha_scissor_threshold = 0.08
+	icon.shaded = false
+	icon.double_sided = true
+	if symbol == "SEVEN":
+		icon.pixel_size = 0.00042
+		icon.modulate = Color("#fff3d1")
+	elif symbol == "WILD":
+		icon.pixel_size = 0.00048
+	cell.add_child(icon)
 
 
 func black_material() -> StandardMaterial3D:
