@@ -2,6 +2,8 @@
 extends Node3D
 class_name ApartmentWallBuilder
 
+const LAYERS = preload("res://core/layers.gd")
+
 ## Procedural structural wall builder for the Apartment.
 ## Attach one instance to Architecture/PerimeterWalls and another to
 ## Architecture/InteriorWalls. Set wall_set accordingly.
