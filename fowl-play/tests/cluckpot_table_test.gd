@@ -78,6 +78,13 @@ func _run() -> void:
 			_check(not wager.is_empty(), "The spin returns a verifiable wallet wager ID")
 			if not wager.is_empty():
 				_check(str(wager.get("status", "")) == "settled", "The spin's wallet wager settles exactly once")
+			first_machine.set("spin_duration", 5.0)
+			var cleanup_spin: Dictionary = first_machine.call("_handle_spin", 1)
+			_check(bool(cleanup_spin.get("ok", false)), "A second spin starts before day-end cleanup")
+			var cleanup: Dictionary = first_machine.call("request_day_end_cleanup", "test_day_end")
+			_check(bool(cleanup.get("ok", false)) and str(cleanup.get("action", "")) == "settled_in_flight", "Day-end cleanup settles an in-flight spin")
+			var cleanup_wager: Dictionary = wallet.call("get_wager", str(cleanup_spin.get("wager_id", "")))
+			_check(str(cleanup_wager.get("status", "")) == "settled", "Day-end cleanup settles the spin's exact wallet wager")
 
 	arcade.queue_free()
 	_finish()
