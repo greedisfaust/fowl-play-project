@@ -2,18 +2,16 @@
 class_name CluckpotRules
 extends RefCounted
 
-const SYMBOLS: Array[String] = ["SEVEN", "ROOSTER", "WILD", "CHICK", "EGG", "CORN", "FEATHER", "CHERRY", "LEMON"]
-const SYMBOL_WEIGHTS: Array[int] = [4, 10, 8, 12, 14, 18, 20, 8, 6]
+const SYMBOLS: Array[String] = ["SEVEN", "WILD", "ROOSTER", "CHICK", "EGG", "CORN", "WINGS"]
+const SYMBOL_WEIGHTS: Array[int] = [4, 8, 10, 13, 16, 21, 28]
 const PAYOUTS: Dictionary = {
 	"SEVEN": 28.0,
+	"WILD": 14.0,
 	"ROOSTER": 7.0,
 	"CHICK": 3.2,
 	"EGG": 2.2,
 	"CORN": 1.3,
-	"FEATHER": 0.5,
-	"WILD": 14.0,
-	"CHERRY": 1.1,
-	"LEMON": 0.8,
+	"WINGS": 0.8,
 }
 const PAYLINES: Array[Array] = [
 	[1, 1, 1], # center
@@ -44,7 +42,7 @@ static func _roll_symbol(rng: RandomNumberGenerator) -> String:
 		roll -= SYMBOL_WEIGHTS[index]
 		if roll <= 0:
 			return SYMBOLS[index]
-	return "FEATHER"
+	return "WINGS"
 
 
 static func evaluate_lines(columns: Array) -> Array[Dictionary]:
@@ -95,28 +93,24 @@ static func calculate_payout(stake: int, outcome: Dictionary) -> int:
 static func get_symbol_display(symbol: String) -> String:
 	match symbol:
 		"SEVEN": return "7"
-		"ROOSTER": return "ROOSTER"
-		"WILD": return "WILD"
+		"WILD": return "GOLDEN CHICKEN"
+		"ROOSTER": return "CHICKEN"
 		"CHICK": return "CHICK"
 		"EGG": return "EGG"
 		"CORN": return "CORN"
-		"FEATHER": return "FEATHER"
-		"CHERRY": return "CHERRY"
-		"LEMON": return "LEMON"
+		"WINGS": return "WINGS"
 	return "?"
 
 
 static func get_symbol_color(symbol: String) -> Color:
 	match symbol:
 		"SEVEN": return Color(1.0, 0.72, 0.12, 1.0)
-		"ROOSTER": return Color(0.9, 0.24, 0.13, 1.0)
 		"WILD": return Color(1.0, 0.86, 0.38, 1.0)
+		"ROOSTER": return Color(0.9, 0.24, 0.13, 1.0)
 		"CHICK": return Color(1.0, 0.82, 0.35, 1.0)
 		"EGG": return Color(0.82, 0.91, 0.83, 1.0)
 		"CORN": return Color(0.98, 0.76, 0.16, 1.0)
-		"FEATHER": return Color(0.55, 0.85, 0.72, 1.0)
-		"CHERRY": return Color(0.88, 0.08, 0.16, 1.0)
-		"LEMON": return Color(1.0, 0.86, 0.18, 1.0)
+		"WINGS": return Color(0.78, 0.56, 0.34, 1.0)
 	return Color.WHITE
 
 
