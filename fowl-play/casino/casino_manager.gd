@@ -6,6 +6,7 @@ const REQUIRED_GAME_COUNT: int = 12
 const DAILY_SELECTION_COUNT: int = 6
 const MAX_DAYS: int = 10
 const CHICKEN_CROSS_SCENE: PackedScene = preload("res://casino/tables/chicken_cross/chicken_cross_table.tscn")
+const EGG_PLINKO_SCENE: PackedScene = preload("res://casino/tables/egg_plinko/egg_plinko_table.tscn")
 
 signal game_catalog_changed(registered_count: int, required_count: int)
 signal daily_selection_changed(day_number: int, game_ids: Array)
@@ -58,6 +59,14 @@ func _register_builtin_games() -> void:
 	var result: Dictionary = register_game(chicken_cross)
 	if not bool(result.get("ok", false)):
 		_log("Could not register Chicken Cross: %s" % str(result.get("reason", "")))
+
+	var egg_plinko: CasinoGameDefinition = CasinoGameDefinition.new()
+	egg_plinko.game_id = &"egg_plinko"
+	egg_plinko.display_name = "Egg Plinko"
+	egg_plinko.table_scene = EGG_PLINKO_SCENE
+	var plinko_result: Dictionary = register_game(egg_plinko)
+	if not bool(plinko_result.get("ok", false)):
+		_log("Could not register Egg Plinko: %s" % str(plinko_result.get("reason", "")))
 
 
 ## Registration is local static catalog setup, so every peer registers the same definitions.
