@@ -25,14 +25,19 @@ func _run() -> void:
 	var screen: Node3D = table.get_node("SlimWorldScreen") as Node3D
 	_check(screen.get("display_size") == Vector2(2.45, 1.12), "Terminal display retains its original physical size")
 	_check(screen.global_position.z > 1.3, "Terminal display sits in front of the cabinet face")
-	_check((table.get_node("BettingKeypad") as Node3D).position.z > 1.3, "Keypad interaction surface sits in front of cabinet collision")
+	var keypad_node: Node3D = table.get_node("BettingKeypad") as Node3D
+	_check(keypad_node.position.is_equal_approx(Vector3(-1.801, 1.227, 1.532)), "Keypad uses its authored cabinet position")
+	_check(is_equal_approx(rad_to_deg(keypad_node.rotation.x), 66.0) and is_equal_approx(rad_to_deg(keypad_node.rotation.y), 15.0), "Keypad uses its authored X66/Y15 rotation")
 	_check((table.get_node("Controls") as Node3D).position.z > 1.3, "Plinko launch button sits in front of cabinet collision")
 	var generated_visuals: Node = table.get_node("Visuals/_GeneratedEggPlinko")
+	_check(generated_visuals.get_node_or_null("PlinkoTitle") == null, "Decorative PLINKO title above the board is removed")
 	var divider_count: int = 0
 	for visual_child: Node in generated_visuals.get_children():
 		if str(visual_child.name).begins_with("PocketDivider_"):
 			divider_count += 1
 	_check(divider_count == 14, "Thirteen landing pockets have all fourteen boundary dividers")
+	var physics_body: StaticBody3D = generated_visuals.get_node("PlinkoPhysicalBody") as StaticBody3D
+	_check(physics_body.get_child_count() >= 5, "Cabinet collision includes base, board backing, side columns and control deck")
 	profile.set("maximum_wager", 20000)
 
 	_check_result(table.call("enter_proximity", 1), true, "Player one enters Plinko proximity")
