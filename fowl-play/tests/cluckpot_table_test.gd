@@ -106,6 +106,7 @@ func _run() -> void:
 			var visual_builder: CluckpotVisualBuilder = first_machine.get_node("Visuals") as CluckpotVisualBuilder
 			var settled_record: Dictionary = first_machine.get("last_spin_result")
 			var expected_columns: Array = settled_record.get("symbols", [])
+			_check(int(settled_record.get("visual_seed", 0)) > 0, "Host supplies a shared visual seed for synchronized multiplayer reels")
 			var aligned_faces: int = 0
 			if is_instance_valid(visual_builder) and expected_columns.size() == 3:
 				for reel_index: int in range(3):
