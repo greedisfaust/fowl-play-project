@@ -1,0 +1,27 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://casino/tables/cluckpot/cluckpot_machine.tscn" id="1_machine"]
+
+[node name="CluckpotArcade" type="Node3D"]
+
+[node name="Cluckpot_01" parent="." instance=ExtResource("1_machine")]
+table_id = "cluckpot_01"
+machine_number = 1
+position = Vector3(-1.08, 0, 0.92)
+
+[node name="Cluckpot_02" parent="." instance=ExtResource("1_machine")]
+table_id = "cluckpot_02"
+machine_number = 2
+position = Vector3(1.08, 0, 0.92)
+
+[node name="Cluckpot_03" parent="." instance=ExtResource("1_machine")]
+table_id = "cluckpot_03"
+machine_number = 3
+position = Vector3(-1.08, 0, -0.92)
+rotation = Vector3(0, 3.141593, 0)
+
+[node name="Cluckpot_04" parent="." instance=ExtResource("1_machine")]
+table_id = "cluckpot_04"
+machine_number = 4
+position = Vector3(1.08, 0, -0.92)
+rotation = Vector3(0, 3.141593, 0)
