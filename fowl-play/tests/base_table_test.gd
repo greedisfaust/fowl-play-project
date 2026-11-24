@@ -107,7 +107,7 @@ func _run() -> void:
 	)
 	_check_result(table.call("open_round", 2), true, "Table opens a round for deadline cleanup")
 	_check_result(table.call("join_table", 2), true, "Participant joins deadline round")
-	var deadline_wager: Dictionary = table.call("place_wager", 2, 80, {})
+	var deadline_wager: Dictionary = table.call("place_wager", 2, 100, {})
 	var deadline_wager_id: String = str(deadline_wager.get("wager_id", ""))
 	_check_result(deadline_wager, true, "Deadline round reserves a wager")
 	_check_result(table.call("start_round", 2), true, "Deadline round starts and locks wager")
@@ -118,7 +118,7 @@ func _run() -> void:
 	_check(auto_resolution_requests.size() == 1, "Game adapter receives one automatic resolution request")
 	_check(str(auto_resolution_requests[0].get("reason", "")) == "casino_timer_expired", "Automatic resolution receives the cleanup reason")
 	_check_result(table.call("settle_round", {deadline_wager_id: 0}), true, "Automatically resolved deadline round can settle")
-	_check(int(wallet.call("get_snapshot")["available_balance"]) == 970, "Deadline loss remains charged after settlement")
+	_check(int(wallet.call("get_snapshot")["available_balance"]) == 950, "Deadline loss remains charged after settlement")
 
 	table.queue_free()
 	if _failed:
