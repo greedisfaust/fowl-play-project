@@ -66,15 +66,10 @@ func spawn_tables() -> Dictionary:
 	# The daily draw is intentionally disabled until all twelve games are registered.
 	# In development mode, bypass that empty-selection gate and spawn the chosen test game.
 	if allow_single_chicken_cross_test_table and not bool(_casino_manager.call("is_catalog_complete")):
+		# The spawner only exists in the Casino world, so standalone scene testing can
+		# safely use Day 1 when no RunManager session has been started.
 		if day_number < 1:
-			return {
-				"ok": true,
-				"pending": true,
-				"reason": "Waiting for an active casino day before spawning the development test table.",
-				"spawned_count": 0,
-				"skipped_count": 0,
-				"total_spawned": _spawned_slot_ids.size(),
-			}
+			day_number = 1
 		var test_definition: CasinoGameDefinition = _casino_manager.call("get_game_definition", StringName(development_test_game_id)) as CasinoGameDefinition
 		if not is_instance_valid(test_definition):
 			return _report_spawn_failure(_failure("CasinoManager has no registered definition for development game '%s'." % development_test_game_id))
