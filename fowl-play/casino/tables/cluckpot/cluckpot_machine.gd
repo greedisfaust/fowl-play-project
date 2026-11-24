@@ -333,7 +333,6 @@ func _setup_keypad() -> void:
 	_keypad.name = "BettingKeypad"
 	_keypad.position = Vector3(-0.48, 0.82, 1.08)
 	_keypad.rotation = Vector3(deg_to_rad(62.0), 0.0, 0.0)
-	add_child(_keypad)
 	var readout := MeshInstance3D.new()
 	readout.name = "WagerReadout"
 	var readout_mesh := TextMesh.new()
@@ -374,6 +373,7 @@ func _setup_keypad() -> void:
 		controller.set("profile", Profile)
 		controller.set("selection_only", true)
 		controller.set("one_wager_per_player", false)
+	add_child(_keypad)
 
 
 func _on_body_entered(body: Node3D) -> void:
