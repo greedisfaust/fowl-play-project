@@ -24,16 +24,21 @@ func _run() -> void:
 	var profile: Resource = display.get("profile")
 	profile.set("maximum_wager", 20000)
 
-	_check_result(table.call("enter_proximity", 1), true, "Player enters Plinko proximity")
+	_check_result(table.call("enter_proximity", 1), true, "Player one enters Plinko proximity")
+	_check_result(table.call("enter_proximity", 2), true, "Player two enters Plinko proximity")
 	var limits: Dictionary = table.call("get_wager_limits")
 	_check(int(limits.get("safety_reserve", 0)) == 2625, "Safety reserve protects 15% of the live quota target")
 	_check(int(limits.get("maximum", 0)) == 7375, "Dynamic maximum respects the quota gap and protected reserve")
 	var keypad: Node = table.get_node("BettingKeypad/BettingKeypadController")
 	for digit: String in ["1", "0", "0", "0"]:
-		_check_result(keypad.call("handle_button_input", StringName(digit), 1), true, "Player enters selected wager digit %s" % digit)
-	_check_result(keypad.call("handle_button_input", &"CONFIRM", 1), true, "Confirm stores the selected amount without spending it")
-	_check(table.call("get_selected_wager", 1) == 1000, "Confirmed amount becomes the player's selected wager")
-	_check(int(wallet.call("get_snapshot")["available_balance"]) == 10000, "Selecting a wager does not reserve or spend money")
+		_check_result(keypad.call("handle_button_input", StringName(digit), 1), true, "Player one enters a wager digit")
+	for digit: String in ["2", "0", "0", "0"]:
+		_check_result(keypad.call("handle_button_input", StringName(digit), 2), true, "Player two enters a separate wager digit")
+	_check_result(keypad.call("handle_button_input", &"CONFIRM", 2), true, "Player two confirms their independent amount")
+	_check(table.call("get_selected_wager", 2) == 2000, "Player two's selected amount is stored separately")
+	_check_result(keypad.call("handle_button_input", &"CONFIRM", 1), true, "Player one confirms their preserved draft")
+	_check(table.call("get_selected_wager", 1) == 1000, "Player one's draft remains independent of player two's input")
+	_check(int(wallet.call("get_snapshot")["available_balance"]) == 10000, "Selecting wagers does not reserve or spend money")
 
 	var first_drop: Dictionary = table.call("_handle_plinko_drop", 1)
 	_check_result(first_drop, true, "First Plinko press launches an egg")
