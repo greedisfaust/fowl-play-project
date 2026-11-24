@@ -13,6 +13,9 @@ const Rules = preload("res://casino/tables/cluckpot/cluckpot_rules.gd")
 			_rebuild()
 
 var reel_cells: Array[Array] = []
+var reel_drums: Array[Node3D] = []
+const REEL_SYMBOL_COUNT: int = 10
+var _symbol_rng := RandomNumberGenerator.new()
 
 
 func _ready() -> void:
@@ -74,31 +77,45 @@ func build(parent: Node3D, number: int = 1) -> void:
 		for y: float in [0.31, 2.28]:
 			_sphere(cabinet, "Rivet", 0.035, Vector3(x, y, 0.57), bright_brass)
 
-	# Three separate vertical reel carriers; symbol objects are real meshes, not text.
+	# Three real horizontal-axis reel drums. Each carries a full ring of symbol tiles.
 	var reels := Node3D.new()
 	reels.name = "Reels"
 	cabinet.add_child(reels)
 	reel_cells.clear()
-	var idle: Array[Array] = [
-		["WINGS", "SEVEN", "EGG"],
-		["ROOSTER", "WILD", "CORN"],
-		["CHICK", "SEVEN", "WINGS"],
-	]
+	reel_drums.clear()
+	_symbol_rng.randomize()
 	for reel_index: int in range(3):
 		var drum := Node3D.new()
 		drum.name = "Reel_%d" % reel_index
+		drum.position = Vector3((float(reel_index) - 1.0) * 0.425, 1.57, 0.745)
 		reels.add_child(drum)
+		reel_drums.append(drum)
+		var barrel := MeshInstance3D.new()
+		barrel.name = "CylindricalDrum"
+		var barrel_mesh := CylinderMesh.new()
+		barrel_mesh.top_radius = 0.49
+		barrel_mesh.bottom_radius = 0.49
+		barrel_mesh.height = 0.39
+		barrel_mesh.radial_segments = 48
+		barrel.mesh = barrel_mesh
+		barrel.rotation.z = PI * 0.5
+		barrel.material_override = _mat(Color("#d9cbb0"), 0.16, 0.28)
+		drum.add_child(barrel)
+		var axle := _cylinder(drum, "Axle", 0.075, 0.54, Vector3.ZERO, dark_brass)
+		axle.rotation.z = PI * 0.5
 		var cells: Array[Node3D] = []
-		var x := (float(reel_index) - 1.0) * 0.425
-		for row: int in range(3):
+		for symbol_index: int in range(REEL_SYMBOL_COUNT):
+			var angle: float = -TAU * float(symbol_index) / float(REEL_SYMBOL_COUNT)
 			var cell := Node3D.new()
-			cell.name = "Cell_%d" % row
-			cell.position = Vector3(x, 1.88 - float(row) * 0.31, 0.745)
+			cell.name = "Cell_%d" % symbol_index
+			cell.position = Vector3(0, sin(angle) * 0.475, cos(angle) * 0.475)
+			cell.rotation.x = -angle
 			drum.add_child(cell)
-			_box(cell, "IvoryTile", Vector3(0.39, 0.285, 0.018), Vector3.ZERO, ivory)
-			set_symbol_icon(cell, str(idle[reel_index][row]))
+			_box(cell, "IvoryTile", Vector3(0.33, 0.265, 0.018), Vector3(0, 0, 0.012), ivory)
+			set_symbol_icon(cell, Rules.SYMBOLS[_symbol_rng.randi_range(0, Rules.SYMBOLS.size() - 1)])
 			cells.append(cell)
-		reel_cells.append(cells)
+		# Public row order is top, center, bottom; these exact cells face the payline at rest.
+		reel_cells.append([cells[9], cells[0], cells[1]])
 
 	# Subtle vertical cooling ribs and a recessed coin-return assembly.
 	for rib_index: int in range(5):
@@ -153,6 +170,25 @@ func build(parent: Node3D, number: int = 1) -> void:
 	_collision(body, Vector3(1.76, 2.42, 1.02), Vector3(0, 1.28, 0))
 	_collision(body, Vector3(0.16, 0.2, 0.2), Vector3(1.0, 1.63, 0.2))
 	_set_owner_recursive(cabinet)
+
+
+func set_reel_outcome(reel_index: int, column: Array) -> void:
+	if reel_index < 0 or reel_index >= 3 or column.size() != 3:
+		return
+	var drum: Node3D = reel_drums[reel_index]
+	var cells: Array[Node3D] = []
+	for child: Node in drum.get_children():
+		if child is Node3D and str(child.name).begins_with("Cell_"):
+			cells.append(child as Node3D)
+	if cells.size() != REEL_SYMBOL_COUNT:
+		return
+	# Fill the hidden circumference with harmless symbols, then pin the authoritative
+	# top/center/bottom result to the three faces that align with the viewing window.
+	for index: int in range(REEL_SYMBOL_COUNT):
+		set_symbol_icon(cells[index], Rules.SYMBOLS[_symbol_rng.randi_range(0, Rules.SYMBOLS.size() - 1)])
+	set_symbol_icon(cells[9], str(column[0]))
+	set_symbol_icon(cells[0], str(column[1]))
+	set_symbol_icon(cells[1], str(column[2]))
 
 
 func set_symbol_icon(cell: Node3D, symbol: String) -> void:
