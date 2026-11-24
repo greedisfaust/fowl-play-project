@@ -14006,7 +14006,6 @@ script = ExtResource("1_ojnio")
 facade_points = PackedVector2Array(-24, -18.665, -14, -28.665, 11, -28.665)
 ceiling_underside_y = 4.5
 header_depth = 0.35
-generate_glass_collision = null
 
 [node name="_GeneratedPanoramicFacade" type="Node3D" parent="Architecture/WindowFrames" unique_id=537812368]
 
@@ -24956,6 +24955,7 @@ mesh = SubResource("BoxMesh_41x0c")
 [node name="TableSpawners" type="Node3D" parent="Architecture" unique_id=1063708686]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0.445, -15.5)
 script = ExtResource("8_rix1d")
+development_test_game_id = "egg_plinko"
 
 [node name="SpawnPoints" type="Node3D" parent="Architecture/TableSpawners" unique_id=919833849]
 
@@ -24964,34 +24964,34 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, 8)
 script = ExtResource("9_r5tfs")
 slot_id = "table_01"
 
-[node name="_TableSpawnPreview" type="Node3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01" unique_id=2110983523]
+[node name="_TableSpawnPreview" type="Node3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01" unique_id=1370248617]
 
-[node name="Footprint" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01/_TableSpawnPreview" unique_id=1921257449]
+[node name="Footprint" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01/_TableSpawnPreview" unique_id=1676109131]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0)
 material_override = SubResource("StandardMaterial3D_yyfnm")
 mesh = SubResource("PlaneMesh_vu7m7")
 
-[node name="FrontEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01/_TableSpawnPreview" unique_id=589248651]
+[node name="FrontEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01/_TableSpawnPreview" unique_id=1440149271]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, -1.2)
 material_override = SubResource("StandardMaterial3D_uwn2a")
 mesh = SubResource("BoxMesh_ykpfq")
 
-[node name="BackEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01/_TableSpawnPreview" unique_id=1333491438]
+[node name="BackEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01/_TableSpawnPreview" unique_id=432460621]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 1.2)
 material_override = SubResource("StandardMaterial3D_uwn2a")
 mesh = SubResource("BoxMesh_5oagg")
 
-[node name="LeftEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01/_TableSpawnPreview" unique_id=670617587]
+[node name="LeftEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01/_TableSpawnPreview" unique_id=1005516527]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 0.025, 0)
 material_override = SubResource("StandardMaterial3D_uwn2a")
 mesh = SubResource("BoxMesh_dcn78")
 
-[node name="RightEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01/_TableSpawnPreview" unique_id=55727917]
+[node name="RightEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01/_TableSpawnPreview" unique_id=1281538618]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 0.025, 0)
 material_override = SubResource("StandardMaterial3D_uwn2a")
 mesh = SubResource("BoxMesh_e0wfw")
 
-[node name="CenterOrientationRing" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01/_TableSpawnPreview" unique_id=1537072825]
+[node name="CenterOrientationRing" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_01/_TableSpawnPreview" unique_id=808960474]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.045, 0)
 material_override = SubResource("StandardMaterial3D_uwn2a")
 mesh = SubResource("TorusMesh_qpxrx")
@@ -25001,34 +25001,34 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, 0)
 script = ExtResource("9_r5tfs")
 slot_id = "table_02"
 
-[node name="_TableSpawnPreview" type="Node3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02" unique_id=2029054378]
+[node name="_TableSpawnPreview" type="Node3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02" unique_id=738641745]
 
-[node name="Footprint" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02/_TableSpawnPreview" unique_id=1185309999]
+[node name="Footprint" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02/_TableSpawnPreview" unique_id=106455919]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0)
 material_override = SubResource("StandardMaterial3D_una2j")
 mesh = SubResource("PlaneMesh_t6k6m")
 
-[node name="FrontEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02/_TableSpawnPreview" unique_id=236193864]
+[node name="FrontEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02/_TableSpawnPreview" unique_id=2043640329]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, -1.2)
 material_override = SubResource("StandardMaterial3D_2g8n0")
 mesh = SubResource("BoxMesh_k1poi")
 
-[node name="BackEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02/_TableSpawnPreview" unique_id=1891435964]
+[node name="BackEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02/_TableSpawnPreview" unique_id=488649152]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 1.2)
 material_override = SubResource("StandardMaterial3D_2g8n0")
 mesh = SubResource("BoxMesh_fthr4")
 
-[node name="LeftEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02/_TableSpawnPreview" unique_id=775104407]
+[node name="LeftEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02/_TableSpawnPreview" unique_id=987201079]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 0.025, 0)
 material_override = SubResource("StandardMaterial3D_2g8n0")
 mesh = SubResource("BoxMesh_26e1p")
 
-[node name="RightEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02/_TableSpawnPreview" unique_id=2080444340]
+[node name="RightEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02/_TableSpawnPreview" unique_id=785362140]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 0.025, 0)
 material_override = SubResource("StandardMaterial3D_2g8n0")
 mesh = SubResource("BoxMesh_381rv")
 
-[node name="CenterOrientationRing" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02/_TableSpawnPreview" unique_id=1013510140]
+[node name="CenterOrientationRing" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_02/_TableSpawnPreview" unique_id=831595803]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.045, 0)
 material_override = SubResource("StandardMaterial3D_2g8n0")
 mesh = SubResource("TorusMesh_drj2f")
@@ -25038,34 +25038,34 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.775, 0, 8)
 script = ExtResource("9_r5tfs")
 slot_id = "table_03"
 
-[node name="_TableSpawnPreview" type="Node3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03" unique_id=938353041]
+[node name="_TableSpawnPreview" type="Node3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03" unique_id=1052627898]
 
-[node name="Footprint" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03/_TableSpawnPreview" unique_id=902803336]
+[node name="Footprint" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03/_TableSpawnPreview" unique_id=513654077]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0)
 material_override = SubResource("StandardMaterial3D_s3jm1")
 mesh = SubResource("PlaneMesh_r6e37")
 
-[node name="FrontEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03/_TableSpawnPreview" unique_id=1122008451]
+[node name="FrontEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03/_TableSpawnPreview" unique_id=377314939]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, -1.2)
 material_override = SubResource("StandardMaterial3D_5s2re")
 mesh = SubResource("BoxMesh_ra3gj")
 
-[node name="BackEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03/_TableSpawnPreview" unique_id=1479256931]
+[node name="BackEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03/_TableSpawnPreview" unique_id=947738666]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 1.2)
 material_override = SubResource("StandardMaterial3D_5s2re")
 mesh = SubResource("BoxMesh_rxse7")
 
-[node name="LeftEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03/_TableSpawnPreview" unique_id=833887170]
+[node name="LeftEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03/_TableSpawnPreview" unique_id=1007244928]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 0.025, 0)
 material_override = SubResource("StandardMaterial3D_5s2re")
 mesh = SubResource("BoxMesh_axc48")
 
-[node name="RightEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03/_TableSpawnPreview" unique_id=259190469]
+[node name="RightEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03/_TableSpawnPreview" unique_id=1903100607]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 0.025, 0)
 material_override = SubResource("StandardMaterial3D_5s2re")
 mesh = SubResource("BoxMesh_7o564")
 
-[node name="CenterOrientationRing" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03/_TableSpawnPreview" unique_id=114112109]
+[node name="CenterOrientationRing" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_03/_TableSpawnPreview" unique_id=900563040]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.045, 0)
 material_override = SubResource("StandardMaterial3D_5s2re")
 mesh = SubResource("TorusMesh_lcscp")
@@ -25075,34 +25075,34 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.775, 0, 0)
 script = ExtResource("9_r5tfs")
 slot_id = "table_04"
 
-[node name="_TableSpawnPreview" type="Node3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04" unique_id=1655878624]
+[node name="_TableSpawnPreview" type="Node3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04" unique_id=640212819]
 
-[node name="Footprint" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04/_TableSpawnPreview" unique_id=121575184]
+[node name="Footprint" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04/_TableSpawnPreview" unique_id=78501435]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0)
 material_override = SubResource("StandardMaterial3D_dshx8")
 mesh = SubResource("PlaneMesh_p2kpk")
 
-[node name="FrontEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04/_TableSpawnPreview" unique_id=2056032253]
+[node name="FrontEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04/_TableSpawnPreview" unique_id=2029544790]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, -1.2)
 material_override = SubResource("StandardMaterial3D_h12u5")
 mesh = SubResource("BoxMesh_cobfw")
 
-[node name="BackEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04/_TableSpawnPreview" unique_id=1914189538]
+[node name="BackEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04/_TableSpawnPreview" unique_id=61096718]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 1.2)
 material_override = SubResource("StandardMaterial3D_h12u5")
 mesh = SubResource("BoxMesh_h0srb")
 
-[node name="LeftEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04/_TableSpawnPreview" unique_id=414887037]
+[node name="LeftEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04/_TableSpawnPreview" unique_id=1084279425]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 0.025, 0)
 material_override = SubResource("StandardMaterial3D_h12u5")
 mesh = SubResource("BoxMesh_hqbtc")
 
-[node name="RightEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04/_TableSpawnPreview" unique_id=1511542452]
+[node name="RightEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04/_TableSpawnPreview" unique_id=2017752807]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 0.025, 0)
 material_override = SubResource("StandardMaterial3D_h12u5")
 mesh = SubResource("BoxMesh_grfgj")
 
-[node name="CenterOrientationRing" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04/_TableSpawnPreview" unique_id=351434179]
+[node name="CenterOrientationRing" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_04/_TableSpawnPreview" unique_id=1467352128]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.045, 0)
 material_override = SubResource("StandardMaterial3D_h12u5")
 mesh = SubResource("TorusMesh_lxxeu")
@@ -25112,34 +25112,34 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.775, 0, -8)
 script = ExtResource("9_r5tfs")
 slot_id = "table_05"
 
-[node name="_TableSpawnPreview" type="Node3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05" unique_id=1310659768]
+[node name="_TableSpawnPreview" type="Node3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05" unique_id=986145599]
 
-[node name="Footprint" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05/_TableSpawnPreview" unique_id=972579929]
+[node name="Footprint" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05/_TableSpawnPreview" unique_id=48807427]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0)
 material_override = SubResource("StandardMaterial3D_gkomo")
 mesh = SubResource("PlaneMesh_fytyt")
 
-[node name="FrontEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05/_TableSpawnPreview" unique_id=374757580]
+[node name="FrontEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05/_TableSpawnPreview" unique_id=529565009]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, -1.2)
 material_override = SubResource("StandardMaterial3D_u1mw2")
 mesh = SubResource("BoxMesh_6ofct")
 
-[node name="BackEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05/_TableSpawnPreview" unique_id=1017080175]
+[node name="BackEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05/_TableSpawnPreview" unique_id=1554887562]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 1.2)
 material_override = SubResource("StandardMaterial3D_u1mw2")
 mesh = SubResource("BoxMesh_3txqq")
 
-[node name="LeftEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05/_TableSpawnPreview" unique_id=1145571196]
+[node name="LeftEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05/_TableSpawnPreview" unique_id=914530933]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 0.025, 0)
 material_override = SubResource("StandardMaterial3D_u1mw2")
 mesh = SubResource("BoxMesh_eiw3g")
 
-[node name="RightEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05/_TableSpawnPreview" unique_id=240370765]
+[node name="RightEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05/_TableSpawnPreview" unique_id=2058783486]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 0.025, 0)
 material_override = SubResource("StandardMaterial3D_u1mw2")
 mesh = SubResource("BoxMesh_ji7dp")
 
-[node name="CenterOrientationRing" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05/_TableSpawnPreview" unique_id=919912378]
+[node name="CenterOrientationRing" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_05/_TableSpawnPreview" unique_id=2015787202]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.045, 0)
 material_override = SubResource("StandardMaterial3D_u1mw2")
 mesh = SubResource("TorusMesh_33m6g")
@@ -25149,34 +25149,34 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, -9)
 script = ExtResource("9_r5tfs")
 slot_id = "table_06"
 
-[node name="_TableSpawnPreview" type="Node3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06" unique_id=893971122]
+[node name="_TableSpawnPreview" type="Node3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06" unique_id=1893386874]
 
-[node name="Footprint" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06/_TableSpawnPreview" unique_id=483253347]
+[node name="Footprint" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06/_TableSpawnPreview" unique_id=209203640]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0)
 material_override = SubResource("StandardMaterial3D_flrxe")
 mesh = SubResource("PlaneMesh_1v4y7")
 
-[node name="FrontEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06/_TableSpawnPreview" unique_id=798022636]
+[node name="FrontEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06/_TableSpawnPreview" unique_id=1534840665]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, -1.2)
 material_override = SubResource("StandardMaterial3D_fktug")
 mesh = SubResource("BoxMesh_3rig8")
 
-[node name="BackEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06/_TableSpawnPreview" unique_id=445088593]
+[node name="BackEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06/_TableSpawnPreview" unique_id=53757892]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 1.2)
 material_override = SubResource("StandardMaterial3D_fktug")
 mesh = SubResource("BoxMesh_ccp6x")
 
-[node name="LeftEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06/_TableSpawnPreview" unique_id=724077724]
+[node name="LeftEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06/_TableSpawnPreview" unique_id=1076427035]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 0.025, 0)
 material_override = SubResource("StandardMaterial3D_fktug")
 mesh = SubResource("BoxMesh_1ogfe")
 
-[node name="RightEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06/_TableSpawnPreview" unique_id=43745397]
+[node name="RightEdge" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06/_TableSpawnPreview" unique_id=741027355]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 0.025, 0)
 material_override = SubResource("StandardMaterial3D_fktug")
 mesh = SubResource("BoxMesh_ctaay")
 
-[node name="CenterOrientationRing" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06/_TableSpawnPreview" unique_id=1660828770]
+[node name="CenterOrientationRing" type="MeshInstance3D" parent="Architecture/TableSpawners/SpawnPoints/TableSlot_06/_TableSpawnPreview" unique_id=931658250]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.045, 0)
 material_override = SubResource("StandardMaterial3D_fktug")
 mesh = SubResource("TorusMesh_v4k75")

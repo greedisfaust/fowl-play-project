@@ -467,4 +467,3 @@ func _format_money(amount: int) -> String:
 			formatted += ","
 		formatted += digits.substr(index, 1)
 	return "$" + formatted
-
