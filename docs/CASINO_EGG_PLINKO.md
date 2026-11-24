@@ -6,7 +6,7 @@ Egg Plinko is a shared multiplayer casino table. Every egg is an independent wag
 
 1. A player enters the table's proximity area.
 2. The shared terminal keypad is used to choose an amount and press CONFIRM.
-3. Confirming stores that player's selected amount; it does not reserve or spend money.
+3. Confirming stores that player's selected amount; it does not reserve or spend money. Each player has an independent keypad draft and selected amount, even though they share the physical terminal.
 4. Pressing the physical PLINKO button launches one egg and reserves the full selected amount.
 5. The host resolves the egg's peg path, landing slot and gross return.
 6. The egg's independent wallet round settles when its animation reaches the pocket.
