@@ -14700,107 +14700,107 @@ transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -12.
 [node name="HallwayVoid" type="Node3D" parent="." unique_id=895245131]
 script = ExtResource("4_a7ve1")
 
-[node name="_GeneratedHallwayVoid" type="Node3D" parent="HallwayVoid" unique_id=116775980]
+[node name="_GeneratedHallwayVoid" type="Node3D" parent="HallwayVoid" unique_id=2016360982]
 
-[node name="DarknessLayer_1" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=924733484]
+[node name="DarknessLayer_1" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=1115261055]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.75, 2, 4.6684213)
 material_override = SubResource("StandardMaterial3D_5yqvx")
 mesh = SubResource("QuadMesh_edfn6")
 
-[node name="DarknessLayer_2" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=568333951]
+[node name="DarknessLayer_2" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=65587305]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.75, 2, 5.336842)
 material_override = SubResource("StandardMaterial3D_uywtx")
 mesh = SubResource("QuadMesh_mw8wp")
 
-[node name="DarknessLayer_3" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=1538465014]
+[node name="DarknessLayer_3" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=2109679227]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.75, 2, 6.0052633)
 material_override = SubResource("StandardMaterial3D_dllni")
 mesh = SubResource("QuadMesh_at8p0")
 
-[node name="DarknessLayer_4" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=1569566293]
+[node name="DarknessLayer_4" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=1360331253]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.75, 2, 6.673684)
 material_override = SubResource("StandardMaterial3D_stfis")
 mesh = SubResource("QuadMesh_r01uk")
 
-[node name="DarknessLayer_5" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=48478047]
+[node name="DarknessLayer_5" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=2049203493]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.75, 2, 7.3421054)
 material_override = SubResource("StandardMaterial3D_xafkr")
 mesh = SubResource("QuadMesh_42tfj")
 
-[node name="DarknessLayer_6" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=1902600345]
+[node name="DarknessLayer_6" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=580678082]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.75, 2, 8.010527)
 material_override = SubResource("StandardMaterial3D_d6kli")
 mesh = SubResource("QuadMesh_643vs")
 
-[node name="DarknessLayer_7" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=1648899686]
+[node name="DarknessLayer_7" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=1280532382]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.75, 2, 8.678947)
 material_override = SubResource("StandardMaterial3D_elyep")
 mesh = SubResource("QuadMesh_amvb0")
 
-[node name="DarknessLayer_8" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=410946659]
+[node name="DarknessLayer_8" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=345579366]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.75, 2, 9.347368)
 material_override = SubResource("StandardMaterial3D_0x6re")
 mesh = SubResource("QuadMesh_xtbes")
 
-[node name="DarknessLayer_9" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=1006409185]
+[node name="DarknessLayer_9" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=199247339]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.75, 2, 10.015789)
 material_override = SubResource("StandardMaterial3D_3c703")
 mesh = SubResource("QuadMesh_g5yma")
 
-[node name="DarknessLayer_10" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=428410425]
+[node name="DarknessLayer_10" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=1757994601]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.75, 2, 10.684211)
 material_override = SubResource("StandardMaterial3D_t3pci")
 mesh = SubResource("QuadMesh_pru5a")
 
-[node name="DarknessLayer_11" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=1380580465]
+[node name="DarknessLayer_11" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=1983900647]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.75, 2, 11.352632)
 material_override = SubResource("StandardMaterial3D_a3wwf")
 mesh = SubResource("QuadMesh_dnrk0")
 
-[node name="DarknessLayer_12" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=1049594240]
+[node name="DarknessLayer_12" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=610069781]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.75, 2, 12.021052)
 material_override = SubResource("StandardMaterial3D_m2rk0")
 mesh = SubResource("QuadMesh_gkxex")
 
-[node name="DarknessLayer_13" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=1010600193]
+[node name="DarknessLayer_13" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=2144870239]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.75, 2, 12.689474)
 material_override = SubResource("StandardMaterial3D_jxexd")
 mesh = SubResource("QuadMesh_b8dei")
 
-[node name="DarknessLayer_14" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=1842477521]
+[node name="DarknessLayer_14" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=770440147]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.75, 2, 13.357895)
 material_override = SubResource("StandardMaterial3D_8gn31")
 mesh = SubResource("QuadMesh_g5xaw")
 
-[node name="DarknessLayer_15" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=2137517577]
+[node name="DarknessLayer_15" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=942193034]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.75, 2, 14.026316)
 material_override = SubResource("StandardMaterial3D_5dchk")
 mesh = SubResource("QuadMesh_ksesy")
 
-[node name="DarknessLayer_16" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=2069527924]
+[node name="DarknessLayer_16" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=397755741]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.75, 2, 14.6947365)
 material_override = SubResource("StandardMaterial3D_hs8vy")
 mesh = SubResource("QuadMesh_ro0io")
 
-[node name="DarknessLayer_17" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=1208214839]
+[node name="DarknessLayer_17" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=1704722058]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.75, 2, 15.363158)
 material_override = SubResource("StandardMaterial3D_n4181")
 mesh = SubResource("QuadMesh_4ia4l")
 
-[node name="DarknessLayer_18" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=1222372669]
+[node name="DarknessLayer_18" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=48000061]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.75, 2, 16.031578)
 material_override = SubResource("StandardMaterial3D_cl1ni")
 mesh = SubResource("QuadMesh_5aomp")
 
-[node name="EndlessBlack" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=1406032005]
+[node name="EndlessBlack" type="MeshInstance3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=1381475660]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.75, 2, 16.7)
 material_override = SubResource("StandardMaterial3D_hxtfu")
 mesh = SubResource("QuadMesh_aeb47")
 
-[node name="InvisibleVoidBarrier" type="StaticBody3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=1558853811]
+[node name="InvisibleVoidBarrier" type="StaticBody3D" parent="HallwayVoid/_GeneratedHallwayVoid" unique_id=884798372]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.75, 2, 16.82)
 
-[node name="@CollisionShape3D@19861" type="CollisionShape3D" parent="HallwayVoid/_GeneratedHallwayVoid/InvisibleVoidBarrier" unique_id=952212429]
+[node name="@CollisionShape3D@19859" type="CollisionShape3D" parent="HallwayVoid/_GeneratedHallwayVoid/InvisibleVoidBarrier" unique_id=649137830]
 shape = SubResource("BoxShape3D_0fcil")
 
 [node name="LobbyDevices" type="Node3D" parent="." unique_id=1827874865]
@@ -14886,7 +14886,7 @@ material_override = SubResource("StandardMaterial3D_i40ur")
 mesh = SubResource("BoxMesh_qpfio")
 
 [node name="EngravedText" parent="LobbyDevices/RegistrationTerminal/Housing/Chassis/ControlPanel/IdentificationPlate" parent_id_path=PackedInt32Array(70243720, 1276401181, 1224424019) index="1" unique_id=129356557]
-transform = Transform3D(2048, 0, 0, 0, 2048, 0, 0, 0, 2048, 0.54, 0, 0.049)
+transform = Transform3D(4096, 0, 0, 0, 4096, 0, 0, 0, 4096, 0.54, 0, 0.049)
 mesh = SubResource("TextMesh_nektu")
 
 [node name="TopLeftFastener" parent="LobbyDevices/RegistrationTerminal/Housing/Chassis/Fasteners" parent_id_path=PackedInt32Array(70243720, 1276401181, 892892411) index="0" unique_id=357282570]
