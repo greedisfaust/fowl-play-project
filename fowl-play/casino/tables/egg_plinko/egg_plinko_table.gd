@@ -24,7 +24,7 @@ signal selected_wager_changed(peer_id: int, amount: int)
 # _wallet is inherited from BaseTable; do not redeclare it here.
 var _network: Node
 var _day_manager: Node
-var _selected_wagers: Dictionary = {}
+var _selected_wager: int = 0
 var _active_eggs: Dictionary = {}
 var _egg_nodes: Dictionary = {}
 var _recent_results: Array[Dictionary] = []
@@ -103,7 +103,7 @@ func set_selected_wager(peer_id: int, amount: int) -> Dictionary:
 	var maximum: int = int(limits["maximum"])
 	if amount < minimum or amount > maximum:
 		return _failure("Selected wager must be between %d and %d." % [minimum, maximum])
-	_selected_wagers[peer_id] = amount
+	_selected_wager = amount
 	selected_wager_changed.emit(peer_id, amount)
 	if multiplayer.multiplayer_peer != null:
 		_rpc_sync_selected_wager.rpc(peer_id, amount)
@@ -113,13 +113,17 @@ func set_selected_wager(peer_id: int, amount: int) -> Dictionary:
 
 @rpc("authority", "call_remote", "reliable")
 func _rpc_sync_selected_wager(peer_id: int, amount: int) -> void:
-	_selected_wagers[peer_id] = amount
+	_selected_wager = amount
 	selected_wager_changed.emit(peer_id, amount)
 	_update_terminal_status()
 
 
-func get_selected_wager(peer_id: int) -> int:
-	return int(_selected_wagers.get(peer_id, 0))
+func get_selected_wager(_peer_id: int = 0) -> int:
+	return _selected_wager
+
+
+func get_shared_selected_wager() -> int:
+	return _selected_wager
 
 
 ## BaseTable's shared terminal queries this method; expose all currently airborne eggs.
@@ -172,7 +176,7 @@ func request_day_end_cleanup(reason: String) -> Dictionary:
 		_egg_nodes.erase(egg_id)
 		settled_ids.append(egg_id)
 		settled_count += 1
-	_selected_wagers.clear()
+	_selected_wager = 0
 	if multiplayer.multiplayer_peer != null:
 		_rpc_clear_active_eggs.rpc(settled_ids)
 	_publish_keypad_snapshot()
@@ -225,7 +229,7 @@ func _handle_plinko_drop(peer_id: int) -> Dictionary:
 		return _reject_drop(peer_id, "Move closer to the Plinko table to launch an egg.")
 	if _active_eggs.size() >= maximum_airborne_eggs:
 		return _reject_drop(peer_id, "The Plinko board is full. Wait for an egg to land.")
-	var stake: int = get_selected_wager(peer_id)
+	var stake: int = get_shared_selected_wager()
 	if stake <= 0:
 		return _reject_drop(peer_id, "Select and confirm a wager before pressing PLINKO.")
 	var limits: Dictionary = get_wager_limits()
@@ -446,9 +450,10 @@ func _update_terminal_status() -> void:
 	var world_screen: Node = get_node_or_null("SlimWorldScreen/WorldScreen")
 	if world_screen != null and world_screen.has_method("set_content"):
 		var lines: Array[String] = []
-		for peer_value: Variant in _selected_wagers.keys():
-			var peer_id: int = int(peer_value)
-			lines.append("%s  SELECTED %s" % [_get_player_nickname(peer_id).to_upper(), _format_money(int(_selected_wagers[peer_id]))])
+		if _selected_wager > 0:
+			lines.append("TEAM WAGER  %s" % _format_money(_selected_wager))
+		else:
+			lines.append("TEAM WAGER  NOT SET")
 		lines.append("EGGS AIRBORNE: %d" % _active_eggs.size())
 		var body: String = "\n".join(lines) if not lines.is_empty() else "SELECT A WAGER  /  PRESS PLINKO TO DROP AN EGG"
 		world_screen.call("set_content", "EGG PLINKO  |  LIVE BOARD", body, "ONE WAGER PER EGG  /  SHARED WALLET")
