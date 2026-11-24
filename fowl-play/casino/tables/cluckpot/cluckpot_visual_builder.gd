@@ -123,19 +123,21 @@ func build(parent: Node3D, number: int = 1) -> void:
 	if screen_scene != null:
 		var screen: WorldScreen = screen_scene.instantiate() as WorldScreen
 		screen.name = "WagerWorldScreen"
-		screen.display_size = Vector2(1.08, 0.48)
+		screen.display_size = Vector2(0.90, 0.30)
 		screen.pixels_per_unit = 2048
+		screen.max_viewport_dimension = 4096
 		screen.text_scale = 1.0
-		screen.font_size_ratio = 0.105
-		screen.content_padding_ratio = 0.12
-		screen.position = Vector3(0, 2.68, 0.51)
-		screen.rotation.x = deg_to_rad(-5.0)
+		screen.font_size_ratio = 0.14
+		screen.content_padding_ratio = 0.04
+		# Raise the compact display above the jackpot medallion so neither obscures the other.
+		screen.position = Vector3(0, 2.84, 0.59)
+		screen.rotation.x = deg_to_rad(-3.0)
 		cabinet.add_child(screen)
 		var display := screen.get_screen_text()
 		if display != null:
-			display.terminal_font_size = 54
-			display.content_padding_ratio = 0.10
-			display.show_layout(ScreenText.LAYOUT_WARNING, "READY", "MIN  $100\nMAX  $5,000\nWAGER  --", "SET WAGER")
+			display.terminal_font_size = 112
+			display.content_padding_ratio = 0.04
+			display.show_layout(ScreenText.LAYOUT_WARNING, "CLUCKPOT", "MIN  $100     MAX  $5,000\nWAGER  --", "INVALID / SET WAGER")
 
 	# Cabinet light accents.
 	var crown_light := OmniLight3D.new()
