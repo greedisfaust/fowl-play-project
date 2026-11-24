@@ -113,19 +113,20 @@ func spawn_single_test_table(day_number: int, definition: CasinoGameDefinition) 
 			enabled_slots.append(child as CasinoTableSpawnPoint)
 	enabled_slots.sort_custom(func(a: CasinoTableSpawnPoint, b: CasinoTableSpawnPoint) -> bool: return a.slot_id < b.slot_id)
 	if enabled_slots.is_empty():
-		return _failure("No enabled casino table slot is available for the Chicken Cross test table.")
+		return _failure("No enabled casino table slot is available for the development test table.")
 	var slot: CasinoTableSpawnPoint = enabled_slots[0]
 	if slot.slot_id.strip_edges().is_empty():
-		return _failure("The first enabled Chicken Cross test slot needs a slot_id.")
+		return _failure("The first enabled development test slot needs a slot_id.")
 	var game_id: String = String(definition.game_id)
 	var table_id: String = "day_%02d_%s_test" % [day_number, game_id]
 	var table_instance: Node = definition.table_scene.instantiate()
 	if not table_instance is Node3D:
 		if is_instance_valid(table_instance):
 			table_instance.free()
-		return _failure("Chicken Cross table scene must have a Node3D root.")
+		return _failure("Development test table scene must have a Node3D root.")
 	var table_node: Node3D = table_instance as Node3D
-	table_node.name = "%s_%s_Test" % [slot.slot_id, game_id.capitalize()]
+	var display_game_name: String = game_id.replace("_", " ").capitalize().replace(" ", "")
+	table_node.name = "%s_%s_Test" % [slot.slot_id, display_game_name]
 	table_node.set_meta("casino_table_id", table_id)
 	table_node.set_meta("casino_game_id", game_id)
 	if table_node is BaseTable:
