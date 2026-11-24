@@ -73,7 +73,7 @@ func _build_board(parent: Node3D, stone: Material, bronze: Material, dark_metal:
 	var peg_glow := _material(Color(0.98, 0.66, 0.28, 1.0), 0.25, 0.24, Color(0.98, 0.66, 0.28, 1.0), 0.45)
 	for row_index: int in range(ROW_COUNT):
 		var peg_count: int = row_index + 1
-		var y: float = 3.02 - float(row_index) * 0.1615
+		var y: float = 3.02 - float(row_index) * 0.145
 		for peg_index: int in range(peg_count):
 			var x: float = (float(peg_index) - float(peg_count - 1) * 0.5) * 0.155
 			_add_sphere(parent, "Peg_%02d_%02d" % [row_index + 1, peg_index + 1], 0.036, Vector3(x, y, -0.035), peg_material)
@@ -91,9 +91,9 @@ func _build_board(parent: Node3D, stone: Material, bronze: Material, dark_metal:
 		elif multiplier <= 0.6:
 			slot_color = Color(0.12, 0.23, 0.26, 1.0)
 		var slot_material := _material(slot_color, 0.3, 0.34, slot_color, 0.35)
-		_add_box(parent, "Pocket_%02d" % slot_index, Vector3(SLOT_WIDTH - 0.009, 0.12, 0.08), Vector3(x, 0.91, -0.08), dark_metal)
-		_add_box(parent, "PocketLight_%02d" % slot_index, Vector3(SLOT_WIDTH - 0.02, 0.012, 0.025), Vector3(x, 0.98, 0.0), slot_material)
-		_add_box(parent, "PocketDivider_%02d" % slot_index, Vector3(0.012, 0.17, 0.12), Vector3(x + SLOT_WIDTH * 0.5, 0.99, -0.04), bronze)
+		_add_box(parent, "Pocket_%02d" % slot_index, Vector3(SLOT_WIDTH - 0.009, 0.12, 0.08), Vector3(x, 1.07, -0.08), dark_metal)
+		_add_box(parent, "PocketLight_%02d" % slot_index, Vector3(SLOT_WIDTH - 0.02, 0.012, 0.025), Vector3(x, 1.13, 0.0), slot_material)
+		_add_box(parent, "PocketDivider_%02d" % slot_index, Vector3(0.012, 0.17, 0.12), Vector3(x + SLOT_WIDTH * 0.5, 1.13, -0.04), bronze)
 		var label := MeshInstance3D.new()
 		label.name = "Multiplier_%02d" % slot_index
 		var text_mesh := TextMesh.new()
@@ -102,7 +102,7 @@ func _build_board(parent: Node3D, stone: Material, bronze: Material, dark_metal:
 		text_mesh.pixel_size = 0.003
 		text_mesh.depth = 0.001
 		label.mesh = text_mesh
-		label.position = Vector3(x - 0.055, 0.78, 0.06)
+		label.position = Vector3(x - 0.055, 0.99, 0.06)
 		label.rotation.x = -PI * 0.5
 		label.material_override = _material(Color(0.96, 0.82, 0.55, 1.0), 0.15, 0.42, Color(0.96, 0.72, 0.32, 1.0), 0.55)
 		parent.add_child(label)
