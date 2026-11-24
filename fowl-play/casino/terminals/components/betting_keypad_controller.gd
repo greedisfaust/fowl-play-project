@@ -140,7 +140,7 @@ func _apply_wager_preset(amount: int) -> Dictionary:
 	var limits: Dictionary = _get_wager_limits()
 	var minimum_value: int = int(limits["minimum"])
 	var maximum_value: int = int(limits["maximum"])
-	if maximum_value <= 0 or minimum_value <= 0:
+	if maximum_value < minimum_value or maximum_value <= 0 or minimum_value <= 0:
 		return _failure("Available shared funds are below the current safe wager limit.")
 	var adjusted_amount: int = clampi(amount, minimum_value, maximum_value)
 	_pending_digits = str(adjusted_amount)
@@ -153,9 +153,11 @@ func _get_wager_limits() -> Dictionary:
 		var dynamic_limits: Variant = table.call("get_wager_limits")
 		if typeof(dynamic_limits) == TYPE_DICTIONARY:
 			return dynamic_limits
+	var minimum_value: int = profile.get_effective_minimum() if profile != null else 1
+	var configured_maximum: int = profile.get_effective_maximum() if profile != null else 2147483647
 	return {
-		"minimum": profile.get_effective_minimum() if profile != null else 1,
-		"maximum": profile.get_effective_maximum() if profile != null else 2147483647,
+		"minimum": minimum_value,
+		"maximum": mini(configured_maximum, _get_available_balance()),
 	}
 
 
