@@ -55,7 +55,7 @@ func build(parent: Node3D, number: int = 1) -> void:
 	_box(cabinet, "BezelLeft", Vector3(0.075, 1.18, 0.14), Vector3(-0.72, 1.57, 0.62), bright_brass)
 	_box(cabinet, "BezelRight", Vector3(0.075, 1.18, 0.14), Vector3(0.72, 1.57, 0.62), bright_brass)
 	_box(cabinet, "ReelCavity", Vector3(1.34, 1.02, 0.09), Vector3(0, 1.57, 0.61), black)
-	_box(cabinet, "Glass", Vector3(1.28, 0.96, 0.025), Vector3(0, 1.57, 0.665), _mat(Color("#10151a", 0.88), 0.2, 0.1))
+	_box(cabinet, "Glass", Vector3(1.28, 0.96, 0.025), Vector3(0, 1.57, 0.665), _mat(Color(0.063, 0.082, 0.102, 0.88), 0.2, 0.1))
 	_box(cabinet, "PaylineGold", Vector3(1.29, 0.025, 0.035), Vector3(0, 1.57, 0.704), bright_brass)
 
 	# Engraved top marquee, badge, and rivets.
