@@ -321,6 +321,8 @@ func _setup_keypad() -> void:
 	_display.name = "WagerDisplayAdapter"
 	_display.set_script(load("res://casino/tables/cluckpot/cluckpot_wager_display.gd"))
 	_display.set("profile", Profile)
+	_display.set("table", self)
+	_display.set("screen", _wager_screen)
 	add_child(_display)
 	var controller: Node = _keypad.get_node_or_null("BettingKeypadController")
 	if not is_instance_valid(controller):
@@ -339,10 +341,13 @@ func _setup_keypad() -> void:
 
 func _refresh_machine_screen() -> void:
 	var limits: Dictionary = get_wager_limits()
-	_set_status("READY FOR WAGER", "MIN %s  MAX %s\nWAGER --" % [
-		_format_money(int(limits.get("minimum", 0))),
-		_format_money(int(limits.get("maximum", 0))),
-	])
+	if is_instance_valid(_display) and _display.has_method("refresh_display"):
+		_display.call("refresh_display")
+	else:
+		_set_status("READY FOR WAGER", "MIN %s  MAX %s\nWAGER --" % [
+			_format_money(int(limits.get("minimum", 0))),
+			_format_money(int(limits.get("maximum", 0))),
+		])
 
 
 func _on_keypad_confirmation_result(peer_id: int, result: Dictionary) -> void:
