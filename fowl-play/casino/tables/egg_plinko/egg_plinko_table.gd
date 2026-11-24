@@ -23,7 +23,6 @@ signal selected_wager_changed(peer_id: int, amount: int)
 
 # _wallet is inherited from BaseTable; do not redeclare it here.
 var _network: Node
-var _day_manager: Node
 var _selected_wager: int = 0
 var _active_eggs: Dictionary = {}
 var _egg_nodes: Dictionary = {}
@@ -35,7 +34,6 @@ var _rng := RandomNumberGenerator.new()
 func _ready() -> void:
 	super._ready()
 	_network = get_node_or_null("/root/Network")
-	_day_manager = get_node_or_null("/root/CasinoDayManager")
 	_rng.randomize()
 	if is_instance_valid(proximity_area):
 		proximity_area.body_entered.connect(_on_proximity_body_entered)
