@@ -182,6 +182,12 @@ func set_symbol_icon(cell: Node3D, symbol: String) -> void:
 		return
 	var icon := Sprite3D.new()
 	icon.name = "SymbolIcon"
+	if symbol == "SEVEN":
+		var jackpot_trim := _mat(Color("#d4ad63"), 0.62, 0.26)
+		_box(icon, "JackpotTrimTop", Vector3(0.32, 0.009, 0.008), Vector3(0, 0.112, 0.035), jackpot_trim)
+		_box(icon, "JackpotTrimBottom", Vector3(0.32, 0.009, 0.008), Vector3(0, -0.112, 0.035), jackpot_trim)
+		_box(icon, "JackpotTrimLeft", Vector3(0.009, 0.22, 0.008), Vector3(-0.16, 0, 0.035), jackpot_trim)
+		_box(icon, "JackpotTrimRight", Vector3(0.009, 0.22, 0.008), Vector3(0.16, 0, 0.035), jackpot_trim)
 	icon.texture = texture
 	var texture_size := Vector2(texture.get_width(), texture.get_height())
 	var target_size := Vector2(0.34, 0.24)
