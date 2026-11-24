@@ -59,6 +59,7 @@ func _run() -> void:
 		for reel_index: int in range(3):
 			var drum_mesh: MeshInstance3D = machine.get_node_or_null("Visuals/Cabinet/Reels/Reel_%d/CylindricalDrum" % reel_index) as MeshInstance3D
 			_check(is_instance_valid(drum_mesh) and drum_mesh.mesh is CylinderMesh, "Each reel is a real cylindrical barrel, not a flat symbol strip")
+			_check(machine.get_node_or_null("Visuals/Cabinet/Reels/Reel_%d/ReelEndCap_-1" % reel_index) is MeshInstance3D and machine.get_node_or_null("Visuals/Cabinet/Reels/Reel_%d/ReelEndCap_1" % reel_index) is MeshInstance3D, "Each drum has machined end caps")
 			var ring: Node3D = machine.get_node_or_null("Visuals/Cabinet/Reels/Reel_%d" % reel_index) as Node3D
 			_check(is_instance_valid(ring) and ring.get_child_count() >= 12, "Each cylindrical reel carries a full wrapped ring of symbol faces")
 		var wager_screen: WorldScreen = machine.get_node_or_null("Visuals/Cabinet/WagerWorldScreen") as WorldScreen
