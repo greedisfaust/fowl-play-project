@@ -365,7 +365,9 @@ func _apply_cabinet_control_layout() -> void:
 	# 25-degree yaw, but bring the complete control cluster onto the cabinet.
 	var screen: Node3D = get_node_or_null("SlimWorldScreen") as Node3D
 	if is_instance_valid(screen):
-		screen.position = Vector3(-0.55, 1.83, 1.52)
+		# Keep the terminal at the authored cabinet placement. This script runs
+		# during spawn and overrides the transform saved in egg_plinko_table.tscn.
+		screen.position = Vector3(-2.839, 1.83, 0.734)
 		screen.rotation = Vector3(0.0, deg_to_rad(25.0), 0.0)
 	var keypad: Node3D = get_node_or_null("BettingKeypad") as Node3D
 	if is_instance_valid(keypad):
