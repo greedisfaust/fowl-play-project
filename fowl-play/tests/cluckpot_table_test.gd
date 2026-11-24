@@ -59,13 +59,18 @@ func _run() -> void:
 		for reel_index: int in range(3):
 			var drum_mesh: MeshInstance3D = machine.get_node_or_null("Visuals/Cabinet/Reels/Reel_%d/CylindricalDrum" % reel_index) as MeshInstance3D
 			_check(is_instance_valid(drum_mesh) and drum_mesh.mesh is CylinderMesh, "Each reel is a real cylindrical barrel, not a flat symbol strip")
+			if is_instance_valid(drum_mesh) and drum_mesh.mesh is CylinderMesh:
+				var barrel_mesh: CylinderMesh = drum_mesh.mesh as CylinderMesh
+				_check(barrel_mesh.top_radius < 0.475, "The inner drum core stays behind the wrapped symbol faces instead of hiding them")
 			_check(machine.get_node_or_null("Visuals/Cabinet/Reels/Reel_%d/ReelEndCap_-1" % reel_index) is MeshInstance3D and machine.get_node_or_null("Visuals/Cabinet/Reels/Reel_%d/ReelEndCap_1" % reel_index) is MeshInstance3D, "Each drum has machined end caps")
 			var ring: Node3D = machine.get_node_or_null("Visuals/Cabinet/Reels/Reel_%d" % reel_index) as Node3D
 			_check(is_instance_valid(ring) and ring.get_child_count() >= 12, "Each cylindrical reel carries a full wrapped ring of symbol faces")
 		var wager_screen: WorldScreen = machine.get_node_or_null("Visuals/Cabinet/WagerWorldScreen") as WorldScreen
 		_check(is_instance_valid(wager_screen), "Every cabinet has its own head-mounted WorldScreen")
 		if is_instance_valid(wager_screen):
-			_check(wager_screen.display_size.x <= 0.95 and wager_screen.display_size.y <= 0.35, "Wager WorldScreen stays compact and clear of the jackpot medallion")
+			_check(wager_screen.display_size.x >= 1.5 and wager_screen.display_size.y >= 0.55, "Wager WorldScreen is enlarged to replace the old jackpot medallion")
+			_check(wager_screen.position.y < 2.7 and wager_screen.position.y - wager_screen.display_size.y * 0.5 > 2.13, "Enlarged WorldScreen sits above the reel bezel without covering the reel window")
+			_check(machine.get_node_or_null("Visuals/Cabinet/SevenMedallion") == null and machine.get_node_or_null("Visuals/Cabinet/JackpotSeven") == null, "Old Golden 7 medallion is removed")
 			_check(wager_screen.pixels_per_unit >= 2048 and wager_screen.font_size_ratio >= 0.14, "Wager WorldScreen uses high-resolution large typography")
 		_check(machine.get_node_or_null("Visuals/Cabinet/ButtonHousing") == null, "The cabinet has no redundant spin button")
 		var textured_symbol_count: int = 0
