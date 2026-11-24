@@ -13,6 +13,7 @@ func _initialize() -> void:
 func _run() -> void:
 	_check(Rules.PAYOUTS["SEVEN"] > Rules.PAYOUTS["ROOSTER"], "Golden 7 is the top regular symbol payout")
 	_check(Rules.PAYOUTS["WILD"] > Rules.PAYOUTS["ROOSTER"], "Golden Chicken wild has a premium payout")
+	_check(Rules.PAYOUTS["CHERRY"] > Rules.PAYOUTS["LEMON"], "Cherry and lemon have distinct classic-slot payouts")
 	var seven_columns: Array = [
 		["SEVEN", "CHICK", "EGG"],
 		["SEVEN", "CORN", "CORN"],
@@ -54,6 +55,10 @@ func _run() -> void:
 		_check(machine.get_node_or_null("BettingKeypad/BettingKeypadController") != null, "Every machine has an independent shared BettingKeypad controller")
 		var reels: Node = machine.get_node_or_null("Visuals/Cabinet/Reels")
 		_check(is_instance_valid(reels) and reels.get_child_count() == 3, "Every cabinet builds three physical reel columns")
+		_check(machine.get_node_or_null("Visuals/Cabinet/WagerWorldScreen") != null, "Every cabinet has its own head-mounted WorldScreen")
+		_check(machine.get_node_or_null("Visuals/Cabinet/ButtonHousing") == null, "The cabinet has no redundant spin button")
+		var first_cell: Node = machine.get_node_or_null("Visuals/Cabinet/Reels/Reel_0/Cell_0/SymbolIcon")
+		_check(is_instance_valid(first_cell) and first_cell.get_child_count() > 0, "Reel symbols are modeled meshes rather than text labels")
 		if first_machine == null:
 			first_machine = machine
 	_check(table_ids.size() == 4, "All four machine IDs are unique")
@@ -71,7 +76,7 @@ func _run() -> void:
 			_check_result(first_machine.call("set_selected_wager", 1, stake), "Select wager through shared limits")
 			var spin: Dictionary = first_machine.call("_handle_spin", 1)
 			_check(bool(spin.get("ok", false)), "Host accepts a valid slot spin")
-			await create_timer(2.0).timeout
+			await create_timer(2.5).timeout
 			var wallet_snapshot: Dictionary = wallet.call("get_snapshot")
 			_check(int(wallet_snapshot.get("reserved_total", 0)) == 0, "Spin settlement releases the reserved wager")
 			var wager: Dictionary = wallet.call("get_wager", str(spin.get("wager_id", "")))
