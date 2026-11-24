@@ -74,13 +74,14 @@ func _ready() -> void:
 		var generated: Node = get_node_or_null(GENERATED_ROOT_NAME)
 		if generated == null or (wall_set == WallSet.INTERIOR and generate_main_room_doorway and generated.get_node_or_null("Apartment_Double_Door") == null):
 			_rebuild_geometry()
-		elif wall_set == WallSet.INTERIOR and generate_main_room_doorway:
-			var saved_door: Node3D = generated.get_node_or_null("Apartment_Double_Door") as Node3D
-			var saved_hinge: Node = saved_door.get_node_or_null("Left_Hinge") if saved_door != null else null
-			if saved_hinge != null and not (saved_hinge is AnimatableBody3D):
-				call_deferred("_replace_saved_double_door")
-		elif wall_set == WallSet.INTERIOR and get_tree().edited_scene_root.find_child("Hallway_Wall_Sconce_00", true, false) == null:
-			_build_hallway_sconces(generated, get_tree().edited_scene_root)
+		else:
+			if wall_set == WallSet.INTERIOR and generate_main_room_doorway:
+				var saved_door: Node3D = generated.get_node_or_null("Apartment_Double_Door") as Node3D
+				var saved_hinge: Node = saved_door.get_node_or_null("Left_Hinge") if saved_door != null else null
+				if saved_hinge != null and not (saved_hinge is AnimatableBody3D):
+					call_deferred("_replace_saved_double_door")
+			if wall_set == WallSet.INTERIOR and get_tree().edited_scene_root.find_child("Hallway_Wall_Sconce_00", true, false) == null:
+				_build_hallway_sconces(generated, get_tree().edited_scene_root)
 
 func _replace_saved_double_door() -> void:
 	if not Engine.is_editor_hint():
