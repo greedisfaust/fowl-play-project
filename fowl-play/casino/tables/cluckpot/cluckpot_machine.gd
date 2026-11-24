@@ -12,7 +12,7 @@ signal spin_settled(record: Dictionary, settlement: Dictionary)
 signal selected_wager_changed(peer_id: int, amount: int)
 
 @export var machine_number: int = 1
-@export var spin_duration: float = 2.15
+@export var spin_duration: float = 3.8
 
 var _network: Node
 var _rng := RandomNumberGenerator.new()
@@ -170,11 +170,11 @@ func _play_spin_visual(record: Dictionary) -> void:
 	var tween: Tween = create_tween()
 	tween.set_trans(Tween.TRANS_LINEAR)
 	for reel_index: int in range(3):
-		var reel_time: float = duration * (0.21 + float(reel_index) * 0.07)
+		var reel_time: float = duration * (0.55 + float(reel_index) * 0.12)
 		var spin_step: Callable = func(step: int) -> void: _set_reel_preview(reel_index, step)
-		var ramp_steps: int = 12
-		var cruise_steps: int = 42
-		var stop_steps: int = 10
+		var ramp_steps: int = 4
+		var cruise_steps: int = 10
+		var stop_steps: int = 4
 		tween.tween_method(spin_step, 0, ramp_steps, reel_time * 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
 		tween.tween_method(spin_step, ramp_steps, ramp_steps + cruise_steps, reel_time * 0.52).set_trans(Tween.TRANS_LINEAR)
 		tween.tween_method(spin_step, ramp_steps + cruise_steps, ramp_steps + cruise_steps + stop_steps, reel_time * 0.28).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
@@ -418,15 +418,16 @@ func _animate_lever() -> void:
 
 
 func _set_status(header: String, detail: String = "") -> void:
+	if is_instance_valid(_display) and _display.has_method("set_status"):
+		var valid_state: bool = header == "WAGER SELECTED" or header == "REELS IN MOTION" or header.begins_with("WIN") or header.begins_with("GOLDEN JACKPOT")
+		_display.call("set_status", header, detail, valid_state)
+		return
 	if not is_instance_valid(_wager_screen):
 		return
 	var screen_text: ScreenText = _wager_screen.get_screen_text()
 	if screen_text == null:
 		return
-	var body: String = header
-	if not detail.is_empty():
-		body += "\n" + detail
-	screen_text.set_content("CLUCKPOT / %02d" % machine_number, body, "GOLDEN COOP")
+	screen_text.show_layout(ScreenText.LAYOUT_WARNING, header, detail)
 
 
 func _flash_win(won: bool, jackpot: bool = false) -> void:

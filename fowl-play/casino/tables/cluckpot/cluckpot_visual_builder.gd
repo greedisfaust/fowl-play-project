@@ -31,14 +31,14 @@ func build(parent: Node3D, number: int = 1) -> void:
 	cabinet.name = "Cabinet"
 	parent.add_child(cabinet)
 
-	var enamel := _mat(Color("#171b20"), 0.72, 0.24)
-	var burgundy := _mat(Color("#4b1019"), 0.42, 0.27)
-	var brass := _mat(Color("#a87836"), 0.92, 0.2)
-	var bright_brass := _mat(Color("#f2c36b"), 0.88, 0.17, Color("#e59a35"), 1.35)
-	var dark_brass := _mat(Color("#51351c"), 0.85, 0.28)
-	var ivory := _mat(Color("#f0dfb7"), 0.08, 0.34)
-	var black := _mat(Color("#090b0d"), 0.18, 0.12)
-	var walnut := _mat(Color("#3b2115"), 0.12, 0.3)
+	var enamel := _mat(Color("#42474a"), 0.76, 0.32)
+	var burgundy := _mat(Color("#481923"), 0.34, 0.3)
+	var brass := _mat(Color("#8e7958"), 0.78, 0.28)
+	var bright_brass := _mat(Color("#c8b58d"), 0.82, 0.24)
+	var dark_brass := _mat(Color("#443a2d"), 0.72, 0.34)
+	var ivory := _mat(Color("#eee2c9"), 0.04, 0.42)
+	var black := _mat(Color("#111619"), 0.22, 0.2)
+	var walnut := _mat(Color("#38251b"), 0.08, 0.38)
 
 	# Solid, rounded-looking cast-metal silhouette with stepped shoulders.
 	_box(cabinet, "MainCasting", Vector3(1.72, 2.34, 0.98), Vector3(0, 1.28, 0), enamel)
@@ -58,9 +58,8 @@ func build(parent: Node3D, number: int = 1) -> void:
 	_box(cabinet, "Glass", Vector3(1.28, 0.96, 0.025), Vector3(0, 1.57, 0.665), _mat(Color(0.063, 0.082, 0.102, 0.88), 0.2, 0.1))
 	_box(cabinet, "PaylineGold", Vector3(1.29, 0.025, 0.035), Vector3(0, 1.57, 0.704), bright_brass)
 
-	# Engraved top marquee, badge, and rivets.
-	_text(cabinet, "Marquee", "CLUCKPOT", 0.2, Vector3(0, 2.37, 0.51), bright_brass)
-	_text(cabinet, "Serial", "THE GOLDEN COOP  •  No.%02d" % number, 0.055, Vector3(0, 2.25, 0.52), ivory)
+	# Restrained cast-metal crown and a few functional fasteners; no text clutter.
+	_cylinder(cabinet, "CrownCap", 0.105, 0.11, Vector3(0, 2.55, 0.47), bright_brass)
 	for x: float in [-0.76, 0.76]:
 		for y: float in [0.31, 2.28]:
 			_sphere(cabinet, "Rivet", 0.035, Vector3(x, y, 0.57), bright_brass)
@@ -96,7 +95,7 @@ func build(parent: Node3D, number: int = 1) -> void:
 	_box(cabinet, "LowerPanelInset", Vector3(1.28, 0.35, 0.025), Vector3(0, 0.59, 0.615), burgundy)
 	_box(cabinet, "CoinReturnRim", Vector3(0.58, 0.19, 0.08), Vector3(0, 0.59, 0.67), bright_brass)
 	_box(cabinet, "CoinReturnDark", Vector3(0.49, 0.12, 0.025), Vector3(0, 0.59, 0.72), black)
-	_text(cabinet, "CoinReturnText", "PAYOUT", 0.065, Vector3(0, 0.34, 0.62), ivory)
+	# Keep the coin return purely mechanical; no decorative label.
 
 	# Physical side lever: decorative and animated on confirmed keypad wager.
 	var mount := _cylinder(cabinet, "LeverMount", 0.16, 0.11, Vector3(0.91, 1.63, 0.18), brass)
@@ -112,24 +111,27 @@ func build(parent: Node3D, number: int = 1) -> void:
 	if screen_scene != null:
 		var screen: WorldScreen = screen_scene.instantiate() as WorldScreen
 		screen.name = "WagerWorldScreen"
-		screen.display_size = Vector2(0.82, 0.34)
-		screen.pixels_per_unit = 1536
-		screen.position = Vector3(0, 2.63, 0.51)
-		screen.rotation.x = deg_to_rad(-8.0)
+		screen.display_size = Vector2(1.08, 0.48)
+		screen.pixels_per_unit = 2048
+		screen.text_scale = 1.65
+		screen.font_size_ratio = 0.105
+		screen.content_padding_ratio = 0.12
+		screen.position = Vector3(0, 2.68, 0.51)
+		screen.rotation.x = deg_to_rad(-5.0)
 		cabinet.add_child(screen)
 		var display := screen.get_screen_text()
 		if display != null:
-			display.terminal_font_size = 34
-			display.content_padding_ratio = 0.25
-			display.set_content("CLUCKPOT / %02d" % number, "MIN  $100\nMAX  $5,000\nWAGER  --", "KEYPAD TO PLAY")
+			display.terminal_font_size = 54
+			display.content_padding_ratio = 0.10
+			display.show_layout(ScreenText.LAYOUT_WARNING, "READY", "MIN  $100\nMAX  $5,000\nWAGER  --", "SET WAGER")
 
 	# Cabinet light accents.
 	var crown_light := OmniLight3D.new()
 	crown_light.name = "CrownGlow"
 	crown_light.position = Vector3(0, 2.72, 0.58)
-	crown_light.light_color = Color("#ffbd58")
-	crown_light.light_energy = 0.9
-	crown_light.omni_range = 2.1
+	crown_light.light_color = Color("#d6c5a3")
+	crown_light.light_energy = 0.28
+	crown_light.omni_range = 1.2
 	cabinet.add_child(crown_light)
 	var body := StaticBody3D.new()
 	body.name = "CabinetCollision"
@@ -148,7 +150,7 @@ func set_symbol_icon(cell: Node3D, symbol: String) -> void:
 	cell.add_child(icon)
 	match symbol:
 		"SEVEN":
-			var seven := _text(icon, "GoldenSeven", "7", 0.29, Vector3(0, 0, 0.055), _mat(Color("#ffd24d"), 0.7, 0.15, Color("#ffb52e"), 1.4))
+			var seven := _text(icon, "GoldenSeven", "7", 0.29, Vector3(0, 0, 0.055), _mat(Color("#e4bd70"), 0.68, 0.23))
 			seven.rotation.x = 0
 		"ROOSTER", "WILD":
 			var gold := symbol == "WILD"
@@ -209,7 +211,7 @@ func black_material() -> StandardMaterial3D:
 
 
 func bright_material() -> StandardMaterial3D:
-	return _mat(Color("#ffd24d"), 0.7, 0.15, Color("#ffb52e"), 1.4)
+	return _mat(Color("#e4bd70"), 0.68, 0.23)
 
 
 func _box(parent: Node3D, node_name: String, size: Vector3, pos: Vector3, material: Material) -> MeshInstance3D:
