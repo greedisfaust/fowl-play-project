@@ -183,7 +183,11 @@ func set_symbol_icon(cell: Node3D, symbol: String) -> void:
 	var icon := Sprite3D.new()
 	icon.name = "SymbolIcon"
 	icon.texture = texture
-	icon.pixel_size = 0.00046
+	var texture_size := Vector2(texture.get_width(), texture.get_height())
+	var target_size := Vector2(0.34, 0.24)
+	if symbol == "SEVEN":
+		target_size = Vector2(0.30, 0.22)
+	icon.pixel_size = minf(target_size.x / texture_size.x, target_size.y / texture_size.y)
 	icon.position = Vector3(0, 0, 0.055)
 	icon.modulate = Color.WHITE
 	icon.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
@@ -192,10 +196,7 @@ func set_symbol_icon(cell: Node3D, symbol: String) -> void:
 	icon.shaded = false
 	icon.double_sided = true
 	if symbol == "SEVEN":
-		icon.pixel_size = 0.00042
 		icon.modulate = Color("#fff3d1")
-	elif symbol == "WILD":
-		icon.pixel_size = 0.00048
 	cell.add_child(icon)
 
 
