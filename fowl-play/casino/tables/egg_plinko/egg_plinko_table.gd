@@ -174,7 +174,7 @@ func request_day_end_cleanup(reason: String) -> Dictionary:
 		settled_ids.append(egg_id)
 		settled_count += 1
 	_selected_wagers.clear()
-	if multiplayer.multiplayer_peer != null and not settled_ids.is_empty():
+	if multiplayer.multiplayer_peer != null:
 		_rpc_clear_active_eggs.rpc(settled_ids)
 	_publish_keypad_snapshot()
 	_update_terminal_status()
