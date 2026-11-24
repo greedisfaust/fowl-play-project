@@ -178,6 +178,9 @@ func _build_pending_rows() -> Array[String]:
 	rows.append(status_text)
 	rows.append("%s: %s" % [profile.minimum_label, _format_compact_money(minimum_value)])
 	rows.append("%s: %s" % [profile.maximum_label, _format_compact_money(maximum_value)])
+	if limits.has("quota_remaining"):
+		rows.append("QUOTA GAP: %s" % _format_compact_money(int(limits["quota_remaining"])))
+		rows.append("SAFETY HOLD: %s" % _format_compact_money(int(limits.get("safety_reserve", 0))))
 	return rows
 
 func _build_player_rows() -> Array[String]:
