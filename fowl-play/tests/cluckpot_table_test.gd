@@ -89,6 +89,11 @@ func _run() -> void:
 			if is_instance_valid(wager_screen):
 				var screen_text: ScreenText = wager_screen.get_screen_text()
 				_check(is_instance_valid(screen_text) and screen_text.text.contains("#54e58b"), "Valid wager is presented in green on the cabinet display")
+				var display_adapter: Node = first_machine.get_node_or_null("WagerDisplayAdapter")
+				if is_instance_valid(display_adapter):
+					display_adapter.call("set_status", "REELS IN MOTION", "WAGER $100", true)
+					display_adapter.call("set_pending_wager_amount", 0)
+					_check(screen_text.text.contains("REELS IN MOTION"), "Clearing the keypad draft does not erase the active spin display")
 			var spin: Dictionary = first_machine.call("_handle_spin", 1)
 			_check(bool(spin.get("ok", false)), "Host accepts a valid slot spin")
 			await create_timer(5.6).timeout
