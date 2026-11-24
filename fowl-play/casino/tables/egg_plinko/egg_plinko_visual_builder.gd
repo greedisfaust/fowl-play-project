@@ -76,8 +76,8 @@ func _build_board(parent: Node3D, stone: Material, bronze: Material, dark_metal:
 		var y: float = 3.02 - float(row_index) * 0.145
 		for peg_index: int in range(peg_count):
 			var x: float = (float(peg_index) - float(peg_count - 1) * 0.5) * 0.155
-			_add_sphere(parent, "Peg_%02d_%02d" % [row_index + 1, peg_index + 1], 0.036, Vector3(x, y, -0.035), peg_material)
-			_add_sphere(parent, "PegCap_%02d_%02d" % [row_index + 1, peg_index + 1], 0.012, Vector3(x, y, 0.003), peg_glow)
+			_add_sphere(parent, "Peg_%02d_%02d" % [row_index + 1, peg_index + 1], 0.025, Vector3(x, y, -0.035), peg_material)
+			_add_sphere(parent, "PegCap_%02d_%02d" % [row_index + 1, peg_index + 1], 0.008, Vector3(x, y, 0.003), peg_glow)
 
 	var multipliers: Array[float] = Rules.get_slot_multipliers()
 	for slot_index: int in range(SLOT_COUNT):
