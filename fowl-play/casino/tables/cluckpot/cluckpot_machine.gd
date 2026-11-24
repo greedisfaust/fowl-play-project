@@ -329,12 +329,18 @@ func _setup_keypad() -> void:
 	if not is_instance_valid(controller):
 		controller = KeypadControllerScript.new()
 		controller.name = "BettingKeypadController"
+		controller.set("table", self)
+		controller.set("display", _display)
+		controller.set("profile", Profile)
+		controller.set("selection_only", true)
+		controller.set("one_wager_per_player", false)
 		_keypad.add_child(controller)
-	controller.set("table", self)
-	controller.set("display", _display)
-	controller.set("profile", Profile)
-	controller.set("selection_only", true)
-	controller.set("one_wager_per_player", false)
+	else:
+		controller.set("table", self)
+		controller.set("display", _display)
+		controller.set("profile", Profile)
+		controller.set("selection_only", true)
+		controller.set("one_wager_per_player", false)
 
 
 func _on_body_entered(body: Node3D) -> void:
