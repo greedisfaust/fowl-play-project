@@ -18,6 +18,7 @@ var _network: Node
 var _rng := RandomNumberGenerator.new()
 var _selected_wagers: Dictionary = {}
 var _active_spin: Dictionary = {}
+var last_spin_result: Dictionary = {}
 var _spin_sequence: int = 1
 var _visuals: Node3D
 var _proximity: Area3D
@@ -233,6 +234,7 @@ func _reel_stop_pulse(reel_index: int) -> void:
 func _finish_spin_visual(record: Dictionary) -> void:
 	if str(_active_spin.get("round_id", "")) != str(record.get("round_id", "")):
 		return
+	last_spin_result = record.duplicate(true)
 	var payout: int = int(record.get("payout", 0))
 	var jackpot: bool = payout >= int(record.get("stake", 0)) * 20 and payout > 0
 	var result_text: String = "TRY AGAIN"
