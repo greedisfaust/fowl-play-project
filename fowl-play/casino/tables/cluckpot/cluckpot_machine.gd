@@ -178,7 +178,6 @@ func _play_spin_visual(record: Dictionary) -> void:
 		var total_steps: float = 48.0
 		var accelerate_steps: float = 8.0
 		var cruise_steps: float = 32.0
-		var decelerate_steps: float = total_steps - accelerate_steps - cruise_steps
 		var accelerate_time: float = reel_duration * 0.16
 		var cruise_time: float = reel_duration * 0.60
 		var decelerate_time: float = reel_duration - accelerate_time - cruise_time
