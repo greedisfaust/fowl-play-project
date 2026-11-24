@@ -13,6 +13,7 @@ const BOARD_TOP_Y: float = 3.02
 const BOARD_BOTTOM_Y: float = 1.28
 const ROW_SPACING: float = (BOARD_TOP_Y - BOARD_BOTTOM_Y) / float(ROW_COUNT)
 const STEP_X: float = 0.155
+const SLOT_WIDTH: float = 0.19
 
 
 ## Builds a visual path in table-local coordinates and returns its landing slot.
@@ -34,8 +35,7 @@ static func build_path(rng: RandomNumberGenerator, start_position: Vector3 = Vec
 		path.append(Vector3(current_x, peg_y + safe_height, -0.015))
 		path.append(Vector3(current_x, peg_y - safe_height, -0.015))
 	var slot_index: int = clampi(roundi(float(horizontal_steps + ROW_COUNT) * 0.5), 0, SLOT_MULTIPLIERS.size() - 1)
-	var slot_width: float = 0.19
-	var slot_x: float = (float(slot_index) - float(SLOT_MULTIPLIERS.size() - 1) * 0.5) * slot_width
+	var slot_x: float = (float(slot_index) - float(SLOT_MULTIPLIERS.size() - 1) * 0.5) * SLOT_WIDTH
 	path.append(Vector3(slot_x, BOARD_BOTTOM_Y - 0.13, -0.015))
 	return {
 		"path": path,
