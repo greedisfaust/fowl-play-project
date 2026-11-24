@@ -50,6 +50,11 @@ func _ready() -> void:
 	_connect_authority_signals()
 	_apply_pending_amount()
 	_try_request_snapshot()
+	# The table creates this controller dynamically during its own _ready().
+	# Re-scan once the complete inherited scene tree has finished entering the
+	# tree so every physical key (including the adjacent CONFIRM key) is bound.
+	call_deferred("_connect_key_buttons")
+	call_deferred("_apply_pending_amount")
 
 func _exit_tree() -> void:
 	for button: Node in _connected_buttons:
@@ -270,6 +275,10 @@ func _connect_key_buttons() -> void:
 	if button_root == null:
 		return
 	_connect_key_buttons_recursive(button_root)
+	if _connected_buttons.is_empty():
+		push_warning("BettingKeypadController found no physical TerminalButton inputs under %s." % str(button_root.get_path()))
+	elif is_instance_valid(_debug_hub):
+		_debug_hub.call("log", &"wallet", "Betting keypad bound %d physical inputs." % _connected_buttons.size())
 
 func _connect_key_buttons_recursive(parent_node: Node) -> void:
 	for child: Node in parent_node.get_children():
