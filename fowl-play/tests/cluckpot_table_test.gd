@@ -62,10 +62,13 @@ func _run() -> void:
 			_check(wager_screen.display_size.x >= 1.0 and wager_screen.display_size.y >= 0.45, "Wager WorldScreen is physically large enough to read")
 			_check(wager_screen.pixels_per_unit >= 2048 and wager_screen.font_size_ratio >= 0.1, "Wager WorldScreen uses high-resolution large typography")
 		_check(machine.get_node_or_null("Visuals/Cabinet/ButtonHousing") == null, "The cabinet has no redundant spin button")
-		var first_cell: Node = machine.get_node_or_null("Visuals/Cabinet/Reels/Reel_0/Cell_0/SymbolIcon")
-		_check(is_instance_valid(first_cell) and first_cell is Sprite3D, "Reel symbols use textured 3D sprites rather than primitive meshes")
-		if first_cell is Sprite3D:
-			_check((first_cell as Sprite3D).texture != null, "Every reel symbol loads its authored PNG artwork")
+		var textured_symbol_count: int = 0
+		for reel_index: int in range(3):
+			for row_index: int in range(3):
+				var symbol_sprite: Sprite3D = machine.get_node_or_null("Visuals/Cabinet/Reels/Reel_%d/Cell_%d/SymbolIcon" % [reel_index, row_index]) as Sprite3D
+				if is_instance_valid(symbol_sprite) and symbol_sprite.texture != null:
+					textured_symbol_count += 1
+		_check(textured_symbol_count == 9, "All nine visible reel faces use loaded PNG artwork on Sprite3D nodes")
 		if first_machine == null:
 			first_machine = machine
 	_check(table_ids.size() == 4, "All four machine IDs are unique")
