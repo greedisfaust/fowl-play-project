@@ -22,7 +22,7 @@ echo Using Godot: "%GODOT%"
 echo Project: "%PROJECT%"
 echo.
 
-echo [1/2] Importing project resources...
+echo [1/3] Importing project resources...
 "%GODOT%" --headless --editor --path "%PROJECT%" --import
 if errorlevel 1 goto failed
 
