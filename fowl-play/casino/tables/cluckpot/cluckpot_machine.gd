@@ -60,9 +60,18 @@ func set_selected_wager(peer_id: int, amount: int) -> Dictionary:
 		return _failure("Wager must be between %d and %d." % [minimum, maximum])
 	_selected_wagers[peer_id] = amount
 	_set_status("WAGER %s" % _format_money(amount))
+	if multiplayer.multiplayer_peer != null:
+		_rpc_sync_selected_wager.rpc(peer_id, amount)
 	selected_wager_changed.emit(peer_id, amount)
 	report_player_feedback(peer_id, "CLUCKPOT WAGER SET  /  %s" % _format_money(amount), &"success")
 	return _success({"peer_id": peer_id, "selected_wager": amount, "limits": limits})
+
+
+@rpc("authority", "call_remote", "reliable")
+func _rpc_sync_selected_wager(peer_id: int, amount: int) -> void:
+	_selected_wagers[peer_id] = amount
+	_set_status("WAGER %s" % _format_money(amount))
+	selected_wager_changed.emit(peer_id, amount)
 
 
 func get_selected_wager(peer_id: int = 0) -> int:
@@ -169,6 +178,7 @@ func _play_spin_visual(record: Dictionary) -> void:
 	if symbols.size() != 3:
 		return
 	_set_status("GOOD LUCK!")
+	_flash_win(false)
 	var duration: float = maxf(float(record.get("spin_duration", spin_duration)), 0.6)
 	var tween: Tween = create_tween()
 	tween.set_parallel(true)
@@ -343,8 +353,6 @@ func _setup_keypad() -> void:
 	_display.set("profile", Profile)
 	_display.set("amount_label", readout)
 	add_child(_display)
-	if _keypad.get_node_or_null("BettingKeypadController") != null:
-		return
 	var controller: Node = _keypad.get_node_or_null("BettingKeypadController")
 	if not is_instance_valid(controller):
 		controller = KeypadControllerScript.new()
