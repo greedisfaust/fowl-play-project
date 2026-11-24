@@ -270,7 +270,7 @@ func _on_button_activated(button_id: StringName, peer_id: int) -> void:
 	var action: String = _normalize_button_id(String(button_id))
 	# Cross/cash-out controls are handled by ChickenCrossTable itself, not
 	# by the wager-entry keypad.
-	if action in ["CROSS", "CASH_OUT", "CASHOUT"]:
+	if action in ["CROSS", "CASH_OUT", "CASHOUT"] or (selection_only and action == "PLINKO"):
 		return
 	if is_instance_valid(_debug_hub):
 		_debug_hub.call("log", &"wallet", "Received physical keypad input '%s' from peer %d." % [String(button_id), peer_id])
