@@ -21,13 +21,15 @@ The table reads the live CasinoDayManager daily quota and the current available 
 
 The configurable safety hold is:
 
-    safety_reserve = ceil(quota_remaining * quota_safety_bias)
+    safety_reserve = ceil(daily_quota * quota_safety_bias)
 
-The maximum launch amount is capped by both the terminal profile maximum and:
+The maximum launch amount is capped by the terminal profile maximum, the spendable balance after that hold, and the remaining quota gap while the quota is still unmet:
 
-    available_balance - safety_reserve
+    maximum = min(profile_maximum, available_balance - safety_reserve, quota_remaining)
 
-The minimum wager reduces with the remaining quota gap, but never exceeds the current maximum. The default safety bias is 15% and can be tuned on the EggPlinkoTable inspector. Launches are revalidated on the host, so an earlier egg's stake or another player's rapid launch cannot bypass the live limit.
+Once the quota is met, the remaining-quota cap is replaced by the spendable balance, while the protected quota buffer remains in place.
+
+The minimum wager reduces with the remaining quota gap, and the maximum cannot exceed that gap until the quota is met. Neither limit can exceed the current safe spendable amount. The default safety bias is 15% and can be tuned on the EggPlinkoTable inspector. Launches are revalidated on the host, so an earlier egg's stake or another player's rapid launch cannot bypass the live limit.
 
 The board also caps concurrent airborne eggs at 32 by default. This is a presentation/performance guard, not a per-player click cooldown.
 
