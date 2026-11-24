@@ -68,7 +68,11 @@ func set_selected_wager(peer_id: int, amount: int) -> Dictionary:
 @rpc("authority", "call_remote", "reliable")
 func _rpc_sync_selected_wager(peer_id: int, amount: int) -> void:
 	_selected_wagers[peer_id] = amount
-	_set_status("WAGER SELECTED", "WAGER %s" % _format_money(amount))
+	_set_status("WAGER SELECTED", "MIN %s  MAX %s\nWAGER %s" % [
+		_format_money(int(limits.get("minimum", 0))),
+		_format_money(int(limits.get("maximum", 0))),
+		_format_money(amount),
+	])
 	selected_wager_changed.emit(peer_id, amount)
 
 
@@ -300,6 +304,7 @@ func _build_machine() -> void:
 		builder.machine_number = machine_number
 		builder.call("_rebuild")
 		_reel_cells = builder.reel_cells
+		_wager_screen = _visuals.get_node_or_null("Cabinet/WagerWorldScreen") as WorldScreen
 	else:
 		push_warning("CluckpotMachine requires a CluckpotVisualBuilder child named Visuals.")
 	_proximity = Area3D.new()
@@ -341,8 +346,17 @@ func _setup_keypad() -> void:
 	controller.set("profile", Profile)
 	controller.set("selection_only", true)
 	controller.set("one_wager_per_player", false)
-	controller.wager_confirmation_result.connect(_on_keypad_confirmation_result)
+	controller.connect("wager_confirmation_result", _on_keypad_confirmation_result)
 	add_child(_keypad)
+	_refresh_machine_screen()
+
+
+func _refresh_machine_screen() -> void:
+	var limits: Dictionary = get_wager_limits()
+	_set_status("READY FOR WAGER", "MIN %s  MAX %s\nWAGER --" % [
+		_format_money(int(limits.get("minimum", 0))),
+		_format_money(int(limits.get("maximum", 0))),
+	])
 
 
 func _on_keypad_confirmation_result(peer_id: int, result: Dictionary) -> void:
