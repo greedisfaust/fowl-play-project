@@ -291,7 +291,7 @@ func _handle_plinko_drop(peer_id: int) -> Dictionary:
 		_rpc_spawn_egg.rpc(record)
 	egg_launched.emit(record.duplicate(true))
 	_publish_keypad_snapshot()
-	report_player_feedback(peer_id, "EGG LAUNCHED  /  %s AT %.1fX" % [_format_money(stake), multiplier], &"success")
+	report_player_feedback(peer_id, "EGG IN PLAY  /  WAGER %s" % _format_money(stake), &"success")
 	_update_terminal_status()
 	return _success({"egg_id": egg_id, "wager_id": wager_id, "stake": stake, "multiplier": multiplier, "slot_index": slot_index})
 
@@ -339,11 +339,11 @@ func _on_egg_animation_finished(egg_id: String) -> void:
 			while _recent_results.size() > 8:
 				_recent_results.pop_front()
 			egg_settled.emit(result_record, settlement.duplicate(true))
-			report_global_announcement("%s LANDED  /  %.1fX  /  %s" % [
+			report_global_announcement("%s HIT %.1fX  /  RETURN %s" % [
 				str(record["nickname"]).to_upper(),
 				float(record["multiplier"]),
 				_format_money(int(record["gross_return"]))
-			], "EGG PLINKO", 1)
+			], "PLINKO RESULT", 1)
 	_active_eggs.erase(egg_id)
 	var egg_node: Node = _egg_nodes.get(egg_id) as Node
 	if is_instance_valid(egg_node):
@@ -372,7 +372,8 @@ func _apply_cabinet_control_layout() -> void:
 	var keypad: Node3D = get_node_or_null("BettingKeypad") as Node3D
 	if is_instance_valid(keypad):
 		# The keypad's local +Y face points toward the player (+Z).
-		keypad.transform = Transform3D(Basis(Vector3.RIGHT, PI * 0.5), Vector3(-1.28, 1.05, 1.52))
+		keypad.position = Vector3(-1.801, 1.227, 1.532)
+	keypad.rotation = Vector3(deg_to_rad(66.0), deg_to_rad(15.0), 0.0)
 	var controls: Node3D = get_node_or_null("Controls") as Node3D
 	if is_instance_valid(controls):
 		controls.position = Vector3(1.08, 0.86, 1.9)
