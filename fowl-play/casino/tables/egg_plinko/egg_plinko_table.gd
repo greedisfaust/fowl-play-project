@@ -16,8 +16,7 @@ signal selected_wager_changed(peer_id: int, amount: int)
 @export var visuals: Node3D
 @export var terminal_display: Node
 
-@export_group("Wager Safety")
-@export_range(0.0, 0.75, 0.01) var quota_safety_bias: float = 0.15
+@export_group("Board Settings")
 @export_range(1, 128, 1) var maximum_airborne_eggs: int = 32
 @export_range(0.1, 10.0, 0.1) var egg_flight_duration: float = 3.4
 @export var auto_fit_cabinet_controls: bool = true
@@ -58,41 +57,6 @@ func _exit_tree() -> void:
 	if is_instance_valid(plinko_interactable) and plinko_interactable.interacted.is_connected(_on_plinko_interacted):
 		plinko_interactable.interacted.disconnect(_on_plinko_interacted)
 	super._exit_tree()
-
-
-## Dynamic limits are recalculated from the live quota and currently available wallet.
-## The safety bias protects a configurable share of the quota target, while the live quota gap caps each wager.
-func get_wager_limits() -> Dictionary:
-	var available: int = _get_available_balance()
-	var base_minimum: int = 100
-	var base_maximum: int = 5000
-	if is_instance_valid(terminal_display):
-		var profile: BettingTerminalProfile = terminal_display.get("profile") as BettingTerminalProfile
-		if profile != null:
-			base_minimum = profile.get_effective_minimum()
-			base_maximum = profile.get_effective_maximum()
-	var quota: int = int(_day_manager.get("daily_quota")) if is_instance_valid(_day_manager) and bool(_day_manager.get("day_active")) else 0
-	var quota_remaining: int = maxi(quota - available, 0)
-	var safety_reserve: int = ceili(float(quota) * quota_safety_bias)
-	var spendable: int = maxi(available - safety_reserve, 0)
-	var quota_cap: int = quota_remaining if quota_remaining > 0 else spendable
-	var maximum: int = mini(base_maximum, mini(spendable, quota_cap))
-	var minimum: int = base_minimum
-	if quota_remaining > 0:
-		minimum = mini(base_minimum, maxi(1, quota_remaining))
-	if maximum > 0:
-		minimum = mini(minimum, maximum)
-	else:
-		minimum = 0
-	return {
-		"minimum": minimum,
-		"maximum": maximum,
-		"available_balance": available,
-		"quota": quota,
-		"quota_remaining": quota_remaining,
-		"safety_reserve": safety_reserve,
-		"spendable_balance": spendable,
-	}
 
 
 ## Called by the shared keypad in selection-only mode. No money is reserved here.
