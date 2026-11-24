@@ -22,6 +22,17 @@ func _run() -> void:
 	await process_frame
 	var display: Node = table.get_node("BettingTerminalDisplay")
 	var profile: Resource = display.get("profile")
+	var screen: Node3D = table.get_node("SlimWorldScreen") as Node3D
+	_check(screen.get("display_size") == Vector2(2.45, 1.12), "Terminal display retains its original physical size")
+	_check(screen.global_position.z > 1.3, "Terminal display sits in front of the cabinet face")
+	_check((table.get_node("BettingKeypad") as Node3D).position.z > 1.3, "Keypad interaction surface sits in front of cabinet collision")
+	_check((table.get_node("Controls") as Node3D).position.z > 1.3, "Plinko launch button sits in front of cabinet collision")
+	var generated_visuals: Node = table.get_node("Visuals/_GeneratedEggPlinko")
+	var divider_count: int = 0
+	for visual_child: Node in generated_visuals.get_children():
+		if str(visual_child.name).begins_with("PocketDivider_"):
+			divider_count += 1
+	_check(divider_count == 14, "Thirteen landing pockets have all fourteen boundary dividers")
 	profile.set("maximum_wager", 20000)
 
 	_check_result(table.call("enter_proximity", 1), true, "Player one enters Plinko proximity")
