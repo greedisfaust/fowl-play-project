@@ -218,6 +218,8 @@ func _confirm_pending_wager(peer_id: int) -> Dictionary:
 	var limits: Dictionary = _get_wager_limits()
 	var minimum_value: int = int(limits["minimum"])
 	var maximum_value: int = int(limits["maximum"])
+	if minimum_value <= 0 or maximum_value <= 0:
+		return _failure("No safe wager is currently available from the shared wallet and quota.")
 	if amount < minimum_value or amount > maximum_value:
 		return _failure("Wager must be between %d and %d." % [minimum_value, maximum_value])
 	if selection_only:
