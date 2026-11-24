@@ -85,7 +85,7 @@ func _run() -> void:
 			_check_result(wallet.call("begin_run", 10000), "Initialize shared wallet")
 			_check_result(day_manager.call("begin_casino_day", 1, 17500), "Start casino quota snapshot")
 			first_machine.set("spin_duration", 5.2)
-			_check(float(first_machine.get("spin_duration")) >= 4.0 and first_machine.has_method("_set_reel_spin_progress"), "Spin uses continuous reel progress over a four-to-six-second presentation")
+			_check(float(first_machine.get("spin_duration")) >= 4.0 and first_machine.has_method("_set_reel_drum_angle") and first_machine.get("_reel_drums").size() == 3, "Spin uses continuous reel progress over a four-to-six-second presentation")
 			_check_result(first_machine.call("enter_proximity", 1), "Register test player near a machine")
 			var limits: Dictionary = first_machine.call("get_wager_limits")
 			var stake: int = int(limits.get("minimum", 0))
