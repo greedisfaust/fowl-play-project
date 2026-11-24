@@ -102,6 +102,19 @@ func _run() -> void:
 			var spin: Dictionary = first_machine.call("_handle_spin", 1)
 			_check(bool(spin.get("ok", false)), "Host accepts a valid slot spin")
 			await create_timer(5.6).timeout
+			var visual_builder: CluckpotVisualBuilder = first_machine.get_node("Visuals") as CluckpotVisualBuilder
+			var settled_record: Dictionary = first_machine.get("last_spin_result")
+			var expected_columns: Array = settled_record.get("symbols", [])
+			var aligned_faces: int = 0
+			if is_instance_valid(visual_builder) and expected_columns.size() == 3:
+				for reel_index: int in range(3):
+					for row_index: int in range(3):
+						var visible_cell: Node3D = visual_builder.reel_cells[reel_index][row_index]
+						var visible_icon: Sprite3D = visible_cell.get_node_or_null("SymbolIcon") as Sprite3D
+						var expected_path: String = _symbol_texture_path(str(expected_columns[reel_index][row_index]))
+						if is_instance_valid(visible_icon) and visible_icon.texture != null and visible_icon.texture.resource_path == expected_path:
+							aligned_faces += 1
+			_check(aligned_faces == 9, "All nine final visible reel symbols match the authoritative spin outcome")
 			var wallet_snapshot: Dictionary = wallet.call("get_snapshot")
 			_check(int(wallet_snapshot.get("reserved_total", 0)) == 0, "Spin settlement releases the reserved wager")
 			var wager: Dictionary = wallet.call("get_wager", str(spin.get("wager_id", "")))
@@ -118,6 +131,18 @@ func _run() -> void:
 
 	arcade.queue_free()
 	_finish()
+
+
+func _symbol_texture_path(symbol: String) -> String:
+	match symbol:
+		"SEVEN": return "res://assets/images/cluckpot/seven.png"
+		"WILD": return "res://assets/images/cluckpot/gold_chicken.png"
+		"ROOSTER": return "res://assets/images/cluckpot/normal_chicken.png"
+		"CHICK": return "res://assets/images/cluckpot/baby_chicken.png"
+		"EGG": return "res://assets/images/cluckpot/egg.png"
+		"CORN": return "res://assets/images/cluckpot/corn.png"
+		"WINGS": return "res://assets/images/cluckpot/chickenwings.png"
+	return ""
 
 
 func _check_result(result: Dictionary, label: String) -> void:
