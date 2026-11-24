@@ -59,7 +59,7 @@ func _exit_tree() -> void:
 
 
 ## Dynamic limits are recalculated from the live quota and currently available wallet.
-## The safety bias protects a configurable share of the remaining quota gap.
+## The safety bias protects a configurable share of the quota target, while the live quota gap caps each wager.
 func get_wager_limits() -> Dictionary:
 	var available: int = _get_available_balance()
 	var base_minimum: int = 100
@@ -71,9 +71,10 @@ func get_wager_limits() -> Dictionary:
 			base_maximum = profile.get_effective_maximum()
 	var quota: int = int(_day_manager.get("daily_quota")) if is_instance_valid(_day_manager) and bool(_day_manager.get("day_active")) else 0
 	var quota_remaining: int = maxi(quota - available, 0)
-	var safety_reserve: int = ceili(float(quota_remaining) * quota_safety_bias)
+	var safety_reserve: int = ceili(float(quota) * quota_safety_bias)
 	var spendable: int = maxi(available - safety_reserve, 0)
-	var maximum: int = mini(base_maximum, spendable)
+	var quota_cap: int = quota_remaining if quota_remaining > 0 else spendable
+	var maximum: int = mini(base_maximum, mini(spendable, quota_cap))
 	var minimum: int = base_minimum
 	if quota_remaining > 0:
 		minimum = mini(base_minimum, maxi(1, quota_remaining))
