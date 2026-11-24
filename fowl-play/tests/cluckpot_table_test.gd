@@ -72,14 +72,12 @@ func _run() -> void:
 			var spin: Dictionary = first_machine.call("_handle_spin", 1)
 			_check(bool(spin.get("ok", false)), "Host accepts a valid slot spin")
 			await create_timer(2.0).timeout
-			_check(int(wallet.call("get_snapshot").get("reserved_total", 0)) == 0, "Spin settlement releases the reserved wager")
+			var wallet_snapshot: Dictionary = wallet.call("get_snapshot")
+			_check(int(wallet_snapshot.get("reserved_total", 0)) == 0, "Spin settlement releases the reserved wager")
 			var wager: Dictionary = wallet.call("get_wager", str(spin.get("wager_id", "")))
+			_check(not wager.is_empty(), "The spin returns a verifiable wallet wager ID")
 			if not wager.is_empty():
 				_check(str(wager.get("status", "")) == "settled", "The spin's wallet wager settles exactly once")
-			else:
-				# The wallet's spin response is keyed by round ID; the integration
-				# assertion above still verifies that no funds remain reserved.
-				_check(true, "Wallet reservation is fully settled")
 
 	arcade.queue_free()
 	_finish()
