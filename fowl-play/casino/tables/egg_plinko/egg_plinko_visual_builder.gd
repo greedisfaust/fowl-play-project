@@ -3,6 +3,7 @@
 class_name EggPlinkoVisualBuilder
 extends Node3D
 
+const Rules = preload("res://casino/tables/egg_plinko/egg_plinko_rules.gd")
 const GENERATED_NAME: StringName = &"_GeneratedEggPlinko"
 const ROW_COUNT: int = 12
 const SLOT_COUNT: int = 13
@@ -78,7 +79,7 @@ func _build_board(parent: Node3D, stone: Material, bronze: Material, dark_metal:
 			_add_sphere(parent, "Peg_%02d_%02d" % [row_index + 1, peg_index + 1], 0.036, Vector3(x, y, -0.035), peg_material)
 			_add_sphere(parent, "PegCap_%02d_%02d" % [row_index + 1, peg_index + 1], 0.012, Vector3(x, y, 0.003), peg_glow)
 
-	var multipliers: Array[float] = EggPlinkoRules.get_slot_multipliers()
+	var multipliers: Array[float] = Rules.get_slot_multipliers()
 	for slot_index: int in range(SLOT_COUNT):
 		var x: float = (float(slot_index) - float(SLOT_COUNT - 1) * 0.5) * SLOT_WIDTH
 		var multiplier: float = multipliers[slot_index]
