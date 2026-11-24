@@ -89,6 +89,7 @@ func _test_single_chicken_cross_fallback() -> void:
 	var spawner: Node3D = Node3D.new()
 	spawner.set_script(SPAWNER_SCRIPT)
 	spawner.set("spawn_on_ready", false)
+	spawner.set("development_test_game_id", "chicken_cross")
 	var spawn_points: Node3D = Node3D.new()
 	spawn_points.name = "SpawnPoints"
 	var spawned_tables: Node3D = Node3D.new()
