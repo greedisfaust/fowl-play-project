@@ -185,7 +185,7 @@ func _play_spin_visual(record: Dictionary) -> void:
 
 
 func _set_reel_preview(reel_index: int, step: int) -> void:
-	if reel_index < 0 or reel_index >= _reel_cells.size():
+	if reel_index < 0 or reel_index >= _reel_cells.size() or step >= 7:
 		return
 	var symbols: Array[String] = Rules.SYMBOLS
 	var builder: CluckpotVisualBuilder = _visuals as CluckpotVisualBuilder
@@ -197,7 +197,8 @@ func _set_reel_preview(reel_index: int, step: int) -> void:
 		var scroll_tween: Tween = create_tween()
 		scroll_tween.set_trans(Tween.TRANS_SINE)
 		scroll_tween.set_ease(Tween.EASE_IN_OUT)
-		scroll_tween.tween_property(cell, "position:y", next_y, 0.105)
+		var scroll_duration: float = 0.045 if step <= 2 else 0.09
+		scroll_tween.tween_property(cell, "position:y", next_y, scroll_duration)
 		scroll_tween.tween_callback(func() -> void:
 			if not is_instance_valid(cell):
 				return
