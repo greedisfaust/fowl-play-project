@@ -31,11 +31,11 @@ func build(parent: Node3D, number: int = 1) -> void:
 	cabinet.name = "Cabinet"
 	parent.add_child(cabinet)
 
-	var enamel := _mat(Color("#42474a"), 0.76, 0.32)
-	var burgundy := _mat(Color("#481923"), 0.34, 0.3)
-	var brass := _mat(Color("#8e7958"), 0.78, 0.28)
-	var bright_brass := _mat(Color("#c8b58d"), 0.82, 0.24)
-	var dark_brass := _mat(Color("#443a2d"), 0.72, 0.34)
+	var enamel := _mat(Color("#858783"), 0.72, 0.36)
+	var burgundy := _mat(Color("#4b1721"), 0.34, 0.32)
+	var brass := _mat(Color("#928a79"), 0.76, 0.3)
+	var bright_brass := _mat(Color("#d0c6b1"), 0.78, 0.26)
+	var dark_brass := _mat(Color("#514a3e"), 0.68, 0.36)
 	var ivory := _mat(Color("#eee2c9"), 0.04, 0.42)
 	var black := _mat(Color("#111619"), 0.22, 0.2)
 	var walnut := _mat(Color("#38251b"), 0.08, 0.38)
@@ -46,6 +46,12 @@ func build(parent: Node3D, number: int = 1) -> void:
 	_box(cabinet, "FootBrassLine", Vector3(1.88, 0.035, 1.09), Vector3(0, 0.235, 0), bright_brass)
 	_box(cabinet, "UpperShoulder", Vector3(1.68, 0.43, 0.96), Vector3(0, 2.36, 0), enamel)
 	_box(cabinet, "CrownBand", Vector3(1.7, 0.07, 1.0), Vector3(0, 2.16, 0), brass)
+	# Rounded cast shoulders soften the silhouette beyond a stack of flat boxes.
+	var left_cheek := _sphere(cabinet, "LeftCastCheek", 0.5, Vector3(-0.79, 1.48, 0.02), enamel)
+	left_cheek.scale = Vector3(0.36, 1.18, 1.0)
+	var right_cheek := _sphere(cabinet, "RightCastCheek", 0.5, Vector3(0.79, 1.48, 0.02), enamel)
+	right_cheek.scale = Vector3(0.36, 1.18, 1.0)
+	_box(cabinet, "CrownPinstripe", Vector3(1.54, 0.025, 0.025), Vector3(0, 2.18, 0.505), bright_brass)
 	_box(cabinet, "FrontBurgundyEnamel", Vector3(1.57, 2.03, 0.075), Vector3(0, 1.28, 0.51), burgundy)
 	_box(cabinet, "InnerFace", Vector3(1.48, 1.18, 0.055), Vector3(0, 1.57, 0.565), enamel)
 
@@ -58,8 +64,12 @@ func build(parent: Node3D, number: int = 1) -> void:
 	_box(cabinet, "Glass", Vector3(1.28, 0.96, 0.025), Vector3(0, 1.57, 0.665), _mat(Color(0.063, 0.082, 0.102, 0.88), 0.2, 0.1))
 	_box(cabinet, "PaylineGold", Vector3(1.29, 0.025, 0.035), Vector3(0, 1.57, 0.704), bright_brass)
 
-	# Restrained cast-metal crown and a few functional fasteners; no text clutter.
-	_cylinder(cabinet, "CrownCap", 0.105, 0.11, Vector3(0, 2.55, 0.47), bright_brass)
+	# A single iconic jackpot medallion replaces the old text-heavy marquee.
+	var medallion := _sphere(cabinet, "SevenMedallion", 0.19, Vector3(0, 2.43, 0.57), burgundy)
+	medallion.scale = Vector3(1.35, 0.88, 0.34)
+	var medallion_rim := _cylinder(cabinet, "SevenMedallionRim", 0.19, 0.035, Vector3(0, 2.43, 0.69), bright_brass)
+	medallion_rim.rotation.x = deg_to_rad(90.0)
+	_text(cabinet, "JackpotSeven", "7", 0.22, Vector3(0, 2.43, 0.715), _mat(Color("#e6c47d"), 0.7, 0.24))
 	for x: float in [-0.76, 0.76]:
 		for y: float in [0.31, 2.28]:
 			_sphere(cabinet, "Rivet", 0.035, Vector3(x, y, 0.57), bright_brass)
@@ -90,7 +100,9 @@ func build(parent: Node3D, number: int = 1) -> void:
 			cells.append(cell)
 		reel_cells.append(cells)
 
-	# Lower coin-return panel and brass trim; no spin button.
+	# Subtle vertical cooling ribs and a recessed coin-return assembly.
+	for rib_index: int in range(5):
+		_box(cabinet, "LowerRib_%d" % rib_index, Vector3(0.018, 0.27, 0.018), Vector3(-0.56 + float(rib_index) * 0.28, 0.59, 0.63), brass)
 	_box(cabinet, "LowerPanel", Vector3(1.42, 0.48, 0.10), Vector3(0, 0.59, 0.55), enamel)
 	_box(cabinet, "LowerPanelInset", Vector3(1.28, 0.35, 0.025), Vector3(0, 0.59, 0.615), burgundy)
 	_box(cabinet, "CoinReturnRim", Vector3(0.58, 0.19, 0.08), Vector3(0, 0.59, 0.67), bright_brass)
@@ -113,7 +125,7 @@ func build(parent: Node3D, number: int = 1) -> void:
 		screen.name = "WagerWorldScreen"
 		screen.display_size = Vector2(1.08, 0.48)
 		screen.pixels_per_unit = 2048
-		screen.text_scale = 1.65
+		screen.text_scale = 1.0
 		screen.font_size_ratio = 0.105
 		screen.content_padding_ratio = 0.12
 		screen.position = Vector3(0, 2.68, 0.51)
