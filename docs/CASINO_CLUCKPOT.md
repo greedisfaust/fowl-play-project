@@ -4,9 +4,9 @@ Cluckpot is a four-cabinet slot-machine bank presented as one selectable casino 
 
 ## Cabinet and interaction
 
-- Each cabinet uses a cool cast-silver body, deep burgundy enamel, restrained champagne-metal trim, walnut foot, a single Golden 7 crown medallion, physical side lever, and collision. Decorative labels and marquee text are intentionally omitted.
-- A compact, high-resolution standard `WorldScreen` is mounted above the jackpot medallion, clear of the reel window and keypad. Its oversized centered readout shows the day's minimum and maximum, current keypad draft, and spin result. Invalid or empty wagers are red; valid wagers are green. It is not a terminal screen or a Slim/Fat terminal housing.
-- Each reel is a horizontal-axis cylinder with ten symbol faces wrapped around its circumference, an ivory barrel, and machined brass end caps. Supplied transparent PNG artwork in `assets/images/cluckpot/` is rendered on curved-facing `Sprite3D` tiles; no symbol-name text or procedural animal/food meshes are used.
+- Each cabinet uses a cool cast-silver body, deep burgundy enamel, restrained champagne-metal trim, walnut foot, an enlarged head-mounted WorldScreen, physical side lever, and collision. Decorative labels and marquee text are intentionally omitted.
+- A high-resolution standard `WorldScreen` replaces the former Golden 7 medallion, enlarged to 1.55 × 0.58 and positioned just above the reel bezel without covering the symbol window. Its oversized centered readout shows the day's minimum and maximum, current keypad draft, and spin result. Invalid or empty wagers are red; valid wagers are green. It is not a terminal screen or a Slim/Fat terminal housing.
+- Each reel is a horizontal-axis cylinder with ten symbol faces wrapped around its circumference, a recessed ivory core smaller than the symbol ring so it cannot occlude the wrapped artwork, and machined brass end caps. Supplied transparent PNG artwork in `assets/images/cluckpot/` is rendered on curved-facing `Sprite3D` tiles; no symbol-name text or procedural animal/food meshes are used.
 - The seven-symbol pool is Golden 7, Golden Chicken (wild), normal chicken, baby chick, egg, corn, and chicken wings. Cherries, lemons, and feathers are not part of the game.
 - Chicken wings are a regular lower-value payout symbol. Golden Chicken substitutes for other symbols on winning lines; three Golden Chickens pay the wild line value.
 - The visual builder is an editor tool. Generated cabinet meshes, textured reel symbols, and collision are owned by the authored scene so they can be inspected and adjusted in Godot.
@@ -44,4 +44,4 @@ These are initial paytable values and should be balanced with playtesting before
 
 ## Checks
 
-Run `tests/run_cluckpot_checks.bat` after setting `FOWL_PLAY_GODOT`. The checks cover Golden 7 and wild payouts, all thirty wrapped symbol faces, cylindrical drums and end caps, exact final-symbol alignment with the host outcome, four independent machines, WorldScreen/keypad integration, and host-side wallet settlement.
+Run `tests/run_cluckpot_checks.bat` after setting `FOWL_PLAY_GODOT`. The checks cover Golden 7 and wild payouts, all thirty wrapped symbol faces, non-occluding cylindrical drum cores and end caps, exact final-symbol alignment with the host outcome, the enlarged WorldScreen placement, four independent machines, WorldScreen/keypad integration, and host-side wallet settlement.
