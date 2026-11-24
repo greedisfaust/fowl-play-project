@@ -77,6 +77,19 @@ func _build_board(parent: Node3D, stone: Material, bronze: Material, dark_metal:
 	_add_box(parent, "Board_Bottom_Rail", Vector3(3.22, 0.12, 0.16), Vector3(0.0, 0.91, -0.17), bronze)
 	_add_box(parent, "Launch_Header", Vector3(0.68, 0.12, 0.12), Vector3(0.0, 3.36, -0.02), warm)
 
+	var title_label := MeshInstance3D.new()
+	title_label.name = "PlinkoTitle"
+	var title_mesh := TextMesh.new()
+	title_mesh.text = "PLINKO"
+	title_mesh.font_size = 40
+	title_mesh.pixel_size = 0.004
+	title_mesh.depth = 0.002
+	title_label.mesh = title_mesh
+	title_label.position = Vector3(-0.32, 3.72, 0.04)
+	title_label.material_override = warm
+	parent.add_child(title_label)
+	_set_owner_recursive(title_label)
+
 	var peg_material := _material(Color(0.86, 0.78, 0.60, 1.0), 0.82, 0.18)
 	var peg_glow := _material(Color(0.94, 0.92, 0.55, 1.0), 0.2, 0.2, Color(0.48, 1.0, 0.22, 1.0), 1.35)
 	for row_index: int in range(ROW_COUNT):
