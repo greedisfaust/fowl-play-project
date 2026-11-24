@@ -87,7 +87,7 @@ func build(parent: Node3D, number: int = 1) -> void:
 	for reel_index: int in range(3):
 		var drum := Node3D.new()
 		drum.name = "Reel_%d" % reel_index
-		drum.position = Vector3((float(reel_index) - 1.0) * 0.425, 1.57, 0.745)
+		drum.position = Vector3((float(reel_index) - 1.0) * 0.425, 1.57, 0.27)
 		reels.add_child(drum)
 		reel_drums.append(drum)
 		var barrel := MeshInstance3D.new()
@@ -228,7 +228,7 @@ func set_symbol_icon(cell: Node3D, symbol: String) -> void:
 		_box(icon, "JackpotTrimRight", Vector3(0.009, 0.22, 0.008), Vector3(0.16, 0, 0.035), jackpot_trim)
 	icon.texture = texture
 	var texture_size := Vector2(texture.get_width(), texture.get_height())
-	var target_size := Vector2(0.34, 0.24)
+	var target_size := Vector2(0.30, 0.22)
 	if symbol == "SEVEN":
 		target_size = Vector2(0.30, 0.22)
 	icon.pixel_size = minf(target_size.x / texture_size.x, target_size.y / texture_size.y)
