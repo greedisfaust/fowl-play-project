@@ -104,7 +104,7 @@ func _build_board(parent: Node3D, stone: Material, bronze: Material, dark_metal:
 		var label := MeshInstance3D.new()
 		label.name = "Multiplier_%02d" % slot_index
 		var text_mesh := TextMesh.new()
-		text_mesh.text = "%.1fX" % multiplier
+		text_mesh.text = "%dX" % int(multiplier) if is_equal_approx(multiplier, roundf(multiplier)) else "%.1fX" % multiplier
 		text_mesh.font_size = 24
 		text_mesh.pixel_size = 0.003
 		text_mesh.depth = 0.001
