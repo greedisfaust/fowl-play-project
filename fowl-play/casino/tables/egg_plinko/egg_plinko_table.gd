@@ -279,6 +279,9 @@ func _on_egg_animation_finished(egg_id: String) -> void:
 				_format_money(int(record["gross_return"]))
 			], "EGG PLINKO", 1)
 	_active_eggs.erase(egg_id)
+	var egg_node: Node = _egg_nodes.get(egg_id) as Node
+	if is_instance_valid(egg_node):
+		egg_node.queue_free()
 	_egg_nodes.erase(egg_id)
 	_publish_keypad_snapshot()
 	_update_terminal_status()
