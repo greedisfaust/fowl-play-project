@@ -56,19 +56,19 @@ func refresh_display() -> void:
 	if header == "READY" or header == "WAGER CHECK" or header == "WAGER SELECTED":
 		header = "CLUCKPOT"
 		state_color = "#54e58b" if wager_valid else "#ff525c"
-		screen_text.append_text("[center][color=%s][font_size=62][b]CLUCKPOT[/b][/font_size][/color][/center]\n" % title_color)
-		screen_text.append_text("[center][color=#f4eee2][font_size=54]MIN  $%s     MAX  $%s[/font_size][/color][/center]\n" % [_format_money(minimum), _format_money(maximum)])
+		screen_text.append_text("[center][color=%s][font_size=124][b]CLUCKPOT[/b][/font_size][/color][/center]\n" % title_color)
+		screen_text.append_text("[center][color=#f4eee2][font_size=108]MIN  $%s     MAX  $%s[/font_size][/color][/center]\n" % [_format_money(minimum), _format_money(maximum)])
 		var wager_text: String = _format_money(pending_wager_amount) if pending_wager_amount > 0 else "--"
-		screen_text.append_text("[center][color=%s][font_size=112][b]WAGER  $%s[/b][/font_size][/color][/center]\n" % [state_color, wager_text])
-		screen_text.append_text("[center][color=%s][font_size=42][b]%s[/b][/font_size][/color]" % [state_color, "VALID WAGER" if wager_valid else "INVALID / SET WAGER"])
+		screen_text.append_text("[center][color=%s][font_size=224][b]WAGER  $%s[/b][/font_size][/color][/center]\n" % [state_color, wager_text])
+		screen_text.append_text("[center][color=%s][font_size=84][b]%s[/b][/font_size][/color]" % [state_color, "VALID WAGER" if wager_valid else "INVALID / SET WAGER"])
 		return
-	screen_text.append_text("[center][color=%s][font_size=68][b]%s[/b][/font_size][/color][/center]\n" % [title_color, _escape(header)])
+	screen_text.append_text("[center][color=%s][font_size=136][b]%s[/b][/font_size][/color][/center]\n" % [title_color, _escape(header)])
 	if not detail.is_empty():
 		var detail_lines: PackedStringArray = detail.split("\n")
 		for line: String in detail_lines:
 			var safe_line: String = _escape(line)
 			var line_color: String = state_color if header.begins_with("WIN") or header.begins_with("GOLDEN") else "#f4eee2"
-			var font_size: int = 68 if line.begins_with("WAGER") or line.begins_with("STAKE") else 58
+			var font_size: int = 68 if line.begins_with("WAGER") or line.begins_with("STAKE") else 116
 			screen_text.append_text("[center][color=%s][font_size=%d][b]%s[/b][/font_size][/color][/center]\n" % [line_color, font_size, safe_line])
 
 
