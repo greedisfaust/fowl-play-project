@@ -339,11 +339,11 @@ func _on_egg_animation_finished(egg_id: String) -> void:
 			while _recent_results.size() > 8:
 				_recent_results.pop_front()
 			egg_settled.emit(result_record, settlement.duplicate(true))
-			report_global_announcement("%s HIT %.1fX  /  RETURN %s" % [
+			report_global_announcement("%s HIT %.1fX — PAYOUT %s" % [
 				str(record["nickname"]).to_upper(),
 				float(record["multiplier"]),
 				_format_money(int(record["gross_return"]))
-			], "PLINKO RESULT", 1)
+			], "EGG PLINKO", 1)
 	_active_eggs.erase(egg_id)
 	var egg_node: Node = _egg_nodes.get(egg_id) as Node
 	if is_instance_valid(egg_node):
