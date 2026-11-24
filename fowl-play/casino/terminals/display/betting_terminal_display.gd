@@ -113,7 +113,9 @@ func refresh_display() -> void:
 	var limits: Dictionary = _get_wager_limits()
 	var minimum_value: int = int(limits["minimum"])
 	var maximum_value: int = int(limits["maximum"])
-	var valid: bool = _is_pending_wager_valid(minimum_value, maximum_value, available_balance)
+	var shared_wager: int = int(table.call("get_shared_selected_wager")) if is_instance_valid(table) and table.has_method("get_shared_selected_wager") else 0
+	var displayed_amount: int = _pending_wager_amount if _pending_wager_amount > 0 else shared_wager
+	var valid: bool = _is_pending_wager_valid(minimum_value, maximum_value, available_balance, displayed_amount)
 	var amount_color: Color = profile.valid_color if valid else profile.invalid_color
 	var amount_font_size: int = roundi(float(screen_text.terminal_font_size) * 1.45)
 	var columns_markup: String = _build_columns_table(left_rows, right_rows, row_count, left_width, right_width, amount_color, amount_font_size, valid)
@@ -170,11 +172,17 @@ func _build_pending_rows() -> Array[String]:
 	var minimum_value: int = int(limits["minimum"])
 	var maximum_value: int = int(limits["maximum"])
 	var available_balance: int = _get_available_balance()
-	var valid: bool = _is_pending_wager_valid(minimum_value, maximum_value, available_balance)
+	var shared_wager: int = int(table.call("get_shared_selected_wager")) if is_instance_valid(table) and table.has_method("get_shared_selected_wager") else 0
+	var displayed_amount: int = _pending_wager_amount if _pending_wager_amount > 0 else shared_wager
+	var valid: bool = _is_pending_wager_valid(minimum_value, maximum_value, available_balance, displayed_amount)
 	var status_text: String = profile.valid_message if valid else profile.invalid_message
-	if _pending_wager_amount > available_balance and _pending_wager_amount > 0:
+	if _pending_wager_amount > 0 and shared_wager > 0:
+		status_text = "EDITING TEAM WAGER"
+	elif shared_wager > 0 and valid:
+		status_text = "TEAM WAGER ACTIVE"
+	if displayed_amount > available_balance and displayed_amount > 0:
 		status_text = profile.insufficient_funds_message
-	rows.append(_format_compact_money(_pending_wager_amount))
+	rows.append(_format_compact_money(displayed_amount))
 	rows.append(status_text)
 	rows.append("%s: %s" % [profile.minimum_label, _format_compact_money(minimum_value)])
 	rows.append("%s: %s" % [profile.maximum_label, _format_compact_money(maximum_value)])
@@ -223,8 +231,9 @@ func _build_player_rows() -> Array[String]:
 	rows.append("%s: %s" % [profile.total_reserved_label, _format_money(total_reserved)])
 	return rows
 
-func _is_pending_wager_valid(minimum_value: int, maximum_value: int, available_balance: int) -> bool:
-	return _pending_wager_amount > 0 and _pending_wager_amount >= minimum_value and _pending_wager_amount <= maximum_value and _pending_wager_amount <= available_balance
+func _is_pending_wager_valid(minimum_value: int, maximum_value: int, available_balance: int, amount: int = -1) -> bool:
+	var amount_to_validate: int = _pending_wager_amount if amount < 0 else amount
+	return amount_to_validate > 0 and amount_to_validate >= minimum_value and amount_to_validate <= maximum_value and amount_to_validate <= available_balance
 
 func _get_nearby_peer_ids() -> Array[int]:
 	if _network_snapshot_active:
