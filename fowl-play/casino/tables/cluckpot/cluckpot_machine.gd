@@ -12,7 +12,7 @@ signal spin_settled(record: Dictionary, settlement: Dictionary)
 signal selected_wager_changed(peer_id: int, amount: int)
 
 @export var machine_number: int = 1
-@export var spin_duration: float = 3.8
+@export_range(4.0, 6.0, 0.1) var spin_duration: float = 5.2
 
 var _network: Node
 var _rng := RandomNumberGenerator.new()
@@ -26,6 +26,8 @@ var _display: Node
 var _reel_cells: Array[Array] = []
 var _wager_screen: WorldScreen
 var _spin_locked: bool = false
+var _reels_stopped: int = 0
+var _reel_symbol_indices: Dictionary = {}
 
 
 func _ready() -> void:
@@ -166,46 +168,57 @@ func _play_spin_visual(record: Dictionary) -> void:
 		return
 	_set_status("REELS IN MOTION", "WAGER %s  /  GOOD LUCK" % _format_money(int(record.get("stake", 0))))
 	_flash_win(false)
-	var duration: float = maxf(float(record.get("spin_duration", spin_duration)), 1.8)
-	var tween: Tween = create_tween()
-	tween.set_trans(Tween.TRANS_LINEAR)
+	_reels_stopped = 0
+	_reel_symbol_indices.clear()
+	var duration: float = clampf(float(record.get("spin_duration", spin_duration)), 4.0, 6.0)
+	# Every reel starts together, spins continuously, then stops left-to-right.
+	# The final reel gets the full anticipation window.
 	for reel_index: int in range(3):
-		var reel_time: float = duration * (0.25 + float(reel_index) * 0.08)
-		var spin_step: Callable = func(step: int) -> void: _set_reel_preview(reel_index, step)
-		var ramp_steps: int = 2
-		var cruise_steps: int = 5
-		var stop_steps: int = 2
-		tween.tween_method(spin_step, 0, ramp_steps, reel_time * 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
-		tween.tween_method(spin_step, ramp_steps, ramp_steps + cruise_steps, reel_time * 0.52).set_trans(Tween.TRANS_LINEAR)
-		tween.tween_method(spin_step, ramp_steps + cruise_steps, ramp_steps + cruise_steps + stop_steps, reel_time * 0.28).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-		tween.tween_callback(func() -> void: _show_final_reel(reel_index, symbols[reel_index]))
-		tween.tween_callback(func() -> void: _reel_stop_pulse(reel_index))
-		tween.tween_interval(0.12)
-	tween.tween_callback(func() -> void: _finish_spin_visual(record))
+		var reel_duration: float = duration - float(2 - reel_index) * 0.45
+		var total_steps: float = 48.0
+		var accelerate_steps: float = 8.0
+		var cruise_steps: float = 32.0
+		var decelerate_steps: float = total_steps - accelerate_steps - cruise_steps
+		var accelerate_time: float = reel_duration * 0.16
+		var cruise_time: float = reel_duration * 0.60
+		var decelerate_time: float = reel_duration - accelerate_time - cruise_time
+		var spin_callback: Callable = Callable(self, "_set_reel_spin_progress").bind(reel_index)
+		var reel_tween: Tween = create_tween()
+		reel_tween.tween_method(spin_callback, 0.0, accelerate_steps, accelerate_time).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+		reel_tween.tween_method(spin_callback, accelerate_steps, accelerate_steps + cruise_steps, cruise_time).set_trans(Tween.TRANS_LINEAR)
+		reel_tween.tween_method(spin_callback, accelerate_steps + cruise_steps, total_steps, decelerate_time).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		reel_tween.tween_callback(Callable(self, "_on_reel_spin_finished").bind(reel_index, symbols[reel_index], record))
 
 
-func _set_reel_preview(reel_index: int, step: int) -> void:
-	if reel_index < 0 or reel_index >= _reel_cells.size() or step >= 7:
+func _set_reel_spin_progress(progress: float, reel_index: int) -> void:
+	if reel_index < 0 or reel_index >= _reel_cells.size():
 		return
 	var symbols: Array[String] = Rules.SYMBOLS
 	var builder: CluckpotVisualBuilder = _visuals as CluckpotVisualBuilder
+	var whole_step: int = floori(progress)
+	var fractional_step: float = fposmod(progress, 1.0)
 	for row_index: int in range(3):
 		var cell: Node3D = _reel_cells[reel_index][row_index] as Node3D
 		if not is_instance_valid(builder) or not is_instance_valid(cell):
 			continue
-		var next_y: float = cell.position.y - 0.31
-		var scroll_tween: Tween = create_tween()
-		scroll_tween.set_trans(Tween.TRANS_SINE)
-		scroll_tween.set_ease(Tween.EASE_IN_OUT)
-		var scroll_duration: float = 0.045 if step <= 2 else 0.09
-		scroll_tween.tween_property(cell, "position:y", next_y, scroll_duration)
-		scroll_tween.tween_callback(func() -> void:
-			if not is_instance_valid(cell):
-				return
-			if cell.position.y < 1.10:
-				cell.position.y = 1.88
-				builder.set_symbol_icon(cell, symbols[posmod(step + row_index * 2 + reel_index, symbols.size())])
-		)
+		# The three symbol tiles circulate through a continuous vertical loop.
+		var reel_phase: float = fposmod(float(2 - row_index) - fractional_step, 3.0)
+		cell.position.y = 1.26 + reel_phase * 0.31
+		var symbol_index: int = posmod(whole_step + row_index * 2 + reel_index, symbols.size())
+		var cell_key: String = "%d:%d" % [reel_index, row_index]
+		if int(_reel_symbol_indices.get(cell_key, -1)) != symbol_index:
+			builder.set_symbol_icon(cell, symbols[symbol_index])
+			_reel_symbol_indices[cell_key] = symbol_index
+
+
+func _on_reel_spin_finished(reel_index: int, column: Array, record: Dictionary) -> void:
+	if str(_active_spin.get("round_id", "")) != str(record.get("round_id", "")):
+		return
+	_show_final_reel(reel_index, column)
+	_reel_stop_pulse(reel_index)
+	_reels_stopped += 1
+	if _reels_stopped >= 3:
+		_finish_spin_visual(record)
 
 
 func _show_final_reel(reel_index: int, column: Array) -> void:
