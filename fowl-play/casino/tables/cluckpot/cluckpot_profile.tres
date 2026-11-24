@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="BettingTerminalProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://casino/terminals/resources/betting_terminal_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+game_title = "CLUCKPOT"
+game_description = "SET YOUR WAGER AND SPIN FOR THE GOLDEN 7."
+pending_heading = "SELECTED WAGER"
+player_list_heading = "MACHINE"
+minimum_label = "MIN"
+maximum_label = "MAX"
+valid_message = "READY TO SPIN"
+invalid_message = "CHECK WAGER"
+insufficient_funds_message = "INSUFFICIENT FUNDS"
+no_wagers_message = "NO SPINS IN PROGRESS"
+minimum_wager = 100
+maximum_wager = 5000
+valid_color = Color(0.32, 0.92, 0.52, 1)
+invalid_color = Color(1, 0.3, 0.22, 1)
+accent_color = Color(0.95, 0.7, 0.25, 1)
+body_color = Color(0.95, 0.92, 0.82, 1)
