@@ -67,12 +67,6 @@ func build(parent: Node3D, number: int = 1) -> void:
 	_box(cabinet, "Glass", Vector3(1.28, 0.96, 0.025), Vector3(0, 1.57, 0.665), _mat(Color(0.063, 0.082, 0.102, 0.88), 0.2, 0.1))
 	_box(cabinet, "PaylineGold", Vector3(1.29, 0.025, 0.035), Vector3(0, 1.57, 0.704), bright_brass)
 
-	# A single iconic jackpot medallion replaces the old text-heavy marquee.
-	var medallion := _sphere(cabinet, "SevenMedallion", 0.19, Vector3(0, 2.43, 0.57), burgundy)
-	medallion.scale = Vector3(1.35, 0.88, 0.34)
-	var medallion_rim := _cylinder(cabinet, "SevenMedallionRim", 0.19, 0.035, Vector3(0, 2.43, 0.69), bright_brass)
-	medallion_rim.rotation.x = deg_to_rad(90.0)
-	_text(cabinet, "JackpotSeven", "7", 0.22, Vector3(0, 2.43, 0.715), _mat(Color("#e6c47d"), 0.7, 0.24))
 	for x: float in [-0.76, 0.76]:
 		for y: float in [0.31, 2.28]:
 			_sphere(cabinet, "Rivet", 0.035, Vector3(x, y, 0.57), bright_brass)
@@ -93,8 +87,10 @@ func build(parent: Node3D, number: int = 1) -> void:
 		var barrel := MeshInstance3D.new()
 		barrel.name = "CylindricalDrum"
 		var barrel_mesh := CylinderMesh.new()
-		barrel_mesh.top_radius = 0.49
-		barrel_mesh.bottom_radius = 0.49
+		# Keep the drum core inside the symbol tiles. A full-radius opaque barrel
+		# would occlude the artwork wrapped around its outside surface.
+		barrel_mesh.top_radius = 0.405
+		barrel_mesh.bottom_radius = 0.405
 		barrel_mesh.height = 0.39
 		barrel_mesh.radial_segments = 48
 		barrel.mesh = barrel_mesh
@@ -153,14 +149,15 @@ func build(parent: Node3D, number: int = 1) -> void:
 	if screen_scene != null:
 		var screen: WorldScreen = screen_scene.instantiate() as WorldScreen
 		screen.name = "WagerWorldScreen"
-		screen.display_size = Vector2(0.90, 0.30)
+		screen.display_size = Vector2(1.55, 0.58)
 		screen.pixels_per_unit = 2048
 		screen.max_viewport_dimension = 4096
 		screen.text_scale = 1.0
 		screen.font_size_ratio = 0.14
 		screen.content_padding_ratio = 0.04
-		# Raise the compact display above the jackpot medallion so neither obscures the other.
-		screen.position = Vector3(0, 2.84, 0.59)
+		# The enlarged display replaces the old jackpot medallion and sits just
+		# above the reel bezel, keeping the entire symbol window unobstructed.
+		screen.position = Vector3(0, 2.49, 0.72)
 		screen.rotation.x = deg_to_rad(-3.0)
 		cabinet.add_child(screen)
 		var display := screen.get_screen_text()
@@ -170,13 +167,6 @@ func build(parent: Node3D, number: int = 1) -> void:
 			display.show_layout(ScreenText.LAYOUT_WARNING, "CLUCKPOT", "MIN  $100     MAX  $5,000\nWAGER  --", "INVALID / SET WAGER")
 
 	# Cabinet light accents.
-	var crown_light := OmniLight3D.new()
-	crown_light.name = "CrownGlow"
-	crown_light.position = Vector3(0, 2.72, 0.58)
-	crown_light.light_color = Color("#d6c5a3")
-	crown_light.light_energy = 0.28
-	crown_light.omni_range = 1.2
-	cabinet.add_child(crown_light)
 	var body := StaticBody3D.new()
 	body.name = "CabinetCollision"
 	cabinet.add_child(body)
