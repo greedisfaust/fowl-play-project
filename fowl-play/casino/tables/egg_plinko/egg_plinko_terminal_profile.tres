@@ -5,8 +5,8 @@
 [resource]
 script = ExtResource("1")
 game_title = "EGG PLINKO"
-game_description = "SET YOUR WAGER, CONFIRM, THEN DROP AN EGG. EVERY DROP IS A NEW WAGER."
-pending_heading = "SELECTED WAGER"
+game_description = "SET THE TEAM WAGER, CONFIRM, THEN DROP EGGS. EVERY DROP IS A NEW WAGER."
+pending_heading = "TEAM WAGER"
 player_list_heading = "EGGS IN FLIGHT"
 minimum_label = "MINIMUM"
 maximum_label = "MAXIMUM"
