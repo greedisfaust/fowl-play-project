@@ -114,7 +114,6 @@ func _build_board(parent: Node3D, stone: Material, bronze: Material, dark_metal:
 		var slot_material := _material(slot_color, 0.24, 0.3, slot_color, 0.85)
 		_add_box(parent, "Pocket_%02d" % slot_index, Vector3(SLOT_WIDTH - 0.009, 0.12, 0.08), Vector3(x, 1.07, -0.08), dark_metal)
 		_add_box(parent, "PocketLight_%02d" % slot_index, Vector3(SLOT_WIDTH - 0.02, 0.018, 0.025), Vector3(x, 1.13, 0.0), slot_material)
-		_add_box(parent, "PocketDivider_%02d" % slot_index, Vector3(0.012, 0.17, 0.12), Vector3(x + SLOT_WIDTH * 0.5, 1.13, -0.04), bronze)
 		var label := MeshInstance3D.new()
 		label.name = "Multiplier_%02d" % slot_index
 		var text_mesh := TextMesh.new()
@@ -129,17 +128,23 @@ func _build_board(parent: Node3D, stone: Material, bronze: Material, dark_metal:
 		parent.add_child(label)
 		_set_owner_recursive(label)
 
+	# Thirteen pockets have fourteen boundaries. Build every separator from
+	# the same slot width and center convention used by EggPlinkoRules.
+	for boundary_index: int in range(SLOT_COUNT + 1):
+		var boundary_x: float = (float(boundary_index) - float(SLOT_COUNT) * 0.5) * SLOT_WIDTH
+		_add_box(parent, "PocketDivider_%02d" % boundary_index, Vector3(0.014, 0.19, 0.12), Vector3(boundary_x, 1.13, -0.04), bronze)
+
 func _build_collision(parent: Node3D) -> void:
 	var body := StaticBody3D.new()
 	body.name = "PlinkoPhysicalBody"
 	body.collision_layer = 1
 	body.collision_mask = 1
 	parent.add_child(body)
-	_add_collision(body, Vector3(3.72, 0.82, 1.35), Vector3(0.0, 0.48, 0.62))
+	# Keep the cabinet's solid mass behind the control surface. The front
+	# remains open so physical keypad/button interaction rays can reach keys.
+	_add_collision(body, Vector3(3.55, 0.72, 0.58), Vector3(0.0, 0.48, 0.34))
 	_add_collision(body, Vector3(0.15, 2.8, 0.16), Vector3(-1.5, 2.2, -0.2))
 	_add_collision(body, Vector3(0.15, 2.8, 0.16), Vector3(1.5, 2.2, -0.2))
-	_add_collision(body, Vector3(0.25, 2.75, 0.16), Vector3(-0.78, 2.2, -0.2))
-	_add_collision(body, Vector3(0.25, 2.75, 0.16), Vector3(0.78, 2.2, -0.2))
 	_set_owner_recursive(body)
 
 func _add_triangle(parent: Node3D, node_name: String, a: Vector3, b: Vector3, c: Vector3, material: Material) -> void:
