@@ -13,6 +13,11 @@ var _status_valid: bool = false
 
 func set_pending_wager_amount(amount: int) -> void:
 	pending_wager_amount = maxi(amount, 0)
+	# Keypad snapshots clear their draft immediately after Confirm. Do not let
+	# that bookkeeping overwrite the active spin or its completed result.
+	if pending_wager_amount == 0 and _status_header not in ["READY", "WAGER CHECK"]:
+		refresh_display()
+		return
 	_status_header = "WAGER CHECK"
 	_status_detail = ""
 	var limits: Dictionary = _get_limits()
