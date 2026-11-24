@@ -178,7 +178,7 @@ func _handle_plinko_drop(peer_id: int) -> Dictionary:
 	var egg_sequence: int = _egg_sequence
 	_egg_sequence += 1
 	var egg_id: String = "%s_E%06d" % [table_id, egg_sequence]
-	var round_id: String = "drop_%06d" % egg_sequence
+	var round_id: String = "drop_%d_%06d" % [Time.get_ticks_usec(), egg_sequence]
 	var path_result: Dictionary = Rules.build_path(_rng)
 	var slot_index: int = int(path_result["slot_index"])
 	var multiplier: float = float(path_result["multiplier"])
@@ -265,6 +265,7 @@ func _on_egg_animation_finished(egg_id: String) -> void:
 		var settlement: Dictionary = _wallet.call("settle_round", table_id, str(record["round_id"]), payouts)
 		if not bool(settlement.get("ok", false)):
 			push_error("Egg Plinko settlement failed for %s: %s" % [egg_id, str(settlement.get("reason", ""))])
+			return
 		else:
 			var result_record: Dictionary = record.duplicate(true)
 			result_record["status"] = "settled"
