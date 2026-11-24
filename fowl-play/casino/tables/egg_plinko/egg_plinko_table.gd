@@ -66,8 +66,8 @@ func set_selected_wager(peer_id: int, amount: int) -> Dictionary:
 	var limits: Dictionary = get_wager_limits()
 	var minimum: int = int(limits["minimum"])
 	var maximum: int = int(limits["maximum"])
-	if amount < minimum or amount > maximum:
-		return _failure("Selected wager must be between %d and %d." % [minimum, maximum])
+	if minimum <= 0 or maximum <= 0 or amount < minimum or amount > maximum:
+		return _failure("No safe team wager is available, or the selection is outside the live range of %d to %d." % [minimum, maximum])
 	_selected_wager = amount
 	selected_wager_changed.emit(peer_id, amount)
 	if multiplayer.multiplayer_peer != null:
