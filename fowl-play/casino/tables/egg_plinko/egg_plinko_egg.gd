@@ -52,8 +52,8 @@ func _build_shell(player_color: Color) -> void:
 	var shell := MeshInstance3D.new()
 	shell.name = "EggShell"
 	var egg_mesh := SphereMesh.new()
-	egg_mesh.radius = 0.075
-	egg_mesh.height = 0.19
+	egg_mesh.radius = 0.04
+	egg_mesh.height = 0.08
 	egg_mesh.radial_segments = 20
 	egg_mesh.rings = 12
 	shell.mesh = egg_mesh
@@ -71,12 +71,12 @@ func _build_shell(player_color: Color) -> void:
 	var crown := MeshInstance3D.new()
 	crown.name = "GoldCrown"
 	var crown_mesh := TorusMesh.new()
-	crown_mesh.inner_radius = 0.046
-	crown_mesh.outer_radius = 0.053
+	crown_mesh.inner_radius = 0.024
+	crown_mesh.outer_radius = 0.029
 	crown_mesh.rings = 8
 	crown_mesh.ring_segments = 16
 	crown.mesh = crown_mesh
-	crown.position.y = 0.025
+	crown.position.y = 0.012
 	crown.rotation.x = PI * 0.5
 	var gold := StandardMaterial3D.new()
 	gold.albedo_color = Color(0.92, 0.68, 0.27, 1.0)
