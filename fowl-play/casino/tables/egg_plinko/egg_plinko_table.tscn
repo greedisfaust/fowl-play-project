@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=9 format=4]
 
 [ext_resource type="Script" path="res://casino/tables/egg_plinko/egg_plinko_table.gd" id="1_table"]
 [ext_resource type="Script" path="res://casino/tables/egg_plinko/egg_plinko_visual_builder.gd" id="2_visuals"]
