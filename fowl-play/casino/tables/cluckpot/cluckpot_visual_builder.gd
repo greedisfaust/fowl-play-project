@@ -77,11 +77,11 @@ func build(parent: Node3D, machine_number: int = 1) -> void:
 		reel_labels.append(reel_cells)
 
 	# Mechanical lever assembly on the cabinet's right shoulder.
-	var lever_mount := _cylinder(cabinet, "LeverMount", 0.14, 0.10, Vector3(0.98, 1.47, 0.12), gold)
+	var lever_mount := _cylinder(cabinet, "LeverMount", 0.14, 0.10, Vector3(0.98, 1.47, 0.58), gold)
 	lever_mount.rotation.z = PI * 0.5
-	var lever_arm := _cylinder(cabinet, "LeverArm", 0.035, 0.48, Vector3(1.02, 1.67, 0.12), bright_gold)
+	var lever_arm := _cylinder(cabinet, "LeverArm", 0.035, 0.48, Vector3(1.02, 1.67, 0.58), bright_gold)
 	lever_arm.rotation.z = deg_to_rad(-22.0)
-	_sphere(cabinet, "LeverGrip", 0.12, Vector3(1.12, 1.86, 0.12), _mat(Color(0.7, 0.035, 0.025), 0.3, 0.22))
+	_sphere(cabinet, "LeverGrip", 0.12, Vector3(1.12, 1.86, 0.58), _mat(Color(0.7, 0.035, 0.025), 0.3, 0.22))
 	_box(cabinet, "ButtonHousing", Vector3(0.46, 0.13, 0.32), Vector3(0, 0.91, 0.88), gold)
 	_cylinder(cabinet, "SpinButton", 0.13, 0.08, Vector3(0, 1.02, 0.9), bright_gold)
 	_text(cabinet, "SpinLabel", "SPIN", 0.07, Vector3(0, 1.09, 0.95), ivory)
