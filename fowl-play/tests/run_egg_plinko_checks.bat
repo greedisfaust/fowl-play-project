@@ -27,8 +27,13 @@ echo [1/2] Importing project resources...
 if errorlevel 1 goto failed
 
 echo.
-echo [2/2] Running Egg Plinko rules checks...
+echo [2/3] Running Egg Plinko rules checks...
 "%GODOT%" --headless --path "%PROJECT%" --script res://tests/egg_plinko_rules_test.gd
+if errorlevel 1 goto failed
+
+echo.
+echo [3/3] Running Egg Plinko table integration checks...
+"%GODOT%" --headless --path "%PROJECT%" --script res://tests/egg_plinko_table_test.gd
 if errorlevel 1 goto failed
 
 echo.
