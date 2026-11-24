@@ -195,7 +195,6 @@ func _set_reel_spin_progress(progress: float, reel_index: int) -> void:
 	var symbols: Array[String] = Rules.SYMBOLS
 	var builder: CluckpotVisualBuilder = _visuals as CluckpotVisualBuilder
 	var whole_step: int = floori(progress)
-	var fractional_step: float = fposmod(progress, 1.0)
 	for row_index: int in range(3):
 		var cell: Node3D = _reel_cells[reel_index][row_index] as Node3D
 		if not is_instance_valid(builder) or not is_instance_valid(cell):
