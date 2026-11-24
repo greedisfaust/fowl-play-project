@@ -10,7 +10,7 @@ const SLOT_MULTIPLIERS: Array[float] = [
 ]
 
 const BOARD_TOP_Y: float = 3.02
-const BOARD_BOTTOM_Y: float = 1.08
+const BOARD_BOTTOM_Y: float = 1.28
 const ROW_SPACING: float = (BOARD_TOP_Y - BOARD_BOTTOM_Y) / float(ROW_COUNT)
 const PEG_SPACING_X: float = 0.155
 const STEP_X: float = 0.155
