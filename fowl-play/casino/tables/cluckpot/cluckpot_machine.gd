@@ -24,6 +24,7 @@ var _proximity: Area3D
 var _keypad: Node3D
 var _display: Node
 var _reel_cells: Array[Array] = []
+var _reel_drums: Array[Node3D] = []
 var _wager_screen: WorldScreen
 var _spin_locked: bool = false
 var _reels_stopped: int = 0
@@ -163,71 +164,50 @@ func _rpc_play_spin(record: Dictionary) -> void:
 func _play_spin_visual(record: Dictionary) -> void:
 	_animate_lever()
 	_animate_cabinet()
-	var symbols: Array = record.get("symbols", [])
-	if symbols.size() != 3:
+	var columns: Array = record.get("symbols", [])
+	if columns.size() != 3 or _reel_drums.size() != 3:
+		push_warning("Cluckpot received an incomplete reel outcome or drum assembly.")
 		return
+	var builder: CluckpotVisualBuilder = _visuals as CluckpotVisualBuilder
+	if not is_instance_valid(builder):
+		return
+	# Install the host-rolled result on the actual symbol ring before any rotation.
+	# The visible center/top/bottom faces are therefore the same symbols that settle.
+	for reel_index: int in range(3):
+		builder.set_reel_outcome(reel_index, columns[reel_index])
 	_set_status("REELS IN MOTION", "WAGER %s  /  GOOD LUCK" % _format_money(int(record.get("stake", 0))))
 	_flash_win(false)
 	_reels_stopped = 0
-	_reel_symbol_indices.clear()
 	var duration: float = clampf(float(record.get("spin_duration", spin_duration)), 4.0, 6.0)
-	# Every reel starts together, spins continuously, then stops left-to-right.
-	# The final reel gets the full anticipation window.
 	for reel_index: int in range(3):
-		var reel_duration: float = duration - float(2 - reel_index) * 0.45
-		var total_steps: float = 48.0
-		var accelerate_steps: float = 8.0
-		var cruise_steps: float = 32.0
-		var accelerate_time: float = reel_duration * 0.16
-		var cruise_time: float = reel_duration * 0.60
-		var decelerate_time: float = reel_duration - accelerate_time - cruise_time
-		var spin_callback: Callable = Callable(self, "_set_reel_spin_progress").bind(reel_index)
+		var drum: Node3D = _reel_drums[reel_index]
+		# Randomize the starting phase, but always finish at an exact whole revolution.
+		# Eight turns gives a recognizable mechanical spin rather than symbol shuffling.
+		var start_phase: float = _rng.randf_range(0.0, TAU)
+		drum.rotation.x = start_phase
+		var reel_duration: float = duration - float(2 - reel_index) * 0.42
+		var acceleration_end: float = start_phase + TAU * 0.65
+		var cruise_end: float = TAU * 6.6
+		var final_rotation: float = TAU * 8.0
+		var acceleration_time: float = reel_duration * 0.16
+		var cruise_time: float = reel_duration * 0.62
+		var deceleration_time: float = reel_duration - acceleration_time - cruise_time
 		var reel_tween: Tween = create_tween()
-		reel_tween.tween_method(spin_callback, 0.0, accelerate_steps, accelerate_time).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
-		reel_tween.tween_method(spin_callback, accelerate_steps, accelerate_steps + cruise_steps, cruise_time).set_trans(Tween.TRANS_LINEAR)
-		reel_tween.tween_method(spin_callback, accelerate_steps + cruise_steps, total_steps, decelerate_time).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-		reel_tween.tween_callback(Callable(self, "_on_reel_spin_finished").bind(reel_index, symbols[reel_index], record))
+		reel_tween.tween_property(drum, "rotation:x", acceleration_end, acceleration_time).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+		reel_tween.tween_property(drum, "rotation:x", cruise_end, cruise_time).set_trans(Tween.TRANS_LINEAR)
+		reel_tween.tween_property(drum, "rotation:x", final_rotation, deceleration_time).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		reel_tween.tween_callback(Callable(self, "_on_reel_spin_finished").bind(reel_index, record))
 
 
-func _set_reel_spin_progress(progress: float, reel_index: int) -> void:
-	if reel_index < 0 or reel_index >= _reel_cells.size():
-		return
-	var symbols: Array[String] = Rules.SYMBOLS
-	var builder: CluckpotVisualBuilder = _visuals as CluckpotVisualBuilder
-	var whole_step: int = floori(progress)
-	for row_index: int in range(3):
-		var cell: Node3D = _reel_cells[reel_index][row_index] as Node3D
-		if not is_instance_valid(builder) or not is_instance_valid(cell):
-			continue
-		# The three symbol tiles circulate through a continuous vertical loop.
-		var reel_phase: float = fposmod(float(2 - row_index) - progress, 3.0)
-		cell.position.y = 1.26 + reel_phase * 0.31
-		var symbol_index: int = posmod(whole_step + row_index * 2 + reel_index, symbols.size())
-		var cell_key: String = "%d:%d" % [reel_index, row_index]
-		if int(_reel_symbol_indices.get(cell_key, -1)) != symbol_index:
-			builder.set_symbol_icon(cell, symbols[symbol_index])
-			_reel_symbol_indices[cell_key] = symbol_index
-
-
-func _on_reel_spin_finished(reel_index: int, column: Array, record: Dictionary) -> void:
+func _on_reel_spin_finished(reel_index: int, record: Dictionary) -> void:
 	if str(_active_spin.get("round_id", "")) != str(record.get("round_id", "")):
 		return
-	_show_final_reel(reel_index, column)
+	# The drum has landed at an exact whole turn. Do not swap or redraw its front symbols.
+	_reel_drums[reel_index].rotation.x = TAU * 8.0
 	_reel_stop_pulse(reel_index)
 	_reels_stopped += 1
 	if _reels_stopped >= 3:
 		_finish_spin_visual(record)
-
-
-func _show_final_reel(reel_index: int, column: Array) -> void:
-	if reel_index < 0 or reel_index >= _reel_cells.size():
-		return
-	var builder: CluckpotVisualBuilder = _visuals as CluckpotVisualBuilder
-	for row_index: int in range(mini(column.size(), 3)):
-		var cell: Node3D = _reel_cells[reel_index][row_index] as Node3D
-		if is_instance_valid(builder) and is_instance_valid(cell):
-			cell.position.y = 1.88 - float(row_index) * 0.31
-			builder.set_symbol_icon(cell, str(column[row_index]))
 
 
 func _reel_stop_pulse(reel_index: int) -> void:
@@ -314,6 +294,7 @@ func _build_machine() -> void:
 		builder.machine_number = machine_number
 		builder.call("_rebuild")
 		_reel_cells = builder.reel_cells
+		_reel_drums = builder.reel_drums
 		_wager_screen = _visuals.get_node_or_null("Cabinet/WagerWorldScreen") as WorldScreen
 	else:
 		push_warning("CluckpotMachine requires a CluckpotVisualBuilder child named Visuals.")
