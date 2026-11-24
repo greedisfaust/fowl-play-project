@@ -28,12 +28,21 @@ func _run() -> void:
 	var limits: Dictionary = table.call("get_wager_limits")
 	_check(int(limits.get("safety_reserve", 0)) == 1125, "Safety reserve follows the live quota gap and 15% bias")
 	_check(int(limits.get("maximum", 0)) == 8875, "Dynamic maximum preserves the quota safety reserve")
-	_check_result(table.call("set_selected_wager", 1, 1000), true, "Player confirms a selected wager")
+	var keypad: Node = table.get_node("BettingKeypad/BettingKeypadController")
+	for digit: String in ["1", "0", "0", "0"]:
+		_check_result(keypad.call("handle_button_input", StringName(digit), 1), true, "Player enters selected wager digit %s" % digit)
+	_check_result(keypad.call("handle_button_input", &"CONFIRM", 1), true, "Confirm stores the selected amount without spending it")
+	_check(table.call("get_selected_wager", 1) == 1000, "Confirmed amount becomes the player's selected wager")
+	_check(int(wallet.call("get_snapshot")["available_balance"]) == 10000, "Selecting a wager does not reserve or spend money")
 
 	var first_drop: Dictionary = table.call("_handle_plinko_drop", 1)
 	_check_result(first_drop, true, "First Plinko press launches an egg")
 	_check(int(wallet.call("get_snapshot")["available_balance"]) == 9000, "First press spends the full selected wager")
-	_check_result(table.call("set_selected_wager", 1, 500), true, "Player changes selected wager while an egg is airborne")
+	keypad.call("handle_button_input", &"CLEAR", 1)
+	for digit: String in ["5", "0", "0"]:
+		keypad.call("handle_button_input", StringName(digit), 1)
+	_check_result(keypad.call("handle_button_input", &"CONFIRM", 1), true, "Player changes selected wager while an egg is airborne")
+	_check(table.call("get_selected_wager", 1) == 500, "The player's new selected wager is stored independently")
 	var second_drop: Dictionary = table.call("_handle_plinko_drop", 1)
 	_check_result(second_drop, true, "Second Plinko press launches another independent egg")
 	_check(int(wallet.call("get_snapshot")["available_balance"]) == 8500, "Second press spends the new full wager without splitting")
