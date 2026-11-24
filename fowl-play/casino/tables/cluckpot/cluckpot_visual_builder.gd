@@ -3,6 +3,8 @@
 class_name CluckpotVisualBuilder
 extends Node3D
 
+const Rules = preload("res://casino/tables/cluckpot/cluckpot_rules.gd")
+
 @export var machine_number: int = 1
 @export var rebuild_visuals: bool = false:
 	set(value):
@@ -76,8 +78,10 @@ func build(parent: Node3D, machine_number: int = 1) -> void:
 			var cell_panel := _box(cell, "CellPanel", Vector3(0.39, 0.285, 0.025), Vector3(0, 0, 0), ivory)
 			cell_panel.position = Vector3(0, 0, 0)
 			var symbol_name: String = str(idle_symbols[reel_index][row_index])
-			var symbol_text: String = "7" if symbol_name == "SEVEN" else symbol_name
-			var label := _text(cell, "Symbol", symbol_text, 0.18, Vector3(0, 0, 0.025), _mat(Color(1.0, 0.72, 0.12), 0.1, 0.25, Color(1.0, 0.42, 0.05), 0.6))
+			var symbol_text: String = Rules.get_symbol_display(symbol_name)
+			var symbol_color: Color = Rules.get_symbol_color(symbol_name)
+			var symbol_material: StandardMaterial3D = _mat(symbol_color, 0.1, 0.25, symbol_color, 0.55)
+			var label := _text(cell, "Symbol", symbol_text, 0.18, Vector3(0, 0, 0.025), symbol_material)
 			label.position = Vector3(0, 0, 0.03)
 			cell.position = Vector3(x, y - 1.47, 0.72)
 			reel_cells.append(label)
