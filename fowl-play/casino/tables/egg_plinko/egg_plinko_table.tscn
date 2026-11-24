@@ -11,7 +11,7 @@
 [sub_resource type="BoxShape3D" id="BoxShape3D_proximity"]
 size = Vector3(5.8, 2.8, 5.2)
 
-[node name="EggPlinkoTable" type="Node3D"]
+[node name="EggPlinkoTable" type="Node3D" node_paths=PackedStringArray("proximity_area", "plinko_interactable", "visuals", "terminal_display")]
 script = ExtResource("1_table")
 table_id = "egg_plinko_table"
 game_id = "egg_plinko"
@@ -27,7 +27,7 @@ egg_flight_duration = 3.4
 [node name="Visuals" type="Node3D" parent="."]
 script = ExtResource("2_visuals")
 
-[node name="BettingTerminalDisplay" type="Node" parent="."]
+[node name="BettingTerminalDisplay" type="Node" parent="." node_paths=PackedStringArray("table", "screen_text")]
 script = ExtResource("3_display")
 table = NodePath("..")
 screen_text = NodePath("../SlimWorldScreen/WorldScreen/SubViewport/ScreenText")
