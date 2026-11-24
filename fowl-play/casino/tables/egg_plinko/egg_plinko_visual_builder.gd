@@ -133,6 +133,7 @@ func _add_triangle(parent: Node3D, node_name: String, a: Vector3, b: Vector3, c:
 	var arrays: Array = []
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = PackedVector3Array([a, b, c])
+	arrays[Mesh.ARRAY_NORMAL] = PackedVector3Array([Vector3.BACK, Vector3.BACK, Vector3.BACK])
 	arrays[Mesh.ARRAY_INDEX] = PackedInt32Array([0, 1, 2])
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
