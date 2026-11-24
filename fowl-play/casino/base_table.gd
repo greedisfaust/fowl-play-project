@@ -389,21 +389,27 @@ func get_wager_limits() -> Dictionary:
 	var profile: BettingTerminalProfile = _get_betting_terminal_profile()
 	var profile_minimum: int = profile.get_effective_minimum() if profile != null else 100
 	var profile_maximum: int = profile.get_effective_maximum() if profile != null else 5000
-	var available: int = 0
-	if is_instance_valid(_wallet) and _wallet.has_method("get_snapshot"):
-		var wallet_snapshot: Dictionary = _wallet.call("get_snapshot")
-		available = maxi(int(wallet_snapshot.get("available_balance", 0)), 0)
 
+	# Wager limits are a per-day snapshot. They are derived from the wallet
+	# and quota at casino-day start, not recalculated as players spend/win.
+	var starting_wallet: int = 0
 	var quota: int = 0
-	var quota_balance: int = available
-	if is_instance_valid(_day_manager) and bool(_day_manager.get("day_active")):
+	var quota_active: bool = is_instance_valid(_day_manager) and bool(_day_manager.get("day_active"))
+	if quota_active:
+		starting_wallet = maxi(int(_day_manager.get("starting_wallet")), 0)
 		quota = maxi(int(_day_manager.get("daily_quota")), 0)
-		quota_balance = maxi(int(_day_manager.get("current_wallet_balance")), 0)
-	var quota_remaining: int = maxi(quota - quota_balance, 0)
+	else:
+		# Outside an active casino day, use a stable current snapshot as a
+		# fallback for table preview/testing.
+		if is_instance_valid(_wallet) and _wallet.has_method("get_snapshot"):
+			var wallet_snapshot: Dictionary = _wallet.call("get_snapshot")
+			starting_wallet = maxi(int(wallet_snapshot.get("available_balance", 0)), 0)
+
+	var quota_remaining: int = maxi(quota - starting_wallet, 0) if quota > 0 else 0
 	var safety_reserve: int = ceili(float(quota) * quota_safety_bias) if quota > 0 else 0
-	var spendable: int = maxi(available - safety_reserve, 0)
-	var quota_cap: int = quota_remaining if quota_remaining > 0 else spendable
-	var maximum: int = mini(profile_maximum, mini(spendable, quota_cap))
+	var initial_spendable: int = maxi(starting_wallet - safety_reserve, 0)
+	var quota_cap: int = quota_remaining if quota_remaining > 0 else initial_spendable
+	var maximum: int = mini(profile_maximum, mini(initial_spendable, quota_cap))
 	var minimum: int = profile_minimum
 	if quota_remaining > 0:
 		minimum = mini(minimum, maxi(quota_remaining, 1))
@@ -412,15 +418,15 @@ func get_wager_limits() -> Dictionary:
 	return {
 		"minimum": minimum,
 		"maximum": maximum,
-		"available_balance": available,
+		"starting_wallet": starting_wallet,
 		"quota": quota,
-		"quota_remaining": quota_remaining,
+		"quota_remaining_at_day_start": quota_remaining,
 		"safety_reserve": safety_reserve,
-		"spendable_balance": spendable,
+		"initial_spendable": initial_spendable,
 		"profile_minimum": profile_minimum,
 		"profile_maximum": profile_maximum,
+		"limits_locked_for_day": quota_active,
 	}
-
 
 func _get_betting_terminal_profile() -> BettingTerminalProfile:
 	var display: Node = null
