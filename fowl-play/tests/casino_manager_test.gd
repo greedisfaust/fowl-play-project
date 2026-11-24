@@ -17,12 +17,12 @@ func _run() -> void:
 		return
 
 	var initial_ids: Array[StringName] = manager.call("get_registered_game_ids")
-	_check(initial_ids.size() == 2 and initial_ids.has(&"chicken_cross") and initial_ids.has(&"egg_plinko"), "Chicken Cross and Egg Plinko are the currently registered production games")
+	_check(initial_ids.size() == 3 and initial_ids.has(&"chicken_cross") and initial_ids.has(&"egg_plinko") and initial_ids.has(&"cluckpot"), "Chicken Cross, Egg Plinko, and Cluckpot are the currently registered production games")
 	_check(not bool(manager.call("is_catalog_complete")), "A partial roster must not pretend it can select six from twelve")
 	var premature: Dictionary = manager.call("select_games_for_day", 1, 42)
 	_check(not bool(premature.get("ok", false)), "Selection is blocked until all twelve game types are registered")
 
-	for index: int in range(10):
+	for index: int in range(9):
 		var definition: Resource = CasinoGameDefinitionScript.new()
 		definition.set("game_id", StringName("test_game_%02d" % index))
 		definition.set("display_name", "Test Game %02d" % index)
