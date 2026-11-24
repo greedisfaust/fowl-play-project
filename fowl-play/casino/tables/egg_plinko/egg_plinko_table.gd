@@ -20,6 +20,7 @@ signal selected_wager_changed(peer_id: int, amount: int)
 @export_range(0.0, 0.75, 0.01) var quota_safety_bias: float = 0.15
 @export_range(1, 128, 1) var maximum_airborne_eggs: int = 32
 @export_range(0.1, 10.0, 0.1) var egg_flight_duration: float = 3.4
+@export var auto_fit_cabinet_controls: bool = true
 
 # _wallet is inherited from BaseTable; do not redeclare it here.
 var _network: Node
@@ -42,6 +43,8 @@ func _ready() -> void:
 		proximity_area.body_exited.connect(_on_proximity_body_exited)
 	if is_instance_valid(plinko_interactable):
 		plinko_interactable.interacted.connect(_on_plinko_interacted)
+	if auto_fit_cabinet_controls:
+		_apply_cabinet_control_layout()
 	_setup_betting_keypad()
 	_update_terminal_status()
 
@@ -356,9 +359,30 @@ func _publish_keypad_snapshot() -> void:
 		controller.call("_publish_snapshot")
 
 
+func _apply_cabinet_control_layout() -> void:
+	# The latest authored scene placed the screen left of the cabinet footprint
+	# and behind its front face. Keep the original 2.45 x 1.12 screen size and
+	# 25-degree yaw, but bring the complete control cluster onto the cabinet.
+	var screen: Node3D = get_node_or_null("SlimWorldScreen") as Node3D
+	if is_instance_valid(screen):
+		screen.position = Vector3(-0.55, 1.83, 1.52)
+		screen.rotation = Vector3(0.0, deg_to_rad(25.0), 0.0)
+	var keypad: Node3D = get_node_or_null("BettingKeypad") as Node3D
+	if is_instance_valid(keypad):
+		# The keypad's local +Y face points toward the player (+Z).
+		keypad.transform = Transform3D(Basis(Vector3.RIGHT, PI * 0.5), Vector3(-1.28, 1.05, 1.52))
+	var controls: Node3D = get_node_or_null("Controls") as Node3D
+	if is_instance_valid(controls):
+		controls.position = Vector3(1.08, 0.86, 1.9)
+
+
 func _setup_betting_keypad() -> void:
 	var keypad: Node = get_node_or_null("BettingKeypad")
-	if not is_instance_valid(keypad) or not is_instance_valid(terminal_display):
+	if not is_instance_valid(keypad):
+		push_warning("Egg Plinko is missing its BettingKeypad scene instance.")
+		return
+	if not is_instance_valid(terminal_display):
+		push_warning("Egg Plinko is missing its BettingTerminalDisplay controller.")
 		return
 	if keypad.get_node_or_null("BettingKeypadController") != null:
 		return
@@ -370,6 +394,9 @@ func _setup_betting_keypad() -> void:
 	controller.set("one_wager_per_player", false)
 	controller.set("selection_only", true)
 	keypad.add_child(controller)
+	controller.call_deferred("_connect_key_buttons")
+	controller.call_deferred("_apply_pending_amount")
+	terminal_display.call_deferred("refresh_display")
 
 
 func _on_proximity_body_entered(body: Node3D) -> void:
