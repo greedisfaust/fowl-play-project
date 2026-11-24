@@ -425,13 +425,21 @@ func _animate_cabinet() -> void:
 	var cabinet: Node3D = _visuals.get_node_or_null("Cabinet") as Node3D
 	if not is_instance_valid(cabinet):
 		return
+	var spin_body: Node3D = get_node_or_null("SpinInteractable") as Node3D
 	var original_y: float = cabinet.position.y
+	var body_y: float = spin_body.position.y if is_instance_valid(spin_body) else 0.0
 	var tween: Tween = create_tween()
 	tween.set_trans(Tween.TRANS_SINE)
 	tween.set_ease(Tween.EASE_OUT)
 	tween.tween_property(cabinet, "position:y", original_y - 0.018, 0.07)
+	if is_instance_valid(spin_body):
+		tween.parallel().tween_property(spin_body, "position:y", body_y - 0.018, 0.07)
 	tween.tween_property(cabinet, "position:y", original_y + 0.008, 0.08)
+	if is_instance_valid(spin_body):
+		tween.parallel().tween_property(spin_body, "position:y", body_y + 0.008, 0.08)
 	tween.tween_property(cabinet, "position:y", original_y, 0.12)
+	if is_instance_valid(spin_body):
+		tween.parallel().tween_property(spin_body, "position:y", body_y, 0.12)
 
 
 func _animate_lever() -> void:
