@@ -24,7 +24,7 @@ func _run() -> void:
 	var second_path: Dictionary = Rules.build_path(second_rng)
 	var path_a: PackedVector3Array = first_path["path"]
 	var path_b: PackedVector3Array = second_path["path"]
-	_check(path_a.size() == Rules.ROW_COUNT * 2 + 2, "Every egg receives a complete path through all peg rows")
+	_check(path_a.size() == Rules.ROW_COUNT * 3 + 2, "Every egg receives a complete path through all peg rows")
 	_check(path_a == path_b, "The same host seed reproduces the same path")
 	_check(int(first_path["slot_index"]) >= 0 and int(first_path["slot_index"]) < Rules.SLOT_MULTIPLIERS.size(), "Landing slot remains in range")
 	_check(is_equal_approx(float(first_path["multiplier"]), Rules.SLOT_MULTIPLIERS[int(first_path["slot_index"])]), "Landing multiplier matches the resolved slot")
