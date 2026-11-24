@@ -315,6 +315,10 @@ func _build_machine() -> void:
 	lever_shape.shape = lever_collision
 	lever_shape.position = Vector3(1.08, 1.84, 0.46)
 	spin_body.add_child(lever_shape)
+	for part_name: String in ["LeverArm", "LeverGrip"]:
+		var lever_part: Node3D = _visuals.get_node_or_null("Cabinet/" + part_name) as Node3D
+		if is_instance_valid(lever_part):
+			lever_part.reparent(spin_body, true)
 	add_child(spin_body)
 	_spin_interactable.interacted.connect(_on_spin_interacted)
 
@@ -417,8 +421,8 @@ func _validate_remote_action_sender() -> bool:
 
 
 func _animate_lever() -> void:
-	var lever: MeshInstance3D = _visuals.get_node_or_null("Cabinet/LeverArm") as MeshInstance3D
-	var grip: MeshInstance3D = _visuals.get_node_or_null("Cabinet/LeverGrip") as MeshInstance3D
+	var lever: MeshInstance3D = get_node_or_null("SpinInteractable/LeverArm") as MeshInstance3D
+	var grip: MeshInstance3D = get_node_or_null("SpinInteractable/LeverGrip") as MeshInstance3D
 	if not is_instance_valid(lever) or not is_instance_valid(grip):
 		return
 	var tween: Tween = create_tween()
