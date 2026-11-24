@@ -1,0 +1,64 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://casino/tables/egg_plinko/egg_plinko_table.gd" id="1_table"]
+[ext_resource type="Script" path="res://casino/tables/egg_plinko/egg_plinko_visual_builder.gd" id="2_visuals"]
+[ext_resource type="Script" path="res://casino/terminals/display/betting_terminal_display.gd" id="3_display"]
+[ext_resource type="Resource" path="res://casino/tables/egg_plinko/egg_plinko_terminal_profile.tres" id="4_profile"]
+[ext_resource type="PackedScene" path="res://environment/kit/slim_world_screen.tscn" id="5_screen"]
+[ext_resource type="PackedScene" path="res://casino/terminals/components/betting_keypad.tscn" id="6_keypad"]
+[ext_resource type="PackedScene" path="res://casino/terminals/components/terminal_confirm_button.tscn" id="7_button"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_proximity"]
+size = Vector3(5.8, 2.8, 5.2)
+
+[node name="EggPlinkoTable" type="Node3D"]
+script = ExtResource("1_table")
+table_id = "egg_plinko_table"
+game_id = "egg_plinko"
+max_participants = 4
+proximity_area = NodePath("ProximityArea")
+plinko_interactable = NodePath("Controls/PlinkoButton/Interactable")
+visuals = NodePath("Visuals")
+terminal_display = NodePath("BettingTerminalDisplay")
+quota_safety_bias = 0.15
+maximum_airborne_eggs = 32
+egg_flight_duration = 3.4
+
+[node name="Visuals" type="Node3D" parent="."]
+script = ExtResource("2_visuals")
+
+[node name="BettingTerminalDisplay" type="Node" parent="."]
+script = ExtResource("3_display")
+table = NodePath("..")
+screen_text = NodePath("../SlimWorldScreen/WorldScreen/SubViewport/ScreenText")
+profile = ExtResource("4_profile")
+
+[node name="SlimWorldScreen" parent="." instance=ExtResource("5_screen")]
+transform = Transform3D(0.9063078, 0, 0.42261827, 0, 1, 0, -0.42261827, 0, 0.9063078, -2.28, 1.95, 0.7)
+display_size = Vector2(2.45, 1.12)
+
+[node name="BettingKeypad" parent="." instance=ExtResource("6_keypad")]
+transform = Transform3D(0.9659258, 0, 0.25881904, 0, 1, 0, -0.25881904, 0, 0.9659258, -1.72, 1.08, 1.28)
+
+[node name="Controls" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.48, 1.08, 1.12)
+
+[node name="PlinkoButton" parent="Controls" instance=ExtResource("7_button")]
+button_id = &"plinko"
+display_text = "PLINKO"
+
+[node name="Interactable" parent="Controls/PlinkoButton" index="2"]
+prompt_text = "DROP EGG"
+
+[node name="ProximityArea" type="Area3D" parent="."]
+position = Vector3(0, 1.25, 0.62)
+collision_layer = 16
+collision_mask = 16
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ProximityArea"]
+shape = SubResource("BoxShape3D_proximity")
+
+[editable path="SlimWorldScreen"]
+[editable path="BettingKeypad"]
+[editable path="Controls/PlinkoButton"]
