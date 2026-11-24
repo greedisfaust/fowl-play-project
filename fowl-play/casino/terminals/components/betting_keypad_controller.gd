@@ -23,6 +23,8 @@ var _debug_hub: Node = null
 var _debug_watch_prefix: String = ""
 var _last_confirmation_status: String = "No wager confirmed yet."
 var _pending_digits: String = "0"
+var _pending_digits_by_peer: Dictionary = {}
+var _active_input_peer_id: int = 0
 var _snapshot_revision: int = 0
 var _snapshot_request_sent: bool = false
 var _connected_buttons: Array[Node] = []
@@ -84,6 +86,9 @@ func handle_button_input(button_id: StringName, peer_id: int) -> Dictionary:
 		peer_id = multiplayer.get_unique_id()
 	if peer_id <= 0:
 		return _failure("The interacting player's peer ID is invalid.")
+	if selection_only:
+		_active_input_peer_id = peer_id
+		_pending_digits = str(_pending_digits_by_peer.get(peer_id, "0"))
 	var action: String = _normalize_button_id(String(button_id))
 	if action.length() == 1 and action.is_valid_int():
 		if _pending_digits.length() >= MAX_WAGER_DIGITS:
@@ -96,15 +101,18 @@ func handle_button_input(button_id: StringName, peer_id: int) -> Dictionary:
 			_pending_digits = action
 		else:
 			_pending_digits += action
+		_remember_pending_digits(peer_id)
 		_publish_snapshot()
 		return _success({"pending_amount": get_pending_wager_amount()})
 	match action:
 		"CLEAR", "CLR", "RESET", "C":
 			_pending_digits = "0"
+			_remember_pending_digits(peer_id)
 			_publish_snapshot()
 			return _success({"pending_amount": 0})
 		"BACKSPACE", "BACK", "DELETE", "DEL", "BKSP", "←", "⌫":
 			_pending_digits = _pending_digits.left(_pending_digits.length() - 1) if _pending_digits.length() > 1 else "0"
+			_remember_pending_digits(peer_id)
 			_publish_snapshot()
 			return _success({"pending_amount": get_pending_wager_amount()})
 		"MIN":
@@ -144,8 +152,14 @@ func _apply_wager_preset(amount: int) -> Dictionary:
 		return _failure("Available shared funds are below the current safe wager limit.")
 	var adjusted_amount: int = clampi(amount, minimum_value, maximum_value)
 	_pending_digits = str(adjusted_amount)
+	_remember_pending_digits(_active_input_peer_id)
 	_publish_snapshot()
 	return _success({"pending_amount": adjusted_amount})
+
+
+func _remember_pending_digits(peer_id: int) -> void:
+	if selection_only and peer_id > 0:
+		_pending_digits_by_peer[peer_id] = _pending_digits
 
 
 func _get_wager_limits() -> Dictionary:
@@ -207,6 +221,7 @@ func _confirm_pending_wager(peer_id: int) -> Dictionary:
 		var selection_result: Dictionary = table.call("set_selected_wager", peer_id, amount)
 		if bool(selection_result.get("ok", false)):
 			_pending_digits = "0"
+			_pending_digits_by_peer[peer_id] = "0"
 			_last_confirmation_status = "SELECTED %s" % _format_money(amount)
 			_publish_snapshot()
 			wager_confirmation_result.emit(peer_id, selection_result.duplicate(true))
