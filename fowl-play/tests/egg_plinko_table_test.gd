@@ -56,9 +56,11 @@ func _run() -> void:
 	_check(connected_button_ids.has("CONFIRM"), "Physical keypad connects its confirm control")
 	for digit: String in ["1", "0", "0", "0"]:
 		_check_result(keypad.call("handle_button_input", StringName(digit), 1), true, "Player one enters a wager digit")
+	_check(display.call("get_pending_wager_amount") == 1000, "Keypad edits are reflected on the terminal display")
 	for digit: String in ["2", "0", "0", "0"]:
 		_check_result(keypad.call("handle_button_input", StringName(digit), 2), true, "Player two enters a separate wager digit")
 	_check_result(keypad.call("handle_button_input", &"CONFIRM", 2), true, "Player two confirms their independent amount")
+	_check(display.call("get_pending_wager_amount") == 0, "Confirm clears the terminal's unconfirmed draft")
 	_check(table.call("get_selected_wager", 2) == 2000, "The shared team wager updates when player two confirms")
 	_check_result(keypad.call("handle_button_input", &"CONFIRM", 1), true, "Player one confirms their preserved draft")
 	_check(table.call("get_selected_wager", 1) == 1000, "Player one can replace the shared team wager with their confirmed draft")
