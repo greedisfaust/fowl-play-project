@@ -146,6 +146,7 @@ func request_day_end_cleanup(reason: String) -> Dictionary:
 	for egg_id_value: Variant in _active_eggs.keys():
 		egg_ids.append(str(egg_id_value))
 	var settled_count: int = 0
+	var settled_ids: Array[String] = []
 	var failed_ids: Array[String] = []
 	for egg_id: String in egg_ids:
 		if not _active_eggs.has(egg_id):
@@ -169,13 +170,28 @@ func request_day_end_cleanup(reason: String) -> Dictionary:
 		if is_instance_valid(egg_node):
 			egg_node.queue_free()
 		_egg_nodes.erase(egg_id)
+		settled_ids.append(egg_id)
 		settled_count += 1
 	_selected_wagers.clear()
+	if multiplayer.multiplayer_peer != null and not settled_ids.is_empty():
+		_rpc_clear_active_eggs.rpc(settled_ids)
 	_publish_keypad_snapshot()
 	_update_terminal_status()
 	if not failed_ids.is_empty():
 		return _failure("Could not settle airborne eggs: %s" % ", ".join(failed_ids))
 	return _success({"round_id": "", "action": "settled_in_flight", "settled_count": settled_count})
+
+
+@rpc("authority", "call_remote", "reliable")
+func _rpc_clear_active_eggs(egg_ids: Array[String]) -> void:
+	for egg_id: String in egg_ids:
+		_active_eggs.erase(egg_id)
+		var egg_node: Node = _egg_nodes.get(egg_id) as Node
+		if is_instance_valid(egg_node):
+			egg_node.queue_free()
+		_egg_nodes.erase(egg_id)
+	_selected_wagers.clear()
+	_update_terminal_status()
 
 
 func get_active_egg_records() -> Array[Dictionary]:
