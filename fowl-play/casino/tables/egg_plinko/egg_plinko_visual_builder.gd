@@ -77,19 +77,6 @@ func _build_board(parent: Node3D, stone: Material, bronze: Material, dark_metal:
 	_add_box(parent, "Board_Bottom_Rail", Vector3(3.22, 0.12, 0.16), Vector3(0.0, 0.91, -0.17), bronze)
 	_add_box(parent, "Launch_Header", Vector3(0.68, 0.12, 0.12), Vector3(0.0, 3.36, -0.02), warm)
 
-	var title_label := MeshInstance3D.new()
-	title_label.name = "PlinkoTitle"
-	var title_mesh := TextMesh.new()
-	title_mesh.text = "PLINKO"
-	title_mesh.font_size = 40
-	title_mesh.pixel_size = 0.004
-	title_mesh.depth = 0.002
-	title_label.mesh = title_mesh
-	title_label.position = Vector3(-0.32, 3.72, 0.04)
-	title_label.material_override = warm
-	parent.add_child(title_label)
-	_set_owner_recursive(title_label)
-
 	var peg_material := _material(Color(0.86, 0.78, 0.60, 1.0), 0.82, 0.18)
 	var peg_glow := _material(Color(0.94, 0.92, 0.55, 1.0), 0.2, 0.2, Color(0.48, 1.0, 0.22, 1.0), 1.35)
 	for row_index: int in range(ROW_COUNT):
@@ -143,11 +130,17 @@ func _build_collision(parent: Node3D) -> void:
 	body.collision_layer = 1
 	body.collision_mask = 1
 	parent.add_child(body)
-	# Keep the cabinet's solid mass behind the control surface. The front
-	# remains open so physical keypad/button interaction rays can reach keys.
-	_add_collision(body, Vector3(3.55, 0.72, 0.58), Vector3(0.0, 0.48, 0.34))
+	# Solid lower cabinet volume. Its front edge stops before the keypad and
+	# launch-button faces so interaction rays are never occluded.
+	_add_collision(body, Vector3(3.72, 0.82, 0.85), Vector3(0.0, 0.48, 0.45))
+	# Board backing prevents players from walking through the upright machine.
+	_add_collision(body, Vector3(3.08, 2.68, 0.10), Vector3(0.0, 2.27, -0.40))
+	# Structural side columns and outer board rails.
 	_add_collision(body, Vector3(0.15, 2.8, 0.16), Vector3(-1.5, 2.2, -0.2))
 	_add_collision(body, Vector3(0.15, 2.8, 0.16), Vector3(1.5, 2.2, -0.2))
+	# Control deck supports player contact from above without covering its
+	# forward-facing screen, keypad, or launch-button interaction surfaces.
+	_add_collision(body, Vector3(3.55, 0.10, 0.72), Vector3(0.0, 1.02, 1.0))
 	_set_owner_recursive(body)
 
 func _add_triangle(parent: Node3D, node_name: String, a: Vector3, b: Vector3, c: Vector3, material: Material) -> void:
