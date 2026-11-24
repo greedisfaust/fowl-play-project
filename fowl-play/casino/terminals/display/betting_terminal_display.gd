@@ -110,8 +110,9 @@ func refresh_display() -> void:
 	var right_rows: Array[String] = _build_player_rows()
 	var row_count: int = maxi(left_rows.size(), right_rows.size() + 1)
 	var available_balance: int = _get_available_balance()
-	var minimum_value: int = profile.get_effective_minimum()
-	var maximum_value: int = profile.get_effective_maximum()
+	var limits: Dictionary = _get_wager_limits()
+	var minimum_value: int = int(limits["minimum"])
+	var maximum_value: int = int(limits["maximum"])
 	var valid: bool = _is_pending_wager_valid(minimum_value, maximum_value, available_balance)
 	var amount_color: Color = profile.valid_color if valid else profile.invalid_color
 	var amount_font_size: int = roundi(float(screen_text.terminal_font_size) * 1.45)
@@ -165,8 +166,9 @@ func _build_columns_table(left_rows: Array[String], right_rows: Array[String], r
 
 func _build_pending_rows() -> Array[String]:
 	var rows: Array[String] = []
-	var minimum_value: int = profile.get_effective_minimum()
-	var maximum_value: int = profile.get_effective_maximum()
+	var limits: Dictionary = _get_wager_limits()
+	var minimum_value: int = int(limits["minimum"])
+	var maximum_value: int = int(limits["maximum"])
 	var available_balance: int = _get_available_balance()
 	var valid: bool = _is_pending_wager_valid(minimum_value, maximum_value, available_balance)
 	var status_text: String = profile.valid_message if valid else profile.invalid_message
@@ -241,6 +243,17 @@ func _get_player_color(peer_id: int) -> Color:
 					if typeof(color_value) == TYPE_COLOR:
 						return color_value
 	return profile.body_color
+
+func _get_wager_limits() -> Dictionary:
+	if is_instance_valid(table) and table.has_method("get_wager_limits"):
+		var dynamic_limits: Variant = table.call("get_wager_limits")
+		if typeof(dynamic_limits) == TYPE_DICTIONARY:
+			return dynamic_limits
+	return {
+		"minimum": profile.get_effective_minimum(),
+		"maximum": profile.get_effective_maximum(),
+	}
+
 
 func _get_available_balance() -> int:
 	if _network_snapshot_active:
