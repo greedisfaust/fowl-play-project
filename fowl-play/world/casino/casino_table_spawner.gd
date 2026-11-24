@@ -58,19 +58,28 @@ func _on_run_state_changed(snapshot: Dictionary) -> void:
 ## the spawner waits for CasinoManager.daily_selection_changed.
 func spawn_tables() -> Dictionary:
 	if not is_instance_valid(_casino_manager):
-		return _failure("CasinoManager is unavailable.")
-	var day_number: int = int(_casino_manager.get("selected_day"))
+		return _report_spawn_failure(_failure("CasinoManager is unavailable."))
+
 	var definitions: Array[CasinoGameDefinition] = _casino_manager.call("get_selected_game_definitions")
-	if day_number < 1:
-		var run_manager: Node = get_node_or_null("/root/RunManager")
-		if is_instance_valid(run_manager):
-			var run_snapshot: Dictionary = run_manager.call("get_snapshot")
-			if int(run_snapshot.get("phase", -1)) == 2:
-				day_number = int(run_snapshot.get("current_day", 0))
-	if definitions.is_empty() and allow_single_chicken_cross_test_table and day_number > 0:
-		var test_definition: CasinoGameDefinition = _casino_manager.call("get_game_definition", development_test_game_id) as CasinoGameDefinition
-		if is_instance_valid(test_definition):
-			return spawn_single_test_table(day_number, test_definition)
+	var day_number: int = _get_active_casino_day_number()
+
+	# The daily draw is intentionally disabled until all twelve games are registered.
+	# In development mode, bypass that empty-selection gate and spawn the chosen test game.
+	if allow_single_chicken_cross_test_table and not bool(_casino_manager.call("is_catalog_complete")):
+		if day_number < 1:
+			return {
+				"ok": true,
+				"pending": true,
+				"reason": "Waiting for an active casino day before spawning the development test table.",
+				"spawned_count": 0,
+				"skipped_count": 0,
+				"total_spawned": _spawned_slot_ids.size(),
+			}
+		var test_definition: CasinoGameDefinition = _casino_manager.call("get_game_definition", StringName(development_test_game_id)) as CasinoGameDefinition
+		if not is_instance_valid(test_definition):
+			return _report_spawn_failure(_failure("CasinoManager has no registered definition for development game '%s'." % development_test_game_id))
+		return _report_spawn_failure(spawn_single_test_table(day_number, test_definition))
+
 	if day_number < 1 or definitions.is_empty():
 		return {
 			"ok": true,
@@ -80,10 +89,29 @@ func spawn_tables() -> Dictionary:
 			"skipped_count": 0,
 			"total_spawned": _spawned_slot_ids.size(),
 		}
-	return spawn_tables_for_definitions(day_number, definitions)
+	return _report_spawn_failure(spawn_tables_for_definitions(day_number, definitions))
 
 
-## Development-only fallback: place the one registered Chicken Cross game in the
+func _get_active_casino_day_number() -> int:
+	if is_instance_valid(_run_manager):
+		var snapshot: Dictionary = _run_manager.call("get_snapshot")
+		if str(snapshot.get("phase_name", "")) == "CASINO":
+			return int(snapshot.get("current_day", 0))
+	if is_instance_valid(_casino_manager):
+		return int(_casino_manager.get("selected_day"))
+	return 0
+
+
+func _report_spawn_failure(result: Dictionary) -> Dictionary:
+	if not bool(result.get("ok", false)):
+		var reason: String = str(result.get("reason", "Unknown table spawner failure."))
+		push_warning("CasinoTableSpawner: " + reason)
+		if is_instance_valid(_debug_hub):
+			_debug_hub.call("warn", &"casino_games", "Table spawner: " + reason)
+	return result
+
+
+## Development-only fallback: place the selected registered test game in the
 ## first enabled physical slot while the twelve-game production roster is incomplete.
 func spawn_single_test_table(day_number: int, definition: CasinoGameDefinition) -> Dictionary:
 	if day_number < 1 or not is_instance_valid(definition):
