@@ -224,6 +224,7 @@ func _handle_plinko_drop(peer_id: int) -> Dictionary:
 	if multiplayer.multiplayer_peer != null:
 		_rpc_spawn_egg.rpc(record)
 	egg_launched.emit(record.duplicate(true))
+	_publish_keypad_snapshot()
 	report_player_feedback(peer_id, "EGG LAUNCHED  /  %s AT %.1fX" % [_format_money(stake), multiplier], &"success")
 	_update_terminal_status()
 	return _success({"egg_id": egg_id, "wager_id": wager_id, "stake": stake, "multiplier": multiplier, "slot_index": slot_index})
@@ -278,7 +279,14 @@ func _on_egg_animation_finished(egg_id: String) -> void:
 			], "EGG PLINKO", 1)
 	_active_eggs.erase(egg_id)
 	_egg_nodes.erase(egg_id)
+	_publish_keypad_snapshot()
 	_update_terminal_status()
+
+
+func _publish_keypad_snapshot() -> void:
+	var controller: Node = get_node_or_null("BettingKeypad/BettingKeypadController")
+	if is_instance_valid(controller) and controller.has_method("_publish_snapshot"):
+		controller.call("_publish_snapshot")
 
 
 func _setup_betting_keypad() -> void:
