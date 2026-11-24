@@ -25,3 +25,15 @@ table_id = "cluckpot_04"
 machine_number = 4
 position = Vector3(1.25, 0, -0.92)
 rotation = Vector3(0, 3.141593, 0)
+
+[node name="Visuals" parent="Cluckpot_01" index="0"]
+machine_number = 1
+
+[node name="Visuals" parent="Cluckpot_02" index="0"]
+machine_number = 2
+
+[node name="Visuals" parent="Cluckpot_03" index="0"]
+machine_number = 3
+
+[node name="Visuals" parent="Cluckpot_04" index="0"]
+machine_number = 4
