@@ -105,8 +105,17 @@ func set_selected_wager(peer_id: int, amount: int) -> Dictionary:
 		return _failure("Selected wager must be between %d and %d." % [minimum, maximum])
 	_selected_wagers[peer_id] = amount
 	selected_wager_changed.emit(peer_id, amount)
+	if multiplayer.multiplayer_peer != null:
+		_rpc_sync_selected_wager.rpc(peer_id, amount)
 	_update_terminal_status()
 	return _success({"peer_id": peer_id, "selected_wager": amount, "limits": limits})
+
+
+@rpc("authority", "call_remote", "reliable")
+func _rpc_sync_selected_wager(peer_id: int, amount: int) -> void:
+	_selected_wagers[peer_id] = amount
+	selected_wager_changed.emit(peer_id, amount)
+	_update_terminal_status()
 
 
 func get_selected_wager(peer_id: int) -> int:
@@ -382,6 +391,3 @@ func _format_money(amount: int) -> String:
 		formatted += digits.substr(index, 1)
 	return "$" + formatted
 
-
-func _is_authority() -> bool:
-	return multiplayer.is_server()
