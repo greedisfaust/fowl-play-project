@@ -174,6 +174,7 @@ func _rpc_play_spin(record: Dictionary) -> void:
 
 func _play_spin_visual(record: Dictionary) -> void:
 	_animate_lever()
+	_animate_cabinet()
 	var symbols: Array = record.get("symbols", [])
 	if symbols.size() != 3:
 		return
@@ -216,13 +217,12 @@ func _finish_spin_visual(record: Dictionary) -> void:
 	if str(_active_spin.get("round_id", "")) != str(record.get("round_id", "")):
 		return
 	var payout: int = int(record.get("payout", 0))
-	var result_text: String = "NO WIN"
+	var jackpot: bool = payout >= int(record.get("stake", 0)) * 20 and payout > 0
+	var result_text: String = "TRY AGAIN"
 	if payout > 0:
-		result_text = "WIN %s" % _format_money(payout)
-	else:
-		result_text = "TRY AGAIN"
+		result_text = ("GOLDEN JACKPOT! " if jackpot else "WIN ") + _format_money(payout)
 	_set_status(result_text)
-	_flash_win(payout > 0)
+	_flash_win(payout > 0, jackpot)
 	if not _is_authority():
 		_active_spin.clear()
 		_spin_locked = false
@@ -421,6 +421,19 @@ func _validate_remote_action_sender() -> bool:
 	return is_instance_valid(_network) and _network.has_method("validate_rpc") and bool(_network.call("validate_rpc"))
 
 
+func _animate_cabinet() -> void:
+	var cabinet: Node3D = _visuals.get_node_or_null("Cabinet") as Node3D
+	if not is_instance_valid(cabinet):
+		return
+	var original_y: float = cabinet.position.y
+	var tween: Tween = create_tween()
+	tween.set_trans(Tween.TRANS_SINE)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.tween_property(cabinet, "position:y", original_y - 0.018, 0.07)
+	tween.tween_property(cabinet, "position:y", original_y + 0.008, 0.08)
+	tween.tween_property(cabinet, "position:y", original_y, 0.12)
+
+
 func _animate_lever() -> void:
 	var lever: MeshInstance3D = get_node_or_null("SpinInteractable/LeverArm") as MeshInstance3D
 	var grip: MeshInstance3D = get_node_or_null("SpinInteractable/LeverGrip") as MeshInstance3D
@@ -465,13 +478,13 @@ func _set_status(value: String) -> void:
 	_status_label.mesh = copy
 
 
-func _flash_win(won: bool) -> void:
+func _flash_win(won: bool, jackpot: bool = false) -> void:
 	var frame: MeshInstance3D = _visuals.get_node_or_null("Cabinet/WinFrame") as MeshInstance3D
 	if not is_instance_valid(frame):
 		return
 	var material: StandardMaterial3D = frame.material_override as StandardMaterial3D
 	if is_instance_valid(material):
-		material.emission_energy_multiplier = 3.0 if won else 0.15
+		material.emission_energy_multiplier = 5.0 if jackpot else (3.0 if won else 0.15)
 
 
 func _format_money(amount: int) -> String:
