@@ -21,7 +21,6 @@ var _active_spin: Dictionary = {}
 var _spin_sequence: int = 1
 var _visuals: Node3D
 var _proximity: Area3D
-var _spin_interactable: Interactable
 var _keypad: Node3D
 var _display: Node
 var _reel_cells: Array[Array] = []
@@ -68,6 +67,7 @@ func set_selected_wager(peer_id: int, amount: int) -> Dictionary:
 @rpc("authority", "call_remote", "reliable")
 func _rpc_sync_selected_wager(peer_id: int, amount: int) -> void:
 	_selected_wagers[peer_id] = amount
+	var limits: Dictionary = get_wager_limits()
 	_set_status("WAGER SELECTED", "MIN %s  MAX %s\nWAGER %s" % [
 		_format_money(int(limits.get("minimum", 0))),
 		_format_money(int(limits.get("maximum", 0))),
@@ -86,22 +86,6 @@ func get_shared_selected_wager() -> int:
 		return 0
 	peer_ids.sort()
 	return int(_selected_wagers[peer_ids[0]])
-
-
-func request_spin() -> Dictionary:
-	if multiplayer.is_server():
-		return _handle_spin(multiplayer.get_unique_id())
-	if multiplayer.multiplayer_peer == null:
-		return _failure("No multiplayer session is active.")
-	_rpc_request_spin.rpc_id(1)
-	return _success({"pending": true})
-
-
-@rpc("any_peer", "call_remote", "reliable")
-func _rpc_request_spin() -> void:
-	if not multiplayer.is_server() or not _validate_remote_action_sender():
-		return
-	_handle_spin(multiplayer.get_remote_sender_id())
 
 
 func _handle_spin(peer_id: int) -> Dictionary:
@@ -381,18 +365,6 @@ func _on_body_exited(body: Node3D) -> void:
 	var peer_id: int = _peer_id_for_actor(body)
 	if peer_id > 0 and _is_near_table(peer_id):
 		exit_proximity(peer_id)
-
-
-func _on_spin_interacted(actor: Node, action: StringName) -> void:
-	if action != &"use" or not is_instance_valid(actor):
-		return
-	var peer_id: int = _peer_id_for_actor(actor)
-	if peer_id <= 0:
-		return
-	if multiplayer.is_server():
-		_handle_spin(peer_id)
-	elif multiplayer.multiplayer_peer != null:
-		_rpc_request_spin.rpc_id(1)
 
 
 func _peer_id_for_actor(actor: Node) -> int:
