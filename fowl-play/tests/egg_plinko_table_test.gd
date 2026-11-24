@@ -30,6 +30,19 @@ func _run() -> void:
 	_check(int(limits.get("safety_reserve", 0)) == 2625, "Safety reserve protects 15% of the live quota target")
 	_check(int(limits.get("maximum", 0)) == 7375, "Dynamic maximum respects the quota gap and protected reserve")
 	var keypad: Node = table.get_node("BettingKeypad/BettingKeypadController")
+	var connected_buttons: Array = keypad.get("_connected_buttons")
+	var connected_button_ids: Dictionary = {}
+	for button_value: Variant in connected_buttons:
+		var button: Node = button_value as Node
+		if not is_instance_valid(button):
+			continue
+		var button_id: String = str(button.get("button_id"))
+		if button_id.is_empty():
+			button_id = str(button.get("display_text"))
+		connected_button_ids[button_id.to_upper()] = true
+	for digit: String in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
+		_check(connected_button_ids.has(digit), "Physical keypad connects digit %s" % digit)
+	_check(connected_button_ids.has("CONFIRM"), "Physical keypad connects its confirm control")
 	for digit: String in ["1", "0", "0", "0"]:
 		_check_result(keypad.call("handle_button_input", StringName(digit), 1), true, "Player one enters a wager digit")
 	for digit: String in ["2", "0", "0", "0"]:
