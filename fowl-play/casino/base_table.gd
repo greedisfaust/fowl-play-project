@@ -221,8 +221,8 @@ func place_wager(peer_id: int, amount: int, payload: Dictionary = {}) -> Diction
 	var limits: Dictionary = get_wager_limits()
 	var minimum: int = int(limits.get("minimum", 1))
 	var maximum: int = int(limits.get("maximum", 0))
-	if amount < minimum or amount > maximum:
-		return _failure("Wager must be between %d and %d under the current wallet and quota limits." % [minimum, maximum])
+	if minimum <= 0 or maximum <= 0 or amount < minimum or amount > maximum:
+		return _failure("No safe wager is available, or the wager is outside the live range of %d to %d." % [minimum, maximum])
 	var result: Dictionary = _wallet.call("reserve_wager", peer_id, table_id, current_round_id, amount, payload)
 	if bool(result.get("ok", false)):
 		_reset_open_round_inactivity()
