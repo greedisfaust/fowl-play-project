@@ -203,14 +203,16 @@ func _set_reel_preview(reel_index: int, step: int) -> void:
 	var symbols: Array[String] = Rules.SYMBOLS
 	var offset: int = posmod(step + reel_index * 3, symbols.size())
 	for row_index: int in range(3):
-		_set_symbol_label(_reel_labels[reel_index][row_index], symbols[posmod(offset + row_index, symbols.size())])
+		var label: MeshInstance3D = _reel_labels[reel_index][row_index] as MeshInstance3D
+		_set_symbol_label(label, symbols[posmod(offset + row_index, symbols.size())])
 
 
 func _show_final_symbols(columns: Array) -> void:
 	for reel_index: int in range(mini(columns.size(), 3)):
 		var column: Array = columns[reel_index]
 		for row_index: int in range(mini(column.size(), 3)):
-			_set_symbol_label(_reel_labels[reel_index][row_index], str(column[row_index]))
+			var label: MeshInstance3D = _reel_labels[reel_index][row_index] as MeshInstance3D
+			_set_symbol_label(label, str(column[row_index]))
 
 
 func _finish_spin_visual(record: Dictionary) -> void:
