@@ -185,7 +185,7 @@ func build(parent: Node3D, number: int = 1) -> void:
 	_set_owner_recursive(cabinet)
 
 
-func set_reel_outcome(reel_index: int, column: Array) -> void:
+func set_reel_outcome(reel_index: int, column: Array, visual_seed: int = 0) -> void:
 	if reel_index < 0 or reel_index >= 3 or column.size() != 3:
 		return
 	var drum: Node3D = reel_drums[reel_index]
@@ -195,6 +195,10 @@ func set_reel_outcome(reel_index: int, column: Array) -> void:
 			cells.append(child as Node3D)
 	if cells.size() != REEL_SYMBOL_COUNT:
 		return
+	if visual_seed > 0:
+		_symbol_rng.seed = visual_seed
+	else:
+		_symbol_rng.randomize()
 	# Fill the hidden circumference with harmless symbols, then pin the authoritative
 	# top/center/bottom result to the three faces that align with the viewing window.
 	for index: int in range(REEL_SYMBOL_COUNT):
