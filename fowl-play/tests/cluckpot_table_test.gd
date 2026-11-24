@@ -55,7 +55,12 @@ func _run() -> void:
 		table_ids[id] = true
 		_check(machine.get_node_or_null("BettingKeypad/BettingKeypadController") != null, "Every machine has an independent shared BettingKeypad controller")
 		var reels: Node = machine.get_node_or_null("Visuals/Cabinet/Reels")
-		_check(is_instance_valid(reels) and reels.get_child_count() == 3, "Every cabinet builds three physical reel columns")
+		_check(is_instance_valid(reels) and reels.get_child_count() == 3, "Every cabinet builds three physical reel drums")
+		for reel_index: int in range(3):
+			var drum_mesh: MeshInstance3D = machine.get_node_or_null("Visuals/Cabinet/Reels/Reel_%d/CylindricalDrum" % reel_index) as MeshInstance3D
+			_check(is_instance_valid(drum_mesh) and drum_mesh.mesh is CylinderMesh, "Each reel is a real cylindrical barrel, not a flat symbol strip")
+			var ring: Node3D = machine.get_node_or_null("Visuals/Cabinet/Reels/Reel_%d" % reel_index) as Node3D
+			_check(is_instance_valid(ring) and ring.get_child_count() >= 12, "Each cylindrical reel carries a full wrapped ring of symbol faces")
 		var wager_screen: WorldScreen = machine.get_node_or_null("Visuals/Cabinet/WagerWorldScreen") as WorldScreen
 		_check(is_instance_valid(wager_screen), "Every cabinet has its own head-mounted WorldScreen")
 		if is_instance_valid(wager_screen):
@@ -64,11 +69,11 @@ func _run() -> void:
 		_check(machine.get_node_or_null("Visuals/Cabinet/ButtonHousing") == null, "The cabinet has no redundant spin button")
 		var textured_symbol_count: int = 0
 		for reel_index: int in range(3):
-			for row_index: int in range(3):
-				var symbol_sprite: Sprite3D = machine.get_node_or_null("Visuals/Cabinet/Reels/Reel_%d/Cell_%d/SymbolIcon" % [reel_index, row_index]) as Sprite3D
+			for symbol_index: int in range(10):
+				var symbol_sprite: Sprite3D = machine.get_node_or_null("Visuals/Cabinet/Reels/Reel_%d/Cell_%d/SymbolIcon" % [reel_index, symbol_index]) as Sprite3D
 				if is_instance_valid(symbol_sprite) and symbol_sprite.texture != null:
 					textured_symbol_count += 1
-		_check(textured_symbol_count == 9, "All nine visible reel faces use loaded PNG artwork on Sprite3D nodes")
+		_check(textured_symbol_count == 30, "All thirty wrapped reel faces use the uploaded PNG artwork")
 		if first_machine == null:
 			first_machine = machine
 	_check(table_ids.size() == 4, "All four machine IDs are unique")
