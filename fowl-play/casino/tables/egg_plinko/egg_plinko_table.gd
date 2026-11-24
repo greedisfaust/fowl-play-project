@@ -21,7 +21,6 @@ signal selected_wager_changed(peer_id: int, amount: int)
 @export_range(1, 128, 1) var maximum_airborne_eggs: int = 32
 @export_range(0.1, 10.0, 0.1) var egg_flight_duration: float = 3.4
 
-var _wallet: Node
 var _network: Node
 var _day_manager: Node
 var _selected_wagers: Dictionary = {}
@@ -34,7 +33,6 @@ var _rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
 	super._ready()
-	_wallet = get_node_or_null("/root/CasinoWallet")
 	_network = get_node_or_null("/root/Network")
 	_day_manager = get_node_or_null("/root/CasinoDayManager")
 	_rng.randomize()
