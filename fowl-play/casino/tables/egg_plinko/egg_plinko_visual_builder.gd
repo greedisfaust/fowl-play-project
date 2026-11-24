@@ -7,7 +7,7 @@ const Rules = preload("res://casino/tables/egg_plinko/egg_plinko_rules.gd")
 const GENERATED_NAME: StringName = &"_GeneratedEggPlinko"
 const ROW_COUNT: int = 12
 const SLOT_COUNT: int = 13
-const SLOT_WIDTH: float = 0.19
+const SLOT_WIDTH: float = Rules.SLOT_WIDTH
 
 @export var rebuild_visuals: bool = false:
 	set(value):
