@@ -121,8 +121,11 @@ func _build_board(parent: Node3D, stone: Material, bronze: Material, dark_metal:
 		text_mesh.font_size = 24
 		text_mesh.pixel_size = 0.003
 		text_mesh.depth = 0.001
+		text_mesh.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		text_mesh.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		label.mesh = text_mesh
-		label.position = Vector3(x - 0.055, 0.99, 0.06)
+		# The mesh itself is centered in the pocket; no per-label width offset.
+		label.position = Vector3(x, 0.99, 0.06)
 		label.rotation.x = -PI * 0.5
 		label.material_override = _material(Color(1.0, 0.9, 0.68, 1.0), 0.12, 0.36, Color(1.0, 0.72, 0.26, 1.0), 0.75)
 		parent.add_child(label)
@@ -132,7 +135,7 @@ func _build_board(parent: Node3D, stone: Material, bronze: Material, dark_metal:
 	# the same slot width and center convention used by EggPlinkoRules.
 	for boundary_index: int in range(SLOT_COUNT + 1):
 		var boundary_x: float = (float(boundary_index) - float(SLOT_COUNT) * 0.5) * SLOT_WIDTH
-		_add_box(parent, "PocketDivider_%02d" % boundary_index, Vector3(0.014, 0.19, 0.12), Vector3(boundary_x, 1.13, -0.04), bronze)
+		_add_box(parent, "PocketDivider_%02d" % boundary_index, Vector3(0.012, 0.14, 0.10), Vector3(boundary_x, 1.13, -0.04), bronze)
 
 func _build_collision(parent: Node3D) -> void:
 	var body := StaticBody3D.new()
