@@ -201,28 +201,64 @@ func _show_final_symbols(columns: Array) -> void:
 
 
 func _finish_spin_visual(record: Dictionary) -> void:
-	if not _is_authority() or str(_active_spin.get("round_id", "")) != str(record.get("round_id", "")):
-		return
-	var wager_id: String = str(record.get("wager_id", ""))
-	var settlement: Dictionary = _wallet.call("settle_round", table_id, str(record.get("round_id", "")), {wager_id: int(record.get("payout", 0))})
-	if not bool(settlement.get("ok", false)):
-		push_error("Cluckpot settlement failed: %s" % str(settlement.get("reason", "")))
+	if str(_active_spin.get("round_id", "")) != str(record.get("round_id", "")):
 		return
 	var payout: int = int(record.get("payout", 0))
-	var wins: Array = record.get("line_wins", [])
 	var result_text: String = "NO WIN"
 	if payout > 0:
 		result_text = "WIN %s" % _format_money(payout)
+	else:
+		result_text = "TRY AGAIN"
+	_set_status(result_text)
+	_flash_win(payout > 0)
+	if not _is_authority():
+		_active_spin.clear()
+		_spin_locked = false
+		return
+	var wager_id: String = str(record.get("wager_id", ""))
+	var settlement: Dictionary = _wallet.call("settle_round", table_id, str(record.get("round_id", "")), {wager_id: payout})
+	if not bool(settlement.get("ok", false)):
+		push_error("Cluckpot settlement failed: %s" % str(settlement.get("reason", "")))
+		return
+	if payout > 0:
 		report_global_announcement("%s HIT CLUCKPOT  /  %s" % [str(record.get("nickname", "PLAYER")).to_upper(), _format_money(payout)], "CLUCKPOT", 2 if payout >= int(record.get("stake", 1)) * 20 else 1)
 	else:
 		report_player_feedback(int(record.get("peer_id", 0)), "NO WIN  /  TRY AGAIN", &"info")
-	_set_status(result_text)
-	_flash_win(payout > 0)
 	var settled: Dictionary = record.duplicate(true)
 	settled["status"] = "settled"
 	spin_settled.emit(settled, settlement.duplicate(true))
 	_active_spin.clear()
 	_spin_locked = false
+
+
+func request_day_end_cleanup(reason: String) -> Dictionary:
+	if not _is_authority():
+		return _failure("Only the host can clean up Cluckpot.")
+	if reason.strip_edges().is_empty():
+		return _failure("A cleanup reason is required.")
+	if _active_spin.is_empty():
+		_selected_wagers.clear()
+		return _success({"round_id": "", "action": "none"})
+	var record: Dictionary = _active_spin.duplicate(true)
+	var settlement: Dictionary = _wallet.call("settle_round", table_id, str(record.get("round_id", "")), {
+		str(record.get("wager_id", "")): int(record.get("payout", 0))
+	})
+	if not bool(settlement.get("ok", false)):
+		return settlement
+	_active_spin.clear()
+	_spin_locked = false
+	_selected_wagers.clear()
+	_set_status("DAY CLOSED")
+	_rpc_clear_spin.rpc() if multiplayer.multiplayer_peer != null else null
+	return _success({"round_id": str(record.get("round_id", "")), "action": "settled_in_flight", "payout": int(record.get("payout", 0))})
+
+
+@rpc("authority", "call_remote", "reliable")
+func _rpc_clear_spin() -> void:
+	_active_spin.clear()
+	_spin_locked = false
+	_selected_wagers.clear()
+	_set_status("DAY CLOSED")
 
 
 func _build_machine() -> void:
@@ -282,6 +318,8 @@ func _setup_keypad() -> void:
 	_display.set_script(load("res://casino/tables/cluckpot/cluckpot_wager_display.gd"))
 	_display.set("profile", Profile)
 	add_child(_display)
+	if _keypad.get_node_or_null("BettingKeypadController") != null:
+		return
 	var controller: Node = KeypadControllerScript.new()
 	controller.name = "BettingKeypadController"
 	controller.set("table", self)
