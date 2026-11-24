@@ -2,8 +2,8 @@
 class_name CluckpotRules
 extends RefCounted
 
-const SYMBOLS: Array[String] = ["SEVEN", "ROOSTER", "WILD", "CHICK", "EGG", "CORN", "FEATHER"]
-const SYMBOL_WEIGHTS: Array[int] = [4, 10, 8, 14, 16, 22, 26]
+const SYMBOLS: Array[String] = ["SEVEN", "ROOSTER", "WILD", "CHICK", "EGG", "CORN", "FEATHER", "CHERRY", "LEMON"]
+const SYMBOL_WEIGHTS: Array[int] = [4, 10, 8, 12, 14, 18, 20, 8, 6]
 const PAYOUTS: Dictionary = {
 	"SEVEN": 28.0,
 	"ROOSTER": 7.0,
@@ -12,6 +12,8 @@ const PAYOUTS: Dictionary = {
 	"CORN": 1.3,
 	"FEATHER": 0.5,
 	"WILD": 14.0,
+	"CHERRY": 1.1,
+	"LEMON": 0.8,
 }
 const PAYLINES: Array[Array] = [
 	[1, 1, 1], # center
@@ -99,6 +101,8 @@ static func get_symbol_display(symbol: String) -> String:
 		"EGG": return "EGG"
 		"CORN": return "CORN"
 		"FEATHER": return "FEATHER"
+		"CHERRY": return "CHERRY"
+		"LEMON": return "LEMON"
 	return "?"
 
 
@@ -111,6 +115,8 @@ static func get_symbol_color(symbol: String) -> Color:
 		"EGG": return Color(0.82, 0.91, 0.83, 1.0)
 		"CORN": return Color(0.98, 0.76, 0.16, 1.0)
 		"FEATHER": return Color(0.55, 0.85, 0.72, 1.0)
+		"CHERRY": return Color(0.88, 0.08, 0.16, 1.0)
+		"LEMON": return Color(1.0, 0.86, 0.18, 1.0)
 	return Color.WHITE
 
 
