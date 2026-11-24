@@ -5,8 +5,8 @@ extends RefCounted
 
 const ROW_COUNT: int = 12
 const SLOT_MULTIPLIERS: Array[float] = [
-	8.0, 3.0, 1.5, 1.2, 1.0, 0.8, 0.6,
-	0.8, 1.0, 1.2, 1.5, 3.0, 8.0,
+	24.0, 12.0, 3.0, 1.5, 1.0, 0.8, 0.4,
+	0.8, 1.0, 1.5, 3.0, 12.0, 24.0,
 ]
 
 const BOARD_TOP_Y: float = 3.02
