@@ -201,7 +201,7 @@ func _set_reel_spin_progress(progress: float, reel_index: int) -> void:
 		if not is_instance_valid(builder) or not is_instance_valid(cell):
 			continue
 		# The three symbol tiles circulate through a continuous vertical loop.
-		var reel_phase: float = fposmod(float(2 - row_index) - fractional_step, 3.0)
+		var reel_phase: float = fposmod(float(2 - row_index) - progress, 3.0)
 		cell.position.y = 1.26 + reel_phase * 0.31
 		var symbol_index: int = posmod(whole_step + row_index * 2 + reel_index, symbols.size())
 		var cell_key: String = "%d:%d" % [reel_index, row_index]
