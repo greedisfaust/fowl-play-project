@@ -24,8 +24,8 @@ var _proximity: Area3D
 var _spin_interactable: Interactable
 var _keypad: Node3D
 var _display: Node
-var _reel_labels: Array[Array] = []
-var _status_label: MeshInstance3D
+var _reel_cells: Array[Array] = []
+var _wager_screen: WorldScreen
 var _spin_locked: bool = false
 
 
@@ -43,8 +43,6 @@ func _exit_tree() -> void:
 			_proximity.body_entered.disconnect(_on_body_entered)
 		if _proximity.body_exited.is_connected(_on_body_exited):
 			_proximity.body_exited.disconnect(_on_body_exited)
-	if is_instance_valid(_spin_interactable) and _spin_interactable.interacted.is_connected(_on_spin_interacted):
-		_spin_interactable.interacted.disconnect(_on_spin_interacted)
 	super._exit_tree()
 
 
@@ -59,7 +57,7 @@ func set_selected_wager(peer_id: int, amount: int) -> Dictionary:
 	if minimum <= 0 or maximum <= 0 or amount < minimum or amount > maximum:
 		return _failure("Wager must be between %d and %d." % [minimum, maximum])
 	_selected_wagers[peer_id] = amount
-	_set_status("WAGER %s" % _format_money(amount))
+	_set_status("WAGER SELECTED", "MIN %s  MAX %s\nWAGER %s" % [_format_money(int(limits.get("minimum", 0))), _format_money(int(limits.get("maximum", 0))), _format_money(amount)])
 	if multiplayer.multiplayer_peer != null:
 		_rpc_sync_selected_wager.rpc(peer_id, amount)
 	selected_wager_changed.emit(peer_id, amount)
@@ -70,7 +68,7 @@ func set_selected_wager(peer_id: int, amount: int) -> Dictionary:
 @rpc("authority", "call_remote", "reliable")
 func _rpc_sync_selected_wager(peer_id: int, amount: int) -> void:
 	_selected_wagers[peer_id] = amount
-	_set_status("WAGER %s" % _format_money(amount))
+	_set_status("WAGER SELECTED", "WAGER %s" % _format_money(amount))
 	selected_wager_changed.emit(peer_id, amount)
 
 
@@ -178,41 +176,56 @@ func _play_spin_visual(record: Dictionary) -> void:
 	var symbols: Array = record.get("symbols", [])
 	if symbols.size() != 3:
 		return
-	_set_status("GOOD LUCK!")
+	_set_status("REELS IN MOTION", "WAGER %s  /  GOOD LUCK" % _format_money(int(record.get("stake", 0))))
 	_flash_win(false)
-	var duration: float = maxf(float(record.get("spin_duration", spin_duration)), 0.6)
+	var duration: float = maxf(float(record.get("spin_duration", spin_duration)), 1.8)
 	var tween: Tween = create_tween()
-	tween.set_parallel(true)
+	tween.set_trans(Tween.TRANS_LINEAR)
 	for reel_index: int in range(3):
-		var reel_delay: float = duration * (0.38 + float(reel_index) * 0.19)
+		var reel_time: float = duration * (0.22 + float(reel_index) * 0.08)
+		var steps: int = 30 + reel_index * 12
 		tween.tween_method(
 			func(step: int) -> void: _set_reel_preview(reel_index, step),
-			0, 18 + reel_index * 7, reel_delay
-		).set_delay(float(reel_index) * duration * 0.18)
-	tween.set_parallel(false)
-	tween.tween_interval(duration * 0.25)
-	tween.tween_callback(func() -> void:
-		_show_final_symbols(symbols)
-		_finish_spin_visual(record)
-	)
+			0, steps, reel_time
+		)
+		tween.tween_callback(func() -> void: _show_final_reel(reel_index, symbols[reel_index]))
+		tween.tween_callback(func() -> void: _reel_stop_pulse(reel_index))
+		tween.tween_interval(0.12)
+	tween.tween_callback(func() -> void: _finish_spin_visual(record))
 
 
 func _set_reel_preview(reel_index: int, step: int) -> void:
-	if reel_index < 0 or reel_index >= _reel_labels.size():
+	if reel_index < 0 or reel_index >= _reel_cells.size():
 		return
 	var symbols: Array[String] = Rules.SYMBOLS
 	var offset: int = posmod(step + reel_index * 3, symbols.size())
+	var builder: CluckpotVisualBuilder = _visuals as CluckpotVisualBuilder
 	for row_index: int in range(3):
-		var label: MeshInstance3D = _reel_labels[reel_index][row_index] as MeshInstance3D
-		_set_symbol_label(label, symbols[posmod(offset + row_index, symbols.size())])
+		var cell: Node3D = _reel_cells[reel_index][row_index] as Node3D
+		if is_instance_valid(builder) and is_instance_valid(cell):
+			builder.set_symbol_icon(cell, symbols[posmod(offset + row_index, symbols.size())])
 
 
-func _show_final_symbols(columns: Array) -> void:
-	for reel_index: int in range(mini(columns.size(), 3)):
-		var column: Array = columns[reel_index]
-		for row_index: int in range(mini(column.size(), 3)):
-			var label: MeshInstance3D = _reel_labels[reel_index][row_index] as MeshInstance3D
-			_set_symbol_label(label, str(column[row_index]))
+func _show_final_reel(reel_index: int, column: Array) -> void:
+	if reel_index < 0 or reel_index >= _reel_cells.size():
+		return
+	var builder: CluckpotVisualBuilder = _visuals as CluckpotVisualBuilder
+	for row_index: int in range(mini(column.size(), 3)):
+		var cell: Node3D = _reel_cells[reel_index][row_index] as Node3D
+		if is_instance_valid(builder) and is_instance_valid(cell):
+			builder.set_symbol_icon(cell, str(column[row_index]))
+
+
+func _reel_stop_pulse(reel_index: int) -> void:
+	var reels: Node3D = _visuals.get_node_or_null("Cabinet/Reels") as Node3D
+	if not is_instance_valid(reels):
+		return
+	var reel: Node3D = reels.get_node_or_null("Reel_%d" % reel_index) as Node3D
+	if not is_instance_valid(reel):
+		return
+	var tween := create_tween()
+	tween.tween_property(reel, "position:z", 0.035, 0.055)
+	tween.tween_property(reel, "position:z", 0.0, 0.12)
 
 
 func _finish_spin_visual(record: Dictionary) -> void:
@@ -223,7 +236,7 @@ func _finish_spin_visual(record: Dictionary) -> void:
 	var result_text: String = "TRY AGAIN"
 	if payout > 0:
 		result_text = ("GOLDEN JACKPOT! " if jackpot else "WIN ") + _format_money(payout)
-	_set_status(result_text)
+	_set_status(result_text, "STAKE %s  /  RETURN %s" % [_format_money(int(record.get("stake", 0))), _format_money(payout)])
 	_flash_win(payout > 0, jackpot)
 	if not _is_authority():
 		_active_spin.clear()
@@ -286,8 +299,7 @@ func _build_machine() -> void:
 	if is_instance_valid(builder):
 		builder.machine_number = machine_number
 		builder.call("_rebuild")
-		_reel_labels = builder.reel_labels
-		_status_label = builder.status_label
+		_reel_cells = builder.reel_cells
 	else:
 		push_warning("CluckpotMachine requires a CluckpotVisualBuilder child named Visuals.")
 	_proximity = Area3D.new()
@@ -303,27 +315,6 @@ func _build_machine() -> void:
 	add_child(_proximity)
 	_proximity.body_entered.connect(_on_body_entered)
 	_proximity.body_exited.connect(_on_body_exited)
-	var spin_body := StaticBody3D.new()
-	spin_body.name = "SpinInteractable"
-	spin_body.collision_layer = 1 << (LAYERS.DEVICES - 1)
-	spin_body.collision_mask = 0
-	var interactable := Interactable.new()
-	interactable.name = "Interactable"
-	interactable.prompt_text = "PULL LEVER / SPIN"
-	spin_body.add_child(interactable)
-	_spin_interactable = interactable
-	var lever_shape := CollisionShape3D.new()
-	var lever_collision := SphereShape3D.new()
-	lever_collision.radius = 0.24
-	lever_shape.shape = lever_collision
-	lever_shape.position = Vector3(1.08, 1.84, 0.46)
-	spin_body.add_child(lever_shape)
-	for part_name: String in ["LeverArm", "LeverGrip"]:
-		var lever_part: Node3D = _visuals.get_node_or_null("Cabinet/" + part_name) as Node3D
-		if is_instance_valid(lever_part):
-			lever_part.reparent(spin_body, true)
-	add_child(spin_body)
-	_spin_interactable.interacted.connect(_on_spin_interacted)
 
 
 func _setup_keypad() -> void:
@@ -335,47 +326,31 @@ func _setup_keypad() -> void:
 	_keypad.name = "BettingKeypad"
 	_keypad.position = Vector3(-0.48, 0.82, 1.08)
 	_keypad.rotation = Vector3(deg_to_rad(62.0), 0.0, 0.0)
-	var readout := MeshInstance3D.new()
-	readout.name = "WagerReadout"
-	var readout_mesh := TextMesh.new()
-	readout_mesh.text = "$0"
-	readout_mesh.font_size = 48
-	readout_mesh.pixel_size = 0.0025
-	readout_mesh.depth = 0.002
-	readout_mesh.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	readout_mesh.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	readout.mesh = readout_mesh
-	readout.position = Vector3(-0.48, 1.47, 1.34)
-	var readout_material := StandardMaterial3D.new()
-	readout_material.albedo_color = Color(1.0, 0.77, 0.31)
-	readout_material.emission_enabled = true
-	readout_material.emission = Color(1.0, 0.48, 0.08)
-	readout_material.emission_energy_multiplier = 1.0
-	readout.material_override = readout_material
-	add_child(readout)
 	_display = Node.new()
 	_display.name = "WagerDisplayAdapter"
 	_display.set_script(load("res://casino/tables/cluckpot/cluckpot_wager_display.gd"))
 	_display.set("profile", Profile)
-	_display.set("amount_label", readout)
 	add_child(_display)
 	var controller: Node = _keypad.get_node_or_null("BettingKeypadController")
 	if not is_instance_valid(controller):
 		controller = KeypadControllerScript.new()
 		controller.name = "BettingKeypadController"
-		controller.set("table", self)
-		controller.set("display", _display)
-		controller.set("profile", Profile)
-		controller.set("selection_only", true)
-		controller.set("one_wager_per_player", false)
 		_keypad.add_child(controller)
-	else:
-		controller.set("table", self)
-		controller.set("display", _display)
-		controller.set("profile", Profile)
-		controller.set("selection_only", true)
-		controller.set("one_wager_per_player", false)
+	controller.set("table", self)
+	controller.set("display", _display)
+	controller.set("profile", Profile)
+	controller.set("selection_only", true)
+	controller.set("one_wager_per_player", false)
+	controller.wager_confirmation_result.connect(_on_keypad_confirmation_result)
 	add_child(_keypad)
+
+
+func _on_keypad_confirmation_result(peer_id: int, result: Dictionary) -> void:
+	if not bool(result.get("ok", false)):
+		return
+	# A successful keypad confirmation is the spin trigger; no separate button.
+	if _is_authority():
+		_handle_spin(peer_id)
 
 
 func _on_body_entered(body: Node3D) -> void:
@@ -427,74 +402,26 @@ func _animate_cabinet() -> void:
 	var cabinet: Node3D = _visuals.get_node_or_null("Cabinet") as Node3D
 	if not is_instance_valid(cabinet):
 		return
-	var spin_body: Node3D = get_node_or_null("SpinInteractable") as Node3D
-	var original_y: float = cabinet.position.y
-	var body_y: float = spin_body.position.y if is_instance_valid(spin_body) else 0.0
-	var tween: Tween = create_tween()
+	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_SINE)
-	tween.set_ease(Tween.EASE_OUT)
-	tween.tween_property(cabinet, "position:y", original_y - 0.018, 0.07)
-	if is_instance_valid(spin_body):
-		tween.parallel().tween_property(spin_body, "position:y", body_y - 0.018, 0.07)
-	tween.tween_property(cabinet, "position:y", original_y + 0.008, 0.08)
-	if is_instance_valid(spin_body):
-		tween.parallel().tween_property(spin_body, "position:y", body_y + 0.008, 0.08)
-	tween.tween_property(cabinet, "position:y", original_y, 0.12)
-	if is_instance_valid(spin_body):
-		tween.parallel().tween_property(spin_body, "position:y", body_y, 0.12)
+	tween.tween_property(cabinet, "position:y", -0.018, 0.07)
+	tween.tween_property(cabinet, "position:y", 0.008, 0.08)
+	tween.tween_property(cabinet, "position:y", 0.0, 0.12)
 
 
 func _animate_lever() -> void:
-	var lever: MeshInstance3D = get_node_or_null("SpinInteractable/LeverArm") as MeshInstance3D
-	var grip: MeshInstance3D = get_node_or_null("SpinInteractable/LeverGrip") as MeshInstance3D
+	var lever: MeshInstance3D = _visuals.get_node_or_null("Cabinet/LeverArm") as MeshInstance3D
+	var grip: MeshInstance3D = _visuals.get_node_or_null("Cabinet/LeverGrip") as MeshInstance3D
 	if not is_instance_valid(lever) or not is_instance_valid(grip):
 		return
-	var tween: Tween = create_tween()
+	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_BACK)
 	tween.set_ease(Tween.EASE_OUT)
 	tween.tween_property(lever, "rotation:z", 0.62, 0.22)
-	tween.parallel().tween_property(grip, "position:y", 1.48, 0.22)
+	tween.parallel().tween_property(grip, "position:y", 1.72, 0.22)
 	tween.tween_interval(0.12)
-	tween.set_ease(Tween.EASE_OUT)
 	tween.tween_property(lever, "rotation:z", deg_to_rad(-22.0), 0.3)
-	tween.parallel().tween_property(grip, "position:y", 1.86, 0.3)
-
-
-func _set_symbol_label(label: MeshInstance3D, symbol: String) -> void:
-	if not is_instance_valid(label):
-		return
-	var text_mesh: TextMesh = label.mesh as TextMesh
-	if text_mesh == null:
-		return
-	var unique_mesh: TextMesh = text_mesh.duplicate() as TextMesh
-	unique_mesh.text = Rules.get_symbol_display(symbol)
-	label.mesh = unique_mesh
-	var material: StandardMaterial3D = StandardMaterial3D.new()
-	material.albedo_color = Rules.get_symbol_color(symbol)
-	material.emission_enabled = true
-	material.emission = Rules.get_symbol_color(symbol)
-	material.emission_energy_multiplier = 0.35 if symbol != "SEVEN" else 1.8
-	label.material_override = material
-
-
-func _set_status(value: String) -> void:
-	if not is_instance_valid(_status_label):
-		return
-	var mesh: TextMesh = _status_label.mesh as TextMesh
-	if mesh == null:
-		return
-	var copy: TextMesh = mesh.duplicate() as TextMesh
-	copy.text = value
-	_status_label.mesh = copy
-
-
-func _flash_win(won: bool, jackpot: bool = false) -> void:
-	var frame: MeshInstance3D = _visuals.get_node_or_null("Cabinet/WinFrame") as MeshInstance3D
-	if not is_instance_valid(frame):
-		return
-	var material: StandardMaterial3D = frame.material_override as StandardMaterial3D
-	if is_instance_valid(material):
-		material.emission_energy_multiplier = 5.0 if jackpot else (3.0 if won else 0.15)
+	tween.parallel().tween_property(grip, "position:y", 2.1, 0.3)
 
 
 func _format_money(amount: int) -> String:
