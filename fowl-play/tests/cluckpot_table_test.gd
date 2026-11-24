@@ -132,7 +132,7 @@ func _run() -> void:
 			var resting_depths: int = 0
 			for reel_index: int in range(3):
 				var reel_node: Node3D = visual_builder.reel_drums[reel_index]
-				var expected_depth: float = (float(reel_index) - 1.0) * 0.0 + 0.27
+				var expected_depth: float = 0.27
 				if is_instance_valid(reel_node) and is_equal_approx(reel_node.position.z, expected_depth):
 					resting_depths += 1
 			_check(resting_depths == 3, "All three reels return to their original forward depth after the stop bounce")
