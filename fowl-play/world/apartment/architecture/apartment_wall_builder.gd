@@ -301,49 +301,47 @@ func _build_double_door(parent: Node3D, scene_root: Node) -> void:
 	var inset: StandardMaterial3D = _make_material(Color(0.16, 0.085, 0.043, 1.0), 0.04, 0.42)
 	var brass: StandardMaterial3D = _make_material(Color(0.58, 0.36, 0.13, 1.0), 0.86, 0.2)
 	var dark: StandardMaterial3D = _make_material(Color(0.035, 0.026, 0.018, 1.0), 0.25, 0.3)
-	var leaf_width: float = doorway_width * 0.5 - 0.055
+	var leaf_width: float = doorway_width * 0.5
 	var leaf_height: float = doorway_height - 0.035
 	var leaf_depth: float = 0.105
 	for side_index: int in range(2):
 		var side: float = -1.0 if side_index == 0 else 1.0
-		var pivot: Node3D = Node3D.new()
+		# The hinge itself is the moving physics body. This keeps the collision
+		# transform synchronized with the visible door while it swings.
+		var pivot: AnimatableBody3D = AnimatableBody3D.new()
 		pivot.name = "Left_Hinge" if side_index == 0 else "Right_Hinge"
 		pivot.position = Vector3(0.0, 0.0, side * doorway_width * 0.5)
+		pivot.sync_to_physics = true
+		pivot.collision_layer = LAYERS.WORLD_STATIC
+		pivot.collision_mask = LAYERS.LAYER_MASK_HEALTHY_PLAYERS
 		door_root.add_child(pivot)
 		pivot.owner = scene_root
-		var body: AnimatableBody3D = AnimatableBody3D.new()
-		body.name = "DoorLeaf"
-		body.sync_to_physics = true
-		body.collision_layer = 1
-		body.collision_mask = 1 << 4
-		pivot.add_child(body)
-		body.owner = scene_root
 		var collision: CollisionShape3D = CollisionShape3D.new()
 		var box_shape: BoxShape3D = BoxShape3D.new()
 		box_shape.size = Vector3(leaf_depth, leaf_height, leaf_width)
 		collision.shape = box_shape
 		collision.position = Vector3(0.0, leaf_height * 0.5, -side * leaf_width * 0.5)
-		body.add_child(collision)
+		pivot.add_child(collision)
 		collision.owner = scene_root
-		_add_door_box(body, "Walnut_Leaf", Vector3(leaf_depth, leaf_height, leaf_width),
+		_add_door_box(pivot, "Walnut_Leaf", Vector3(leaf_depth, leaf_height, leaf_width),
 			Vector3(0.0, leaf_height * 0.5, -side * leaf_width * 0.5), wood, scene_root)
-		_add_door_box(body, "Raised_Center_Panel", Vector3(0.025, leaf_height * 0.66, leaf_width * 0.66),
+		_add_door_box(pivot, "Raised_Center_Panel", Vector3(0.025, leaf_height * 0.66, leaf_width * 0.66),
 			Vector3(side * (leaf_depth * 0.5 + 0.014), leaf_height * 0.52, -side * leaf_width * 0.5), inset, scene_root)
 		for rail_y: float in [0.18, leaf_height - 0.16]:
-			_add_door_box(body, "Brass_Horizontal_Inlay", Vector3(0.018, 0.025, leaf_width * 0.82),
+			_add_door_box(pivot, "Brass_Horizontal_Inlay", Vector3(0.018, 0.025, leaf_width * 0.82),
 				Vector3(side * (leaf_depth * 0.5 + 0.03), rail_y, -side * leaf_width * 0.5), brass, scene_root)
 		for rail_z: float in [-leaf_width * 0.40, leaf_width * 0.40]:
-			_add_door_box(body, "Brass_Vertical_Inlay", Vector3(0.018, leaf_height * 0.72, 0.025),
+			_add_door_box(pivot, "Brass_Vertical_Inlay", Vector3(0.018, leaf_height * 0.72, 0.025),
 				Vector3(side * (leaf_depth * 0.5 + 0.03), leaf_height * 0.52, -side * leaf_width * 0.5 + rail_z), brass, scene_root)
-		_add_door_box(body, "Handle_Backplate", Vector3(0.035, 0.25, 0.11),
+		_add_door_box(pivot, "Handle_Backplate", Vector3(0.035, 0.25, 0.11),
 			Vector3(side * (leaf_depth * 0.5 + 0.045), leaf_height * 0.52, -side * 0.12), dark, scene_root)
-		_add_door_box(body, "Brass_Pull_Handle", Vector3(0.075, 0.19, 0.035),
+		_add_door_box(pivot, "Brass_Pull_Handle", Vector3(0.075, 0.19, 0.035),
 			Vector3(side * (leaf_depth * 0.5 + 0.075), leaf_height * 0.52, -side * 0.12), brass, scene_root)
-		_add_door_box(body, "Back_Raised_Center_Panel", Vector3(0.025, leaf_height * 0.66, leaf_width * 0.66),
+		_add_door_box(pivot, "Back_Raised_Center_Panel", Vector3(0.025, leaf_height * 0.66, leaf_width * 0.66),
 			Vector3(-side * (leaf_depth * 0.5 + 0.014), leaf_height * 0.52, -side * leaf_width * 0.5), inset, scene_root)
-		_add_door_box(body, "Back_Brass_Horizontal_Inlay", Vector3(0.018, 0.025, leaf_width * 0.82),
+		_add_door_box(pivot, "Back_Brass_Horizontal_Inlay", Vector3(0.018, 0.025, leaf_width * 0.82),
 			Vector3(-side * (leaf_depth * 0.5 + 0.03), leaf_height - 0.16, -side * leaf_width * 0.5), brass, scene_root)
-		_add_door_box(body, "Back_Brass_Pull_Handle", Vector3(0.075, 0.19, 0.035),
+		_add_door_box(pivot, "Back_Brass_Pull_Handle", Vector3(0.075, 0.19, 0.035),
 			Vector3(-side * (leaf_depth * 0.5 + 0.075), leaf_height * 0.52, -side * 0.12), brass, scene_root)
 		for hinge_index: int in range(3):
 			var hinge: MeshInstance3D = MeshInstance3D.new()
