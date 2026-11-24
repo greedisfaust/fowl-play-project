@@ -6,12 +6,12 @@ Egg Plinko is a shared multiplayer casino table. Every egg is an independent wag
 
 1. A player enters the table's proximity area.
 2. The shared terminal keypad is used to choose an amount and press CONFIRM.
-3. Confirming stores that player's selected amount; it does not reserve or spend money. Each player has an independent keypad draft and selected amount, even though they share the physical terminal.
-4. Pressing the physical PLINKO button launches one egg and reserves the full selected amount.
+3. Confirming updates one shared team/table wager; it does not reserve or spend money. Players may maintain independent unconfirmed keypad drafts, but the latest successful confirmation becomes the wager used by every player's upcoming launch.
+4. Any player pressing the physical PLINKO button launches one egg and reserves the full current team wager.
 5. The host resolves the egg's peg path, landing slot and gross return.
 6. The egg's independent wallet round settles when its animation reaches the pocket.
 
-Changing the selected amount never edits an egg already in flight. Every PLINKO press is a new, full-stake wager.
+Changing the shared team wager never edits an egg already in flight. Every PLINKO press by any player is a new, full-stake wager using the current shared setting.
 
 ## Shared-wallet safety
 
@@ -46,7 +46,7 @@ The path is replicated rather than independently simulated by each peer. This ke
 
 ## Board presentation
 
-The board, peg rows, rails, multiplier pockets, and table body are generated procedurally by egg_plinko_visual_builder.gd. Eggs are visual-only synchronized path followers; the host wallet ledger remains the source of truth.
+The oversized freestanding arcade cabinet, triangular illuminated peg field, rails, multiplier pockets, and pedestal body are generated procedurally by egg_plinko_visual_builder.gd. The shared terminal display, full keypad and launch button are mounted into the cabinet's control deck. Eggs are visual-only synchronized path followers; the host wallet ledger remains the source of truth.
 
 The terminal reuses the Chicken Cross Slim World Screen, BettingKeypad, BettingTerminalDisplay and BettingTerminalProfile systems. The keypad controller's selection-only mode is opt-in, so Chicken Cross keeps its existing one-wager-per-player flow.
 
