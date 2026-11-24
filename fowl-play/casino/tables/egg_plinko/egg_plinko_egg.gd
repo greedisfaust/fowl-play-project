@@ -21,7 +21,8 @@ func configure(record: Dictionary) -> void:
 	flight_duration = maxf(float(record.get("flight_duration", 3.4)), 0.1)
 	_elapsed = 0.0
 	_finished = false
-	_build_shell(Color(record.get("player_color", Color.WHITE)))
+	var player_color: Color = record.get("player_color", Color.WHITE)
+	_build_shell(player_color)
 
 
 func _process(delta: float) -> void:
