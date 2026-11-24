@@ -289,22 +289,22 @@ func _build_machine() -> void:
 	add_child(_proximity)
 	_proximity.body_entered.connect(_on_body_entered)
 	_proximity.body_exited.connect(_on_body_exited)
-	var spin_area := Area3D.new()
-	spin_area.name = "SpinInteractable"
-	spin_area.collision_layer = 0
-	spin_area.collision_mask = 0
+	var spin_body := StaticBody3D.new()
+	spin_body.name = "SpinInteractable"
+	spin_body.collision_layer = 1
+	spin_body.collision_mask = 1
 	var interactable := Interactable.new()
 	interactable.name = "Interactable"
 	interactable.prompt_text = "PULL LEVER / SPIN"
-	spin_area.add_child(interactable)
+	spin_body.add_child(interactable)
 	_spin_interactable = interactable
 	var lever_shape := CollisionShape3D.new()
 	var lever_collision := SphereShape3D.new()
-	lever_collision.radius = 0.32
+	lever_collision.radius = 0.24
 	lever_shape.shape = lever_collision
-	lever_shape.position = Vector3(0.95, 1.25, 1.0)
-	spin_area.add_child(lever_shape)
-	add_child(spin_area)
+	lever_shape.position = Vector3(1.08, 1.84, 0.46)
+	spin_body.add_child(lever_shape)
+	add_child(spin_body)
 	_spin_interactable.interacted.connect(_on_spin_interacted)
 
 
