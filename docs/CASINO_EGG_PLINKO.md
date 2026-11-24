@@ -33,6 +33,15 @@ The minimum wager reduces with the remaining quota gap, and the maximum cannot e
 
 The board also caps concurrent airborne eggs at 32 by default. This is a presentation/performance guard, not a per-player click cooldown. If the casino day ends or the team departs early, the table immediately settles every already-reserved egg using its host-resolved outcome, then clears the visuals on all peers. This prevents locked stakes from surviving a day transition.
 
+## Payout schedule
+
+The thirteen landing pockets use a symmetric multiplier schedule:
+
+    24x, 12x, 3x, 1.5x, 1x, 0.8x, 0.4x,
+    0.8x, 1x, 1.5x, 3x, 12x, 24x
+
+With twelve independent 50/50 peg decisions, the theoretical gross return is approximately 98.12% of total stakes (about a 1.88% house edge before integer rounding). The outer jackpot pockets remain rare, while the center pocket is the lowest-return result.
+
 ## Multiplayer authority
 
 - The host alone chooses the path, slot and multiplier.
@@ -46,7 +55,7 @@ The path is replicated rather than independently simulated by each peer. This ke
 
 ## Board presentation
 
-The oversized freestanding arcade cabinet, triangular illuminated peg field, rails, multiplier pockets, and pedestal body are generated procedurally by egg_plinko_visual_builder.gd. The shared terminal display, full keypad and launch button are mounted into the cabinet's control deck. Eggs are visual-only synchronized path followers; the host wallet ledger remains the source of truth.
+The oversized freestanding arcade cabinet, triangular illuminated peg field, rails, multiplier pockets, and pedestal body are generated procedurally by egg_plinko_visual_builder.gd. Its collision body covers the lower cabinet, board backing, side columns, and control deck while leaving forward-facing controls accessible. The decorative title above the board is intentionally omitted. The shared terminal display, full keypad and launch button are mounted into the cabinet's control deck. Eggs are visual-only synchronized path followers; the host wallet ledger remains the source of truth.
 
 The terminal reuses the Chicken Cross Slim World Screen, BettingKeypad, BettingTerminalDisplay and BettingTerminalProfile systems. The keypad controller's selection-only mode is opt-in, so Chicken Cross keeps its existing one-wager-per-player flow.
 
