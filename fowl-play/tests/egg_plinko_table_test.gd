@@ -26,8 +26,8 @@ func _run() -> void:
 
 	_check_result(table.call("enter_proximity", 1), true, "Player enters Plinko proximity")
 	var limits: Dictionary = table.call("get_wager_limits")
-	_check(int(limits.get("safety_reserve", 0)) == 1125, "Safety reserve follows the live quota gap and 15% bias")
-	_check(int(limits.get("maximum", 0)) == 8875, "Dynamic maximum preserves the quota safety reserve")
+	_check(int(limits.get("safety_reserve", 0)) == 2625, "Safety reserve protects 15% of the live quota target")
+	_check(int(limits.get("maximum", 0)) == 7375, "Dynamic maximum respects the quota gap and protected reserve")
 	var keypad: Node = table.get_node("BettingKeypad/BettingKeypadController")
 	for digit: String in ["1", "0", "0", "0"]:
 		_check_result(keypad.call("handle_button_input", StringName(digit), 1), true, "Player enters selected wager digit %s" % digit)
