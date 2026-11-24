@@ -138,7 +138,8 @@ func get_round_wagers() -> Array[Dictionary]:
 func get_active_egg_records() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	for record_value: Variant in _active_eggs.values():
-		result.append((record_value as Dictionary).duplicate(true))
+		var record: Dictionary = record_value
+		result.append(record.duplicate(true))
 	return result
 
 
