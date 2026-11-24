@@ -61,8 +61,8 @@ func build(parent: Node3D, number: int = 1) -> void:
 	# Engraved top marquee, badge, and rivets.
 	_text(cabinet, "Marquee", "CLUCKPOT", 0.2, Vector3(0, 2.37, 0.51), bright_brass)
 	_text(cabinet, "Serial", "THE GOLDEN COOP  •  No.%02d" % number, 0.055, Vector3(0, 2.25, 0.52), ivory)
-	for x in [-0.76, 0.76]:
-		for y in [0.31, 2.28]:
+	for x: float in [-0.76, 0.76]:
+		for y: float in [0.31, 2.28]:
 			_sphere(cabinet, "Rivet", 0.035, Vector3(x, y, 0.57), bright_brass)
 
 	# Three separate vertical reel carriers; symbol objects are real meshes, not text.
@@ -75,13 +75,13 @@ func build(parent: Node3D, number: int = 1) -> void:
 		["ROOSTER", "SEVEN", "CORN"],
 		["LEMON", "SEVEN", "CHICK"],
 	]
-	for reel_index in range(3):
+	for reel_index: int in range(3):
 		var drum := Node3D.new()
 		drum.name = "Reel_%d" % reel_index
 		reels.add_child(drum)
 		var cells: Array[Node3D] = []
 		var x := (float(reel_index) - 1.0) * 0.425
-		for row in range(3):
+		for row: int in range(3):
 			var cell := Node3D.new()
 			cell.name = "Cell_%d" % row
 			cell.position = Vector3(x, 1.88 - float(row) * 0.31, 0.745)
@@ -159,7 +159,7 @@ func set_symbol_icon(cell: Node3D, symbol: String) -> void:
 			_cone(icon, "Beak", 0.035, 0.075, Vector3(0.13, 0.075, 0.09), _mat(Color("#f4a52f"), 0.25, 0.3))
 			_sphere(icon, "Comb", 0.035, Vector3(0.055, 0.16, 0.08), _mat(Color("#c51e25"), 0.2, 0.25))
 			_sphere(icon, "Eye", 0.012, Vector3(0.102, 0.105, 0.14), black_material())
-			for feather_index in range(3):
+			for feather_index: int in range(3):
 				var tail := _sphere(icon, "TailFeather", 0.045, Vector3(-0.13, 0.055 + feather_index * 0.035, 0.045), body_mat)
 				tail.scale = Vector3(0.65, 1.8, 0.55)
 			_box(icon, "Feet", Vector3(0.13, 0.018, 0.025), Vector3(0, -0.13, 0.08), _mat(Color("#e89a29"), 0.25, 0.3))
@@ -173,12 +173,12 @@ func set_symbol_icon(cell: Node3D, symbol: String) -> void:
 		"EGG":
 			var egg := _sphere(icon, "SpeckledEgg", 0.12, Vector3(0, 0, 0.07), _mat(Color("#f4e7c8"), 0.05, 0.24))
 			egg.scale = Vector3(0.78, 1.18, 0.62)
-			for spot in range(5):
+			for spot: int in range(5):
 				_sphere(icon, "EggSpeckle", 0.009, Vector3(-0.05 + float(spot % 3) * 0.045, -0.035 + float(spot / 3) * 0.07, 0.145), _mat(Color("#bd9871"), 0.0, 0.5))
 		"CORN":
 			_cylinder(icon, "CornCob", 0.072, 0.25, Vector3(0, 0, 0.07), _mat(Color("#f5c83d"), 0.1, 0.28))
-			for row in range(4):
-				for col in range(3):
+			for row: int in range(4):
+				for col: int in range(3):
 					_sphere(icon, "Kernel", 0.027, Vector3(-0.045 + col * 0.045, -0.085 + row * 0.055, 0.135), _mat(Color("#ffdf54"), 0.08, 0.23))
 			_cone(icon, "Husk", 0.07, 0.18, Vector3(-0.09, -0.07, 0.05), _mat(Color("#3d8b42"), 0.05, 0.35))
 		"CHERRY":
@@ -197,7 +197,7 @@ func set_symbol_icon(cell: Node3D, symbol: String) -> void:
 			var feather_mat := _mat(Color("#e8e5d9"), 0.12, 0.26)
 			var shaft := _cylinder(icon, "Quill", 0.009, 0.28, Vector3(0, 0, 0.08), _mat(Color("#bcae8e"), 0.15, 0.3))
 			shaft.rotation.z = deg_to_rad(-28)
-			for barb in range(5):
+			for barb: int in range(5):
 				var vane := _sphere(icon, "Vane", 0.025, Vector3(-0.035 + barb * 0.018, -0.07 + barb * 0.035, 0.08), feather_mat)
 				vane.scale = Vector3(1.6, 0.55, 0.35)
 		_:
