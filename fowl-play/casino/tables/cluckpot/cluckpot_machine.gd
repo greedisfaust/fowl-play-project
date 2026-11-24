@@ -2,7 +2,6 @@
 extends BaseTable
 
 const Rules = preload("res://casino/tables/cluckpot/cluckpot_rules.gd")
-const VisualBuilder = preload("res://casino/tables/cluckpot/cluckpot_visual_builder.gd")
 const KeypadControllerScript = preload("res://casino/terminals/components/betting_keypad_controller.gd")
 const KeypadScene: PackedScene = preload("res://casino/terminals/components/betting_keypad.tscn")
 const Profile: BettingTerminalProfile = preload("res://casino/tables/cluckpot/cluckpot_profile.tres")
@@ -481,15 +480,3 @@ func _get_player_nickname(peer_id: int) -> String:
 	return "PLAYER %d" % peer_id
 
 
-func _is_authority() -> bool:
-	return multiplayer.is_server()
-
-
-func _success(data: Dictionary = {}) -> Dictionary:
-	var result: Dictionary = {"ok": true, "reason": ""}
-	result.merge(data, true)
-	return result
-
-
-func _failure(reason: String) -> Dictionary:
-	return {"ok": false, "reason": reason}
