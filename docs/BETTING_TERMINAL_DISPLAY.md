@@ -24,7 +24,7 @@ The Chicken Cross scene already contains the editor-authored `BettingTerminalDis
 ## Display behavior
 
 - The pending amount is green only when it is positive, at least the configured minimum, no greater than the configured maximum, and no greater than the available shared-wallet balance. Otherwise it is red; insufficient funds use the profile's dedicated message.
-- The configured table maximum is shown independently of the current wallet balance.
+- The displayed minimum and maximum come from `BaseTable.get_wager_limits()` and update with the shared wallet, active daily quota, protected safety reserve, and this game's profile ceilings.
 - Confirmed wagers come from the current table round and only reserved/locked wagers are displayed.
 - Wagers are grouped by peer and summed to one `[PLAYER] — [CONFIRMED WAGER]` row per bettor.
 - The occupancy line shows players currently inside the table's proximity area versus configured terminal capacity (for example, `2 / 4 PLAYERS`). It updates on every proximity enter/exit and includes players who have not yet confirmed a wager.
@@ -32,7 +32,7 @@ The Chicken Cross scene already contains the editor-authored `BettingTerminalDis
 - The total reserved value includes reserved/locked wagers in the current round.
 - Player names use `Network.player_identities` when available, with a peer-number fallback.
 - The two betting columns use native RichTextLabel table cells with separate left, divider, and right cells. The pending amount is centered and enlarged to 1.45 times the authored font size; its larger glyphs cannot push the right column out of position.
-- The status and amount share one validity rule: positive, within the configured minimum/maximum, and affordable from the available shared wallet. Valid amounts are green; zero, out-of-range, and unaffordable amounts are red.
+- The status and amount share one validity rule: positive, within the live minimum/maximum, and affordable from the available shared wallet. If the live maximum reaches zero, the terminal reports that no safe wager is available. Valid amounts are green; zero, out-of-range, and unaffordable amounts are red.
 - Compact currency formatting supports the signed 64-bit integer range using K, M, B, T, Qa, and Qi denominations (thousand through quintillion). Confirmed wagers and reserved totals retain full-value formatting.
 - The title is large, bold, and left-aligned in a full-width header area. The description is directly beneath it and capped at two lines. A divider separates the header from the betting columns.
 - The first render is deferred until ScreenText completes its own initialization. Automatic scrolling is disabled for this fixed physical readout.
@@ -41,7 +41,7 @@ The Chicken Cross scene already contains the editor-authored `BettingTerminalDis
 
 - Number buttons edit one shared pending amount. CLEAR resets it; BACKSPACE removes its final digit.
 - Any nearby player may press CONFIRM. If the table is idle, the first successful confirmation opens the round. The confirmer is joined and becomes the bettor.
-- The host validates the configured wager limits and available shared-wallet balance, then calls `BaseTable.place_wager(peer_id, amount)`.
+- The host validates the shared live wager limits and available shared-wallet balance, then `BaseTable.place_wager(peer_id, amount)` validates the same range again immediately before reserving funds.
 - The host never calls `CasinoWallet.reserve_wager()` directly from the terminal. BaseTable and CasinoWallet remain the only wager-reservation path.
 - A successful confirmation resets the shared pending amount to zero. Rejected confirmation preserves the amount.
 - The keypad accepts up to 19 digits, with an exact guard against values above the signed 64-bit maximum. The wallet itself stores integer balances and stakes.
