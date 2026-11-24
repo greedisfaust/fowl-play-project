@@ -234,9 +234,15 @@ func _reel_stop_pulse(reel_index: int) -> void:
 	var reel: Node3D = reels.get_node_or_null("Reel_%d" % reel_index) as Node3D
 	if not is_instance_valid(reel):
 		return
+	# The reel's resting depth is part of the cabinet alignment (currently z=0.27).
+	# Never tween to a hard-coded zero here: that pulls the whole drum behind
+	# the front viewing window, making it appear to vanish after the stop.
+	var resting_depth: float = reel.position.z
 	var tween := create_tween()
-	tween.tween_property(reel, "position:z", 0.035, 0.055)
-	tween.tween_property(reel, "position:z", 0.0, 0.12)
+	tween.set_trans(Tween.TRANS_BACK)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.tween_property(reel, "position:z", resting_depth - 0.035, 0.055)
+	tween.tween_property(reel, "position:z", resting_depth, 0.12)
 
 
 func _finish_spin_visual(record: Dictionary) -> void:
