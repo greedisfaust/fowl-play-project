@@ -5,13 +5,13 @@ extends RefCounted
 const SYMBOLS: Array[String] = ["SEVEN", "ROOSTER", "WILD", "CHICK", "EGG", "CORN", "FEATHER"]
 const SYMBOL_WEIGHTS: Array[int] = [4, 10, 8, 14, 16, 22, 26]
 const PAYOUTS: Dictionary = {
-	"SEVEN": 100.0,
-	"ROOSTER": 25.0,
-	"CHICK": 12.0,
-	"EGG": 8.0,
-	"CORN": 5.0,
-	"FEATHER": 2.0,
-	"WILD": 50.0,
+	"SEVEN": 28.0,
+	"ROOSTER": 7.0,
+	"CHICK": 3.2,
+	"EGG": 2.2,
+	"CORN": 1.3,
+	"FEATHER": 0.5,
+	"WILD": 14.0,
 }
 const PAYLINES: Array[Array] = [
 	[1, 1, 1], # center
