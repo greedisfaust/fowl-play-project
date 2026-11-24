@@ -29,11 +29,14 @@ signal global_announcement(message: String, category: String, priority: int)
 @export var table_id: String = ""
 @export var game_id: String = ""
 @export_range(1, 4, 1) var max_participants: int = 4
+@export_group("Shared Wager Rules")
+@export_range(0.0, 0.75, 0.01) var quota_safety_bias: float = 0.15
 
 var state: TableState = TableState.IDLE
 var current_round_id: String = ""
 
 var _wallet: Node = null
+var _day_manager: Node = null
 var _debug_hub: Node = null
 var _inside_proximity: Dictionary = {}
 var _participants: Dictionary = {}
@@ -43,6 +46,7 @@ var _open_round_inactivity_remaining: float = 0.0
 func _ready() -> void:
 	add_to_group("casino_tables")
 	_wallet = get_node_or_null("/root/CasinoWallet")
+	_day_manager = get_node_or_null("/root/CasinoDayManager")
 	_debug_hub = get_node_or_null("/root/DebugHub")
 	if _wallet == null:
 		push_error("BaseTable requires the CasinoWallet autoload.")
@@ -366,6 +370,77 @@ func get_round_wagers() -> Array[Dictionary]:
 		return []
 	var result: Array[Dictionary] = _wallet.call("get_round_wagers", table_id, current_round_id)
 	return result
+
+## Shared live wager limits for every casino table.
+## Profiles provide per-game ceilings; the wallet and active day quota determine
+## what the team can safely wager right now. Host-side wager paths recheck these
+## limits immediately before reserving funds.
+func get_wager_limits() -> Dictionary:
+	var profile: BettingTerminalProfile = _get_betting_terminal_profile()
+	var profile_minimum: int = profile.get_effective_minimum() if profile != null else 100
+	var profile_maximum: int = profile.get_effective_maximum() if profile != null else 5000
+	var available: int = 0
+	if is_instance_valid(_wallet) and _wallet.has_method("get_snapshot"):
+		var wallet_snapshot: Dictionary = _wallet.call("get_snapshot")
+		available = maxi(int(wallet_snapshot.get("available_balance", 0)), 0)
+
+	var quota: int = 0
+	var quota_balance: int = available
+	if is_instance_valid(_day_manager) and bool(_day_manager.get("day_active")):
+		quota = maxi(int(_day_manager.get("daily_quota")), 0)
+		quota_balance = maxi(int(_day_manager.get("current_wallet_balance")), 0)
+	var quota_remaining: int = maxi(quota - quota_balance, 0)
+	var safety_reserve: int = ceili(float(quota) * quota_safety_bias) if quota > 0 else 0
+	var spendable: int = maxi(available - safety_reserve, 0)
+	var quota_cap: int = quota_remaining if quota_remaining > 0 else spendable
+	var maximum: int = mini(profile_maximum, mini(spendable, quota_cap))
+	var minimum: int = profile_minimum
+	if quota_remaining > 0:
+		minimum = mini(minimum, maxi(quota_remaining, 1))
+	minimum = mini(minimum, maximum) if maximum > 0 else 0
+
+	return {
+		"minimum": minimum,
+		"maximum": maximum,
+		"available_balance": available,
+		"quota": quota,
+		"quota_remaining": quota_remaining,
+		"safety_reserve": safety_reserve,
+		"spendable_balance": spendable,
+		"profile_minimum": profile_minimum,
+		"profile_maximum": profile_maximum,
+	}
+
+
+func _get_betting_terminal_profile() -> BettingTerminalProfile:
+	var display: Node = null
+	# Egg Plinko exposes its display controller as an exported scene reference;
+	# Chicken Cross uses a sibling named BettingTerminalDisplay.
+	for property_info: Dictionary in get_property_list():
+		if str(property_info.get("name", "")) == "terminal_display":
+			display = get("terminal_display") as Node
+			break
+	if not is_instance_valid(display):
+		display = get_node_or_null("BettingTerminalDisplay")
+	if is_instance_valid(display):
+		var profile_value: Variant = display.get("profile")
+		if profile_value is BettingTerminalProfile:
+			return profile_value as BettingTerminalProfile
+	return _find_betting_terminal_profile(self)
+
+
+func _find_betting_terminal_profile(parent_node: Node) -> BettingTerminalProfile:
+	for child: Node in parent_node.get_children():
+		for property_info: Dictionary in child.get_property_list():
+			if str(property_info.get("name", "")) != "profile":
+				continue
+			var profile_value: Variant = child.get("profile")
+			if profile_value is BettingTerminalProfile:
+				return profile_value as BettingTerminalProfile
+		var nested_profile: BettingTerminalProfile = _find_betting_terminal_profile(child)
+		if nested_profile != null:
+			return nested_profile
+	return null
 
 func get_snapshot() -> Dictionary:
 	return {
