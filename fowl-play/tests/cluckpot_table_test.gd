@@ -122,6 +122,13 @@ func _run() -> void:
 						if is_instance_valid(visible_icon) and visible_icon.texture != null and visible_icon.texture.resource_path == expected_path:
 							aligned_faces += 1
 			_check(aligned_faces == 9, "All nine final visible reel symbols match the authoritative spin outcome")
+			var persistent_reels: int = 0
+			for reel_index: int in range(3):
+				var reel_node: Node3D = visual_builder.reel_drums[reel_index]
+				var drum_core: MeshInstance3D = reel_node.get_node_or_null("CylindricalDrum") as MeshInstance3D
+				if is_instance_valid(reel_node) and is_instance_valid(drum_core) and drum_core.visible and reel_node.quaternion.is_equal_approx(Quaternion.IDENTITY):
+					persistent_reels += 1
+			_check(persistent_reels == 3, "All three cylindrical drums remain present, visible, and at their home orientation after stopping")
 			var wallet_snapshot: Dictionary = wallet.call("get_snapshot")
 			_check(int(wallet_snapshot.get("reserved_total", 0)) == 0, "Spin settlement releases the reserved wager")
 			var wager: Dictionary = wallet.call("get_wager", str(spin.get("wager_id", "")))
