@@ -62,6 +62,18 @@ func _run() -> void:
 	_check(str(first_wager.get("status", "")) == "settled", "First egg's independent wallet round settles")
 	_check(str(second_wager.get("status", "")) == "settled", "Second egg's independent wallet round settles")
 
+	_check_result(keypad.call("handle_button_input", &"MIN", 1), true, "Select the minimum wager for day-end cleanup test")
+	_check_result(keypad.call("handle_button_input", &"CONFIRM", 1), true, "Confirm the cleanup-test wager")
+	var cleanup_drop: Dictionary = table.call("_handle_plinko_drop", 1)
+	_check_result(cleanup_drop, true, "Launch an egg before casino cleanup")
+	var cleanup_result: Dictionary = table.call("request_day_end_cleanup", "test_day_end")
+	_check_result(cleanup_result, true, "Casino cleanup settles airborne Plinko eggs")
+	_check(int(cleanup_result.get("settled_count", 0)) == 1, "Cleanup settles the in-flight egg immediately")
+	_check(table.call("get_active_egg_records").is_empty(), "Day-end cleanup clears active egg visuals")
+	var cleanup_wager: Dictionary = wallet.call("get_wager", str(cleanup_drop.get("wager_id", "")))
+	_check(str(cleanup_wager.get("status", "")) == "settled", "Day-end cleanup preserves the individual wallet settlement")
+	_check(int(wallet.call("get_snapshot")["reserved_total"]) == 0, "Day-end cleanup leaves no locked Plinko stakes")
+
 	table.queue_free()
 	if _failed:
 		quit(1)
