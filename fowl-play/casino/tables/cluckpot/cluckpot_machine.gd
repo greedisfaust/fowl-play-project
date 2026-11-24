@@ -188,12 +188,23 @@ func _set_reel_preview(reel_index: int, step: int) -> void:
 	if reel_index < 0 or reel_index >= _reel_cells.size():
 		return
 	var symbols: Array[String] = Rules.SYMBOLS
-	var offset: int = posmod(step + reel_index * 3, symbols.size())
 	var builder: CluckpotVisualBuilder = _visuals as CluckpotVisualBuilder
 	for row_index: int in range(3):
 		var cell: Node3D = _reel_cells[reel_index][row_index] as Node3D
-		if is_instance_valid(builder) and is_instance_valid(cell):
-			builder.set_symbol_icon(cell, symbols[posmod(offset + row_index, symbols.size())])
+		if not is_instance_valid(builder) or not is_instance_valid(cell):
+			continue
+		var next_y: float = cell.position.y - 0.31
+		var scroll_tween: Tween = create_tween()
+		scroll_tween.set_trans(Tween.TRANS_SINE)
+		scroll_tween.set_ease(Tween.EASE_IN_OUT)
+		scroll_tween.tween_property(cell, "position:y", next_y, 0.105)
+		scroll_tween.tween_callback(func() -> void:
+			if not is_instance_valid(cell):
+				return
+			if cell.position.y < 1.10:
+				cell.position.y = 1.88
+				builder.set_symbol_icon(cell, symbols[posmod(step + row_index * 2 + reel_index, symbols.size())])
+		)
 
 
 func _show_final_reel(reel_index: int, column: Array) -> void:
@@ -203,6 +214,7 @@ func _show_final_reel(reel_index: int, column: Array) -> void:
 	for row_index: int in range(mini(column.size(), 3)):
 		var cell: Node3D = _reel_cells[reel_index][row_index] as Node3D
 		if is_instance_valid(builder) and is_instance_valid(cell):
+			cell.position.y = 1.88 - float(row_index) * 0.31
 			builder.set_symbol_icon(cell, str(column[row_index]))
 
 
