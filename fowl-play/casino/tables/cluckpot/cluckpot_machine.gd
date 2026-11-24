@@ -189,7 +189,7 @@ func _play_spin_visual(record: Dictionary) -> void:
 		# Randomize the starting phase, but always finish at an exact whole revolution.
 		# Eight turns gives a recognizable mechanical spin rather than symbol shuffling.
 		var start_phase: float = visual_rng.randf_range(0.0, TAU)
-		drum.rotation.x = start_phase
+		drum.quaternion = Quaternion(Vector3.RIGHT, wrapf(start_phase, 0.0, TAU))
 		var reel_duration: float = duration - float(2 - reel_index) * 0.42
 		var acceleration_end: float = start_phase + TAU * 0.65
 		var cruise_end: float = TAU * 6.6
@@ -208,15 +208,19 @@ func _play_spin_visual(record: Dictionary) -> void:
 func _set_reel_drum_angle(angle: float, reel_index: int) -> void:
 	if reel_index < 0 or reel_index >= _reel_drums.size():
 		return
-	# Drive the basis from a scalar so Euler-angle normalization cannot collapse full turns.
-	_reel_drums[reel_index].rotation = Vector3(angle, 0.0, 0.0)
+	# Store only the wrapped physical orientation. Keeping eight-turn Euler values
+	# on Node3D can accumulate a large angle and produce an unstable final basis.
+	var wrapped_angle: float = wrapf(angle, 0.0, TAU)
+	_reel_drums[reel_index].quaternion = Quaternion(Vector3.RIGHT, wrapped_angle)
 
 
 func _on_reel_spin_finished(reel_index: int, record: Dictionary) -> void:
 	if str(_active_spin.get("round_id", "")) != str(record.get("round_id", "")):
 		return
 	# The drum has landed at an exact whole turn. Do not swap or redraw its front symbols.
-	_reel_drums[reel_index].rotation = Vector3(TAU * 8.0, 0.0, 0.0)
+	# Land on an exact identity orientation so the pinned center/top/bottom
+	# symbols remain facing the viewing window after the tween is finished.
+	_reel_drums[reel_index].quaternion = Quaternion.IDENTITY
 	_reel_stop_pulse(reel_index)
 	_reels_stopped += 1
 	if _reels_stopped >= 3:
