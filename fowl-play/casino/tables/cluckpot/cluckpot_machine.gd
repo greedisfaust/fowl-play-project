@@ -417,6 +417,30 @@ func _animate_lever() -> void:
 	tween.parallel().tween_property(grip, "position:y", 2.1, 0.3)
 
 
+func _set_status(header: String, detail: String = "") -> void:
+	if not is_instance_valid(_wager_screen):
+		return
+	var screen_text: ScreenText = _wager_screen.get_screen_text()
+	if screen_text == null:
+		return
+	var body: String = header
+	if not detail.is_empty():
+		body += "\n" + detail
+	screen_text.set_content("CLUCKPOT / %02d" % machine_number, body, "GOLDEN COOP")
+
+
+func _flash_win(won: bool, jackpot: bool = false) -> void:
+	var frame: MeshInstance3D = _visuals.get_node_or_null("Cabinet/PaylineGold") as MeshInstance3D
+	if not is_instance_valid(frame):
+		return
+	var material: StandardMaterial3D = frame.material_override as StandardMaterial3D
+	if not is_instance_valid(material):
+		return
+	material.emission_enabled = true
+	material.emission = Color("#ffbd58")
+	material.emission_energy_multiplier = 5.0 if jackpot else (2.5 if won else 0.25)
+
+
 func _format_money(amount: int) -> String:
 	return "$" + Rules.format_money(amount)
 
