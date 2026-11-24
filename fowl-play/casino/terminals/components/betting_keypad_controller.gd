@@ -15,6 +15,7 @@ const TABLE_STATE_OPEN: int = 1
 @export var display: Node
 @export var profile: BettingTerminalProfile
 @export var one_wager_per_player: bool = true
+@export var selection_only: bool = false
 
 var _wallet: Node = null
 var _network: Node = null
@@ -107,13 +108,13 @@ func handle_button_input(button_id: StringName, peer_id: int) -> Dictionary:
 			_publish_snapshot()
 			return _success({"pending_amount": get_pending_wager_amount()})
 		"MIN":
-			return _apply_wager_preset(profile.get_effective_minimum())
+			return _apply_wager_preset(_get_wager_limits()["minimum"])
 		"QUARTER", "1/4", "ONE_QUARTER", "QTR":
 			return _apply_balance_fraction(4)
 		"HALF", "1/2", "ONE_HALF":
 			return _apply_balance_fraction(2)
 		"MAX":
-			var maximum_value: int = profile.get_effective_maximum() if profile != null else 2147483647
+			var maximum_value: int = int(_get_wager_limits()["maximum"])
 			return _apply_wager_preset(mini(maximum_value, _get_available_balance()))
 		"CONFIRM", "ENTER", "OK", "SUBMIT":
 			var submitted_amount: int = get_pending_wager_amount()
@@ -130,19 +131,32 @@ func _apply_balance_fraction(divisor: int) -> Dictionary:
 	if divisor <= 0:
 		return _failure("Invalid wager preset.")
 	var amount: int = floori(float(_get_available_balance()) / float(divisor))
-	var maximum_value: int = profile.get_effective_maximum() if profile != null else 2147483647
+	var maximum_value: int = int(_get_wager_limits()["maximum"])
 	amount = mini(amount, maximum_value)
 	return _apply_wager_preset(amount)
 
 
 func _apply_wager_preset(amount: int) -> Dictionary:
-	var minimum_value: int = profile.get_effective_minimum() if profile != null else 1
-	if _get_available_balance() < minimum_value:
-		return _failure("Available shared funds are below the minimum wager.")
-	var adjusted_amount: int = clampi(amount, minimum_value, mini(profile.get_effective_maximum(), _get_available_balance())) if profile != null else maxi(amount, minimum_value)
+	var limits: Dictionary = _get_wager_limits()
+	var minimum_value: int = int(limits["minimum"])
+	var maximum_value: int = int(limits["maximum"])
+	if maximum_value <= 0 or minimum_value <= 0:
+		return _failure("Available shared funds are below the current safe wager limit.")
+	var adjusted_amount: int = clampi(amount, minimum_value, maximum_value)
 	_pending_digits = str(adjusted_amount)
 	_publish_snapshot()
 	return _success({"pending_amount": adjusted_amount})
+
+
+func _get_wager_limits() -> Dictionary:
+	if is_instance_valid(table) and table.has_method("get_wager_limits"):
+		var dynamic_limits: Variant = table.call("get_wager_limits")
+		if typeof(dynamic_limits) == TYPE_DICTIONARY:
+			return dynamic_limits
+	return {
+		"minimum": profile.get_effective_minimum() if profile != null else 1,
+		"maximum": profile.get_effective_maximum() if profile != null else 2147483647,
+	}
 
 
 func _get_available_balance() -> int:
@@ -180,10 +194,21 @@ func _confirm_pending_wager(peer_id: int) -> Dictionary:
 	if not is_instance_valid(table):
 		return _failure("The betting table is unavailable.")
 	var amount: int = get_pending_wager_amount()
-	var minimum_value: int = profile.get_effective_minimum() if profile != null else 1
-	var maximum_value: int = profile.get_effective_maximum() if profile != null else 2147483647
+	var limits: Dictionary = _get_wager_limits()
+	var minimum_value: int = int(limits["minimum"])
+	var maximum_value: int = int(limits["maximum"])
 	if amount < minimum_value or amount > maximum_value:
 		return _failure("Wager must be between %d and %d." % [minimum_value, maximum_value])
+	if selection_only:
+		if not table.has_method("set_selected_wager"):
+			return _failure("This table does not support selected wagers.")
+		var selection_result: Dictionary = table.call("set_selected_wager", peer_id, amount)
+		if bool(selection_result.get("ok", false)):
+			_pending_digits = "0"
+			_last_confirmation_status = "SELECTED %s" % _format_money(amount)
+			_publish_snapshot()
+			wager_confirmation_result.emit(peer_id, selection_result.duplicate(true))
+		return selection_result
 	if not is_instance_valid(_wallet) or not _wallet.has_method("get_snapshot"):
 		return _failure("The shared wallet is unavailable.")
 	var wallet_snapshot: Dictionary = _wallet.call("get_snapshot")
