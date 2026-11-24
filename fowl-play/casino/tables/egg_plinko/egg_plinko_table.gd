@@ -194,7 +194,7 @@ func _rpc_clear_active_eggs(egg_ids: Array[String]) -> void:
 		if is_instance_valid(egg_node):
 			egg_node.queue_free()
 		_egg_nodes.erase(egg_id)
-	_selected_wagers.clear()
+	_selected_wager = 0
 	_update_terminal_status()
 
 
