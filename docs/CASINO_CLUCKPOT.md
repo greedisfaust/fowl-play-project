@@ -4,12 +4,12 @@ Cluckpot is a four-cabinet slot-machine bank presented as one selectable casino 
 
 ## Cabinet and interaction
 
-- Each cabinet is a classic mechanical slot machine with a cast-metal housing, burgundy enamel face, polished brass bezel, walnut foot, physical side lever, and collision.
-- A standard `WorldScreen` is mounted above the reel window. It shows the live keypad draft plus the day's minimum and maximum wager, selected amount, and spin result. It is not a terminal screen or a Slim/Fat terminal housing.
+- Each cabinet uses a cool cast-silver body, deep burgundy enamel, restrained champagne-metal trim, walnut foot, a single Golden 7 crown medallion, physical side lever, and collision. Decorative labels and marquee text are intentionally omitted.
+- A larger, high-resolution standard `WorldScreen` is mounted above the reel window. Its large centered readout shows the day's minimum and maximum, current keypad draft, and spin result. Invalid or empty wagers are red; valid wagers are green. It is not a terminal screen or a Slim/Fat terminal housing.
 - The reels use modeled 3D symbol meshes: Golden 7, rooster, Golden Chicken wild, chick, egg, corn, feather, cherries, and lemon. Reel faces never display symbol-name text.
 - The visual builder is an editor tool. Generated cabinet meshes, symbols, and collision are owned by the authored scene so they can be inspected and adjusted in Godot.
 - Each cabinet instantiates the existing shared `BettingKeypad` and `BettingKeypadController` in selection-only mode. Confirming a valid wager immediately reserves the stake and starts the spin. There is no extra spin button.
-- Reels ramp up, cycle at speed, then decelerate and stop one at a time. The physical side lever pulls and the cabinet gives a small mechanical kick during the spin.
+- Reels use smooth vertical symbol scrolling with a slower ramp, longer anticipation, and staggered deceleration/stops. The physical side lever pulls and the cabinet gives a small mechanical kick during the spin.
 - Each machine is independent. A spin locks only that cabinet while its reels animate, so the other three remain available.
 - The host validates proximity and the selected wager, reserves the stake in `CasinoWallet`, rolls the outcome, and settles the individual spin. Clients receive the authoritative reel result and play the same staged stop animation.
 - In-flight spins settle using their precomputed payout during casino day-end cleanup.
