@@ -53,8 +53,8 @@ func _run() -> void:
 	_check_result(second_wager, true, "Second participant confirms a wager")
 	_check_result(table.call("update_wager", 2, first_wager_id, 150, {}), false, "A player cannot edit another player's wager")
 	_check(int(wallet.call("get_snapshot")["available_balance"]) == 700, "Both wagers reserve from shared funds")
-	var live_limits_after_wagers: Dictionary = table.call("get_wager_limits")
-	_check(int(live_limits_after_wagers.get("maximum", 0)) == 437, "Every table recalculates its maximum from the live wallet, quota gap, and safety reserve")
+	var limits_after_wagers: Dictionary = table.call("get_wager_limits")
+	_check(int(limits_after_wagers.get("maximum", 0)) == 737, "Daily wager maximum stays fixed after wallet reservations")
 
 	var exit_result: Dictionary = table.call("exit_proximity", 2)
 	_check_result(exit_result, true, "Leaving before start removes the participant")
