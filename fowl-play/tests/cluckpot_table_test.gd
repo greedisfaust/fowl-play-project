@@ -13,7 +13,8 @@ func _initialize() -> void:
 func _run() -> void:
 	_check(Rules.PAYOUTS["SEVEN"] > Rules.PAYOUTS["ROOSTER"], "Golden 7 is the top regular symbol payout")
 	_check(Rules.PAYOUTS["WILD"] > Rules.PAYOUTS["ROOSTER"], "Golden Chicken wild has a premium payout")
-	_check(Rules.PAYOUTS["CHERRY"] > Rules.PAYOUTS["LEMON"], "Cherry and lemon have distinct classic-slot payouts")
+	_check(Rules.PAYOUTS["CORN"] > Rules.PAYOUTS["WINGS"], "Chicken wings are a regular low-value payout symbol")
+	_check(Rules.SYMBOLS.size() == 7 and Rules.SYMBOLS.has("WINGS") and not Rules.SYMBOLS.has("CHERRY") and not Rules.SYMBOLS.has("LEMON"), "The symbol pool uses the seven uploaded Fowl Play assets")
 	var seven_columns: Array = [
 		["SEVEN", "CHICK", "EGG"],
 		["SEVEN", "CORN", "CORN"],
@@ -62,7 +63,9 @@ func _run() -> void:
 			_check(wager_screen.pixels_per_unit >= 2048 and wager_screen.font_size_ratio >= 0.1, "Wager WorldScreen uses high-resolution large typography")
 		_check(machine.get_node_or_null("Visuals/Cabinet/ButtonHousing") == null, "The cabinet has no redundant spin button")
 		var first_cell: Node = machine.get_node_or_null("Visuals/Cabinet/Reels/Reel_0/Cell_0/SymbolIcon")
-		_check(is_instance_valid(first_cell) and first_cell.get_child_count() > 0, "Reel symbols are modeled meshes rather than text labels")
+		_check(is_instance_valid(first_cell) and first_cell is Sprite3D, "Reel symbols use textured 3D sprites rather than primitive meshes")
+		if first_cell is Sprite3D:
+			_check((first_cell as Sprite3D).texture != null, "Every reel symbol loads its authored PNG artwork")
 		if first_machine == null:
 			first_machine = machine
 	_check(table_ids.size() == 4, "All four machine IDs are unique")
