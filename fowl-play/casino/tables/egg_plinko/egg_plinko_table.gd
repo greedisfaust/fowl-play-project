@@ -21,6 +21,7 @@ signal selected_wager_changed(peer_id: int, amount: int)
 @export_range(1, 128, 1) var maximum_airborne_eggs: int = 32
 @export_range(0.1, 10.0, 0.1) var egg_flight_duration: float = 3.4
 
+# _wallet is inherited from BaseTable; do not redeclare it here.
 var _network: Node
 var _day_manager: Node
 var _selected_wagers: Dictionary = {}
