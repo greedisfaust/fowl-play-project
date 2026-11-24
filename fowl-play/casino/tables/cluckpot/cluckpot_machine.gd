@@ -170,11 +170,11 @@ func _play_spin_visual(record: Dictionary) -> void:
 	var tween: Tween = create_tween()
 	tween.set_trans(Tween.TRANS_LINEAR)
 	for reel_index: int in range(3):
-		var reel_time: float = duration * (0.55 + float(reel_index) * 0.12)
+		var reel_time: float = duration * (0.25 + float(reel_index) * 0.08)
 		var spin_step: Callable = func(step: int) -> void: _set_reel_preview(reel_index, step)
-		var ramp_steps: int = 4
-		var cruise_steps: int = 10
-		var stop_steps: int = 4
+		var ramp_steps: int = 2
+		var cruise_steps: int = 5
+		var stop_steps: int = 2
 		tween.tween_method(spin_step, 0, ramp_steps, reel_time * 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
 		tween.tween_method(spin_step, ramp_steps, ramp_steps + cruise_steps, reel_time * 0.52).set_trans(Tween.TRANS_LINEAR)
 		tween.tween_method(spin_step, ramp_steps + cruise_steps, ramp_steps + cruise_steps + stop_steps, reel_time * 0.28).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
