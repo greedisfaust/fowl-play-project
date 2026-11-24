@@ -340,11 +340,12 @@ func _setup_keypad() -> void:
 	readout_mesh.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	readout.mesh = readout_mesh
 	readout.position = Vector3(-0.48, 1.47, 1.34)
-	readout.material_override = StandardMaterial3D.new()
-	(readout.material_override as StandardMaterial3D).albedo_color = Color(1.0, 0.77, 0.31)
-	(readout.material_override as StandardMaterial3D).emission_enabled = true
-	(readout.material_override as StandardMaterial3D).emission = Color(1.0, 0.48, 0.08)
-	(readout.material_override as StandardMaterial3D).emission_energy_multiplier = 1.0
+	var readout_material := StandardMaterial3D.new()
+	readout_material.albedo_color = Color(1.0, 0.77, 0.31)
+	readout_material.emission_enabled = true
+	readout_material.emission = Color(1.0, 0.48, 0.08)
+	readout_material.emission_energy_multiplier = 1.0
+	readout.material_override = readout_material
 	add_child(readout)
 	_display = Node.new()
 	_display.name = "WagerDisplayAdapter"
