@@ -31,7 +31,7 @@ Once the quota is met, the remaining-quota cap is replaced by the spendable bala
 
 The minimum wager reduces with the remaining quota gap, and the maximum cannot exceed that gap until the quota is met. Neither limit can exceed the current safe spendable amount. The default safety bias is 15% and can be tuned on the EggPlinkoTable inspector. Launches are revalidated on the host, so an earlier egg's stake or another player's rapid launch cannot bypass the live limit.
 
-The board also caps concurrent airborne eggs at 32 by default. This is a presentation/performance guard, not a per-player click cooldown.
+The board also caps concurrent airborne eggs at 32 by default. This is a presentation/performance guard, not a per-player click cooldown. If the casino day ends or the team departs early, the table immediately settles every already-reserved egg using its host-resolved outcome, then clears the visuals on all peers. This prevents locked stakes from surviving a day transition.
 
 ## Multiplayer authority
 
@@ -51,5 +51,7 @@ The board, peg rows, rails, multiplier pockets, and table body are generated pro
 The terminal reuses the Chicken Cross Slim World Screen, BettingKeypad, BettingTerminalDisplay and BettingTerminalProfile systems. The keypad controller's selection-only mode is opt-in, so Chicken Cross keeps its existing one-wager-per-player flow.
 
 ## Verification
+
+The CasinoManager now registers Egg Plinko as the second built-in game, but the production catalog still requires twelve unique definitions before daily selection is enabled. Until the full roster is complete, the existing development fallback continues to spawn Chicken Cross. Open the Egg Plinko table scene directly to inspect it, or use the dedicated test runner.
 
 Run tests/run_egg_plinko_checks.bat on Windows with FOWL_PLAY_GODOT set to the Godot executable. The headless rules check covers deterministic paths, slot ranges and gross payout calculations. Full editor/physics/multiplayer validation still needs to be performed in Godot.
