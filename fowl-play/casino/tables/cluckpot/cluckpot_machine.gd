@@ -138,7 +138,7 @@ func _handle_spin(peer_id: int) -> Dictionary:
 		"line_wins": outcome["line_wins"],
 		"payout": payout,
 		"spin_duration": spin_duration,
-		"visual_seed": _rng.randi(),
+		"visual_seed": maxi(1, _rng.randi()),
 		"sequence": sequence,
 	}
 	_active_spin = record
