@@ -5,13 +5,13 @@ Cluckpot is a four-cabinet slot-machine bank presented as one selectable casino 
 ## Cabinet and interaction
 
 - Each cabinet uses a cool cast-silver body, deep burgundy enamel, restrained champagne-metal trim, walnut foot, a single Golden 7 crown medallion, physical side lever, and collision. Decorative labels and marquee text are intentionally omitted.
-- A larger, high-resolution standard `WorldScreen` is mounted above the reel window. Its large centered readout shows the day's minimum and maximum, current keypad draft, and spin result. Invalid or empty wagers are red; valid wagers are green. It is not a terminal screen or a Slim/Fat terminal housing.
+- A compact, high-resolution standard `WorldScreen` is mounted above the jackpot medallion, clear of the reel window and keypad. Its oversized centered readout shows the day's minimum and maximum, current keypad draft, and spin result. Invalid or empty wagers are red; valid wagers are green. It is not a terminal screen or a Slim/Fat terminal housing.
 - Each reel symbol is rendered from the supplied transparent PNG artwork in `assets/images/cluckpot/`, using a `Sprite3D` on an ivory reel tile. No symbol-name text or procedural animal/food meshes are used.
 - The seven-symbol pool is Golden 7, Golden Chicken (wild), normal chicken, baby chick, egg, corn, and chicken wings. Cherries, lemons, and feathers are not part of the game.
 - Chicken wings are a regular lower-value payout symbol. Golden Chicken substitutes for other symbols on winning lines; three Golden Chickens pay the wild line value.
 - The visual builder is an editor tool. Generated cabinet meshes, textured reel symbols, and collision are owned by the authored scene so they can be inspected and adjusted in Godot.
 - Each cabinet instantiates the existing shared `BettingKeypad` and `BettingKeypadController` in selection-only mode. Confirming a valid wager immediately reserves the stake and starts the spin. There is no extra spin button.
-- Reels use smooth vertical symbol scrolling with a slower ramp, longer anticipation, and staggered deceleration/stops. The physical side lever pulls and the cabinet gives a small mechanical kick during the spin.
+- All three reels continuously circulate their symbol tiles for a 4–6 second spin. Each accelerates, runs at a sustained speed, then decelerates and stops left-to-right with a short stagger; the final reel carries the anticipation. The physical side lever pulls and the cabinet gives a small mechanical kick during the spin.
 - Each machine is independent. A spin locks only that cabinet while its reels animate, so the other three remain available.
 - The host validates proximity and the selected wager, reserves the stake in `CasinoWallet`, rolls the outcome, and settles the individual spin. Clients receive the authoritative reel result and play the same staged stop animation.
 - In-flight spins settle using their precomputed payout during casino day-end cleanup.
