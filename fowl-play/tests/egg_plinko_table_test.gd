@@ -24,7 +24,8 @@ func _run() -> void:
 	var profile: Resource = display.get("profile")
 	var screen: Node3D = table.get_node("SlimWorldScreen") as Node3D
 	_check(screen.get("display_size") == Vector2(2.45, 1.12), "Terminal display retains its original physical size")
-	_check(screen.global_position.z > 1.3, "Terminal display sits in front of the cabinet face")
+	_check(screen.position.is_equal_approx(Vector3(-2.839, 1.83, 0.734)), "Terminal retains its requested authored spawn position")
+	_check(is_equal_approx(rad_to_deg(screen.rotation.y), 25.0), "Terminal retains its requested Y25 rotation")
 	var keypad_node: Node3D = table.get_node("BettingKeypad") as Node3D
 	_check(keypad_node.position.is_equal_approx(Vector3(-1.801, 1.227, 1.532)), "Keypad uses its authored cabinet position")
 	_check(is_equal_approx(rad_to_deg(keypad_node.rotation.x), 66.0) and is_equal_approx(rad_to_deg(keypad_node.rotation.y), 15.0), "Keypad uses its authored X66/Y15 rotation")
