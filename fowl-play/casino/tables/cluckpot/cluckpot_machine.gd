@@ -170,12 +170,14 @@ func _play_spin_visual(record: Dictionary) -> void:
 	var tween: Tween = create_tween()
 	tween.set_trans(Tween.TRANS_LINEAR)
 	for reel_index: int in range(3):
-		var reel_time: float = duration * (0.22 + float(reel_index) * 0.08)
-		var steps: int = 30 + reel_index * 12
-		tween.tween_method(
-			func(step: int) -> void: _set_reel_preview(reel_index, step),
-			0, steps, reel_time
-		)
+		var reel_time: float = duration * (0.21 + float(reel_index) * 0.07)
+		var spin_step: Callable = func(step: int) -> void: _set_reel_preview(reel_index, step)
+		var ramp_steps: int = 12
+		var cruise_steps: int = 42
+		var stop_steps: int = 10
+		tween.tween_method(spin_step, 0, ramp_steps, reel_time * 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+		tween.tween_method(spin_step, ramp_steps, ramp_steps + cruise_steps, reel_time * 0.52).set_trans(Tween.TRANS_LINEAR)
+		tween.tween_method(spin_step, ramp_steps + cruise_steps, ramp_steps + cruise_steps + stop_steps, reel_time * 0.28).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		tween.tween_callback(func() -> void: _show_final_reel(reel_index, symbols[reel_index]))
 		tween.tween_callback(func() -> void: _reel_stop_pulse(reel_index))
 		tween.tween_interval(0.12)
