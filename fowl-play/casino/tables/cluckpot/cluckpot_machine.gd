@@ -59,6 +59,7 @@ func set_selected_wager(peer_id: int, amount: int) -> Dictionary:
 	if minimum <= 0 or maximum <= 0 or amount < minimum or amount > maximum:
 		return _failure("Wager must be between %d and %d." % [minimum, maximum])
 	_selected_wagers[peer_id] = amount
+	_set_status("WAGER %s" % _format_money(amount))
 	selected_wager_changed.emit(peer_id, amount)
 	report_player_feedback(peer_id, "CLUCKPOT WAGER SET  /  %s" % _format_money(amount), &"success")
 	return _success({"peer_id": peer_id, "selected_wager": amount, "limits": limits})
@@ -163,6 +164,7 @@ func _rpc_play_spin(record: Dictionary) -> void:
 
 
 func _play_spin_visual(record: Dictionary) -> void:
+	_animate_lever()
 	var symbols: Array = record.get("symbols", [])
 	if symbols.size() != 3:
 		return
@@ -318,10 +320,28 @@ func _setup_keypad() -> void:
 	_keypad.position = Vector3(-0.48, 0.82, 1.08)
 	_keypad.rotation = Vector3(deg_to_rad(62.0), 0.0, 0.0)
 	add_child(_keypad)
+	var readout := MeshInstance3D.new()
+	readout.name = "WagerReadout"
+	var readout_mesh := TextMesh.new()
+	readout_mesh.text = "$0"
+	readout_mesh.font_size = 48
+	readout_mesh.pixel_size = 0.0025
+	readout_mesh.depth = 0.002
+	readout_mesh.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	readout_mesh.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	readout.mesh = readout_mesh
+	readout.position = Vector3(-0.48, 1.47, 1.34)
+	readout.material_override = StandardMaterial3D.new()
+	(readout.material_override as StandardMaterial3D).albedo_color = Color(1.0, 0.77, 0.31)
+	(readout.material_override as StandardMaterial3D).emission_enabled = true
+	(readout.material_override as StandardMaterial3D).emission = Color(1.0, 0.48, 0.08)
+	(readout.material_override as StandardMaterial3D).emission_energy_multiplier = 1.0
+	add_child(readout)
 	_display = Node.new()
 	_display.name = "WagerDisplayAdapter"
 	_display.set_script(load("res://casino/tables/cluckpot/cluckpot_wager_display.gd"))
 	_display.set("profile", Profile)
+	_display.set("amount_label", readout)
 	add_child(_display)
 	if _keypad.get_node_or_null("BettingKeypadController") != null:
 		return
@@ -386,6 +406,22 @@ func _peer_id_for_actor(actor: Node) -> int:
 
 func _validate_remote_action_sender() -> bool:
 	return is_instance_valid(_network) and _network.has_method("validate_rpc") and bool(_network.call("validate_rpc"))
+
+
+func _animate_lever() -> void:
+	var lever: MeshInstance3D = _visuals.get_node_or_null("Cabinet/LeverArm") as MeshInstance3D
+	var grip: MeshInstance3D = _visuals.get_node_or_null("Cabinet/LeverGrip") as MeshInstance3D
+	if not is_instance_valid(lever) or not is_instance_valid(grip):
+		return
+	var tween: Tween = create_tween()
+	tween.set_trans(Tween.TRANS_BACK)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.tween_property(lever, "rotation:z", 0.62, 0.22)
+	tween.parallel().tween_property(grip, "position:y", 1.48, 0.22)
+	tween.tween_interval(0.12)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.tween_property(lever, "rotation:z", deg_to_rad(-22.0), 0.3)
+	tween.parallel().tween_property(grip, "position:y", 1.86, 0.3)
 
 
 func _set_symbol_label(label: MeshInstance3D, symbol: String) -> void:
