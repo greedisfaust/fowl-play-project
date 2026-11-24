@@ -193,17 +193,25 @@ func _play_spin_visual(record: Dictionary) -> void:
 		var cruise_time: float = reel_duration * 0.62
 		var deceleration_time: float = reel_duration - acceleration_time - cruise_time
 		var reel_tween: Tween = create_tween()
-		reel_tween.tween_property(drum, "rotation:x", acceleration_end, acceleration_time).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
-		reel_tween.tween_property(drum, "rotation:x", cruise_end, cruise_time).set_trans(Tween.TRANS_LINEAR)
-		reel_tween.tween_property(drum, "rotation:x", final_rotation, deceleration_time).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		var angle_callback: Callable = Callable(self, "_set_reel_drum_angle").bind(reel_index)
+		reel_tween.tween_method(angle_callback, start_phase, acceleration_end, acceleration_time).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+		reel_tween.tween_method(angle_callback, acceleration_end, cruise_end, cruise_time).set_trans(Tween.TRANS_LINEAR)
+		reel_tween.tween_method(angle_callback, cruise_end, final_rotation, deceleration_time).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		reel_tween.tween_callback(Callable(self, "_on_reel_spin_finished").bind(reel_index, record))
+
+
+func _set_reel_drum_angle(angle: float, reel_index: int) -> void:
+	if reel_index < 0 or reel_index >= _reel_drums.size():
+		return
+	# Drive the basis from a scalar so Euler-angle normalization cannot collapse full turns.
+	_reel_drums[reel_index].rotation = Vector3(angle, 0.0, 0.0)
 
 
 func _on_reel_spin_finished(reel_index: int, record: Dictionary) -> void:
 	if str(_active_spin.get("round_id", "")) != str(record.get("round_id", "")):
 		return
 	# The drum has landed at an exact whole turn. Do not swap or redraw its front symbols.
-	_reel_drums[reel_index].rotation.x = TAU * 8.0
+	_reel_drums[reel_index].rotation = Vector3(TAU * 8.0, 0.0, 0.0)
 	_reel_stop_pulse(reel_index)
 	_reels_stopped += 1
 	if _reels_stopped >= 3:
