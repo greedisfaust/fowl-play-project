@@ -4,7 +4,9 @@ Cluckpot is a four-cabinet slot-machine bank presented as one selectable casino 
 
 ## Cabinet and interaction
 
-- Each cabinet is a procedural Art Deco machine with dark green enamel, brass/gold trim, a three-reel window, status fascia, mechanical side lever, spin button, and collision.
+- Each cabinet is a classic mechanical slot machine with a cast-metal housing, burgundy enamel face, polished brass bezel, walnut foot, physical side lever, and collision.
+- A standard `WorldScreen` is mounted above the reel window and shows the wager minimum, maximum, selected amount, and spin result. It is not a terminal or terminal-screen variant.
+- The reels use modeled 3D symbols: Golden 7, rooster/wild chicken, chick, egg, corn, feather, cherries, and lemon. No symbol names are printed on the reel faces.
 - The visual builder is an editor tool. Generated cabinet meshes and collision are owned by the authored scene so they can be inspected and adjusted in Godot.
 - Each cabinet instantiates the existing shared `BettingKeypad` and `BettingKeypadController` in selection-only mode. There is no terminal screen; wager status and spin results are shown on the cabinet fascia.
 - Each machine is independent. A spin locks only that cabinet while its reels animate, so the other three remain available.
@@ -35,7 +37,7 @@ The symbol weights and five-line paytable target approximately 97% theoretical r
 - `cluckpot_visual_builder.gd` — editor-time procedural cabinet and reel visuals.
 - `cluckpot_rules.gd` — symbol weighting, paylines, and payout calculation.
 - `cluckpot_profile.tres` — shared keypad wager profile.
-- `cluckpot_wager_display.gd` — screenless adapter for the existing keypad controller.
+- `cluckpot_wager_display.gd` — adapter for the existing keypad controller.
 
 ## Checks
 
