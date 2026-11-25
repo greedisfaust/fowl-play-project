@@ -45,3 +45,8 @@ The single-line multipliers are 4.5× the former per-line values to make the one
 ## Checks
 
 Run `tests/run_cluckpot_checks.bat` after setting `FOWL_PLAY_GODOT`. The checks cover Golden 7 and wild payouts, all thirty wrapped symbol faces, non-occluding cylindrical drum cores and end caps, exact final-symbol alignment with the host outcome, the enlarged WorldScreen placement, four independent machines, WorldScreen/keypad integration, and host-side wallet settlement.
+
+
+## Repeat-spin convenience
+
+After a player confirms their first wager, Cluckpot retains that player's selected amount for the rest of the casino day. The keypad's numeric draft clears as usual, but pressing CONFIRM again with an empty draft immediately starts another spin at the retained amount. Every repeat is a new independently reserved and settled wager; the current shared-wallet balance and daily wager limits are still validated for each spin. Entering a new amount and confirming replaces the retained selection.
