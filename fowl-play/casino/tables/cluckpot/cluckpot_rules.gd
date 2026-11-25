@@ -45,37 +45,51 @@ static func _roll_symbol(rng: RandomNumberGenerator) -> String:
 
 static func evaluate_lines(columns: Array) -> Array[Dictionary]:
 	var wins: Array[Dictionary] = []
+	# Reject malformed outcomes rather than allowing an incomplete reel to pay.
 	if columns.size() != 3:
 		return wins
-	for line_index: int in range(PAYLINES.size()):
-		var line: Array = PAYLINES[line_index]
-		var symbols: Array[String] = []
-		for reel_index: int in range(3):
-			var column: Array = columns[reel_index]
-			symbols.append(str(column[int(line[reel_index])]))
-		var matched: String = _resolve_match(symbols)
-		if matched.is_empty():
-			continue
-		wins.append({
-			"line": line_index,
-			"symbol": matched,
-			"multiplier": float(PAYOUTS[matched]),
-		})
+	for column: Variant in columns:
+		if not column is Array or column.size() != 3:
+			return wins
+		for symbol: Variant in column:
+			if not SYMBOLS.has(str(symbol)):
+				return wins
+
+	# There is exactly one payline: the three symbols physically facing the player.
+	# Keep this explicit instead of relying on a configurable line loop.
+	var center_symbols: Array[String] = [
+		str(columns[0][1]),
+		str(columns[1][1]),
+		str(columns[2][1]),
+	]
+	var matched: String = _resolve_match(center_symbols)
+	if matched.is_empty():
+		return wins
+	wins.append({
+		"line": 0,
+		"symbol": matched,
+		"multiplier": float(PAYOUTS[matched]),
+	})
 	return wins
 
 
 static func _resolve_match(symbols: Array[String]) -> String:
 	if symbols.size() != 3:
 		return ""
+	# A win requires all three positions to resolve to the same symbol.
+	# Wilds may substitute, but two matching symbols alone never pay.
 	var chosen: String = ""
+	var wild_count: int = 0
 	for symbol: String in symbols:
-		if symbol != "WILD":
-			if chosen.is_empty():
-				chosen = symbol
-			elif symbol != chosen:
-				return ""
+		if symbol == "WILD":
+			wild_count += 1
+			continue
+		if chosen.is_empty():
+			chosen = symbol
+		elif symbol != chosen:
+			return ""
 	if chosen.is_empty():
-		return "WILD"
+		return "WILD" if wild_count == 3 else ""
 	return chosen
 
 
