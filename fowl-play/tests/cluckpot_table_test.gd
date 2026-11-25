@@ -15,25 +15,33 @@ func _run() -> void:
 	_check(Rules.PAYOUTS["WILD"] > Rules.PAYOUTS["ROOSTER"], "Golden Chicken wild has a premium payout")
 	_check(Rules.PAYOUTS["CORN"] > Rules.PAYOUTS["WINGS"], "Chicken wings are a regular low-value payout symbol")
 	_check(Rules.SYMBOLS.size() == 7 and Rules.SYMBOLS.has("WINGS") and not Rules.SYMBOLS.has("CHERRY") and not Rules.SYMBOLS.has("LEMON"), "The symbol pool uses the seven uploaded Fowl Play assets")
+	_check(Rules.PAYLINES.size() == 1 and Rules.PAYLINES[0] == [1, 1, 1], "Cluckpot evaluates only the single front-facing center payline")
 	var seven_columns: Array = [
-		["SEVEN", "CHICK", "EGG"],
-		["SEVEN", "CORN", "CORN"],
-		["SEVEN", "EGG", "WINGS"],
+		["CHICK", "SEVEN", "EGG"],
+		["CORN", "SEVEN", "CORN"],
+		["EGG", "SEVEN", "WINGS"],
 	]
 	var seven_wins: Array[Dictionary] = Rules.evaluate_lines(seven_columns)
 	_check(not seven_wins.is_empty() and str(seven_wins[0].get("symbol", "")) == "SEVEN", "Three Golden 7s form a winning line")
-	_check(Rules.calculate_payout(100, {"line_wins": seven_wins}) >= 2800, "Golden 7 line pays the top multiplier")
+	_check(Rules.calculate_payout(100, {"line_wins": seven_wins}) == 14000, "Single Golden 7 line pays the boosted 140x multiplier")
+	var off_line_columns: Array = [
+		["SEVEN", "CHICK", "EGG"],
+		["SEVEN", "CORN", "WINGS"],
+		["SEVEN", "ROOSTER", "CHICK"],
+	]
+	_check(Rules.evaluate_lines(off_line_columns).is_empty(), "Matching symbols outside the center line never pay")
 	var wild_columns: Array = [
-		["ROOSTER", "CHICK", "EGG"],
-		["WILD", "CORN", "WINGS"],
-		["ROOSTER", "EGG", "CORN"],
+		["CHICK", "ROOSTER", "EGG"],
+		["CORN", "WILD", "EGG"],
+		["WINGS", "ROOSTER", "CORN"],
 	]
 	var wild_wins: Array[Dictionary] = Rules.evaluate_lines(wild_columns)
 	var found_rooster: bool = false
 	for win: Dictionary in wild_wins:
 		if str(win.get("symbol", "")) == "ROOSTER":
 			found_rooster = true
-	_check(found_rooster, "Golden Chicken wild substitutes into a matching rooster line")
+	_check(found_rooster, "Golden Chicken wild substitutes into a matching rooster center line")
+	_check(Rules.PAYOUTS["SEVEN"] == 140.0 and Rules.PAYOUTS["WILD"] == 70.0, "Single-line premium multipliers compensate for the reduced number of paylines")
 
 	var arcade: Node3D = ArcadeScene.instantiate() as Node3D
 	_check(is_instance_valid(arcade), "Cluckpot arcade scene instantiates")
