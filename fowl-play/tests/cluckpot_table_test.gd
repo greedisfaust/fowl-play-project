@@ -161,6 +161,20 @@ func _run() -> void:
 			first_machine.call("_play_win_confetti", false)
 			var confetti_burst: Node3D = first_machine.get_node_or_null("Visuals/WinConfettiBurst") as Node3D
 			_check(is_instance_valid(confetti_burst) and confetti_burst.get_child_count() >= 40, "A winning Cluckpot creates a visible gold-and-red confetti celebration on its own cabinet")
+
+			# After the first wager is selected, the keypad draft is empty. A
+			# second blank Confirm must reuse the saved amount for a fresh spin.
+			var keypad_controller: Node = first_machine.get_node_or_null("BettingKeypad/BettingKeypadController")
+			_check(is_instance_valid(keypad_controller), "Cluckpot exposes its shared keypad controller")
+			if is_instance_valid(keypad_controller):
+				_check(int(keypad_controller.call("get_pending_wager_amount")) == 0, "The keypad draft is empty after the first spin")
+				var retained_stake: int = int(first_machine.call("get_selected_wager", 1))
+				var repeat_spin: Dictionary = keypad_controller.call("handle_button_input", &"CONFIRM", 1)
+				_check(bool(repeat_spin.get("ok", false)), "Blank Confirm immediately starts another spin with the retained wager")
+				_check(int(repeat_spin.get("stake", 0)) == retained_stake and retained_stake == stake, "Repeat Confirm charges the same saved wager amount")
+				_check(int(first_machine.call("get_selected_wager", 1)) == retained_stake, "The selected wager remains saved after repeat confirmation")
+				await create_timer(5.6).timeout
+				_check(str(first_machine.get("last_spin_result").get("round_id", "")) == str(repeat_spin.get("round_id", "")), "The repeat-confirm spin completes and settles normally")
 			var wallet_snapshot: Dictionary = wallet.call("get_snapshot")
 			_check(int(wallet_snapshot.get("reserved_total", 0)) == 0, "Spin settlement releases the reserved wager")
 			var wager: Dictionary = wallet.call("get_wager", str(spin.get("wager_id", "")))
