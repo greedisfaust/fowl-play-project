@@ -144,6 +144,9 @@ func _run() -> void:
 				if is_instance_valid(reel_node) and is_equal_approx(reel_node.position.z, expected_depth):
 					resting_depths += 1
 			_check(resting_depths == 3, "All three reels return to their original forward depth after the stop bounce")
+			first_machine.call("_play_win_confetti", false)
+			var confetti_burst: Node3D = first_machine.get_node_or_null("Visuals/WinConfettiBurst") as Node3D
+			_check(is_instance_valid(confetti_burst) and confetti_burst.get_child_count() >= 40, "A winning Cluckpot creates a visible gold-and-red confetti celebration on its own cabinet")
 			var wallet_snapshot: Dictionary = wallet.call("get_snapshot")
 			_check(int(wallet_snapshot.get("reserved_total", 0)) == 0, "Spin settlement releases the reserved wager")
 			var wager: Dictionary = wallet.call("get_wager", str(spin.get("wager_id", "")))
