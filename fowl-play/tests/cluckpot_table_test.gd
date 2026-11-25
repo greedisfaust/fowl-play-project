@@ -30,6 +30,20 @@ func _run() -> void:
 		["SEVEN", "ROOSTER", "CHICK"],
 	]
 	_check(Rules.evaluate_lines(off_line_columns).is_empty(), "Matching symbols outside the center line never pay")
+	var mismatched_front_row: Array = [
+		["EGG", "CORN", "CHICK"],
+		["CHICK", "ROOSTER", "ROOSTER"],
+		["EGG", "ROOSTER", "WINGS"],
+	]
+	var mismatched_wins: Array[Dictionary] = Rules.evaluate_lines(mismatched_front_row)
+	_check(mismatched_wins.is_empty(), "Corn, rooster, rooster on the visible center line is not a win")
+	_check(Rules.calculate_payout(100, {"line_wins": mismatched_wins}) == 0, "A two-of-a-kind center line pays nothing")
+	var malformed_columns: Array = [
+		["CORN", "ROOSTER", "WINGS"],
+		["CORN", "ROOSTER"],
+		["CORN", "ROOSTER", "WINGS"],
+	]
+	_check(Rules.evaluate_lines(malformed_columns).is_empty(), "Malformed reel data is rejected without awarding a payout")
 	var wild_columns: Array = [
 		["CHICK", "ROOSTER", "EGG"],
 		["CORN", "WILD", "EGG"],
