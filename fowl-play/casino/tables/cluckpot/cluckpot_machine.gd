@@ -84,6 +84,14 @@ func get_selected_wager(peer_id: int = 0) -> int:
 	return int(_selected_wagers.get(peer_id, 0))
 
 
+## Called by the shared keypad when Confirm is pressed with an empty draft.
+## The saved wager is charged again as a fresh, independently settled spin.
+func confirm_selected_wager(peer_id: int) -> Dictionary:
+	if get_selected_wager(peer_id) <= 0:
+		return _reject_spin(peer_id, "SELECT A WAGER ON THE KEYPAD FIRST.")
+	return _handle_spin(peer_id)
+
+
 func get_shared_selected_wager() -> int:
 	var peer_ids: Array = _selected_wagers.keys()
 	if peer_ids.is_empty():
