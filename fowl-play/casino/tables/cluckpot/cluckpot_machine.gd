@@ -256,6 +256,8 @@ func _finish_spin_visual(record: Dictionary) -> void:
 		result_text = ("GOLDEN JACKPOT! " if jackpot else "WIN ") + _format_money(payout)
 	_set_status(result_text, "STAKE %s  /  RETURN %s" % [_format_money(int(record.get("stake", 0))), _format_money(payout)])
 	_flash_win(payout > 0, jackpot)
+	if payout > 0:
+		_play_win_confetti(jackpot)
 	if not _is_authority():
 		_active_spin.clear()
 		_spin_locked = false
@@ -457,6 +459,74 @@ func _set_status(header: String, detail: String = "") -> void:
 	if screen_text == null:
 		return
 	screen_text.show_layout(ScreenText.LAYOUT_WARNING, header, detail)
+
+
+
+func _play_win_confetti(jackpot: bool = false) -> void:
+	# Cosmetic celebration is local to this cabinet instance, so four Cluckpots
+	# can celebrate independently without affecting another machine.
+	var burst := Node3D.new()
+	burst.name = "WinConfettiBurst"
+	_visuals.add_child(burst)
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	var piece_count: int = 64 if jackpot else 44
+	var gold := Color("#ffd36a")
+	var red := Color("#c92e38")
+	var cream := Color("#fff0cf")
+	for index: int in range(piece_count):
+		var piece := MeshInstance3D.new()
+		piece.name = "Confetti_%02d" % index
+		var mesh := BoxMesh.new()
+		mesh.size = Vector3(
+			rng.randf_range(0.025, 0.055),
+			rng.randf_range(0.012, 0.025),
+			rng.randf_range(0.003, 0.008)
+		)
+		piece.mesh = mesh
+		var material := StandardMaterial3D.new()
+		var color_pick: float = rng.randf()
+		material.albedo_color = gold if color_pick < 0.58 else (red if color_pick < 0.92 else cream)
+		material.metallic = 0.35 if color_pick < 0.58 else 0.08
+		material.roughness = 0.28
+		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+		piece.material_override = material
+		burst.add_child(piece)
+		var start := Vector3(
+			rng.randf_range(-0.72, 0.72),
+			rng.randf_range(1.75, 2.55),
+			rng.randf_range(0.78, 1.12)
+		)
+		piece.position = start
+		piece.rotation = Vector3(
+			rng.randf_range(-PI, PI),
+			rng.randf_range(-PI, PI),
+			rng.randf_range(-PI, PI)
+		)
+		var travel := Vector3(
+			start.x + rng.randf_range(-1.0, 1.0),
+			start.y + rng.randf_range(-1.35, 0.35),
+			start.z + rng.randf_range(-0.18, 0.32)
+		)
+		var spin := Vector3(
+			rng.randf_range(-TAU * 2.0, TAU * 2.0),
+			rng.randf_range(-TAU * 2.0, TAU * 2.0),
+			rng.randf_range(-TAU * 3.0, TAU * 3.0)
+		)
+		var duration: float = rng.randf_range(1.45, 2.25)
+		var tween := create_tween()
+		tween.set_parallel(true)
+		tween.set_trans(Tween.TRANS_QUAD)
+		tween.set_ease(Tween.EASE_OUT)
+		tween.tween_property(piece, "position", travel, duration)
+		tween.tween_property(piece, "rotation", piece.rotation + spin, duration)
+		tween.tween_property(piece, "scale", Vector3.ZERO, duration).set_delay(duration * 0.72)
+		tween.tween_property(material, "albedo_color:a", 0.0, duration * 0.28).set_delay(duration * 0.72)
+		tween.chain().tween_callback(piece.queue_free)
+	var cleanup := create_tween()
+	cleanup.tween_interval(2.6)
+	cleanup.tween_callback(burst.queue_free)
 
 
 func _flash_win(won: bool, jackpot: bool = false) -> void:
