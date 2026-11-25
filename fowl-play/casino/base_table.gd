@@ -22,16 +22,21 @@ signal round_cancelled(table_id: String, round_id: String, refund_total: int)
 signal round_auto_resolution_requested(table_id: String, round_id: String, reason: String)
 ## Host-authoritative, peer-targeted feedback consumed by the persistent Casino HUD.
 signal player_feedback(peer_id: int, message: String, severity: StringName)
+## Host-authoritative notices intended for every connected player's HUD.
+signal global_announcement(message: String, category: String, priority: int)
 
 @export var open_round_inactivity_seconds: float = 45.0
 @export var table_id: String = ""
 @export var game_id: String = ""
 @export_range(1, 4, 1) var max_participants: int = 4
+@export_group("Shared Wager Rules")
+@export_range(0.0, 0.75, 0.01) var quota_safety_bias: float = 0.15
 
 var state: TableState = TableState.IDLE
 var current_round_id: String = ""
 
 var _wallet: Node = null
+var _day_manager: Node = null
 var _debug_hub: Node = null
 var _inside_proximity: Dictionary = {}
 var _participants: Dictionary = {}
@@ -41,6 +46,7 @@ var _open_round_inactivity_remaining: float = 0.0
 func _ready() -> void:
 	add_to_group("casino_tables")
 	_wallet = get_node_or_null("/root/CasinoWallet")
+	_day_manager = get_node_or_null("/root/CasinoDayManager")
 	_debug_hub = get_node_or_null("/root/DebugHub")
 	if _wallet == null:
 		push_error("BaseTable requires the CasinoWallet autoload.")
@@ -138,6 +144,24 @@ func _receive_player_feedback(peer_id: int, message: String, severity: StringNam
 	player_feedback.emit(peer_id, message, severity)
 
 
+## Broadcasts a meaningful gameplay event to every HUD. Call only from the host.
+func report_global_announcement(message: String, category: String = "CASINO NOTICE", priority: int = 1) -> bool:
+	if not _is_authority() or message.strip_edges().is_empty():
+		return false
+	_receive_global_announcement(message, category, priority)
+	var network: Node = get_node_or_null("/root/Network")
+	if is_instance_valid(network) and network.get("peer") != null:
+		_receive_global_announcement.rpc(message, category, priority)
+	return true
+
+@rpc("authority", "call_remote", "reliable", 0)
+func _receive_global_announcement(message: String, category: String, priority: int) -> void:
+	var network: Node = get_node_or_null("/root/Network")
+	if is_instance_valid(network) and network.get("peer") != null:
+		if not bool(network.call("validate_rpc", 1)):
+			return
+	global_announcement.emit(message, category, clampi(priority, 0, 3))
+
 ## Opens a round. The opener does not have to join or place a wager.
 func open_round(peer_id: int) -> Dictionary:
 	if not _is_authority():
@@ -194,6 +218,11 @@ func place_wager(peer_id: int, amount: int, payload: Dictionary = {}) -> Diction
 		return _failure("Player is no longer within table proximity.")
 	if _wallet == null or not is_instance_valid(_wallet):
 		return _failure("CasinoWallet is unavailable.")
+	var limits: Dictionary = get_wager_limits()
+	var minimum: int = int(limits.get("minimum", 1))
+	var maximum: int = int(limits.get("maximum", 0))
+	if minimum <= 0 or maximum <= 0 or amount < minimum or amount > maximum:
+		return _failure("No safe wager is available, or the wager is outside the live range of %d to %d." % [minimum, maximum])
 	var result: Dictionary = _wallet.call("reserve_wager", peer_id, table_id, current_round_id, amount, payload)
 	if bool(result.get("ok", false)):
 		_reset_open_round_inactivity()
@@ -208,6 +237,11 @@ func update_wager(peer_id: int, wager_id: String, amount: int, payload: Dictiona
 	var wager: Dictionary = _get_owned_current_wager(peer_id, wager_id)
 	if wager.is_empty():
 		return _failure("Wager does not belong to this player and table round.")
+	var limits: Dictionary = get_wager_limits()
+	var minimum: int = int(limits.get("minimum", 1))
+	var maximum: int = int(limits.get("maximum", 0))
+	if minimum <= 0 or maximum <= 0 or amount < minimum or amount > maximum:
+		return _failure("No safe wager is available, or the wager is outside the live range of %d to %d." % [minimum, maximum])
 	var result: Dictionary = _wallet.call("update_wager", wager_id, amount, payload)
 	if bool(result.get("ok", false)):
 		_reset_open_round_inactivity()
@@ -346,6 +380,83 @@ func get_round_wagers() -> Array[Dictionary]:
 		return []
 	var result: Array[Dictionary] = _wallet.call("get_round_wagers", table_id, current_round_id)
 	return result
+
+## Shared live wager limits for every casino table.
+## Profiles provide per-game ceilings; the wallet and active day quota determine
+## what the team can safely wager right now. Host-side wager paths recheck these
+## limits immediately before reserving funds.
+func get_wager_limits() -> Dictionary:
+	var profile: BettingTerminalProfile = _get_betting_terminal_profile()
+	var profile_minimum: int = profile.get_effective_minimum() if profile != null else 100
+	var profile_maximum: int = profile.get_effective_maximum() if profile != null else 5000
+
+	# Wager limits are a per-day snapshot. They are derived from the wallet
+	# and quota at casino-day start, not recalculated as players spend/win.
+	var starting_wallet: int = 0
+	var quota: int = 0
+	var quota_active: bool = is_instance_valid(_day_manager) and bool(_day_manager.get("day_active"))
+	if quota_active:
+		starting_wallet = maxi(int(_day_manager.get("starting_wallet")), 0)
+		quota = maxi(int(_day_manager.get("daily_quota")), 0)
+	else:
+		# Outside an active casino day, use a stable current snapshot as a
+		# fallback for table preview/testing.
+		if is_instance_valid(_wallet) and _wallet.has_method("get_snapshot"):
+			var wallet_snapshot: Dictionary = _wallet.call("get_snapshot")
+			starting_wallet = maxi(int(wallet_snapshot.get("available_balance", 0)), 0)
+
+	var quota_remaining: int = maxi(quota - starting_wallet, 0) if quota > 0 else 0
+	var safety_reserve: int = ceili(float(quota) * quota_safety_bias) if quota > 0 else 0
+	var initial_spendable: int = maxi(starting_wallet - safety_reserve, 0)
+	var quota_cap: int = quota_remaining if quota_remaining > 0 else initial_spendable
+	var maximum: int = mini(profile_maximum, mini(initial_spendable, quota_cap))
+	var minimum: int = profile_minimum
+	if quota_remaining > 0:
+		minimum = mini(minimum, maxi(quota_remaining, 1))
+	minimum = mini(minimum, maximum) if maximum > 0 else 0
+
+	return {
+		"minimum": minimum,
+		"maximum": maximum,
+		"starting_wallet": starting_wallet,
+		"quota": quota,
+		"quota_remaining_at_day_start": quota_remaining,
+		"safety_reserve": safety_reserve,
+		"initial_spendable": initial_spendable,
+		"profile_minimum": profile_minimum,
+		"profile_maximum": profile_maximum,
+		"limits_locked_for_day": quota_active,
+	}
+
+func _get_betting_terminal_profile() -> BettingTerminalProfile:
+	var display: Node = null
+	# Egg Plinko exposes its display controller as an exported scene reference;
+	# Chicken Cross uses a sibling named BettingTerminalDisplay.
+	for property_info: Dictionary in get_property_list():
+		if str(property_info.get("name", "")) == "terminal_display":
+			display = get("terminal_display") as Node
+			break
+	if not is_instance_valid(display):
+		display = get_node_or_null("BettingTerminalDisplay")
+	if is_instance_valid(display):
+		var profile_value: Variant = display.get("profile")
+		if profile_value is BettingTerminalProfile:
+			return profile_value as BettingTerminalProfile
+	return _find_betting_terminal_profile(self)
+
+
+func _find_betting_terminal_profile(parent_node: Node) -> BettingTerminalProfile:
+	for child: Node in parent_node.get_children():
+		for property_info: Dictionary in child.get_property_list():
+			if str(property_info.get("name", "")) != "profile":
+				continue
+			var profile_value: Variant = child.get("profile")
+			if profile_value is BettingTerminalProfile:
+				return profile_value as BettingTerminalProfile
+		var nested_profile: BettingTerminalProfile = _find_betting_terminal_profile(child)
+		if nested_profile != null:
+			return nested_profile
+	return null
 
 func get_snapshot() -> Dictionary:
 	return {

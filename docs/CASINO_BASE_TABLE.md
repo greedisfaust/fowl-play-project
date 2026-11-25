@@ -9,6 +9,18 @@ Branch: `environment/world-building-and-gameplay-loop`
 
 It owns the generic table lifecycle and calls the existing `CasinoWallet` autoload for financial operations. The host remains authoritative.
 
+## Daily snapshot wager limits
+
+Every casino table inherits the same `get_wager_limits()` calculation from `BaseTable`. Individual `BettingTerminalProfile` resources provide that game's configured minimum and maximum ceilings.
+
+At the start of a casino day, the shared calculation uses the day's starting wallet (`CasinoDayManager.starting_wallet`), the fixed daily quota, the table's `quota_safety_bias` (default 15%), and the profile ceilings. The resulting minimum and maximum stay fixed for that casino day; later wagers, losses, wins, and refunds do not recalculate the range.
+
+Maximum wager is the lowest of the profile ceiling, the starting wallet after the safety reserve, and the quota gap at day start while quota is unmet. If the starting wallet already meets the quota, the quota-gap cap is removed but the starting-wallet safety reserve remains. Minimum wager starts at the profile minimum, can reduce to the quota gap at day start, and is capped to the fixed maximum. If no safe amount is available at day start, both limits resolve to zero.
+
+The current wallet is still authoritative for transactions. `BaseTable.place_wager()` and `update_wager()` revalidate the stable daily range on the host, and `CasinoWallet` independently rejects reservations that exceed currently available funds. This keeps the terminal's displayed range predictable without allowing players to spend funds that are no longer available.
+
+The shared keypad and terminal use this same table method, so Chicken Cross, Egg Plinko, and future tables share the daily snapshot rules. Profiles still allow different per-game ceilings.
+
 ## Lifecycle
 
 - `IDLE`: ready for a new round.

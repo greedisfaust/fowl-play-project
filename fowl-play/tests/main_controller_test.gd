@@ -120,7 +120,9 @@ func _run() -> void:
 		main.queue_free()
 		_finish(false, "BaseTable should publish local HUD feedback for its intended peer.")
 		return
-	var announcement_label: Label = casino_hud.get("_announcement_label") as Label if casino_hud != null else null
+	var announcement_feed: VBoxContainer = casino_hud.get("_announcement_feed") as VBoxContainer if casino_hud != null else null
+	var announcement_entry: VBoxContainer = announcement_feed.get_child(0) as VBoxContainer if is_instance_valid(announcement_feed) and announcement_feed.get_child_count() > 0 else null
+	var announcement_label: Label = announcement_entry.get_child(1) as Label if is_instance_valid(announcement_entry) and announcement_entry.get_child_count() > 1 else null
 	if announcement_label == null or announcement_label.text != "TEST WAGER CONFIRMED":
 		main.queue_free()
 		_finish(false, "Casino HUD should display peer-targeted feedback emitted by a BaseTable.")
@@ -180,7 +182,8 @@ func _run() -> void:
 		_finish(false, "Could not enter the Casino phase before session-end reset verification.")
 		return
 	var day_manager: Node = root.get_node_or_null("CasinoDayManager")
-	if not is_instance_valid(day_manager) or not bool(day_manager.get("day_active")):
+	var day_start_result: Dictionary = day_manager.call("start_casino_day_after_disembark") if is_instance_valid(day_manager) else {}
+	if not is_instance_valid(day_manager) or not bool(day_start_result.get("ok", false)) or not bool(day_manager.get("day_active")):
 		main.queue_free()
 		_finish(false, "Casino day state should be active before the network session ends.")
 		return

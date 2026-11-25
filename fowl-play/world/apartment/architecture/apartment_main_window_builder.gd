@@ -24,7 +24,7 @@ class_name ApartmentMainWindowBuilder
 @export_range(0.025, 0.10, 0.005) var horizontal_mullion_height: float = 0.055
 
 @export_group("Materials")
-@export var glass_tint: Color = Color(0.72, 0.86, 0.94, 0.20)
+@export var glass_tint: Color = Color(0.98, 0.98, 0.96, 0.025)
 @export var bronze_color: Color = Color(0.36, 0.22, 0.105, 1.0)
 @export var sill_color: Color = Color(0.075, 0.082, 0.09, 1.0)
 
@@ -40,8 +40,24 @@ class_name ApartmentMainWindowBuilder
 const GENERATED_ROOT_NAME: String = "_GeneratedApartmentMainPanoramicWindow"
 
 func _ready() -> void:
-	if Engine.is_editor_hint():
+	if not Engine.is_editor_hint():
+		return
+	# Wait until the editor has assigned the opened scene as edited_scene_root.
+	call_deferred("_ensure_saved_window_setup")
+
+func _ensure_saved_window_setup() -> void:
+	if not Engine.is_editor_hint():
+		return
+	var scene_root: Node = get_tree().edited_scene_root
+	if scene_root == null:
+		return
+	var generated: Node3D = get_node_or_null(GENERATED_ROOT_NAME) as Node3D
+	if generated == null:
 		_rebuild_geometry()
+		return
+	_ensure_glass_collisions(generated, scene_root)
+	if generated.get_node_or_null("NightCityEnvironment") == null:
+		_add_night_city_environment(generated, scene_root)
 
 func _rebuild_geometry() -> void:
 	if not Engine.is_editor_hint():
@@ -63,11 +79,25 @@ func _rebuild_geometry() -> void:
 	add_child(generated_root)
 	generated_root.owner = scene_root
 
+	# Reuse the same Night City and weather rig as the Casino, oriented out
+	# from this Apartment panorama's east-facing window.
+	var city_node := Node3D.new()
+	city_node.name = "NightCityEnvironment"
+	city_node.set_script(load("res://world/casino/night_city_environment.gd"))
+	city_node.set("facade_points", PackedVector2Array([
+		Vector2(wall_x, window_center_z - window_width * 0.5),
+		Vector2(wall_x, window_center_z + window_width * 0.5)
+	]))
+	city_node.set("buildings_per_segment", 30)
+	city_node.set("rain_amount", 1800)
+	generated_root.add_child(city_node)
+	city_node.owner = scene_root
+
 	var glass_material: StandardMaterial3D = StandardMaterial3D.new()
 	glass_material.albedo_color = glass_tint
 	glass_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	glass_material.metallic = 0.28
-	glass_material.roughness = 0.10
+	glass_material.metallic = 0.0
+	glass_material.roughness = 0.025
 	glass_material.cull_mode = BaseMaterial3D.CULL_DISABLED
 
 	var bronze_material: StandardMaterial3D = StandardMaterial3D.new()
@@ -144,6 +174,40 @@ func _rebuild_geometry() -> void:
 		Transform3D(segment_basis, midpoint + Vector3.UP * (glass_bottom + glass_height * 0.52)),
 		bronze_material, scene_root
 	)
+
+func _ensure_glass_collisions(generated: Node3D, scene_root: Node) -> void:
+	for child: Node in generated.get_children():
+		var visual: MeshInstance3D = child as MeshInstance3D
+		if visual == null or not visual.name.ends_with("Glass"):
+			continue
+		if generated.get_node_or_null(visual.name + "_Collision") != null:
+			continue
+		var box_mesh: BoxMesh = visual.mesh as BoxMesh
+		if box_mesh == null:
+			continue
+		var body: StaticBody3D = StaticBody3D.new()
+		body.name = visual.name + "_Collision"
+		generated.add_child(body)
+		body.owner = scene_root
+		var collision: CollisionShape3D = CollisionShape3D.new()
+		var shape: BoxShape3D = BoxShape3D.new()
+		shape.size = box_mesh.size
+		collision.shape = shape
+		collision.transform = visual.transform
+		body.add_child(collision)
+		collision.owner = scene_root
+
+func _add_night_city_environment(parent: Node3D, scene_root: Node) -> void:
+	var city_node: Node3D = Node3D.new()
+	city_node.name = "NightCityEnvironment"
+	city_node.set_script(load("res://world/casino/night_city_environment.gd"))
+	city_node.set("facade_points", PackedVector2Array([
+		Vector2(wall_x, window_center_z - window_width * 0.5),
+		Vector2(wall_x, window_center_z + window_width * 0.5)
+	]))
+	city_node.set("rain_amount", 1800)
+	parent.add_child(city_node)
+	city_node.owner = scene_root
 
 func _add_box(
 	parent: Node3D,

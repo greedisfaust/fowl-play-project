@@ -1,14 +1,19 @@
 ## Persistent casino HUD controller.
-## Reads authoritative progression and wallet services; it never mutates game state.
+## Presentation only: authoritative managers remain the source of all gameplay state.
 extends CanvasLayer
 
 const PHASE_CASINO: int = 2
 const TERMINAL_FONT: Font = preload("res://assets/fonts/JetBrainsMonoNL-Regular.ttf")
-const COLOR_WALLET: Color = Color(0.25, 0.82, 0.48, 1.0)
-const COLOR_QUOTA_UNMET: Color = Color(0.88, 0.27, 0.29, 1.0)
-const COLOR_QUOTA_MET: Color = Color(0.91, 0.72, 0.34, 1.0)
-const COLOR_TIMER_NORMAL: Color = Color(0.96, 0.94, 0.88, 1.0)
-const COLOR_TIMER_URGENT: Color = Color(0.91, 0.34, 0.31, 1.0)
+const BOLD_FONT: Font = preload("res://assets/fonts/JetBrainsMono-Bold.ttf")
+const QUOTA_GLOW_SHADER: Shader = preload("res://ui/hud/quota_glow.gdshader")
+const COLOR_WALLET: Color = Color(0.25, 0.88, 0.49, 1.0)
+const COLOR_QUOTA_UNMET: Color = Color(0.94, 0.29, 0.32, 1.0)
+const COLOR_QUOTA_MET: Color = Color(1.0, 0.78, 0.38, 1.0)
+const COLOR_TEXT: Color = Color(0.94, 0.94, 0.91, 1.0)
+const COLOR_MUTED: Color = Color(0.57, 0.59, 0.60, 1.0)
+const COLOR_PANEL: Color = Color(0.018, 0.023, 0.026, 0.34)
+const COLOR_PANEL_EDGE: Color = Color(0.72, 0.75, 0.73, 0.38)
+const COLOR_TIMER_URGENT: Color = Color(0.96, 0.34, 0.31, 1.0)
 
 @export_group("Display Nodes")
 @export var day_label_path: NodePath = ^"MarginContainer/LayoutRoot/TopLeft/WalletStack/DayLabel"
@@ -18,10 +23,10 @@ const COLOR_TIMER_URGENT: Color = Color(0.91, 0.34, 0.31, 1.0)
 
 @export_group("Terminal Typography")
 @export var terminal_font: Font
-@export_range(8, 64, 1) var day_font_size: int = 16
-@export_range(16, 96, 1) var wallet_font_size: int = 42
-@export_range(12, 72, 1) var quota_font_size: int = 30
-@export_range(16, 96, 1) var timer_font_size: int = 36
+@export_range(8, 64, 1) var day_font_size: int = 17
+@export_range(16, 96, 1) var wallet_font_size: int = 46
+@export_range(12, 72, 1) var quota_font_size: int = 29
+@export_range(16, 96, 1) var timer_font_size: int = 34
 
 @export_group("Timer Warning")
 @export_range(1, 120, 1) var urgent_timer_threshold_seconds: int = 30
@@ -30,29 +35,40 @@ var _day_label: Label
 var _wallet_label: Label
 var _quota_label: Label
 var _timer_label: Label
-
+var _timer_caption: Label
 var _run_manager: Node
 var _day_manager: Node
 var _wallet: Node
 var _main_controller: Node
-var _last_day_snapshot: Dictionary = {}
 var _network: Node
 var _players_root: Node
 var _local_player: Node
 var _focused_interactable: Interactable
+var _last_day_snapshot: Dictionary = {}
+var _last_run_active: bool = false
+var _last_quota_reached: bool = false
+
 var _contributions: Dictionary = {}
 var _counted_wagers: Dictionary = {}
 var _current_contribution_day: int = 0
-var _last_run_active: bool = false
-var _last_quota_reached: bool = false
 var _contribution_list: VBoxContainer
-var _modifier_panel: HBoxContainer
+var _modifier_panel: PanelContainer
 var _blessed_label: Label
 var _watched_label: Label
-var _action_prompt: Label
-var _announcement_label: Label
-var _announcement_tween: Tween
+
+var _action_list: VBoxContainer
+var _action_rows: Dictionary = {}
+var _action_refresh_elapsed: float = 0.0
+var _last_action_signature: String = ""
+
+var _announcement_panel: Control
+var _announcement_feed: VBoxContainer
+var _announcement_entries: Array[Dictionary] = []
 var _connected_tables: Array[BaseTable] = []
+var _wallet_glow_material: ShaderMaterial
+var _quota_glow_material: ShaderMaterial
+var _glow_tween: Tween
+var _quota_glow_enabled: bool = false
 
 
 func _ready() -> void:
@@ -60,7 +76,6 @@ func _ready() -> void:
 	_wallet_label = get_node_or_null(wallet_label_path) as Label
 	_quota_label = get_node_or_null(quota_label_path) as Label
 	_timer_label = get_node_or_null(timer_label_path) as Label
-
 	if not _validate_display_nodes():
 		set_process(false)
 		return
@@ -69,7 +84,6 @@ func _ready() -> void:
 	_day_manager = get_node_or_null("/root/CasinoDayManager")
 	_wallet = get_node_or_null("/root/CasinoWallet")
 	_main_controller = get_parent()
-
 	if not is_instance_valid(_run_manager) or not is_instance_valid(_day_manager) or not is_instance_valid(_wallet):
 		push_error("CasinoHUD requires RunManager, CasinoDayManager, and CasinoWallet autoloads.")
 		visible = false
@@ -86,32 +100,37 @@ func _ready() -> void:
 	_connect_focus_sources()
 	_refresh_all()
 	call_deferred("_refresh_visibility")
+	set_process(true)
+
+
+func _process(delta: float) -> void:
+	_action_refresh_elapsed += delta
+	if _action_refresh_elapsed >= 0.12:
+		_action_refresh_elapsed = 0.0
+		_refresh_action_prompt()
 
 
 func _exit_tree() -> void:
 	if get_tree().node_added.is_connected(_on_tree_node_added):
 		get_tree().node_added.disconnect(_on_tree_node_added)
 	for table: BaseTable in _connected_tables:
-		if is_instance_valid(table) and table.player_feedback.is_connected(_on_table_feedback):
-			table.player_feedback.disconnect(_on_table_feedback)
+		if is_instance_valid(table):
+			if table.player_feedback.is_connected(_on_table_feedback):
+				table.player_feedback.disconnect(_on_table_feedback)
+			if table.global_announcement.is_connected(_on_global_announcement):
+				table.global_announcement.disconnect(_on_global_announcement)
 	_connected_tables.clear()
 	_disconnect_services()
+	if _glow_tween != null and _glow_tween.is_running():
+		_glow_tween.kill()
 
 
 func _validate_display_nodes() -> bool:
 	var valid: bool = true
-	if _day_label == null:
-		push_error("CasinoHUD is missing its DayLabel. Check day_label_path.")
-		valid = false
-	if _wallet_label == null:
-		push_error("CasinoHUD is missing its WalletLabel. Check wallet_label_path.")
-		valid = false
-	if _quota_label == null:
-		push_error("CasinoHUD is missing its QuotaLabel. Check quota_label_path.")
-		valid = false
-	if _timer_label == null:
-		push_error("CasinoHUD is missing its TimerLabel. Check timer_label_path.")
-		valid = false
+	for pair: Array in [[_day_label, "DayLabel"], [_wallet_label, "WalletLabel"], [_quota_label, "QuotaLabel"], [_timer_label, "TimerLabel"]]:
+		if pair[0] == null:
+			push_error("CasinoHUD is missing %s. Check its exported NodePath." % pair[1])
+			valid = false
 	return valid
 
 
@@ -127,19 +146,22 @@ func _apply_typography() -> void:
 		top_left.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	if is_instance_valid(top_center):
 		top_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	for label: Label in [_day_label, _wallet_label, _quota_label, _timer_label]:
+		label.add_theme_font_override("font", terminal_font)
+		label.add_theme_color_override("font_color", COLOR_TEXT)
 	_day_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_wallet_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_quota_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-
-	for label: Label in [_day_label, _wallet_label, _quota_label, _timer_label]:
-		if terminal_font != null:
-			label.add_theme_font_override("font", terminal_font)
-
+	_timer_label.offset_top = 24.0
+	_timer_label.offset_bottom = 70.0
 	_day_label.add_theme_font_size_override("font_size", day_font_size)
+	_wallet_label.add_theme_font_override("font", BOLD_FONT)
 	_wallet_label.add_theme_font_size_override("font_size", wallet_font_size)
 	_quota_label.add_theme_font_size_override("font_size", quota_font_size)
+	_timer_label.add_theme_font_override("font", BOLD_FONT)
 	_timer_label.add_theme_font_size_override("font_size", timer_font_size)
+	_day_label.add_theme_color_override("font_color", COLOR_TEXT)
 
 
 func _connect_services() -> void:
@@ -151,8 +173,6 @@ func _connect_services() -> void:
 		_wallet.wallet_changed.connect(_on_wallet_changed)
 	if _wallet.has_signal("wager_changed"):
 		_wallet.wager_changed.connect(_on_wager_changed)
-	if _day_manager.has_signal("day_finished"):
-		_day_manager.day_finished.connect(_on_day_finished)
 	_network = get_node_or_null("/root/Network")
 	if is_instance_valid(_network) and _network.has_signal("identity_roster_changed"):
 		_network.identity_roster_changed.connect(_on_identity_roster_changed)
@@ -164,30 +184,18 @@ func _connect_services() -> void:
 
 
 func _disconnect_services() -> void:
-	if is_instance_valid(_run_manager) and _run_manager.has_signal("run_state_changed"):
-		if _run_manager.run_state_changed.is_connected(_on_run_state_changed):
-			_run_manager.run_state_changed.disconnect(_on_run_state_changed)
-	if is_instance_valid(_day_manager) and _day_manager.has_signal("day_state_changed"):
-		if _day_manager.day_state_changed.is_connected(_on_day_state_changed):
-			_day_manager.day_state_changed.disconnect(_on_day_state_changed)
-	if is_instance_valid(_wallet) and _wallet.has_signal("wallet_changed"):
-		if _wallet.wallet_changed.is_connected(_on_wallet_changed):
-			_wallet.wallet_changed.disconnect(_on_wallet_changed)
-	if is_instance_valid(_wallet) and _wallet.has_signal("wager_changed"):
-		if _wallet.wager_changed.is_connected(_on_wager_changed):
-			_wallet.wager_changed.disconnect(_on_wager_changed)
-	if is_instance_valid(_day_manager) and _day_manager.has_signal("day_finished"):
-		if _day_manager.day_finished.is_connected(_on_day_finished):
-			_day_manager.day_finished.disconnect(_on_day_finished)
-	if is_instance_valid(_network) and _network.has_signal("identity_roster_changed"):
-		if _network.identity_roster_changed.is_connected(_on_identity_roster_changed):
-			_network.identity_roster_changed.disconnect(_on_identity_roster_changed)
-	if is_instance_valid(_players_root) and _players_root.has_signal("child_entered_tree"):
-		if _players_root.child_entered_tree.is_connected(_on_player_added):
-			_players_root.child_entered_tree.disconnect(_on_player_added)
-	if is_instance_valid(_main_controller) and _main_controller.has_signal("world_changed"):
-		if _main_controller.world_changed.is_connected(_on_world_changed):
-			_main_controller.world_changed.disconnect(_on_world_changed)
+	_disconnect_signal(_run_manager, &"run_state_changed", _on_run_state_changed)
+	_disconnect_signal(_day_manager, &"day_state_changed", _on_day_state_changed)
+	_disconnect_signal(_wallet, &"wallet_changed", _on_wallet_changed)
+	_disconnect_signal(_wallet, &"wager_changed", _on_wager_changed)
+	_disconnect_signal(_network, &"identity_roster_changed", _on_identity_roster_changed)
+	_disconnect_signal(_players_root, &"child_entered_tree", _on_player_added)
+	_disconnect_signal(_main_controller, &"world_changed", _on_world_changed)
+
+
+func _disconnect_signal(source: Node, signal_name: StringName, callback: Callable) -> void:
+	if is_instance_valid(source) and source.has_signal(signal_name) and source.is_connected(signal_name, callback):
+		source.disconnect(signal_name, callback)
 
 
 func _on_tree_node_added(node: Node) -> void:
@@ -200,21 +208,39 @@ func _connect_table_feedback_source(node: Node) -> void:
 		return
 	if not table.player_feedback.is_connected(_on_table_feedback):
 		table.player_feedback.connect(_on_table_feedback)
+	if not table.global_announcement.is_connected(_on_global_announcement):
+		table.global_announcement.connect(_on_global_announcement)
 	_connected_tables.append(table)
 
 
 func _on_table_feedback(peer_id: int, message: String, severity: StringName) -> void:
 	if peer_id != _get_local_peer_id():
 		return
-	var feedback_color: Color = COLOR_TIMER_NORMAL
+	var tint: Color = COLOR_TEXT
+	var priority: int = 0
 	match severity:
 		&"success":
-			feedback_color = COLOR_WALLET
+			tint = COLOR_WALLET
 		&"warning":
-			feedback_color = COLOR_QUOTA_MET
+			tint = COLOR_QUOTA_MET
+			priority = 1
 		&"error":
-			feedback_color = COLOR_QUOTA_UNMET
-	_show_announcement(message, feedback_color)
+			tint = COLOR_QUOTA_UNMET
+			priority = 1
+	_show_announcement(message, tint, priority)
+
+
+
+func _on_global_announcement(message: String, category: String, priority: int) -> void:
+	var tint: Color = COLOR_TEXT
+	match category.to_upper():
+		"CHICKEN CROSS":
+			tint = COLOR_QUOTA_MET
+		"CASH OUT":
+			tint = COLOR_WALLET
+		"DAILY RESULT":
+			tint = COLOR_QUOTA_MET if message.contains("QUOTA MET") else COLOR_QUOTA_UNMET
+	_show_announcement(message, tint, priority, category)
 
 
 func _get_local_peer_id() -> int:
@@ -236,9 +262,8 @@ func _on_run_state_changed(snapshot: Dictionary) -> void:
 	_last_run_active = run_active
 	_refresh_visibility()
 	_day_label.text = "DAY %d" % int(snapshot.get("current_day", 0))
-	if int(snapshot.get("phase", -1)) != PHASE_CASINO:
-		return
-	_refresh_day_and_wallet()
+	if int(snapshot.get("phase", -1)) == PHASE_CASINO:
+		_refresh_day_and_wallet()
 
 
 func _on_day_state_changed(snapshot: Dictionary) -> void:
@@ -248,12 +273,25 @@ func _on_day_state_changed(snapshot: Dictionary) -> void:
 		_contributions.clear()
 		_counted_wagers.clear()
 		_refresh_contribution_panel()
+	var previous_result_recorded: bool = bool(_last_day_snapshot.get("day_result_recorded", false))
 	var quota_now: bool = bool(snapshot.get("quota_reached", false))
-	if quota_now and not _last_quota_reached:
-		_show_announcement("DAILY QUOTA REACHED")
+	var quota_just_reached: bool = quota_now and not _last_quota_reached
+	var result_now_recorded: bool = bool(snapshot.get("day_result_recorded", false))
 	_last_quota_reached = quota_now
 	_last_day_snapshot = snapshot.duplicate(true)
 	_refresh_day_display(snapshot)
+	if quota_just_reached:
+		_show_announcement("DAILY QUOTA REACHED", COLOR_QUOTA_MET, 3, "EARLY DEPARTURE UNLOCKED")
+		_play_quota_glow_pulse()
+	if result_now_recorded and not previous_result_recorded:
+		var result_success: bool = bool(snapshot.get("day_success", false))
+		var result_day: int = int(snapshot.get("day_number", 0))
+		var final_wallet: int = int(snapshot.get("final_wallet_snapshot", 0))
+		var quota: int = int(snapshot.get("daily_quota", 0))
+		var result_text: String = "QUOTA MET" if result_success else "QUOTA MISSED"
+		var result_color: Color = COLOR_QUOTA_MET if result_success else COLOR_QUOTA_UNMET
+		_show_announcement("DAY %d — %s" % [result_day, result_text], result_color, 3,
+			"DAILY RESULT  ·  %s / %s" % [_format_money(final_wallet), _format_money(quota)])
 
 
 func _on_wallet_changed(available_balance: int, _reserved_total: int) -> void:
@@ -286,18 +324,16 @@ func _refresh_day_display(snapshot: Dictionary) -> void:
 	var seconds_remaining: int = int(snapshot.get("seconds_remaining", 0))
 	var quota_reached: bool = bool(snapshot.get("quota_reached", false))
 	var day_active: bool = bool(snapshot.get("day_active", false))
-
 	if day_number > 0:
 		_day_label.text = "DAY %d" % day_number
 	if day_active:
 		_wallet_label.text = _format_money(wallet_balance)
 		_quota_label.text = "/ " + _format_money(quota)
 		_timer_label.text = _format_time(seconds_remaining)
-		_timer_label.add_theme_color_override("font_color", COLOR_TIMER_URGENT if seconds_remaining <= urgent_timer_threshold_seconds else COLOR_TIMER_NORMAL)
+		_timer_label.add_theme_color_override("font_color", COLOR_TIMER_URGENT if seconds_remaining <= urgent_timer_threshold_seconds else COLOR_TEXT)
 	else:
 		_quota_label.text = ""
 		_timer_label.text = ""
-
 	_wallet_label.add_theme_color_override("font_color", COLOR_QUOTA_MET if quota_reached else COLOR_WALLET)
 	_quota_label.add_theme_color_override("font_color", COLOR_QUOTA_MET if quota_reached else COLOR_QUOTA_UNMET)
 	_set_quota_glow(quota_reached)
@@ -311,13 +347,48 @@ func _refresh_quota_colors() -> void:
 
 
 func _set_quota_glow(enabled: bool) -> void:
-	var glow_color: Color = Color(1.0, 0.72, 0.28, 0.78) if enabled else Color(0.0, 0.0, 0.0, 0.0)
-	for label: Label in [_wallet_label, _quota_label]:
-		label.add_theme_color_override("font_shadow_color", glow_color)
-		label.add_theme_constant_override("shadow_outline_size", 10 if enabled else 0)
-		label.add_theme_constant_override("shadow_offset_x", 0)
-		label.add_theme_constant_override("shadow_offset_y", 0)
+	if _wallet_glow_material == null or _quota_glow_material == null:
+		return
+	if enabled == _quota_glow_enabled:
+		return
+	_quota_glow_enabled = enabled
+	var target: float = 1.0 if enabled else 0.0
+	for material: ShaderMaterial in [_wallet_glow_material, _quota_glow_material]:
+		material.set_shader_parameter("quota_active", target)
+		material.set_shader_parameter("glow_strength", 0.82 if enabled else 0.0)
+		material.set_shader_parameter("reward_flash", 0.0)
+		material.set_shader_parameter("flash_position", -0.2)
 
+func _play_quota_glow_pulse() -> void:
+	if not _quota_glow_enabled:
+		return
+	if _glow_tween != null and _glow_tween.is_running():
+		_glow_tween.kill()
+	_glow_tween = create_tween()
+	_glow_tween.tween_method(_set_glow_strength, 0.82, 2.6, 0.16)
+	_glow_tween.tween_method(_set_glow_strength, 2.6, 0.82, 0.95)
+	var flash_tween: Tween = create_tween()
+	flash_tween.set_parallel(true)
+	flash_tween.tween_method(_set_reward_flash, 0.0, 1.0, 0.42)
+	flash_tween.tween_method(_set_flash_position, -0.2, 1.2, 0.72)
+	flash_tween.chain().tween_callback(func() -> void: _set_reward_flash(0.0))
+
+func _set_glow_strength(value: float) -> void:
+	for material: ShaderMaterial in [_wallet_glow_material, _quota_glow_material]:
+		if is_instance_valid(material):
+			material.set_shader_parameter("glow_strength", value)
+
+
+func _set_reward_flash(value: float) -> void:
+	for material: ShaderMaterial in [_wallet_glow_material, _quota_glow_material]:
+		if is_instance_valid(material):
+			material.set_shader_parameter("reward_flash", value)
+
+
+func _set_flash_position(value: float) -> void:
+	for material: ShaderMaterial in [_wallet_glow_material, _quota_glow_material]:
+		if is_instance_valid(material):
+			material.set_shader_parameter("flash_position", value)
 
 func _refresh_visibility() -> void:
 	var in_casino: bool = false
@@ -325,7 +396,7 @@ func _refresh_visibility() -> void:
 		in_casino = _main_controller.get("active_world") == 1
 	else:
 		var run_snapshot: Dictionary = _run_manager.call("get_snapshot")
-		in_casino = run_snapshot.get("phase", -1) == PHASE_CASINO
+		in_casino = int(run_snapshot.get("phase", -1)) == PHASE_CASINO
 	visible = in_casino
 
 
@@ -342,71 +413,137 @@ func _format_money(amount: int) -> String:
 
 func _format_time(total_seconds: int) -> String:
 	var safe_seconds: int = maxi(0, total_seconds)
-	var minutes: int = floori(float(safe_seconds) / 60.0)
-	var seconds: int = safe_seconds % 60
-	return "%02d:%02d" % [minutes, seconds]
-
+	return "%02d:%02d" % [floori(float(safe_seconds) / 60.0), safe_seconds % 60]
 
 
 func _build_runtime_hud_sections() -> void:
-	# Compact terminal readout: Blessed on the left, Watched on the right.
-	_modifier_panel = HBoxContainer.new()
+	# Timer caption stays centered above the countdown.
+	var top_center: Control = get_node_or_null("MarginContainer/LayoutRoot/TopCenter") as Control
+	if is_instance_valid(top_center):
+		_timer_caption = _make_runtime_label("DAY ENDS IN", 12, HORIZONTAL_ALIGNMENT_CENTER, true)
+		_timer_caption.anchor_left = 0.5
+		_timer_caption.anchor_right = 0.5
+		_timer_caption.offset_left = -130.0
+		_timer_caption.offset_top = 0.0
+		_timer_caption.offset_right = 130.0
+		_timer_caption.offset_bottom = 22.0
+		_timer_caption.add_theme_color_override("font_color", COLOR_MUTED)
+		top_center.add_child(_timer_caption)
+
+	# Translucent top-right status and contribution readouts.
+	_modifier_panel = _make_panel()
 	_modifier_panel.name = "ModifierStatusPanel"
 	_modifier_panel.anchor_left = 1.0
 	_modifier_panel.anchor_right = 1.0
-	_modifier_panel.offset_left = -420.0
-	_modifier_panel.offset_top = 32.0
-	_modifier_panel.offset_right = -32.0
-	_modifier_panel.offset_bottom = 58.0
-	_modifier_panel.add_theme_constant_override("separation", 12)
+	_modifier_panel.offset_left = -360.0
+	_modifier_panel.offset_top = 28.0
+	_modifier_panel.offset_right = -30.0
+	_modifier_panel.offset_bottom = 94.0
 	add_child(_modifier_panel)
-	_blessed_label = _make_runtime_label("BLESSED —", 15, HORIZONTAL_ALIGNMENT_LEFT)
-	_watched_label = _make_runtime_label("WATCHED —", 15, HORIZONTAL_ALIGNMENT_RIGHT)
-	_blessed_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_watched_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_modifier_panel.add_child(_blessed_label)
-	_modifier_panel.add_child(_watched_label)
-	_modifier_panel.visible = true
+	var modifier_stack: VBoxContainer = VBoxContainer.new()
+	modifier_stack.add_theme_constant_override("separation", 2)
+	modifier_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_modifier_panel.add_child(modifier_stack)
+	_blessed_label = _make_runtime_label("BLESSED   —", 14, HORIZONTAL_ALIGNMENT_LEFT, true)
+	_watched_label = _make_runtime_label("WATCHED  —", 14, HORIZONTAL_ALIGNMENT_LEFT, true)
+	modifier_stack.add_child(_blessed_label)
+	modifier_stack.add_child(_watched_label)
 
+	var contribution_panel: PanelContainer = _make_panel()
+	contribution_panel.name = "ContributionPanel"
+	contribution_panel.anchor_left = 1.0
+	contribution_panel.anchor_right = 1.0
+	contribution_panel.offset_left = -360.0
+	contribution_panel.offset_top = 104.0
+	contribution_panel.offset_right = -30.0
+	contribution_panel.offset_bottom = 292.0
+	add_child(contribution_panel)
 	var contribution_root: VBoxContainer = VBoxContainer.new()
-	contribution_root.name = "ContributionPanel"
-	contribution_root.anchor_left = 1.0
-	contribution_root.anchor_right = 1.0
-	contribution_root.offset_left = -420.0
-	contribution_root.offset_top = 82.0
-	contribution_root.offset_right = -32.0
-	contribution_root.offset_bottom = 330.0
-	contribution_root.add_theme_constant_override("separation", 5)
-	add_child(contribution_root)
-	var heading: Label = _make_runtime_label("TODAY'S CONTRIBUTIONS", 13, HORIZONTAL_ALIGNMENT_LEFT)
+	contribution_root.add_theme_constant_override("separation", 7)
+	contribution_panel.add_child(contribution_root)
+	var heading: Label = _make_runtime_label("TODAY'S CONTRIBUTOR", 13, HORIZONTAL_ALIGNMENT_LEFT, true)
+	heading.add_theme_color_override("font_color", COLOR_MUTED)
 	contribution_root.add_child(heading)
 	_contribution_list = VBoxContainer.new()
-	_contribution_list.add_theme_constant_override("separation", 3)
+	_contribution_list.add_theme_constant_override("separation", 5)
 	contribution_root.add_child(_contribution_list)
 	_refresh_contribution_panel()
 
-	_action_prompt = _make_runtime_label("", 16, HORIZONTAL_ALIGNMENT_LEFT)
-	_action_prompt.anchor_top = 1.0
-	_action_prompt.anchor_bottom = 1.0
-	_action_prompt.offset_left = 32.0
-	_action_prompt.offset_top = -88.0
-	_action_prompt.offset_right = 720.0
-	_action_prompt.offset_bottom = -32.0
-	_action_prompt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	add_child(_action_prompt)
+	# Contextual controls: right-aligned, consistent terminal-white, no indentation.
+	_action_list = VBoxContainer.new()
+	_action_list.name = "ContextualControls"
+	_action_list.anchor_left = 1.0
+	_action_list.anchor_top = 1.0
+	_action_list.anchor_right = 1.0
+	_action_list.anchor_bottom = 1.0
+	_action_list.offset_left = -390.0
+	_action_list.offset_top = -280.0
+	_action_list.offset_right = -32.0
+	_action_list.offset_bottom = -28.0
+	_action_list.alignment = BoxContainer.ALIGNMENT_END
+	_action_list.add_theme_constant_override("separation", 4)
+	_action_list.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_action_list)
 
-	_announcement_label = _make_runtime_label("", 22, HORIZONTAL_ALIGNMENT_CENTER)
-	_announcement_label.anchor_left = 0.5
-	_announcement_label.anchor_right = 0.5
-	_announcement_label.offset_left = -360.0
-	_announcement_label.offset_top = 112.0
-	_announcement_label.offset_right = 360.0
-	_announcement_label.offset_bottom = 154.0
-	_announcement_label.modulate.a = 0.0
-	add_child(_announcement_label)
+	# Floating, unboxed announcer feed. New notices enter at the top.
+	_announcement_panel = Control.new()
+	_announcement_panel.name = "CenterAnnouncerFeed"
+	_announcement_panel.anchor_left = 0.5
+	_announcement_panel.anchor_right = 0.5
+	_announcement_panel.offset_left = -330.0
+	_announcement_panel.offset_top = 112.0
+	_announcement_panel.offset_right = 330.0
+	_announcement_panel.offset_bottom = 308.0
+	_announcement_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_announcement_panel)
+	_announcement_feed = VBoxContainer.new()
+	_announcement_feed.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_announcement_feed.alignment = BoxContainer.ALIGNMENT_BEGIN
+	_announcement_feed.add_theme_constant_override("separation", 8)
+	_announcement_feed.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_announcement_panel.add_child(_announcement_feed)
 
-## The HUD is visual-only. Even its full-screen MarginContainer must not consume
-## mouse motion, otherwise Player._unhandled_input never receives FPS look events.
+	_wallet_glow_material = _make_glow_material()
+	_quota_glow_material = _make_glow_material()
+	_wallet_label.material = _wallet_glow_material
+	_quota_label.material = _quota_glow_material
+	_set_quota_glow(bool(_last_day_snapshot.get("quota_reached", false)))
+	_refresh_action_prompt()
+
+func _make_panel() -> PanelContainer:
+	var panel: PanelContainer = PanelContainer.new()
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_theme_stylebox_override("panel", _make_panel_style())
+	panel.add_theme_constant_override("panel", 12)
+	return panel
+
+
+func _make_panel_style() -> StyleBoxFlat:
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	style.bg_color = COLOR_PANEL
+	style.border_color = COLOR_PANEL_EDGE
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(3)
+	style.shadow_color = Color(0.0, 0.0, 0.0, 0.12)
+	style.shadow_size = 3
+	style.content_margin_left = 13.0
+	style.content_margin_right = 13.0
+	style.content_margin_top = 9.0
+	style.content_margin_bottom = 9.0
+	return style
+
+func _make_glow_material() -> ShaderMaterial:
+	var material: ShaderMaterial = ShaderMaterial.new()
+	material.shader = QUOTA_GLOW_SHADER
+	material.set_shader_parameter("glow_color", COLOR_QUOTA_MET)
+	material.set_shader_parameter("glow_radius", 5.0)
+	material.set_shader_parameter("glow_strength", 0.0)
+	material.set_shader_parameter("quota_active", 0.0)
+	material.set_shader_parameter("reward_flash", 0.0)
+	material.set_shader_parameter("flash_position", -0.2)
+	return material
+
+
 func _set_hud_controls_mouse_passthrough() -> void:
 	for node: Node in find_children("*", "Control", true, false):
 		var control: Control = node as Control
@@ -414,15 +551,14 @@ func _set_hud_controls_mouse_passthrough() -> void:
 			control.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
-func _make_runtime_label(label_text: String, size: int, alignment: int) -> Label:
+func _make_runtime_label(label_text: String, size: int, alignment: int, bold: bool = false) -> Label:
 	var label: Label = Label.new()
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.text = label_text
 	label.horizontal_alignment = alignment
 	label.add_theme_font_size_override("font_size", size)
-	label.add_theme_color_override("font_color", COLOR_TIMER_NORMAL)
-	if terminal_font != null:
-		label.add_theme_font_override("font", terminal_font)
+	label.add_theme_color_override("font_color", COLOR_TEXT)
+	label.add_theme_font_override("font", BOLD_FONT if bold else terminal_font)
 	return label
 
 
@@ -430,14 +566,11 @@ func _on_wager_changed(wager_id: String, status: String) -> void:
 	if status != "settled" or _counted_wagers.has(wager_id) or not is_instance_valid(_wallet):
 		return
 	var wager: Dictionary = _wallet.call("get_wager", wager_id)
-	if wager.is_empty():
-		return
-	if int(wager.get("peer_id", 0)) <= 0:
+	if wager.is_empty() or int(wager.get("peer_id", 0)) <= 0:
 		return
 	_counted_wagers[wager_id] = true
 	var peer_id: int = int(wager.get("peer_id", 0))
-	var net_result: int = int(wager.get("net_result", 0))
-	_contributions[peer_id] = int(_contributions.get(peer_id, 0)) + net_result
+	_contributions[peer_id] = int(_contributions.get(peer_id, 0)) + int(wager.get("net_result", 0))
 	_refresh_contribution_panel()
 
 
@@ -448,8 +581,7 @@ func _refresh_contribution_panel() -> void:
 		_contribution_list.remove_child(child)
 		child.queue_free()
 	if _contributions.is_empty():
-		var empty_label: Label = _make_runtime_label("NO SETTLED WAGERS", 14, HORIZONTAL_ALIGNMENT_LEFT)
-		_contribution_list.add_child(empty_label)
+		_contribution_list.add_child(_make_runtime_label("NO SETTLED WAGERS", 12, HORIZONTAL_ALIGNMENT_LEFT))
 		return
 	var peer_ids: Array = _contributions.keys()
 	peer_ids.sort()
@@ -458,10 +590,10 @@ func _refresh_contribution_panel() -> void:
 		var amount: int = int(_contributions[peer_id])
 		var row: HBoxContainer = HBoxContainer.new()
 		row.add_theme_constant_override("separation", 8)
-		var amount_label: Label = _make_runtime_label(_format_signed_money(amount), 16, HORIZONTAL_ALIGNMENT_LEFT)
-		amount_label.add_theme_color_override("font_color", COLOR_WALLET if amount > 0 else COLOR_QUOTA_UNMET if amount < 0 else COLOR_TIMER_NORMAL)
+		var amount_label: Label = _make_runtime_label(_format_signed_money(amount), 14, HORIZONTAL_ALIGNMENT_LEFT, true)
+		amount_label.add_theme_color_override("font_color", COLOR_WALLET if amount > 0 else COLOR_QUOTA_UNMET if amount < 0 else COLOR_TEXT)
 		amount_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var nickname_label: Label = _make_runtime_label(_get_player_nickname(peer_id), 16, HORIZONTAL_ALIGNMENT_RIGHT)
+		var nickname_label: Label = _make_runtime_label(_get_player_nickname(peer_id), 14, HORIZONTAL_ALIGNMENT_RIGHT, true)
 		var identity: Object = _get_player_identity(peer_id)
 		if identity != null and identity.has_method("get_color"):
 			nickname_label.add_theme_color_override("font_color", identity.call("get_color"))
@@ -487,9 +619,7 @@ func _get_player_identity(peer_id: int) -> Object:
 
 func _get_player_nickname(peer_id: int) -> String:
 	var identity: Object = _get_player_identity(peer_id)
-	if identity != null:
-		return str(identity.get("nickname"))
-	return "PLAYER %d" % peer_id
+	return str(identity.get("nickname")) if identity != null else "PLAYER %d" % peer_id
 
 
 func _on_identity_roster_changed() -> void:
@@ -517,6 +647,8 @@ func _connect_focus_sources() -> void:
 				carrier.carry_started.connect(_on_carry_started_for_prompt)
 			if carrier.has_signal("carry_ended") and not carrier.carry_ended.is_connected(_on_carry_ended_for_prompt):
 				carrier.carry_ended.connect(_on_carry_ended_for_prompt)
+			if bool(carrier.call("is_holding")):
+				_on_carry_started_for_prompt(carrier.get("held_item") as Node3D)
 		_refresh_action_prompt()
 		return
 
@@ -527,49 +659,126 @@ func _on_focus_target_changed(target: Interactable) -> void:
 
 
 func _refresh_action_prompt() -> void:
-	if not is_instance_valid(_action_prompt):
+	if not is_instance_valid(_action_list):
 		return
-	var prompt_parts: PackedStringArray = PackedStringArray()
-	if is_instance_valid(_focused_interactable) and _focused_interactable.enabled:
-		var controls: PackedStringArray = PackedStringArray()
-		if _focused_interactable.action_for_input(&"primary") != &"":
-			controls.append("M1")
-		if _focused_interactable.action_for_input(&"interact") != &"":
-			controls.append("E")
-		if not controls.is_empty():
-			prompt_parts.append("%s — %s" % [", ".join(controls), _focused_interactable.prompt_text])
-	if is_instance_valid(_local_player) and _local_player.has_method("is_carrying") and bool(_local_player.call("is_carrying")):
-		prompt_parts.append("Q — DROP  |  HOLD Q — THROW")
+	var lines: Array[String] = []
+	var carrying: bool = is_instance_valid(_local_player) and _local_player.has_method("is_carrying") and bool(_local_player.call("is_carrying"))
+	var limp: bool = is_instance_valid(_local_player) and bool(_local_player.get("is_limp"))
+	var recovering: bool = is_instance_valid(_local_player) and bool(_local_player.get("is_recovering"))
+	var terminal_locked: bool = is_instance_valid(_local_player) and bool(_local_player.get("terminal_movement_locked"))
+	var moving: bool = false
+	var grounded: bool = false
+	if is_instance_valid(_local_player):
+		var velocity_value: Variant = _local_player.get("velocity")
+		if velocity_value is Vector3:
+			moving = Vector2(velocity_value.x, velocity_value.z).length() > 0.35
+		if _local_player.has_method("is_on_floor"):
+			grounded = bool(_local_player.call("is_on_floor"))
+
+	if limp or recovering:
+		lines.append("RECOVER — AUTOMATIC")
+	elif carrying:
+		lines.append("THROW — [HOLD Q]")
+		lines.append("DROP — [Q]")
+		lines.append("MOVE — [W] [A] [S] [D]")
+	elif not terminal_locked:
+		if is_instance_valid(_focused_interactable) and _focused_interactable.enabled:
+			var controls: PackedStringArray = PackedStringArray()
+			if _focused_interactable.action_for_input(&"primary") != &"":
+				controls.append("M1")
+			if _focused_interactable.action_for_input(&"interact") != &"":
+				controls.append("E")
+			if not controls.is_empty():
+				lines.append("INTERACT — [%s]" % ", ".join(controls))
+		if moving:
+			lines.append("SPRINT — [SHIFT]")
+			if grounded:
+				lines.append("JUMP — [SPACE]")
+		lines.append("JAB / CHARGED PUNCH — [Q]")
+		lines.append("PARRY — [F]")
+		lines.append("MOVE — [W] [A] [S] [D]")
+
+	var signature: String = "\n".join(lines)
+	if signature == _last_action_signature:
+		return
+	_last_action_signature = signature
+	for child: Node in _action_list.get_children():
+		_action_list.remove_child(child)
+		child.queue_free()
+	for line: String in lines:
+		var label: Label = _make_runtime_label(line, 13, HORIZONTAL_ALIGNMENT_RIGHT, true)
+		label.add_theme_color_override("font_color", COLOR_TEXT)
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_action_list.add_child(label)
+
+func _show_announcement(message: String, text_color: Color = COLOR_TEXT, priority: int = -1, subtitle: String = "") -> void:
+	if not is_instance_valid(_announcement_feed) or message.strip_edges().is_empty():
+		return
+	var resolved_priority: int = priority
+	if resolved_priority < 0:
+		var upper: String = message.to_upper()
+		resolved_priority = 3 if upper.contains("DAY ") or upper.contains("QUOTA REACHED") or upper.contains("GAME OVER") else 1 if upper.contains("WON") or upper.contains("LOST") else 0
+
+	# Suppress repeated spam and keep critical notices visually dominant.
+	for existing: Dictionary in _announcement_entries:
+		if str(existing.get("message", "")) == message:
+			return
+	if resolved_priority < 3:
+		for existing: Dictionary in _announcement_entries:
+			if int(existing.get("priority", 0)) >= 3:
+				return
 	else:
-		prompt_parts.append("Q — PUNCH  |  F — PARRY")
-	_action_prompt.text = "\n".join(prompt_parts)
+		for existing: Dictionary in _announcement_entries.duplicate():
+			if int(existing.get("priority", 0)) < resolved_priority:
+				var old_node: Control = existing.get("node") as Control
+				if is_instance_valid(old_node):
+					old_node.queue_free()
+				_announcement_entries.erase(existing)
 
+	var entry: VBoxContainer = VBoxContainer.new()
+	entry.alignment = BoxContainer.ALIGNMENT_CENTER
+	entry.add_theme_constant_override("separation", 2)
+	entry.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	entry.modulate.a = 0.0
+	var category: Label = _make_runtime_label(subtitle if not subtitle.is_empty() else "CASINO NOTICE", 10, HORIZONTAL_ALIGNMENT_CENTER, true)
+	category.add_theme_color_override("font_color", text_color.lightened(0.12))
+	category.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var headline: Label = _make_runtime_label(message, 19, HORIZONTAL_ALIGNMENT_CENTER, true)
+	headline.add_theme_color_override("font_color", text_color)
+	headline.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	headline.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	entry.add_child(category)
+	entry.add_child(headline)
+	_announcement_feed.add_child(entry)
+	_announcement_feed.move_child(entry, 0)
+	var record: Dictionary = {"message": message, "priority": resolved_priority, "node": entry}
+	_announcement_entries.push_front(record)
 
-func _on_day_finished(day: int, success: bool, final_wallet: int, quota: int) -> void:
-	var result_text: String = "QUOTA MET" if success else "QUOTA MISSED"
-	_show_announcement("DAY %d — %s  |  WALLET %s / %s" % [day, result_text, _format_money(final_wallet), _format_money(quota)])
+	while _announcement_entries.size() > 3:
+		var expired: Dictionary = _announcement_entries.pop_back()
+		var expired_node: Control = expired.get("node") as Control
+		if is_instance_valid(expired_node):
+			expired_node.queue_free()
 
+	var lifetime: float = 4.0 if resolved_priority >= 3 else 3.0
+	var tween: Tween = create_tween()
+	tween.tween_property(entry, "modulate:a", 1.0, 0.18)
+	tween.tween_interval(lifetime)
+	tween.tween_property(entry, "modulate:a", 0.0, 0.55)
+	tween.finished.connect(func() -> void:
+		for i in range(_announcement_entries.size() - 1, -1, -1):
+			if _announcement_entries[i].get("node") == entry:
+				_announcement_entries.remove_at(i)
+				break
+		if is_instance_valid(entry):
+			entry.queue_free()
+	)
 
-func _show_announcement(message: String, text_color: Color = COLOR_TIMER_NORMAL) -> void:
-	if not is_instance_valid(_announcement_label):
-		return
-	_announcement_label.add_theme_color_override("font_color", text_color)
-	_announcement_label.text = message
-	if _announcement_tween != null and _announcement_tween.is_running():
-		_announcement_tween.kill()
-	_announcement_label.modulate.a = 0.0
-	_announcement_tween = create_tween()
-	_announcement_tween.tween_property(_announcement_label, "modulate:a", 1.0, 0.2)
-	_announcement_tween.tween_interval(2.8)
-	_announcement_tween.tween_property(_announcement_label, "modulate:a", 0.0, 0.5)
-
-
-## Future modifier service integration point. Call only with authoritative, real player assignments.
 func set_modifier_status(blessed_player: String, watched_player: String) -> void:
 	if not is_instance_valid(_modifier_panel):
 		return
-	_blessed_label.text = "BLESSED — %s" % blessed_player if not blessed_player.is_empty() else "BLESSED —"
-	_watched_label.text = "WATCHED — %s" % watched_player if not watched_player.is_empty() else "WATCHED —"
+	_blessed_label.text = "BLESSED  —  %s" % blessed_player if not blessed_player.is_empty() else "BLESSED  —"
+	_watched_label.text = "WATCHED —  %s" % watched_player if not watched_player.is_empty() else "WATCHED —"
 	_modifier_panel.visible = true
 
 

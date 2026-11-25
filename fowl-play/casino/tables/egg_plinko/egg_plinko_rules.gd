@@ -5,15 +5,15 @@ extends RefCounted
 
 const ROW_COUNT: int = 12
 const SLOT_MULTIPLIERS: Array[float] = [
-	8.0, 3.0, 1.5, 1.2, 1.0, 0.8, 0.6,
-	0.8, 1.0, 1.2, 1.5, 3.0, 8.0,
+	24.0, 12.0, 3.0, 1.5, 1.0, 0.8, 0.4,
+	0.8, 1.0, 1.5, 3.0, 12.0, 24.0,
 ]
 
 const BOARD_TOP_Y: float = 3.02
 const BOARD_BOTTOM_Y: float = 1.28
 const ROW_SPACING: float = (BOARD_TOP_Y - BOARD_BOTTOM_Y) / float(ROW_COUNT)
-const PEG_SPACING_X: float = 0.155
 const STEP_X: float = 0.155
+const SLOT_WIDTH: float = 0.19
 
 
 ## Builds a visual path in table-local coordinates and returns its landing slot.
@@ -25,16 +25,17 @@ static func build_path(rng: RandomNumberGenerator, start_position: Vector3 = Vec
 	var current_x: float = 0.0
 	for row_index: int in range(ROW_COUNT):
 		var peg_y: float = BOARD_TOP_Y - float(row_index) * ROW_SPACING
-		# Approach each row above the peg currently in this lane.
-		path.append(Vector3(current_x, peg_y + ROW_SPACING * 0.42, -0.015))
+		var safe_height: float = ROW_SPACING * 0.48
+		# Approach above the current peg, then shift sideways while still above it.
+		path.append(Vector3(current_x, peg_y + safe_height, -0.015))
 		var direction: int = -1 if rng.randi_range(0, 1) == 0 else 1
-		# Exit below the peg into the gap between the next row's pegs.
 		current_x += float(direction) * STEP_X * 0.5
 		horizontal_steps += direction
-		path.append(Vector3(current_x, peg_y - ROW_SPACING * 0.42, -0.015))
+		# Drop through the gap between the next row's pegs.
+		path.append(Vector3(current_x, peg_y + safe_height, -0.015))
+		path.append(Vector3(current_x, peg_y - safe_height, -0.015))
 	var slot_index: int = clampi(roundi(float(horizontal_steps + ROW_COUNT) * 0.5), 0, SLOT_MULTIPLIERS.size() - 1)
-	var slot_width: float = 0.19
-	var slot_x: float = (float(slot_index) - float(SLOT_MULTIPLIERS.size() - 1) * 0.5) * slot_width
+	var slot_x: float = (float(slot_index) - float(SLOT_MULTIPLIERS.size() - 1) * 0.5) * SLOT_WIDTH
 	path.append(Vector3(slot_x, BOARD_BOTTOM_Y - 0.13, -0.015))
 	return {
 		"path": path,

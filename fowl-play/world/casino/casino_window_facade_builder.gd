@@ -38,9 +38,12 @@ class_name CasinoWindowFacadeBuilder
 @export var generate_end_posts: bool = true
 
 @export_group("Materials")
-@export var glass_tint: Color = Color(0.72, 0.86, 0.94, 0.20)
+@export var glass_tint: Color = Color(0.98, 0.98, 0.96, 0.025)
 @export var bronze_color: Color = Color(0.36, 0.22, 0.105, 1.0)
 @export var sill_color: Color = Color(0.075, 0.082, 0.09, 1.0)
+
+@export_group("Collision")
+@export var generate_glass_collision: bool = true
 
 @export_group("Generation")
 @export var rebuild_geometry: bool = false:
@@ -51,7 +54,9 @@ class_name CasinoWindowFacadeBuilder
 const GENERATED_ROOT_NAME: String = "_GeneratedPanoramicFacade"
 
 func _ready() -> void:
-	if Engine.is_editor_hint():
+	# Generated children are serialized into the scene. Preserve editor-authored
+	# tweaks on reopen; the inspector rebuild toggle remains the explicit reset.
+	if Engine.is_editor_hint() and get_node_or_null(GENERATED_ROOT_NAME) == null:
 		_rebuild_geometry()
 
 func _rebuild_geometry() -> void:
@@ -75,10 +80,12 @@ func _rebuild_geometry() -> void:
 	generated_root.owner = scene_root
 
 	var glass_material: StandardMaterial3D = StandardMaterial3D.new()
+	# Clear architectural glazing: almost no tint or opacity, with a
+	# smooth dielectric surface so the skyline and rain remain crisp.
 	glass_material.albedo_color = glass_tint
 	glass_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	glass_material.metallic = 0.28
-	glass_material.roughness = 0.10
+	glass_material.metallic = 0.0
+	glass_material.roughness = 0.025
 	glass_material.cull_mode = BaseMaterial3D.CULL_DISABLED
 
 	var bronze_material: StandardMaterial3D = StandardMaterial3D.new()
@@ -161,12 +168,16 @@ func _build_facade_segment(
 	)
 
 	# Continuous, lightly tinted glazing keeps the skyline visually open.
+	var glass_size: Vector3 = Vector3(maxf(0.05, edge_length - mullion_width), glass_height, glass_thickness)
+	var glass_transform: Transform3D = Transform3D(segment_basis, midpoint + Vector3.UP * (glass_bottom + glass_height * 0.5))
 	_add_box(
 		parent, prefix + "Glass",
-		Vector3(maxf(0.05, edge_length - mullion_width), glass_height, glass_thickness),
-		Transform3D(segment_basis, midpoint + Vector3.UP * (glass_bottom + glass_height * 0.5)),
+		glass_size,
+		glass_transform,
 		glass_material, scene_root
 	)
+	if generate_glass_collision:
+		_add_box_collision(parent, prefix + "Glass_Collision", glass_size, glass_transform, scene_root)
 
 	# Slim bronze sill accent and top rail.
 	_add_box(
@@ -240,3 +251,25 @@ func _add_box(
 	mesh_instance.transform = box_transform
 	parent.add_child(mesh_instance)
 	mesh_instance.owner = scene_root
+
+func _add_box_collision(
+	parent: Node3D,
+	node_name: String,
+	box_size: Vector3,
+	box_transform: Transform3D,
+	scene_root: Node
+) -> void:
+	var body: StaticBody3D = StaticBody3D.new()
+	body.name = node_name
+	body.transform = box_transform
+	body.collision_layer = 1
+	body.collision_mask = 1
+	parent.add_child(body)
+	body.owner = scene_root
+
+	var collision: CollisionShape3D = CollisionShape3D.new()
+	var shape: BoxShape3D = BoxShape3D.new()
+	shape.size = box_size
+	collision.shape = shape
+	body.add_child(collision)
+	collision.owner = scene_root

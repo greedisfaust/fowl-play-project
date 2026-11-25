@@ -327,14 +327,15 @@ func _resolve_player_action(peer_id: int, advance_chicken: bool) -> Dictionary:
 		return _failure("Only the host can resolve Chicken Cross actions.")
 	if not _is_near_table(peer_id):
 		return _failure("The player must remain within table proximity.")
-	# The first CROSS after a confirmed wager starts the round, locks all stakes,
-	# initializes the chicken states, and then advances onto the first tile.
+	# The first CROSS starts the shared round and is announced once to every player.
+	var round_just_started: bool = false
 	if state == TableState.OPEN:
 		if not advance_chicken:
 			return _failure("CROSS must start the round before any player can cash out.")
 		var start_result: Dictionary = start_round(peer_id)
 		if not bool(start_result.get("ok", false)):
 			return start_result
+		round_just_started = true
 	if state != TableState.RUNNING or _round_model == null:
 		return _failure("Chicken Cross is not currently running.")
 	var result: Dictionary
@@ -344,6 +345,10 @@ func _resolve_player_action(peer_id: int, advance_chicken: bool) -> Dictionary:
 		result = _round_model.call("cash_out", peer_id)
 	if not bool(result.get("ok", false)):
 		return result
+	if round_just_started:
+		report_global_announcement("CHICKEN CROSS STARTED", "CHICKEN CROSS", 2)
+	if not advance_chicken:
+		report_global_announcement("%s CASHED OUT" % _get_player_nickname(peer_id), "CASH OUT", 2)
 	_publish_player_state(peer_id)
 	_try_settle_completed_round()
 	return result

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BettingTerminalProfile" format=3 uid="uid://beas5jalwx1vl"]
+
+[ext_resource type="Script" uid="uid://wf882bhl4vvh" path="res://casino/terminals/resources/betting_terminal_profile.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+game_title = "EGG PLINKO"
+game_description = "SET THE TEAM WAGER, CONFIRM, THEN DROP EGGS. EVERY DROP IS A NEW WAGER."
+pending_heading = "TEAM WAGER"
+player_list_heading = "EGGS IN FLIGHT"
+valid_message = "READY TO CONFIRM"
+invalid_message = "SELECT A VALID WAGER"
+insufficient_funds_message = "SAFETY LIMIT REACHED"
+no_wagers_message = "NO EGGS IN FLIGHT"
+total_reserved_label = "STAKES IN FLIGHT"

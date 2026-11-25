@@ -42,6 +42,14 @@ func _run() -> void:
 		_finish(false, "The Apartment phase should reject a departure from an invalid world ID.")
 		return
 	transition_source.emit_signal("world_changed", 0, 1)
+	var day_manager: Node = root.get_node_or_null("CasinoDayManager")
+	if not is_instance_valid(day_manager):
+		_finish(false, "CasinoDayManager should be available after Casino arrival.")
+		return
+	var day_start_result: Dictionary = day_manager.call("start_casino_day_after_disembark")
+	if not bool(day_start_result.get("ok", false)):
+		_finish(false, "The first player disembarking should start Day 1: %s" % str(day_start_result.get("reason", "")))
+		return
 	if int(manager.call("get_snapshot").get("phase", -1)) != 2:
 		_finish(false, "Completing Apartment to Casino should advance the phase.")
 		return
@@ -59,8 +67,7 @@ func _run() -> void:
 	if int(manager.call("get_departure_destination", 1)) != 0:
 		_finish(false, "An unlocked Casino departure should return to the Apartment for the Rest phase.")
 		return
-	var day_manager: Node = root.get_node_or_null("CasinoDayManager")
-	if not is_instance_valid(day_manager) or not bool(day_manager.get("day_active")):
+	if not bool(day_manager.get("day_active")):
 		_finish(false, "Day 1 casino state should be active before its deadline is simulated.")
 		return
 	day_manager.call("advance_day_timer", 300.0, 1000)
@@ -83,6 +90,10 @@ func _run() -> void:
 		_finish(false, "Apartment Rest-phase departure should lead to the next Casino day.")
 		return
 	transition_source.emit_signal("world_changed", 0, 1)
+	day_start_result = day_manager.call("start_casino_day_after_disembark")
+	if not bool(day_start_result.get("ok", false)):
+		_finish(false, "The first player disembarking should start Day 2.")
+		return
 	if int(manager.call("get_snapshot").get("current_day", 0)) != 2:
 		_finish(false, "Completing Apartment Rest phase to Casino should advance the day.")
 		return
@@ -100,6 +111,10 @@ func _run() -> void:
 		_finish(false, "A successful Day 2 should enter the Apartment Rest phase.")
 		return
 	transition_source.emit_signal("world_changed", 0, 1)
+	day_start_result = day_manager.call("start_casino_day_after_disembark")
+	if not bool(day_start_result.get("ok", false)):
+		_finish(false, "The first player disembarking should start Day 3.")
+		return
 	if int(manager.call("get_snapshot").get("current_day", 0)) != 3:
 		_finish(false, "A successful Day 2 should advance the next Casino day to Day 3.")
 		return
@@ -135,7 +150,8 @@ func _run() -> void:
 		_finish(false, "A fresh run should be available after session cleanup.")
 		return
 	manager.call("_publish_state", true, 10, 2, false)
-	if not bool(day_manager.get("day_active")) or int(day_manager.get("day_number")) != 10:
+	day_start_result = day_manager.call("start_casino_day_after_disembark")
+	if not bool(day_start_result.get("ok", false)) or not bool(day_manager.get("day_active")) or int(day_manager.get("day_number")) != 10:
 		_finish(false, "The Day 10 test phase should initialize the Day 10 timer.")
 		return
 	day_manager.call("advance_day_timer", 300.0, 1000)
@@ -151,6 +167,10 @@ func _run() -> void:
 		return
 	if not bool(manager.call("complete_world_transition", 0, 1)):
 		_finish(false, "The House continuation should successfully restart Day 10.")
+		return
+	day_start_result = day_manager.call("start_casino_day_after_disembark")
+	if not bool(day_start_result.get("ok", false)):
+		_finish(false, "The first player disembarking should start the replayed Day 10.")
 		return
 	if not bool(day_manager.get("day_active")) or int(day_manager.get("day_number")) != 10 or int(day_manager.get("starting_wallet")) != 1500:
 		_finish(false, "The replayed Day 10 should restart its timer using the continued wallet.")
@@ -170,7 +190,8 @@ func _run() -> void:
 		_finish(false, "A new run should start after the failed run is reset.")
 		return
 	manager.call("_publish_state", true, 10, 2, false)
-	if not bool(day_manager.get("day_active")) or int(day_manager.get("day_number")) != 10:
+	day_start_result = day_manager.call("start_casino_day_after_disembark")
+	if not bool(day_start_result.get("ok", false)) or not bool(day_manager.get("day_active")) or int(day_manager.get("day_number")) != 10:
 		_finish(false, "The successful Day 10 test should initialize correctly.")
 		return
 	day_manager.call("advance_day_timer", 300.0, 2200)

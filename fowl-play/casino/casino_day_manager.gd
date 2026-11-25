@@ -20,6 +20,7 @@ var daily_quota: int = 0
 var seconds_remaining: float = 0.0
 var quota_reached: bool = false
 var day_result_recorded: bool = false
+var day_start_pending: bool = false
 var day_success: bool = false
 var final_wallet_snapshot: int = 0
 
@@ -96,6 +97,7 @@ func begin_casino_day(requested_day: int, wallet_at_day_start: int) -> Dictionar
 		return _failure("A casino day is already active.")
 	if day_result_recorded and requested_day == day_number:
 		return _failure("This casino day has already been recorded.")
+	day_start_pending = false
 	day_number = requested_day
 	starting_wallet = wallet_at_day_start
 	current_wallet_balance = wallet_at_day_start
@@ -107,8 +109,8 @@ func begin_casino_day(requested_day: int, wallet_at_day_start: int) -> Dictionar
 	day_success = false
 	final_wallet_snapshot = 0
 	_last_published_second = ceili(seconds_remaining)
-	if quota_reached:
-		_set_departure_allowed(true)
+	# Departure permission always mirrors the current wallet, including a fresh day.
+	_set_departure_allowed(quota_reached)
 	_publish_state()
 	_log("Day %d started: wallet %d, quota %d, timer %.0fs." % [day_number, starting_wallet, daily_quota, seconds_remaining])
 	return _success(get_snapshot())
@@ -157,6 +159,7 @@ func _on_wallet_changed(available_balance: int, _reserved_total: int) -> void:
 func _on_run_state_changed(snapshot: Dictionary) -> void:
 	var run_is_active: bool = bool(snapshot.get("run_active", false))
 	if not run_is_active:
+		day_start_pending = false
 		day_active = false
 		day_number = 0
 		starting_wallet = 0
@@ -170,28 +173,63 @@ func _on_run_state_changed(snapshot: Dictionary) -> void:
 		_last_published_second = -1
 		day_state_changed.emit(get_snapshot())
 		return
-	if not _is_authority():
-		return
 	var phase_value: int = int(snapshot.get("phase", -1))
-	if not run_is_active or phase_value != 2:
+	if phase_value != 2:
+		day_start_pending = false
 		return
 	var incoming_day: int = int(snapshot.get("current_day", 0))
 	if day_active and day_number == incoming_day:
 		return
 	if day_result_recorded and day_number == incoming_day:
 		return
-	var result: Dictionary = begin_casino_day(incoming_day, _get_current_wallet_balance())
-	if not bool(result.get("ok", false)):
-		_log("Could not initialize casino day: %s" % str(result.get("reason", "")))
+	# Mirror the incoming day immediately, but defer its actual timer/quota snapshot
+	# until the host observes the first player leaving the destination elevator.
+	day_active = false
+	day_number = incoming_day
+	starting_wallet = _get_current_wallet_balance()
+	current_wallet_balance = starting_wallet
+	daily_quota = 0
+	seconds_remaining = 0.0
+	quota_reached = false
+	day_result_recorded = false
+	day_success = false
+	final_wallet_snapshot = 0
+	_last_published_second = -1
+	day_start_pending = _is_authority()
+	day_state_changed.emit(get_snapshot())
+	if _is_authority():
+		_log("Day %d is waiting for the first player to leave the elevator." % incoming_day)
 
+func start_casino_day_after_disembark() -> Dictionary:
+	if not _is_authority():
+		return _failure("Only the host can start the casino day.")
+	if not day_start_pending or day_active:
+		return _failure("The casino day is not waiting for its first disembark.")
+	if not is_instance_valid(_run_manager) or int(_run_manager.get("phase")) != 2:
+		return _failure("The run is no longer in the Casino phase.")
+	var requested_day: int = int(_run_manager.get("current_day"))
+	var result: Dictionary = begin_casino_day(requested_day, _get_current_wallet_balance())
+	if not bool(result.get("ok", false)):
+		_log("Could not start casino day after disembark: %s" % str(result.get("reason", "")))
+		return result
+	_log("Day %d timer started after the first player left the elevator." % requested_day)
+	return result
 
 func _evaluate_quota(current_balance: int) -> void:
-	if not day_active or quota_reached or current_balance < daily_quota:
+	if not day_active:
 		return
-	quota_reached = true
-	_set_departure_allowed(true)
-	_publish_state()
-	_log("Day %d quota reached at wallet %d (target %d). Early departure is unlocked; play may continue." % [day_number, current_balance, daily_quota])
+	var quota_is_currently_met: bool = current_balance >= daily_quota
+	if quota_is_currently_met == quota_reached:
+		return
+
+	# Quota is a live condition, not a permanent achievement flag. If a later
+	# wager drops the available wallet below target, lock departure again.
+	quota_reached = quota_is_currently_met
+	_set_departure_allowed(quota_reached)
+	if quota_reached:
+		_log("Day %d quota reached at wallet %d (target %d). Early departure is unlocked; play may continue." % [day_number, current_balance, daily_quota])
+	else:
+		_log("Day %d wallet fell below quota (%d / %d). Early departure is locked again." % [day_number, current_balance, daily_quota])
 
 
 func _finish_at_deadline(current_balance: int) -> void:
@@ -213,12 +251,27 @@ func _finish_at_deadline(current_balance: int) -> void:
 func finish_early_departure(final_wallet_override: int = -1) -> Dictionary:
 	if not _is_authority():
 		return _failure("Only the host can end a casino day.")
-	if not day_active or not quota_reached:
-		return _failure("Early departure requires an active day whose quota has been reached.")
+	if not day_active:
+		return _failure("Early departure requires an active casino day.")
+
+	# Re-read the wallet at the point of departure. Never trust the cached
+	# quota flag: a wager may have lowered the balance since it was unlocked.
+	var departure_balance: int = final_wallet_override if final_wallet_override >= 0 else _get_current_wallet_balance()
+	current_wallet_balance = departure_balance
+	_evaluate_quota(departure_balance)
+	if not quota_reached or departure_balance < daily_quota:
+		_publish_state()
+		return _failure("Early departure is locked: current wallet %s is below the required quota %s." % [str(departure_balance), str(daily_quota)])
+
 	_cleanup_tables("early_departure")
+	# Table cleanup can settle/refund wagers, so validate the final live balance again.
 	final_wallet_snapshot = final_wallet_override if final_wallet_override >= 0 else _get_current_wallet_balance()
 	current_wallet_balance = final_wallet_snapshot
-	day_success = final_wallet_snapshot >= daily_quota
+	_evaluate_quota(final_wallet_snapshot)
+	if not quota_reached or final_wallet_snapshot < daily_quota:
+		_publish_state()
+		return _failure("Early departure cancelled: final wallet no longer meets the daily quota.")
+	day_success = true
 	day_result_recorded = true
 	day_active = false
 	seconds_remaining = 0.0

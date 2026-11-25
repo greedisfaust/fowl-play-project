@@ -9,9 +9,9 @@ The persistent CasinoHUD is a CanvasLayer child of the persistent Main scene. Th
 - Daily quota.
 - Casino countdown timer.
 - Per-player daily contribution totals derived only from settled wager records (`net_result` grouped by `peer_id`).
-- Contextual M1/E prompts from the existing local Focus/Interactable target, plus Q/F combat prompts and carry-specific Q prompts.
-- Brief quota-reached and day-result announcements.
-- A Blessed/Watched panel integration point that remains hidden until an authoritative modifier service supplies real player assignments.
+- A bottom-right contextual control stack driven by the local player's movement, focus, carry, and recovery states.
+- A priority-aware center-screen announcer for local table feedback, quota completion, and day results.
+- A visible Blessed/Watched placeholder panel reserved for a future authoritative modifier service.
 
 The HUD is visible only while MainController's active world is the Casino.
 
@@ -69,7 +69,7 @@ The wallet amount shown is the available shared balance, consistent with quota e
 - Wallet and quota after reached: gold.
 - Timer normally uses a light neutral color and turns warning red at 30 seconds or less.
 
-The controller creates the contribution, modifier, action-prompt, and announcement labels at runtime so the user's authored `.tscn` hierarchy remains untouched. It applies the assigned terminal font to those labels as well. The current HUD uses color changes but does not yet add a wallet glow effect; that remains a visual polish item for the in-game review.
+The controller creates the contribution, modifier placeholder, contextual control stack, timer caption, and announcer at runtime. The wallet and quota retain green/red colors until quota is reached; only then do both transition to warm gold and receive a soft text shader bloom. The quota transition plays a one-time reward flare and sweeping highlight, then settles into a soft champagne halo with a restrained idle glint. The shader preserves the original green/red text colors until quota is reached. The announcer begins below the timer with a small visual gap. The shader is `res://ui/hud/quota_glow.gdshader`.
 
 ## Integration
 
@@ -94,9 +94,9 @@ Run the existing RunManager and Casino Day test runners after integration.
 - `CasinoWallet.wager_changed` is observed, but only the `settled` status is counted. The controller reads the settled wager record and adds its `net_result` to the total for that wager's `peer_id`. Reserved, locked, withdrawn, and refunded wagers are not counted. A wager ID is counted once only.
 - Player nicknames and row colors come from the existing Network identity roster. If an identity is not available, the row falls back to `PLAYER <peer_id>`.
 - Contribution totals reset when a new run begins or the casino day number changes.
-- The bottom-left action prompt listens to the local Player's existing `Focus.focus_target_changed` signal. M1 and E are shown only when the focused Interactable accepts those inputs. Q and F are shown as punch/parry controls; while carrying, Q is described as drop/throw.
-- Quota-reached and day-finished signals drive short announcements. The controller does not create or change progression state.
-- Blessed/Watched currently has no authoritative modifier service to read. `set_modifier_status(blessed_player, watched_player)` is an explicit future integration point; the panel stays hidden until non-empty authoritative assignments are supplied. Do not call it with placeholder/random player names.
+- The bottom-right contextual control stack listens to the local Player's existing `Focus.focus_target_changed` signal, Carrier signals, and movement/recovery state. It shows Interact only when the focused Interactable accepts M1 or E; carrying replaces combat actions with Drop/Throw. All entries use bright terminal-white, right-aligned, with no indentation.
+- Quota-reached and day-result announcements are derived from CasinoDayManager's synchronized state, so every peer sees the same result. BaseTable exposes a host-authoritative `global_announcement` RPC for shared gameplay events; Chicken Cross uses it for round start and successful cash-out. Peer-targeted table feedback remains private to its intended player. The announcer is an unboxed floating feed: up to three notices stack newest-first, fade after a short lifetime, suppress duplicates, and allow critical notices to clear lower-priority entries. It never changes progression state.
+- Blessed/Watched currently has no authoritative modifier service to read. The panel is a visible placeholder with empty values. `set_modifier_status(blessed_player, watched_player)` remains the future integration point; only call it with real authoritative assignments.
 
 ## Updated playtest checklist
 
@@ -106,11 +106,14 @@ Run the existing RunManager and Casino Day test runners after integration.
 4. Settle a losing wager. The same player's total should decrease by the net loss.
 5. Withdraw an unstarted wager or cancel an unstarted round. Confirm the contribution total does not change.
 6. Settle more than one wager for one player. Confirm the row accumulates the net results and does not double-count.
-7. Reach quota. Confirm the announcement appears and wallet/quota colors turn gold.
-8. Focus a USE target and a GRAB target. Confirm M1/E hints match the Interactable's accepted inputs and prompt text. Look away and confirm the target prompt clears.
-9. Stand normally and confirm Q punch / F parry hints. Carry an item and confirm the Q drop/throw hint appears.
-10. Finish a casino day and confirm the day-result announcement contains the actual final wallet and quota.
+7. Reach quota. Confirm every peer sees the announcement and wallet/quota transition from green/red to a smooth champagne-gold gradient, with a one-time bright reward sweep followed by a soft idle glow.
+8. Confirm the center announcer has a comfortable small gap beneath the timer without moving too far down the screen.\n9. Focus a USE target and a GRAB target. Confirm M1/E hints match the Interactable's accepted inputs and prompt text. Look away and confirm the target prompt clears.
+10. Stand still and confirm the movement baseline sits at the bottom-right. Move and confirm Sprint/Jump appear above it; focus an interactable and confirm Interact appears; carry an item and confirm Drop/Throw replace combat actions.
+11. Finish a casino day and confirm every peer sees the day-result announcement with the actual final wallet and quota.
 11. Start a fresh run and confirm prior contribution rows are cleared.
-12. Confirm Blessed/Watched stays hidden until a real modifier provider is connected; no fake assignments should appear.
+12. Confirm the Blessed/Watched placeholder remains visible without invented player assignments; calling `set_modifier_status` should only happen with real authoritative values.
+13. Confirm the unboxed announcer stacks up to three notices newest-first, fades them out, suppresses duplicates, and lets critical quota/day-result notices override lower-priority notices.
+14. Confirm wallet remains green and quota remains red before quota. On quota, confirm a one-time bright golden flare/sweep, followed by a soft champagne halo and restrained idle glint.
+15. Confirm the contextual controls sit bottom-right, remain right-aligned and terminal-white, and update for movement, focus, carrying, and recovery.
 
 The current branch has no dedicated automated CasinoHUD test stage yet. Run the existing `tests/run_run_manager_checks.bat` and `tests/run_casino_day_checks.bat` checks, plus `tests/run_checks.ps1 -OnlyStage casino-wallet` from `fowl-play/`. The user must perform the rendered HUD and two-instance multiplayer checks above. The assistant has not run Godot in this environment.

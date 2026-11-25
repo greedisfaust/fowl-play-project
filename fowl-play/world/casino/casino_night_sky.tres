@@ -1,0 +1,17 @@
+[gd_resource type="Sky" format=3 uid="uid://6uhxend5dl0d"]
+
+[ext_resource type="Shader" uid="uid://mxn6rf0qqbag" path="res://world/casino/shaders/night_city_sky.gdshader" id="1_night_city_sky"]
+
+[sub_resource type="ShaderMaterial" id="NightCitySkyMaterial"]
+shader = ExtResource("1_night_city_sky")
+shader_parameter/zenith_color = Color(0.004, 0.008, 0.022, 1)
+shader_parameter/upper_haze_color = Color(0.018, 0.028, 0.065, 1)
+shader_parameter/horizon_color = Color(0.055, 0.07, 0.125, 1)
+shader_parameter/amber_city_glow = Color(0.34, 0.105, 0.045, 1)
+shader_parameter/cyan_city_glow = Color(0.025, 0.18, 0.28, 1)
+shader_parameter/violet_city_glow = Color(0.16, 0.055, 0.25, 1)
+shader_parameter/horizon_glow_strength = 0.72
+shader_parameter/cloud_strength = 0.055
+
+[resource]
+sky_material = SubResource("NightCitySkyMaterial")

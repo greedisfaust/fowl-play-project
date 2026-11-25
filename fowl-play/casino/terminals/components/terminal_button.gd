@@ -68,12 +68,10 @@ func _on_interacted(_actor: Node, action: StringName) -> void:
 	if action != &"use":
 		return
 	var network: Node = get_node_or_null("/root/Network")
-	if not is_instance_valid(network):
-		return
-	var network_peer: MultiplayerPeer = network.get("peer") as MultiplayerPeer
-	# Interactable emits on the authority. Offline mode has no ENet peer but
-	# still owns the local interaction.
-	if network_peer != null and not bool(network.get("is_host")):
+	var network_peer: MultiplayerPeer = network.get("peer") as MultiplayerPeer if is_instance_valid(network) else null
+	# Interactable emits on the authority. Offline mode may not have a Network
+	# autoload/ENet peer, but local keypad input must still reach its controller.
+	if network_peer != null and is_instance_valid(network) and not bool(network.get("is_host")):
 		return
 	var actor_peer_id: int = int(_actor.get("input_peer_id")) if _actor_has_peer_id(_actor) else 0
 	if actor_peer_id <= 0:

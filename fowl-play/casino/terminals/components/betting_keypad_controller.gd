@@ -15,6 +15,7 @@ const TABLE_STATE_OPEN: int = 1
 @export var display: Node
 @export var profile: BettingTerminalProfile
 @export var one_wager_per_player: bool = true
+@export var selection_only: bool = false
 
 var _wallet: Node = null
 var _network: Node = null
@@ -22,6 +23,8 @@ var _debug_hub: Node = null
 var _debug_watch_prefix: String = ""
 var _last_confirmation_status: String = "No wager confirmed yet."
 var _pending_digits: String = "0"
+var _pending_digits_by_peer: Dictionary = {}
+var _active_input_peer_id: int = 0
 var _snapshot_revision: int = 0
 var _snapshot_request_sent: bool = false
 var _connected_buttons: Array[Node] = []
@@ -47,6 +50,11 @@ func _ready() -> void:
 	_connect_authority_signals()
 	_apply_pending_amount()
 	_try_request_snapshot()
+	# The table creates this controller dynamically during its own _ready().
+	# Re-scan once the complete inherited scene tree has finished entering the
+	# tree so every physical key (including the adjacent CONFIRM key) is bound.
+	call_deferred("_connect_key_buttons")
+	call_deferred("_apply_pending_amount")
 
 func _exit_tree() -> void:
 	for button: Node in _connected_buttons:
@@ -83,6 +91,9 @@ func handle_button_input(button_id: StringName, peer_id: int) -> Dictionary:
 		peer_id = multiplayer.get_unique_id()
 	if peer_id <= 0:
 		return _failure("The interacting player's peer ID is invalid.")
+	if selection_only:
+		_active_input_peer_id = peer_id
+		_pending_digits = str(_pending_digits_by_peer.get(peer_id, "0"))
 	var action: String = _normalize_button_id(String(button_id))
 	if action.length() == 1 and action.is_valid_int():
 		if _pending_digits.length() >= MAX_WAGER_DIGITS:
@@ -95,28 +106,41 @@ func handle_button_input(button_id: StringName, peer_id: int) -> Dictionary:
 			_pending_digits = action
 		else:
 			_pending_digits += action
+		_remember_pending_digits(peer_id)
 		_publish_snapshot()
 		return _success({"pending_amount": get_pending_wager_amount()})
 	match action:
 		"CLEAR", "CLR", "RESET", "C":
 			_pending_digits = "0"
+			_remember_pending_digits(peer_id)
 			_publish_snapshot()
 			return _success({"pending_amount": 0})
 		"BACKSPACE", "BACK", "DELETE", "DEL", "BKSP", "←", "⌫":
 			_pending_digits = _pending_digits.left(_pending_digits.length() - 1) if _pending_digits.length() > 1 else "0"
+			_remember_pending_digits(peer_id)
 			_publish_snapshot()
 			return _success({"pending_amount": get_pending_wager_amount()})
 		"MIN":
-			return _apply_wager_preset(profile.get_effective_minimum())
+			return _apply_wager_preset(_get_wager_limits()["minimum"])
 		"QUARTER", "1/4", "ONE_QUARTER", "QTR":
 			return _apply_balance_fraction(4)
 		"HALF", "1/2", "ONE_HALF":
 			return _apply_balance_fraction(2)
 		"MAX":
-			var maximum_value: int = profile.get_effective_maximum() if profile != null else 2147483647
+			var maximum_value: int = int(_get_wager_limits()["maximum"])
 			return _apply_wager_preset(mini(maximum_value, _get_available_balance()))
 		"CONFIRM", "ENTER", "OK", "SUBMIT":
 			var submitted_amount: int = get_pending_wager_amount()
+			# Cluckpot opts into reusing its saved wager: once a player has
+			# selected an amount, a blank Confirm immediately starts another spin.
+			# Other selection-only tables keep their existing keypad behavior.
+			if selection_only and submitted_amount <= 0 and is_instance_valid(table) and table.has_method("confirm_selected_wager"):
+				var saved_wager: int = int(table.call("get_selected_wager", peer_id)) if table.has_method("get_selected_wager") else 0
+				if saved_wager > 0:
+					var repeat_confirmation: Dictionary = table.call("confirm_selected_wager", peer_id)
+					_last_confirmation_status = "SPIN %s" % _format_money(saved_wager) if bool(repeat_confirmation.get("ok", false)) else "REJECTED: %s" % str(repeat_confirmation.get("reason", "unknown error"))
+					_publish_snapshot()
+					return repeat_confirmation
 			var confirmation: Dictionary = _confirm_pending_wager(peer_id)
 			_last_confirmation_status = "CONFIRMED %s" % _format_money(submitted_amount) if bool(confirmation.get("ok", false)) else "REJECTED: %s" % str(confirmation.get("reason", "unknown error"))
 			_publish_snapshot()
@@ -130,19 +154,40 @@ func _apply_balance_fraction(divisor: int) -> Dictionary:
 	if divisor <= 0:
 		return _failure("Invalid wager preset.")
 	var amount: int = floori(float(_get_available_balance()) / float(divisor))
-	var maximum_value: int = profile.get_effective_maximum() if profile != null else 2147483647
+	var maximum_value: int = int(_get_wager_limits()["maximum"])
 	amount = mini(amount, maximum_value)
 	return _apply_wager_preset(amount)
 
 
 func _apply_wager_preset(amount: int) -> Dictionary:
-	var minimum_value: int = profile.get_effective_minimum() if profile != null else 1
-	if _get_available_balance() < minimum_value:
-		return _failure("Available shared funds are below the minimum wager.")
-	var adjusted_amount: int = clampi(amount, minimum_value, mini(profile.get_effective_maximum(), _get_available_balance())) if profile != null else maxi(amount, minimum_value)
+	var limits: Dictionary = _get_wager_limits()
+	var minimum_value: int = int(limits["minimum"])
+	var maximum_value: int = int(limits["maximum"])
+	if maximum_value < minimum_value or maximum_value <= 0 or minimum_value <= 0:
+		return _failure("Available shared funds are below the current safe wager limit.")
+	var adjusted_amount: int = clampi(amount, minimum_value, maximum_value)
 	_pending_digits = str(adjusted_amount)
+	_remember_pending_digits(_active_input_peer_id)
 	_publish_snapshot()
 	return _success({"pending_amount": adjusted_amount})
+
+
+func _remember_pending_digits(peer_id: int) -> void:
+	if selection_only and peer_id > 0:
+		_pending_digits_by_peer[peer_id] = _pending_digits
+
+
+func _get_wager_limits() -> Dictionary:
+	if is_instance_valid(table) and table.has_method("get_wager_limits"):
+		var dynamic_limits: Variant = table.call("get_wager_limits")
+		if typeof(dynamic_limits) == TYPE_DICTIONARY:
+			return dynamic_limits
+	var minimum_value: int = profile.get_effective_minimum() if profile != null else 1
+	var configured_maximum: int = profile.get_effective_maximum() if profile != null else 2147483647
+	return {
+		"minimum": minimum_value,
+		"maximum": mini(configured_maximum, _get_available_balance()),
+	}
 
 
 func _get_available_balance() -> int:
@@ -180,10 +225,24 @@ func _confirm_pending_wager(peer_id: int) -> Dictionary:
 	if not is_instance_valid(table):
 		return _failure("The betting table is unavailable.")
 	var amount: int = get_pending_wager_amount()
-	var minimum_value: int = profile.get_effective_minimum() if profile != null else 1
-	var maximum_value: int = profile.get_effective_maximum() if profile != null else 2147483647
+	var limits: Dictionary = _get_wager_limits()
+	var minimum_value: int = int(limits["minimum"])
+	var maximum_value: int = int(limits["maximum"])
+	if minimum_value <= 0 or maximum_value <= 0:
+		return _failure("No safe wager is currently available from the shared wallet and quota.")
 	if amount < minimum_value or amount > maximum_value:
 		return _failure("Wager must be between %d and %d." % [minimum_value, maximum_value])
+	if selection_only:
+		if not table.has_method("set_selected_wager"):
+			return _failure("This table does not support selected wagers.")
+		var selection_result: Dictionary = table.call("set_selected_wager", peer_id, amount)
+		if bool(selection_result.get("ok", false)):
+			_pending_digits = "0"
+			_pending_digits_by_peer[peer_id] = "0"
+			_last_confirmation_status = "SELECTED %s" % _format_money(amount)
+			_publish_snapshot()
+			wager_confirmation_result.emit(peer_id, selection_result.duplicate(true))
+		return selection_result
 	if not is_instance_valid(_wallet) or not _wallet.has_method("get_snapshot"):
 		return _failure("The shared wallet is unavailable.")
 	var wallet_snapshot: Dictionary = _wallet.call("get_snapshot")
@@ -228,6 +287,10 @@ func _connect_key_buttons() -> void:
 	if button_root == null:
 		return
 	_connect_key_buttons_recursive(button_root)
+	if _connected_buttons.is_empty():
+		push_warning("BettingKeypadController found no physical TerminalButton inputs under %s." % str(button_root.get_path()))
+	elif is_instance_valid(_debug_hub):
+		_debug_hub.call("log", &"wallet", "Betting keypad bound %d physical inputs." % _connected_buttons.size())
 
 func _connect_key_buttons_recursive(parent_node: Node) -> void:
 	for child: Node in parent_node.get_children():
@@ -243,7 +306,7 @@ func _on_button_activated(button_id: StringName, peer_id: int) -> void:
 	var action: String = _normalize_button_id(String(button_id))
 	# Cross/cash-out controls are handled by ChickenCrossTable itself, not
 	# by the wager-entry keypad.
-	if action in ["CROSS", "CASH_OUT", "CASHOUT"]:
+	if action in ["CROSS", "CASH_OUT", "CASHOUT"] or (selection_only and action == "PLINKO"):
 		return
 	if is_instance_valid(_debug_hub):
 		_debug_hub.call("log", &"wallet", "Received physical keypad input '%s' from peer %d." % [String(button_id), peer_id])

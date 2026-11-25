@@ -82,6 +82,8 @@ func _ready() -> void:
 		_occupancy.connect("occupant_entered", _on_rest_occupant_entered)
 	if _occupancy.is_connected("occupant_exited", _on_rest_occupant_exited) == false:
 		_occupancy.connect("occupant_exited", _on_rest_occupant_exited)
+	if _occupancy.is_connected("occupant_exited", _on_casino_occupant_exited) == false:
+		_occupancy.connect("occupant_exited", _on_casino_occupant_exited)
 	_sync_rest_disembark_gate()
 	if _button.has_signal("button_activated"):
 		if not _button.is_connected("button_activated", _on_button_activated):
@@ -106,6 +108,8 @@ func _exit_tree() -> void:
 			_occupancy.disconnect("occupant_entered", _on_rest_occupant_entered)
 		if _occupancy.is_connected("occupant_exited", _on_rest_occupant_exited):
 			_occupancy.disconnect("occupant_exited", _on_rest_occupant_exited)
+		if _occupancy.is_connected("occupant_exited", _on_casino_occupant_exited):
+			_occupancy.disconnect("occupant_exited", _on_casino_occupant_exited)
 	if is_instance_valid(_casino_day_manager) and _casino_day_manager.has_signal("day_finished"):
 		var day_finished_callback: Callable = Callable(self, "_on_casino_day_finished")
 		if _casino_day_manager.is_connected("day_finished", day_finished_callback):
@@ -243,6 +247,20 @@ func _update_rest_disembark_progress() -> void:
 			_rest_disembarked[peer_id] = true
 			if _rest_disembark_pending.is_empty():
 				_log_rejection("REST departure unlocked: every player has left the Apartment elevator.")
+
+
+## The first player to step out of the destination Casino elevator starts the day clock.
+func _on_casino_occupant_exited(_peer_id: int, _player: Node) -> void:
+	if not _is_network_authority() or not is_instance_valid(_run_manager):
+		return
+	if int(_run_manager.get("phase")) != 2:
+		return
+	var day_manager: Node = get_node_or_null("/root/CasinoDayManager")
+	if not is_instance_valid(day_manager) or not day_manager.has_method("start_casino_day_after_disembark"):
+		return
+	var result: Dictionary = day_manager.call("start_casino_day_after_disembark")
+	if bool(result.get("ok", false)):
+		_log_rejection("Casino day timer started after the first player disembarked.")
 
 
 func _on_rest_occupant_entered(peer_id: int, _player: Node) -> void:

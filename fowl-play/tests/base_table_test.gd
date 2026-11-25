@@ -11,11 +11,16 @@ func _initialize() -> void:
 func _run() -> void:
 	var wallet: Node = root.get_node("CasinoWallet")
 	_check_result(wallet.call("begin_run", 1000), true, "Initialize shared wallet")
+	var day_manager: Node = root.get_node("CasinoDayManager")
+	_check_result(day_manager.call("begin_casino_day", 1, 1000), true, "Start a quota-backed casino day")
 	var table: BaseTable = BaseTableScript.new() as BaseTable
 	table.set("table_id", "test_table")
 	table.set("game_id", "test_game")
 	table.set("max_participants", 2)
 	root.add_child(table)
+	var initial_limits: Dictionary = table.call("get_wager_limits")
+	_check(int(initial_limits.get("minimum", 0)) == 100, "Shared rules retain the profile minimum while funds support it")
+	_check(int(initial_limits.get("maximum", 0)) == 737, "Shared rules cap maximum by quota gap and 15 percent safety reserve")
 
 	var feedback_events: Array[Dictionary] = []
 	table.player_feedback.connect(func(peer_id: int, message: String, severity: StringName) -> void:
@@ -48,6 +53,8 @@ func _run() -> void:
 	_check_result(second_wager, true, "Second participant confirms a wager")
 	_check_result(table.call("update_wager", 2, first_wager_id, 150, {}), false, "A player cannot edit another player's wager")
 	_check(int(wallet.call("get_snapshot")["available_balance"]) == 700, "Both wagers reserve from shared funds")
+	var limits_after_wagers: Dictionary = table.call("get_wager_limits")
+	_check(int(limits_after_wagers.get("maximum", 0)) == 737, "Daily wager maximum stays fixed after wallet reservations")
 
 	var exit_result: Dictionary = table.call("exit_proximity", 2)
 	_check_result(exit_result, true, "Leaving before start removes the participant")
@@ -74,7 +81,7 @@ func _run() -> void:
 
 	_check_result(table.call("open_round", 2), true, "Table can open another round")
 	_check_result(table.call("join_table", 2), true, "Player joins the next round")
-	_check_result(table.call("place_wager", 2, 50, {}), true, "Player reserves another wager")
+	_check_result(table.call("place_wager", 2, 100, {}), true, "Player reserves another wager")
 	_check_result(table.call("cancel_open_round"), true, "Open round can be cancelled")
 	_check(int(wallet.call("get_snapshot")["available_balance"]) == 1050, "Cancelling an open round refunds its wager")
 	_check(int(table.get("state")) == 0, "Cancelled table returns to idle")
@@ -87,7 +94,7 @@ func _run() -> void:
 	table.set("open_round_inactivity_seconds", 0.05)
 	_check_result(table.call("open_round", 2), true, "Table opens a round for inactivity timeout")
 	_check_result(table.call("join_table", 2), true, "Participant joins timeout round")
-	var timeout_wager: Dictionary = table.call("place_wager", 2, 75, {})
+	var timeout_wager: Dictionary = table.call("place_wager", 2, 100, {})
 	var timeout_wager_id: String = str(timeout_wager.get("wager_id", ""))
 	_check_result(timeout_wager, true, "Timeout round reserves a wager")
 	await create_timer(0.15).timeout
@@ -100,7 +107,7 @@ func _run() -> void:
 	)
 	_check_result(table.call("open_round", 2), true, "Table opens a round for deadline cleanup")
 	_check_result(table.call("join_table", 2), true, "Participant joins deadline round")
-	var deadline_wager: Dictionary = table.call("place_wager", 2, 80, {})
+	var deadline_wager: Dictionary = table.call("place_wager", 2, 100, {})
 	var deadline_wager_id: String = str(deadline_wager.get("wager_id", ""))
 	_check_result(deadline_wager, true, "Deadline round reserves a wager")
 	_check_result(table.call("start_round", 2), true, "Deadline round starts and locks wager")
@@ -111,7 +118,7 @@ func _run() -> void:
 	_check(auto_resolution_requests.size() == 1, "Game adapter receives one automatic resolution request")
 	_check(str(auto_resolution_requests[0].get("reason", "")) == "casino_timer_expired", "Automatic resolution receives the cleanup reason")
 	_check_result(table.call("settle_round", {deadline_wager_id: 0}), true, "Automatically resolved deadline round can settle")
-	_check(int(wallet.call("get_snapshot")["available_balance"]) == 970, "Deadline loss remains charged after settlement")
+	_check(int(wallet.call("get_snapshot")["available_balance"]) == 950, "Deadline loss remains charged after settlement")
 
 	table.queue_free()
 	if _failed:
