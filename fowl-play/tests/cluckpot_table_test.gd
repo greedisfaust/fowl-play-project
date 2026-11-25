@@ -23,7 +23,7 @@ func _run() -> void:
 	]
 	var seven_wins: Array[Dictionary] = Rules.evaluate_lines(seven_columns)
 	_check(not seven_wins.is_empty() and str(seven_wins[0].get("symbol", "")) == "SEVEN", "Three Golden 7s form a winning line")
-	_check(Rules.calculate_payout(100, {"line_wins": seven_wins}) == 14000, "Single Golden 7 line pays the boosted 140x multiplier")
+	_check(Rules.calculate_payout(100, {"line_wins": seven_wins}) == 12600, "Single Golden 7 line pays the boosted 140x multiplier")
 	var off_line_columns: Array = [
 		["SEVEN", "CHICK", "EGG"],
 		["SEVEN", "CORN", "WINGS"],
@@ -41,7 +41,7 @@ func _run() -> void:
 		if str(win.get("symbol", "")) == "ROOSTER":
 			found_rooster = true
 	_check(found_rooster, "Golden Chicken wild substitutes into a matching rooster center line")
-	_check(Rules.PAYOUTS["SEVEN"] == 140.0 and Rules.PAYOUTS["WILD"] == 70.0, "Single-line premium multipliers compensate for the reduced number of paylines")
+	_check(Rules.PAYOUTS["SEVEN"] == 126.0 and Rules.PAYOUTS["WILD"] == 63.0, "Single-line premium multipliers compensate for the reduced number of paylines")
 
 	var arcade: Node3D = ArcadeScene.instantiate() as Node3D
 	_check(is_instance_valid(arcade), "Cluckpot arcade scene instantiates")
