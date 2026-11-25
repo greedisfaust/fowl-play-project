@@ -6,7 +6,7 @@ const SYMBOLS: Array[String] = ["SEVEN", "WILD", "ROOSTER", "CHICK", "EGG", "COR
 const SYMBOL_WEIGHTS: Array[int] = [4, 8, 10, 13, 16, 21, 28]
 const PAYOUTS: Dictionary = {
 	# Single center-line paytable: 5x the previous line values to compensate
-	# for removing four paylines while keeping the same expected return.
+	# for removing four paylines while targeting a roughly 91.7% theoretical return.
 	"SEVEN": 140.0,
 	"WILD": 70.0,
 	"ROOSTER": 35.0,
