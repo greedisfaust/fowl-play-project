@@ -15,6 +15,17 @@ const Rules = preload("res://casino/tables/cluckpot/cluckpot_rules.gd")
 var reel_cells: Array[Array] = []
 var reel_drums: Array[Node3D] = []
 const REEL_SYMBOL_COUNT: int = 10
+const SYMBOL_TEXTURES: Dictionary = {
+	"SEVEN": preload("res://assets/images/cluckpot/seven.png"),
+	"WILD": preload("res://assets/images/cluckpot/gold_chicken.png"),
+	"ROOSTER": preload("res://assets/images/cluckpot/normal_chicken.png"),
+	"CHICK": preload("res://assets/images/cluckpot/baby_chicken.png"),
+	"EGG": preload("res://assets/images/cluckpot/egg.png"),
+	"CORN": preload("res://assets/images/cluckpot/corn.png"),
+	"WINGS": preload("res://assets/images/cluckpot/chickenwings.png"),
+}
+var reel_symbol_cells: Array[Array] = []
+var _jackpot_trim_material: StandardMaterial3D
 var _symbol_rng := RandomNumberGenerator.new()
 
 
@@ -77,6 +88,7 @@ func build(parent: Node3D, number: int = 1) -> void:
 	cabinet.add_child(reels)
 	reel_cells.clear()
 	reel_drums.clear()
+	reel_symbol_cells.clear()
 	_symbol_rng.randomize()
 	for reel_index: int in range(3):
 		var drum := Node3D.new()
@@ -125,6 +137,7 @@ func build(parent: Node3D, number: int = 1) -> void:
 			cells.append(cell)
 		# Public row order is top, center, bottom; these exact cells face the payline at rest.
 		reel_cells.append([cells[9], cells[0], cells[1]])
+		reel_symbol_cells.append(cells)
 
 	# Subtle vertical cooling ribs and a recessed coin-return assembly.
 	for rib_index: int in range(5):
@@ -178,20 +191,18 @@ func build(parent: Node3D, number: int = 1) -> void:
 func set_reel_outcome(reel_index: int, column: Array, visual_seed: int = 0) -> void:
 	if reel_index < 0 or reel_index >= 3 or column.size() != 3:
 		return
-	var drum: Node3D = reel_drums[reel_index]
-	var cells: Array[Node3D] = []
-	for child: Node in drum.get_children():
-		if child is Node3D and str(child.name).begins_with("Cell_"):
-			cells.append(child as Node3D)
+	if reel_symbol_cells.size() != 3:
+		return
+	var cells: Array = reel_symbol_cells[reel_index]
 	if cells.size() != REEL_SYMBOL_COUNT:
 		return
 	if visual_seed > 0:
 		_symbol_rng.seed = visual_seed
 	else:
 		_symbol_rng.randomize()
-	# Fill the hidden circumference with harmless symbols, then pin the authoritative
-	# top/center/bottom result to the three faces that align with the viewing window.
-	for index: int in range(REEL_SYMBOL_COUNT):
+	# Only randomize the seven hidden faces. The visible top/center/bottom cells
+	# are assigned their authoritative result once, avoiding three redundant updates.
+	for index: int in range(2, 9):
 		set_symbol_icon(cells[index], Rules.SYMBOLS[_symbol_rng.randi_range(0, Rules.SYMBOLS.size() - 1)])
 	set_symbol_icon(cells[9], str(column[0]))
 	set_symbol_icon(cells[0], str(column[1]))
@@ -199,56 +210,46 @@ func set_reel_outcome(reel_index: int, column: Array, visual_seed: int = 0) -> v
 
 
 func set_symbol_icon(cell: Node3D, symbol: String) -> void:
-	for child: Node in cell.get_children():
-		if child.name == "SymbolIcon":
-			child.free()
-	var texture_path: String = ""
-	match symbol:
-		"SEVEN":
-			texture_path = "res://assets/images/cluckpot/seven.png"
-		"WILD":
-			texture_path = "res://assets/images/cluckpot/gold_chicken.png"
-		"ROOSTER":
-			texture_path = "res://assets/images/cluckpot/normal_chicken.png"
-		"CHICK":
-			texture_path = "res://assets/images/cluckpot/baby_chicken.png"
-		"EGG":
-			texture_path = "res://assets/images/cluckpot/egg.png"
-		"CORN":
-			texture_path = "res://assets/images/cluckpot/corn.png"
-		"WINGS":
-			texture_path = "res://assets/images/cluckpot/chickenwings.png"
-		_:
-			push_warning("Unknown Cluckpot symbol: %s" % symbol)
-			return
-	var texture: Texture2D = load(texture_path) as Texture2D
+	var texture: Texture2D = SYMBOL_TEXTURES.get(symbol) as Texture2D
 	if texture == null:
-		push_warning("Cluckpot symbol texture could not be loaded: %s" % texture_path)
+		push_warning("Unknown or unavailable Cluckpot symbol texture: %s" % symbol)
 		return
-	var icon := Sprite3D.new()
-	icon.name = "SymbolIcon"
-	if symbol == "SEVEN":
-		var jackpot_trim := _mat(Color("#d4ad63"), 0.62, 0.26)
-		_box(icon, "JackpotTrimTop", Vector3(0.32, 0.009, 0.008), Vector3(0, 0.112, 0.035), jackpot_trim)
-		_box(icon, "JackpotTrimBottom", Vector3(0.32, 0.009, 0.008), Vector3(0, -0.112, 0.035), jackpot_trim)
-		_box(icon, "JackpotTrimLeft", Vector3(0.009, 0.22, 0.008), Vector3(-0.16, 0, 0.035), jackpot_trim)
-		_box(icon, "JackpotTrimRight", Vector3(0.009, 0.22, 0.008), Vector3(0.16, 0, 0.035), jackpot_trim)
+
+	# Keep one Sprite3D per reel cell and swap its cached texture in place.
+	var icon: Sprite3D = cell.get_node_or_null("SymbolIcon") as Sprite3D
+	if not is_instance_valid(icon):
+		icon = Sprite3D.new()
+		icon.name = "SymbolIcon"
+		icon.position = Vector3(0, 0, 0.055)
+		icon.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
+		icon.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+		icon.alpha_scissor_threshold = 0.08
+		icon.shaded = false
+		icon.double_sided = true
+		cell.add_child(icon)
+
 	icon.texture = texture
 	var texture_size := Vector2(texture.get_width(), texture.get_height())
-	var target_size := Vector2(0.30, 0.22)
-	if symbol == "SEVEN":
-		target_size = Vector2(0.30, 0.22)
-	icon.pixel_size = minf(target_size.x / texture_size.x, target_size.y / texture_size.y)
-	icon.position = Vector3(0, 0, 0.055)
-	icon.modulate = Color.WHITE
-	icon.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
-	icon.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
-	icon.alpha_scissor_threshold = 0.08
-	icon.shaded = false
-	icon.double_sided = true
-	if symbol == "SEVEN":
-		icon.modulate = Color("#fff3d1")
-	cell.add_child(icon)
+	icon.pixel_size = minf(0.30 / texture_size.x, 0.22 / texture_size.y)
+	icon.modulate = Color("#fff3d1") if symbol == "SEVEN" else Color.WHITE
+
+	# Jackpot trim is created at most once per cell, then simply toggled.
+	var is_jackpot: bool = symbol == "SEVEN"
+	var trim_top := icon.get_node_or_null("JackpotTrimTop") as MeshInstance3D
+	if is_jackpot and not is_instance_valid(trim_top):
+		if not is_instance_valid(_jackpot_trim_material):
+			_jackpot_trim_material = _mat(Color("#d4ad63"), 0.62, 0.26)
+		_box(icon, "JackpotTrimTop", Vector3(0.32, 0.009, 0.008), Vector3(0, 0.112, 0.035), _jackpot_trim_material)
+		_box(icon, "JackpotTrimBottom", Vector3(0.32, 0.009, 0.008), Vector3(0, -0.112, 0.035), _jackpot_trim_material)
+		_box(icon, "JackpotTrimLeft", Vector3(0.009, 0.22, 0.008), Vector3(-0.16, 0, 0.035), _jackpot_trim_material)
+		_box(icon, "JackpotTrimRight", Vector3(0.009, 0.22, 0.008), Vector3(0.16, 0, 0.035), _jackpot_trim_material)
+
+	# Existing trim remains attached and is only shown for Golden 7 symbols.
+	if is_instance_valid(icon.get_node_or_null("JackpotTrimTop")):
+		for trim_name: String in ["JackpotTrimTop", "JackpotTrimBottom", "JackpotTrimLeft", "JackpotTrimRight"]:
+			var trim := icon.get_node_or_null(trim_name) as MeshInstance3D
+			if is_instance_valid(trim):
+				trim.visible = is_jackpot
 
 
 func black_material() -> StandardMaterial3D:
