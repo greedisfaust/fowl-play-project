@@ -5,20 +5,18 @@ extends RefCounted
 const SYMBOLS: Array[String] = ["SEVEN", "WILD", "ROOSTER", "CHICK", "EGG", "CORN", "WINGS"]
 const SYMBOL_WEIGHTS: Array[int] = [4, 8, 10, 13, 16, 21, 28]
 const PAYOUTS: Dictionary = {
-	"SEVEN": 28.0,
-	"WILD": 14.0,
-	"ROOSTER": 7.0,
-	"CHICK": 3.2,
-	"EGG": 2.2,
-	"CORN": 1.3,
-	"WINGS": 0.8,
+	# Single center-line paytable: 5x the previous line values to compensate
+	# for removing four paylines while keeping the same expected return.
+	"SEVEN": 140.0,
+	"WILD": 70.0,
+	"ROOSTER": 35.0,
+	"CHICK": 16.0,
+	"EGG": 11.0,
+	"CORN": 6.5,
+	"WINGS": 4.0,
 }
 const PAYLINES: Array[Array] = [
-	[1, 1, 1], # center
-	[0, 0, 0], # top
-	[2, 2, 2], # bottom
-	[0, 1, 2], # descending
-	[2, 1, 0], # ascending
+	[1, 1, 1], # single front-facing center line
 ]
 
 
