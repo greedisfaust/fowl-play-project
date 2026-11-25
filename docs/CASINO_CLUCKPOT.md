@@ -18,19 +18,19 @@ Cluckpot is a four-cabinet slot-machine bank presented as one selectable casino 
 
 ## Symbols and paylines
 
-The reels display three rows each. Five paylines are evaluated: center, top, bottom, descending diagonal, and ascending diagonal. The Golden Chicken is wild and substitutes for the matching symbol. Payouts from all winning lines are added together.
+The reels display three rows each, but only the center row directly facing the player is an active 1 × 3 payline. Matching symbols on the top, bottom, or diagonals do not pay. The Golden Chicken is wild and substitutes for the matching symbol. This keeps the win condition visually obvious: match the three symbols in the front row.
 
 | Symbol | Gross line multiplier |
 | --- | ---: |
-| Golden 7 | 28× |
-| Golden Chicken (wild) | 14× |
-| Normal chicken | 7× |
-| Baby chick | 3.2× |
-| Egg | 2.2× |
-| Corn | 1.3× |
-| Chicken wings | 0.8× |
+| Golden 7 | 126× |
+| Golden Chicken (wild) | 63× |
+| Normal chicken | 31.5× |
+| Baby chick | 14.4× |
+| Egg | 9.9× |
+| Corn | 5.85× |
+| Chicken wings | 3.6× |
 
-These are initial paytable values and should be balanced with playtesting before release.
+The single-line multipliers are 4.5× the former per-line values to make the one visible payline feel rewarding without simply multiplying the old paytable by five. With the current symbol weights and wild substitution, the theoretical gross return is approximately 91.7% before integer payout rounding; playtesting should still validate the feel and economy.
 
 ## Files
 
