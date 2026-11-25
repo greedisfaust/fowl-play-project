@@ -131,6 +131,16 @@ func handle_button_input(button_id: StringName, peer_id: int) -> Dictionary:
 			return _apply_wager_preset(mini(maximum_value, _get_available_balance()))
 		"CONFIRM", "ENTER", "OK", "SUBMIT":
 			var submitted_amount: int = get_pending_wager_amount()
+			# Cluckpot opts into reusing its saved wager: once a player has
+			# selected an amount, a blank Confirm immediately starts another spin.
+			# Other selection-only tables keep their existing keypad behavior.
+			if selection_only and submitted_amount <= 0 and is_instance_valid(table) and table.has_method("confirm_selected_wager"):
+				var saved_wager: int = int(table.call("get_selected_wager", peer_id)) if table.has_method("get_selected_wager") else 0
+				if saved_wager > 0:
+					var repeat_confirmation: Dictionary = table.call("confirm_selected_wager", peer_id)
+					_last_confirmation_status = "SPIN %s" % _format_money(saved_wager) if bool(repeat_confirmation.get("ok", false)) else "REJECTED: %s" % str(repeat_confirmation.get("reason", "unknown error"))
+					_publish_snapshot()
+					return repeat_confirmation
 			var confirmation: Dictionary = _confirm_pending_wager(peer_id)
 			_last_confirmation_status = "CONFIRMED %s" % _format_money(submitted_amount) if bool(confirmation.get("ok", false)) else "REJECTED: %s" % str(confirmation.get("reason", "unknown error"))
 			_publish_snapshot()
