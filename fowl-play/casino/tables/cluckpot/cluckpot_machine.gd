@@ -110,6 +110,10 @@ func _handle_spin(peer_id: int) -> Dictionary:
 	_spin_sequence += 1
 	var round_id: String = "cluckpot_%d_%06d" % [Time.get_ticks_usec(), sequence]
 	var outcome: Dictionary = Rules.roll_outcome(_rng)
+	# Re-evaluate from the authoritative three center symbols immediately before
+	# reserving the wager. Never trust a stale or externally supplied win list.
+	var verified_wins: Array[Dictionary] = Rules.evaluate_lines(outcome.get("symbols", []))
+	outcome["line_wins"] = verified_wins
 	var payout: int = Rules.calculate_payout(stake, outcome)
 	var opened: Dictionary = _wallet.call("open_round", table_id, round_id)
 	if not bool(opened.get("ok", false)):
