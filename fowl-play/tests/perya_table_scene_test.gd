@@ -65,7 +65,11 @@ func _run() -> void:
 	_check(is_instance_valid(display), "shared betting terminal controller exists")
 	if is_instance_valid(display):
 		_check(is_instance_valid(display.get("screen_text")), "terminal is connected to the physical screen")
-		_check(is_instance_valid(display.get("profile")), "Perya terminal profile is assigned")
+		var terminal_profile := display.get("profile") as BettingTerminalProfile
+		_check(is_instance_valid(terminal_profile), "Perya terminal profile is assigned")
+		table.set("_last_result_line", "LAST ROLL / RED x2")
+		table.call("_update_terminal_status")
+		_check(terminal_profile.game_description.contains("LAST ROLL"), "dice result feedback remains inside the shared betting terminal")
 	var keypad_controller := table.get_node_or_null("BettingKeypad/BettingKeypadController")
 	_check(is_instance_valid(keypad_controller), "shared betting keypad controller is attached")
 	if is_instance_valid(keypad_controller):
