@@ -18,6 +18,7 @@ var _bet_visual_totals: Dictionary = {}
 var _round_dice: Array[int] = []
 var _rolling: bool = false
 var _round_serial: int = 0
+var _last_result_line: String = ""
 
 func _ready() -> void:
 	super._ready()
