@@ -66,11 +66,13 @@ func _run() -> void:
 	if is_instance_valid(visuals):
 		table.set("_rolling", true)
 		table.call("_update_terminal_status")
+		_check(not visuals.roll_interactable.enabled, "roll control locks while dice are moving")
 		for zone in visuals.color_zones:
 			var interactable := zone.get_parent().get_node_or_null("Interactable") as Interactable
 			_check(is_instance_valid(interactable) and not interactable.enabled, "color pad locks during a dice roll")
 		table.set("_rolling", false)
 		table.call("_update_terminal_status")
+		_check(visuals.roll_interactable.enabled, "roll control reopens after settlement")
 		for zone in visuals.color_zones:
 			var interactable := zone.get_parent().get_node_or_null("Interactable") as Interactable
 			_check(is_instance_valid(interactable) and interactable.enabled, "color pad reopens after the dice roll")
