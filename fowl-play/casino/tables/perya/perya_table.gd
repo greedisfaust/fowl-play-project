@@ -226,10 +226,10 @@ func _apply_bet_presentation(record: Dictionary) -> void:
 	_bet_visual_totals[key] = totals
 	if is_instance_valid(visuals):
 		visuals.animate_color_selection(color_index)
+		var player_color: Color = record.get("player_color", Color.WHITE)
 		visuals.add_or_update_chip_stack(
 			color_index, peer_id, str(record.get("nickname", "PLAYER")),
-			record.get("player_color", Color.WHITE),
-			int(totals["count"]), int(totals["stake"])
+			player_color, int(totals["count"]), int(totals["stake"])
 		)
 	_update_terminal_status()
 
