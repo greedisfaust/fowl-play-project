@@ -113,8 +113,8 @@ func _on_round_cancelled(_table_id: String, _round_id: String, _refund_total: in
 	_selected_wagers.clear()
 	_last_selected_peer_id = 0
 	if multiplayer.multiplayer_peer != null:
-		_rpc_clear_round_visuals.rpc()
-	_clear_round_visuals_local()
+		_rpc_clear_round_visuals.rpc([])
+	_clear_round_visuals_local([])
 
 ## Selection is only a keypad confirmation. No money is reserved until a color is clicked.
 func set_selected_wager(peer_id: int, amount: int) -> Dictionary:
@@ -314,6 +314,8 @@ func _rpc_begin_roll(dice: Array[int], serial: int) -> void:
 	_show_result(_round_dice)
 
 func _play_roll_and_settle(dice: Array[int], serial: int) -> void:
+	if serial != _round_serial or not _rolling:
+		return
 	if is_instance_valid(visuals):
 		await visuals.animate_dice(dice, 2.45)
 	_settle_round_from_dice(dice, serial)
@@ -355,22 +357,25 @@ func _settle_round_from_dice(dice: Array[int], serial: int) -> void:
 	for color_index in dice:
 		result_names.append(Rules.COLOR_NAMES[color_index])
 	report_global_announcement("PERYA ROLL  /  %s" % "  •  ".join(result_names), "PERYA COLOR GAME", 1)
+	var final_dice := dice.duplicate()
 	_rolling = false
 	_selected_wagers.clear()
 	_round_dice.clear()
 	_bet_visual_totals.clear()
 	if multiplayer.multiplayer_peer != null:
-		_rpc_clear_round_visuals.rpc()
-	_clear_round_visuals_local()
+		_rpc_clear_round_visuals.rpc(final_dice)
+	_clear_round_visuals_local(final_dice)
 	_publish_keypad_snapshot()
 	_update_terminal_status()
 
 @rpc("authority", "call_remote", "reliable")
-func _rpc_clear_round_visuals() -> void:
-	_clear_round_visuals_local()
+func _rpc_clear_round_visuals(final_dice: Array[int]) -> void:
+	_clear_round_visuals_local(final_dice)
 
-func _clear_round_visuals_local() -> void:
+func _clear_round_visuals_local(final_dice: Array[int] = []) -> void:
 	_rolling = false
+	if is_instance_valid(visuals):
+		visuals.cancel_dice_animation(final_dice)
 	_round_dice.clear()
 	_selected_wagers.clear()
 	_last_selected_peer_id = 0
