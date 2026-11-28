@@ -11,6 +11,10 @@ var _text_shader_material: ShaderMaterial
 var _overlay_material: StandardMaterial3D
 var _missing_overlay_warning_sent: bool = false
 
+## When enabled, the SubViewport renders only after request_update() is called.
+## Defaults to continuous rendering so existing WorldScreen users keep their behavior.
+@export var render_on_demand: bool = false
+
 @export_group("Display Size")
 @export var display_size: Vector2 = Vector2(2.0, 1.125):
 	set(value):
@@ -87,6 +91,10 @@ func _ready() -> void:
 	# before the @tool controller changes mesh sizes or material parameters.
 	_make_instance_resources_local(self)
 	_apply_configuration()
+	if render_on_demand:
+		var viewport: SubViewport = get_node_or_null("SubViewport") as SubViewport
+		if is_instance_valid(viewport):
+			viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 
 func _make_instance_resources_local(node: Node) -> void:
 	if node is MeshInstance3D:
@@ -200,6 +208,15 @@ func _calculate_font_size(viewport_height: int) -> int:
 
 func get_screen_text() -> ScreenText:
 	return get_node_or_null("SubViewport/ScreenText") as ScreenText
+
+## Schedules one redraw for the next viewport update. Safe to call repeatedly;
+## UPDATE_ONCE naturally coalesces requests before the next rendered frame.
+func request_update() -> void:
+	if not render_on_demand:
+		return
+	var viewport: SubViewport = get_node_or_null("SubViewport") as SubViewport
+	if is_instance_valid(viewport):
+		viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 
 func set_display_size(value: Vector2) -> void:
 	display_size = value
