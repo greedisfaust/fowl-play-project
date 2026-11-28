@@ -66,9 +66,23 @@ func _exit_tree() -> void:
 ## Keep physical chip stacks consistent with BaseTable's pre-start departure refunds.
 func exit_proximity(peer_id: int) -> Dictionary:
 	var result: Dictionary = super.exit_proximity(peer_id)
-	if bool(result.get("ok", false)) and state == TableState.OPEN:
-		_rebuild_chip_stacks_from_wagers()
+	if bool(result.get("ok", false)):
+		_selected_wagers.erase(peer_id)
+		if _last_selected_peer_id == peer_id:
+			_last_selected_peer_id = 0
+		if multiplayer.multiplayer_peer != null:
+			_rpc_remove_selected_wager.rpc(peer_id)
+		if state == TableState.OPEN:
+			_rebuild_chip_stacks_from_wagers()
+		_update_terminal_status()
 	return result
+
+@rpc("authority", "call_remote", "reliable")
+func _rpc_remove_selected_wager(peer_id: int) -> void:
+	_selected_wagers.erase(peer_id)
+	if _last_selected_peer_id == peer_id:
+		_last_selected_peer_id = 0
+	_update_terminal_status()
 
 func _rebuild_chip_stacks_from_wagers() -> void:
 	var records: Array[Dictionary] = []
