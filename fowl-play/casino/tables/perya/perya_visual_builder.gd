@@ -4,6 +4,7 @@ extends Node3D
 class_name PeryaVisualBuilder
 
 const Rules = preload("res://casino/tables/perya/perya_rules.gd")
+const Layers = preload("res://core/layers.gd")
 const COLOR_VALUES: Array[Color] = [
 	Color("#e53935"), Color("#2878d0"), Color("#f5c842"),
 	Color("#35a765"), Color("#f2eee2"), Color("#ed65a5")
@@ -15,7 +16,7 @@ const COLOR_DARK: Array[Color] = [
 const COLOR_NAMES: Array[String] = Rules.COLOR_NAMES
 const STACK_SPACING := 0.12
 
-var color_zones: Array[Area3D] = []
+var color_zones: Array[StaticBody3D] = []
 var roll_interactable: Interactable
 var _dice: Array[Node3D] = []
 var _dice_markers: Array[MeshInstance3D] = []
@@ -100,10 +101,10 @@ func _build_color_board() -> void:
 		_box(tile, "ColorInlay", Vector3(0.79, 0.012, 0.34), Vector3(0, 0.04, 0), inset_mat)
 		_box(tile, "TopAccent", Vector3(0.73, 0.009, 0.018), Vector3(0, 0.049, -0.15), _mat(Color("#fff0c8"), 0.2, 0.28, Color("#fff0c8"), 0.4))
 		_text(tile, "ColorLabel", COLOR_NAMES[index], Vector3(-0.34, 0.052, 0.07), 0.0023, Color("#fff8e8"))
-		var zone := Area3D.new()
+		var zone := StaticBody3D.new()
 		zone.name = "ColorZone_%s" % COLOR_NAMES[index]
 		zone.position = Vector3(0, 0.07, 0)
-		zone.collision_layer = 1
+		zone.collision_layer = 1 << (Layers.DEVICES - 1)
 		zone.collision_mask = 0
 		var shape := CollisionShape3D.new()
 		var box := BoxShape3D.new()
