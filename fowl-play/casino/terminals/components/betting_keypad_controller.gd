@@ -26,6 +26,8 @@ var _pending_digits: String = "0"
 var _pending_digits_by_peer: Dictionary = {}
 var _active_input_peer_id: int = 0
 var _snapshot_revision: int = 0
+var _last_published_snapshot: Dictionary = {}
+var _last_applied_pending_amount: int = -1
 var _snapshot_request_sent: bool = false
 var _connected_buttons: Array[Node] = []
 
@@ -238,7 +240,9 @@ func _confirm_pending_wager(peer_id: int) -> Dictionary:
 			_pending_digits = "0"
 			_pending_digits_by_peer[peer_id] = "0"
 			_last_confirmation_status = "SELECTED %s" % _format_money(amount)
-			_publish_snapshot()
+			# The outer Confirm handler publishes after this synchronous signal.
+			# Cluckpot starts its spin from the signal, whose wallet mutation also
+			# publishes the changed balance; avoid an early duplicate snapshot.
 			wager_confirmation_result.emit(peer_id, selection_result.duplicate(true))
 		return selection_result
 	if not is_instance_valid(_wallet) or not _wallet.has_method("get_snapshot"):
@@ -364,6 +368,8 @@ func _on_wallet_changed(_available_balance: int, _reserved_total: int) -> void:
 func _on_session_ended() -> void:
 	_pending_digits = "0"
 	_snapshot_revision = 0
+	_last_published_snapshot.clear()
+	_last_applied_pending_amount = -1
 	_snapshot_request_sent = false
 	if is_instance_valid(display):
 		display.call("clear_network_snapshot")
@@ -382,9 +388,9 @@ func _try_request_snapshot() -> void:
 	_request_snapshot.rpc_id(1)
 
 func _publish_snapshot() -> void:
-	_snapshot_revision += 1
 	_apply_pending_amount()
 	if not multiplayer.is_server() or not _is_network_session_active():
+		_snapshot_revision += 1
 		return
 	var wagers: Array[Dictionary] = table.get_round_wagers() if is_instance_valid(table) else []
 	var available_balance: int = 0
@@ -392,11 +398,33 @@ func _publish_snapshot() -> void:
 		var wallet_snapshot: Dictionary = _wallet.call("get_snapshot")
 		available_balance = int(wallet_snapshot.get("available_balance", 0))
 	var nearby_peer_ids: Array[int] = table.get_nearby_peer_ids() if is_instance_valid(table) else []
-	_sync_snapshot.rpc(get_pending_wager_amount(), _snapshot_revision, wagers, available_balance, nearby_peer_ids)
+	var snapshot: Dictionary = {
+		"amount": get_pending_wager_amount(),
+		"wagers": wagers,
+		"available_balance": available_balance,
+		"nearby_peer_ids": nearby_peer_ids,
+	}
+	# Wallet and table signals can fire during one Confirm action. Only send a
+	# reliable snapshot when its actual gameplay state changed.
+	if snapshot == _last_published_snapshot:
+		return
+	_last_published_snapshot = snapshot.duplicate(true)
+	_snapshot_revision += 1
+	_sync_snapshot.rpc(
+		int(snapshot["amount"]),
+		_snapshot_revision,
+		wagers,
+		available_balance,
+		nearby_peer_ids
+	)
 
 func _apply_pending_amount() -> void:
+	var amount: int = get_pending_wager_amount()
+	if amount == _last_applied_pending_amount:
+		return
+	_last_applied_pending_amount = amount
 	if is_instance_valid(display) and display.has_method("set_pending_wager_amount"):
-		display.call("set_pending_wager_amount", get_pending_wager_amount())
+		display.call("set_pending_wager_amount", amount)
 
 func _is_network_session_active() -> bool:
 	return is_instance_valid(_network) and _network.get("peer") != null
