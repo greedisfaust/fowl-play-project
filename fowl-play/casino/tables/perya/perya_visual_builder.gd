@@ -354,6 +354,7 @@ func set_roll_ready(ready: bool, rolling: bool = false) -> void:
 			material.emission = Color("#ffbd45")
 			material.emission_energy_multiplier = 0.25 if not ready else 2.0
 	if is_instance_valid(roll_interactable):
+		roll_interactable.enabled = not rolling
 		roll_interactable.prompt_text = "DICE ARE ROLLING" if rolling else ("START / ROLL THE DICE" if ready else "PLACE A COLOR BET FIRST")
 
 func animate_roll_button() -> void:
