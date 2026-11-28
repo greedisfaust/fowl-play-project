@@ -258,6 +258,7 @@ func _handle_start_roll(peer_id: int) -> Dictionary:
 	_round_dice = Rules.roll_dice(_rng)
 	_round_serial += 1
 	_rolling = true
+	_update_terminal_status()
 	if is_instance_valid(visuals):
 		visuals.animate_roll_button()
 	if multiplayer.multiplayer_peer != null:
@@ -272,6 +273,7 @@ func _rpc_begin_roll(dice: Array[int], serial: int) -> void:
 	_round_serial = serial
 	_round_dice = dice.duplicate()
 	_rolling = true
+	_update_terminal_status()
 	if is_instance_valid(visuals):
 		visuals.animate_roll_button()
 		await visuals.animate_dice(_round_dice, 2.45)
