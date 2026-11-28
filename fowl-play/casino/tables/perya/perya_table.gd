@@ -443,6 +443,8 @@ func _update_terminal_status() -> void:
 		bet_count += int(totals.get("count", 0))
 		total += int(totals.get("stake", 0))
 	var headline := "DICE IN MOTION" if _rolling else ("BETTING OPEN" if state == TableState.OPEN or not _bet_visual_totals.is_empty() else "PLACE YOUR BETS")
+	if is_instance_valid(visuals):
+		visuals.set_roll_ready(bet_count > 0 and not _rolling, _rolling)
 	var detail := "ACTIVE BETS  %d\nTOTAL STAKED  %s" % [bet_count, _format_money(total)]
 	if not _last_result_line.is_empty():
 		detail += "\n" + _last_result_line
