@@ -20,6 +20,7 @@ var color_zones: Array[StaticBody3D] = []
 var roll_interactable: Interactable
 var _dice: Array[Node3D] = []
 var _dice_markers: Array[MeshInstance3D] = []
+var _roll_light: OmniLight3D
 var _chip_stacks: Dictionary = {}
 var _stack_tweens: Dictionary = {}
 var _materials: Dictionary = {}
@@ -36,6 +37,7 @@ func build() -> void:
 	color_zones.clear()
 	_dice.clear()
 	_dice_markers.clear()
+	_roll_light = null
 	_chip_stacks.clear()
 	_materials.clear()
 	_chip_mesh = CylinderMesh.new()
@@ -162,6 +164,14 @@ func _build_dice_station() -> void:
 		die.add_child(marker)
 		_dice.append(die)
 		_dice_markers.append(marker)
+	_roll_light = OmniLight3D.new()
+	_roll_light.name = "RollGlow"
+	_roll_light.position = Vector3(0, 0.42, 0.34)
+	_roll_light.light_color = Color("#ffc66d")
+	_roll_light.light_energy = 1.1
+	_roll_light.omni_range = 2.8
+	_roll_light.shadow_enabled = false
+	station.add_child(_roll_light)
 	_text(station, "CageLabel", "ROLL", Vector3(-0.19, 0.8, -0.56), 0.0024, Color("#f4d28a"))
 
 func _build_roll_control() -> void:
@@ -304,6 +314,10 @@ func animate_dice(results: Array[int], duration: float = 2.25) -> void:
 	if results.size() != Rules.DICE_COUNT:
 		return
 	var total_duration := maxf(duration, 0.5)
+	if is_instance_valid(_roll_light):
+		var light_tween := create_tween()
+		light_tween.tween_property(_roll_light, "light_energy", 3.0, 0.16).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		light_tween.tween_property(_roll_light, "light_energy", 1.1, total_duration * 0.72)
 	for index in range(Rules.DICE_COUNT):
 		var die := _dice[index]
 		var marker := _dice_markers[index]
