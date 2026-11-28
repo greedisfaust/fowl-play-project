@@ -37,6 +37,17 @@ func _run() -> void:
 	_check(table.has_method("_rpc_request_selected_wager"), "client keypad selections are validated and routed through the host")
 	_check(table.has_method("_rpc_request_color_bet"), "client color wagers are validated and routed through the host")
 	_check(table.has_method("_rpc_request_start_roll"), "client roll requests are validated and routed through the host")
+	if is_instance_valid(visuals):
+		table.set("_rolling", true)
+		table.call("_update_terminal_status")
+		for zone in visuals.color_zones:
+			var interactable := zone.get_parent().get_node_or_null("Interactable") as Interactable
+			_check(is_instance_valid(interactable) and not interactable.enabled, "color pad locks during a dice roll")
+		table.set("_rolling", false)
+		table.call("_update_terminal_status")
+		for zone in visuals.color_zones:
+			var interactable := zone.get_parent().get_node_or_null("Interactable") as Interactable
+			_check(is_instance_valid(interactable) and interactable.enabled, "color pad reopens after the dice roll")
 	var proximity := table.get_node_or_null("ProximityArea") as Area3D
 	_check(is_instance_valid(proximity) and proximity.collision_mask == 16, "proximity sensor detects the healthy-player collision layer")
 	var display := table.get_node_or_null("BettingTerminalDisplay")
