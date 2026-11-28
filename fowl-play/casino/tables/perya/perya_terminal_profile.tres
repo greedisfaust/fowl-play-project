@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="BettingTerminalProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://casino/terminals/resources/betting_terminal_profile.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+game_title = "PERYA / COLOR GAME"
+game_description = "SET YOUR CHIP VALUE, CONFIRM, THEN CLICK ANY COLOR TO PLACE A SEPARATE BET. PRESS START / ROLL TO LOCK ALL BETS."
+pending_heading = "CHIP VALUE"
+player_list_heading = "ACTIVE COLOR BETS"
+minimum_wager = 1
+maximum_wager = 9223372036854775807
+valid_message = "READY TO PLACE"
+invalid_message = "ENTER CHIP VALUE"
+insufficient_funds_message = "WALLET BALANCE EXCEEDED"
+no_wagers_message = "CLICK A COLOR TO BET"
+total_reserved_label = "TOTAL ON TABLE"
+accent_color = Color(0.91, 0.73, 0.38, 1)
+body_color = Color(0.91, 0.94, 0.97, 1)
+left_column_width = 30
+right_column_width = 42
+list_rows = 6
