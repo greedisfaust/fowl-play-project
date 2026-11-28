@@ -37,7 +37,7 @@ func _run() -> void:
 	if is_instance_valid(visuals):
 		var stack_anchor := visuals.color_zones[0].get_parent().get_node("ChipStacks") as Node3D
 		var occupied_slots: Dictionary = {}
-		for peer_id in [1, 5, 7, 9]:
+		for peer_id in [9, 7, 5, 1]:
 			visuals.add_or_update_chip_stack(0, peer_id, "PLAYER %d" % peer_id, Color("#42a5f5"), 1, 100)
 			var stack := stack_anchor.get_node("PlayerStack_%d" % peer_id) as Node3D
 			var slot_key := str(snappedf(stack.position.x, 0.001))
