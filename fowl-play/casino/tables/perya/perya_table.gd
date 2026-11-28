@@ -353,10 +353,12 @@ func _show_result(dice: Array[int]) -> void:
 		if is_instance_valid(visuals):
 			visuals.highlight_winning_color(int(color_value))
 	var parts: PackedStringArray = []
-	for color_index in dice:
-		parts.append(Rules.COLOR_NAMES[color_index])
-	var body := "RESULT  /  %s\nMATCH COUNTS DETERMINE PAYOUT\n1 MATCH  2X   /   2 MATCHES  3X   /   3 MATCHES  4X" % "  •  ".join(parts)
-	_last_result_line = "LAST ROLL  /  %s" % "  •  ".join(parts)
+	for color_index in range(Rules.COLOR_COUNT):
+		if totals.has(color_index):
+			parts.append("%s x%d" % [Rules.COLOR_NAMES[color_index], int(totals[color_index])])
+	var result_summary := "  •  ".join(parts)
+	var body := "RESULT  /  %s\nMATCH COUNTS DETERMINE PAYOUT\n1 MATCH  2X   /   2 MATCHES  3X   /   3 MATCHES  4X" % result_summary
+	_last_result_line = "LAST ROLL  /  %s" % result_summary
 	var world_screen := get_node_or_null("SlimWorldScreen/WorldScreen")
 	if is_instance_valid(world_screen) and world_screen.has_method("set_content"):
 		world_screen.call("set_content", "PERYA  /  RESULT", body, "LOSING COLOR BETS ARE NOT REFUNDED")
