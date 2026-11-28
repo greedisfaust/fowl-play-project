@@ -242,8 +242,9 @@ func _play_roll_and_settle(dice: Array[int], serial: int) -> void:
 	_selected_wagers.clear()
 	_round_dice.clear()
 	_bet_visual_totals.clear()
-	if is_instance_valid(visuals):
-		visuals.clear_chip_stacks()
+	if multiplayer.multiplayer_peer != null:
+		_rpc_clear_round_visuals.rpc()
+	_clear_round_visuals_local()
 	_publish_keypad_snapshot()
 	_update_terminal_status()
 
