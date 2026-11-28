@@ -237,7 +237,7 @@ func add_or_update_chip_stack(color_index: int, peer_id: int, nickname: String, 
 		stack.add_child(amount)
 	else:
 		(amount.mesh as TextMesh).text = "$%s" % _format_money(total_stake)
-	var target := Vector3(-0.26 + float(posmod(peer_id, 3)) * 0.26, 0.0, 0.0)
+	var target := Vector3(-0.30 + float(posmod(peer_id - 1, 4)) * 0.20, 0.0, 0.0)
 	stack.position = target
 	stack.scale = Vector3.ONE * 0.72
 	var previous_tween := _stack_tweens.get(key) as Tween
