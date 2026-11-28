@@ -207,6 +207,8 @@ func _rpc_sync_bet(record: Dictionary) -> void:
 	_apply_bet_presentation(record)
 
 func _apply_bet_presentation(record: Dictionary) -> void:
+	if _bet_visual_totals.is_empty():
+		_last_result_line = ""
 	var peer_id := int(record.get("peer_id", 0))
 	var color_index := int(record.get("color_index", -1))
 	if peer_id <= 0 or color_index < 0 or color_index >= Rules.COLOR_COUNT:
@@ -217,6 +219,7 @@ func _apply_bet_presentation(record: Dictionary) -> void:
 	totals["stake"] = int(totals["stake"]) + int(record.get("stake", 0))
 	_bet_visual_totals[key] = totals
 	if is_instance_valid(visuals):
+		visuals.animate_color_selection(color_index)
 		visuals.add_or_update_chip_stack(
 			color_index, peer_id, str(record.get("nickname", "PLAYER")),
 			record.get("player_color", Color.WHITE),
@@ -249,6 +252,8 @@ func _handle_start_roll(peer_id: int) -> Dictionary:
 	_round_dice = Rules.roll_dice(_rng)
 	_round_serial += 1
 	_rolling = true
+	if is_instance_valid(visuals):
+		visuals.animate_roll_button()
 	if multiplayer.multiplayer_peer != null:
 		_rpc_begin_roll.rpc(_round_dice, _round_serial)
 	await _play_roll_and_settle(_round_dice, _round_serial)
@@ -262,6 +267,7 @@ func _rpc_begin_roll(dice: Array[int], serial: int) -> void:
 	_round_dice = dice.duplicate()
 	_rolling = true
 	if is_instance_valid(visuals):
+		visuals.animate_roll_button()
 		await visuals.animate_dice(_round_dice, 2.45)
 	_show_result(_round_dice)
 
