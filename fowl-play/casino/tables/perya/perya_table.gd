@@ -391,11 +391,8 @@ func _show_result(dice: Array[int]) -> void:
 		if totals.has(color_index):
 			parts.append("%s x%d" % [Rules.COLOR_NAMES[color_index], int(totals[color_index])])
 	var result_summary := "  •  ".join(parts)
-	var body := "RESULT  /  %s\nMATCH COUNTS DETERMINE PAYOUT\n1 MATCH  2X   /   2 MATCHES  3X   /   3 MATCHES  4X" % result_summary
 	_last_result_line = "LAST ROLL  /  %s" % result_summary
-	var world_screen := get_node_or_null("SlimWorldScreen/WorldScreen")
-	if is_instance_valid(world_screen) and world_screen.has_method("set_content"):
-		world_screen.call("set_content", "PERYA  /  RESULT", body, "LOSING COLOR BETS ARE NOT REFUNDED")
+	_update_terminal_status()
 
 func _on_auto_resolution_requested(_table_id: String, _round_id: String, _reason: String) -> void:
 	if _is_authority() and _rolling and Rules.is_valid_dice(_round_dice):
