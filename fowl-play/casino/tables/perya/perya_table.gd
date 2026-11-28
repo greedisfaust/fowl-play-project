@@ -171,7 +171,7 @@ func _apply_bet_presentation(record: Dictionary) -> void:
 	if is_instance_valid(visuals):
 		visuals.add_or_update_chip_stack(
 			color_index, peer_id, str(record.get("nickname", "PLAYER")),
-			record.get("player_color", Color.WHITE) as Color,
+			record.get("player_color", Color.WHITE),
 			int(totals["count"]), int(totals["stake"])
 		)
 	_update_terminal_status()
