@@ -256,7 +256,7 @@ func _handle_start_roll(peer_id: int) -> Dictionary:
 		visuals.animate_roll_button()
 	if multiplayer.multiplayer_peer != null:
 		_rpc_begin_roll.rpc(_round_dice, _round_serial)
-	await _play_roll_and_settle(_round_dice, _round_serial)
+	call_deferred("_play_roll_and_settle", _round_dice.duplicate(), _round_serial)
 	return _success({"dice": _round_dice.duplicate()})
 
 @rpc("authority", "call_remote", "reliable")
