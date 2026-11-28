@@ -34,6 +34,17 @@ func _run() -> void:
 						face_count += 1
 				_check(face_count == 6, "die %d has all six color faces" % (die_index + 1))
 	_check(is_instance_valid(table.get("roll_interactable")), "table controller binds the roll interaction")
+	if is_instance_valid(visuals):
+		var stack_anchor := visuals.color_zones[0].get_parent().get_node("ChipStacks") as Node3D
+		var occupied_slots: Dictionary = {}
+		for peer_id in [1, 5, 7, 9]:
+			visuals.add_or_update_chip_stack(0, peer_id, "PLAYER %d" % peer_id, Color("#42a5f5"), 1, 100)
+			var stack := stack_anchor.get_node("PlayerStack_%d" % peer_id) as Node3D
+			var slot_key := str(snappedf(stack.position.x, 0.001))
+			occupied_slots[slot_key] = true
+			_check(stack.get_node_or_null("ChipStack") is MultiMeshInstance3D, "chip stack uses a MultiMesh")
+			_check(stack.get_node_or_null("PlayerColorRims") is MultiMeshInstance3D, "player-color rim uses a MultiMesh")
+		_check(occupied_slots.size() == 4, "non-consecutive peer IDs receive distinct chip stack positions")
 	_check(table.has_method("_rpc_request_selected_wager"), "client keypad selections are validated and routed through the host")
 	_check(table.has_method("_rpc_request_color_bet"), "client color wagers are validated and routed through the host")
 	_check(table.has_method("_rpc_request_start_roll"), "client roll requests are validated and routed through the host")
