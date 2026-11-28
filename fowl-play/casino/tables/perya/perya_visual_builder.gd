@@ -289,6 +289,17 @@ func animate_color_selection(color_index: int) -> void:
 	tween.tween_property(inlay, "scale", Vector3(1.035, 1.0, 1.035), 0.10)
 	tween.tween_property(inlay, "scale", Vector3.ONE, 0.16)
 
+func set_roll_ready(ready: bool, rolling: bool = false) -> void:
+	var cap := get_node_or_null("PeryaAssembly/RollControl/StartButtonCap") as MeshInstance3D
+	if is_instance_valid(cap):
+		var material := cap.material_override as StandardMaterial3D
+		if is_instance_valid(material):
+			material.emission_enabled = true
+			material.emission = Color("#ffbd45")
+			material.emission_energy_multiplier = 0.25 if not ready else 2.0
+	if is_instance_valid(roll_interactable):
+		roll_interactable.prompt_text = "DICE ARE ROLLING" if rolling else ("START / ROLL THE DICE" if ready else "PLACE A COLOR BET FIRST")
+
 func animate_roll_button() -> void:
 	var cap := get_node_or_null("PeryaAssembly/RollControl/StartButtonCap") as MeshInstance3D
 	if not is_instance_valid(cap):
