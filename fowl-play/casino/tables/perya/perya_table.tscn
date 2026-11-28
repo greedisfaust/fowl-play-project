@@ -18,7 +18,6 @@ max_participants = 4
 proximity_area = NodePath("ProximityArea")
 visuals = NodePath("Visuals")
 terminal_display = NodePath("BettingTerminalDisplay")
-roll_interactable = NodePath("Visuals/PeryaAssembly/RollControl/RollButtonBody/Interactable")
 
 [node name="Visuals" type="Node3D" parent="."]
 script = ExtResource("2_visual")
