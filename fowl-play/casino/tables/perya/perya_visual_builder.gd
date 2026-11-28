@@ -202,20 +202,36 @@ func add_or_update_chip_stack(color_index: int, peer_id: int, nickname: String, 
 		_chip_stacks[key] = stack
 		var chip_material := _mat(Color("#202833"), 0.8, 0.22)
 		var rim_material := _mat(player_color, 0.24, 0.25, player_color, 1.15)
+		var chip_multimesh := MultiMesh.new()
+		chip_multimesh.transform_format = MultiMesh.TRANSFORM_3D
+		chip_multimesh.mesh = _chip_mesh
+		chip_multimesh.instance_count = 4
+		var rim_multimesh := MultiMesh.new()
+		rim_multimesh.transform_format = MultiMesh.TRANSFORM_3D
+		rim_multimesh.mesh = _chip_rim_mesh
+		rim_multimesh.instance_count = 4
+		var rim_basis := Basis(Vector3.RIGHT, PI * 0.5)
 		for chip_index in range(4):
-			var chip := MeshInstance3D.new()
-			chip.name = "Chip_%d" % chip_index
-			chip.mesh = _chip_mesh
-			chip.material_override = chip_material
-			chip.position.y = 0.0225 + float(chip_index) * 0.032
-			stack.add_child(chip)
-			var rim := MeshInstance3D.new()
-			rim.name = "PlayerColorRim_%d" % chip_index
-			rim.mesh = _chip_rim_mesh
-			rim.position.y = 0.045 + float(chip_index) * 0.032
-			rim.rotation.x = PI * 0.5
-			rim.material_override = rim_material
-			stack.add_child(rim)
+			chip_multimesh.set_instance_transform(
+				chip_index,
+				Transform3D(Basis.IDENTITY, Vector3(0, 0.0225 + float(chip_index) * 0.032, 0))
+			)
+			rim_multimesh.set_instance_transform(
+				chip_index,
+				Transform3D(rim_basis, Vector3(0, 0.045 + float(chip_index) * 0.032, 0))
+			)
+		var chips := MultiMeshInstance3D.new()
+		chips.name = "ChipStack"
+		chips.multimesh = chip_multimesh
+		chips.material_override = chip_material
+		chips.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		stack.add_child(chips)
+		var rims := MultiMeshInstance3D.new()
+		rims.name = "PlayerColorRims"
+		rims.multimesh = rim_multimesh
+		rims.material_override = rim_material
+		rims.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		stack.add_child(rims)
 		var label := _make_text_mesh("%s  x%d" % [nickname.substr(0, 8).to_upper(), bet_count], 0.00135, Color("#fff1d0"))
 		label.name = "StackLabel"
 		label.position = Vector3(-0.16, 0.19, -0.12)
@@ -224,13 +240,12 @@ func add_or_update_chip_stack(color_index: int, peer_id: int, nickname: String, 
 		var label := stack.get_node_or_null("StackLabel") as MeshInstance3D
 		if is_instance_valid(label) and label.mesh is TextMesh:
 			(label.mesh as TextMesh).text = "%s  x%d" % [nickname.substr(0, 8).to_upper(), bet_count]
-	for chip_index in range(4):
-		var chip := stack.get_node_or_null("Chip_%d" % chip_index) as MeshInstance3D
-		var rim := stack.get_node_or_null("PlayerColorRim_%d" % chip_index) as MeshInstance3D
-		if is_instance_valid(chip):
-			chip.visible = chip_index < mini(bet_count, 4)
-		if is_instance_valid(rim):
-			rim.visible = chip_index < mini(bet_count, 4)
+	var chips := stack.get_node_or_null("ChipStack") as MultiMeshInstance3D
+	var rims := stack.get_node_or_null("PlayerColorRims") as MultiMeshInstance3D
+	if is_instance_valid(chips) and is_instance_valid(chips.multimesh):
+		chips.multimesh.visible_instance_count = mini(bet_count, 4)
+	if is_instance_valid(rims) and is_instance_valid(rims.multimesh):
+		rims.multimesh.visible_instance_count = mini(bet_count, 4)
 	var amount := stack.get_node_or_null("AmountLabel") as MeshInstance3D
 	if not is_instance_valid(amount):
 		amount = _make_text_mesh("$%s" % _format_money(total_stake), 0.0013, Color("#e6c77c"))
