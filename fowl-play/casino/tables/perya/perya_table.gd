@@ -36,6 +36,7 @@ func _ready() -> void:
 	if is_instance_valid(roll_interactable):
 		roll_interactable.interacted.connect(_on_roll_interacted)
 	round_auto_resolution_requested.connect(_on_auto_resolution_requested)
+	round_cancelled.connect(_on_round_cancelled)
 	_setup_betting_keypad()
 	_update_terminal_status()
 
@@ -47,13 +48,44 @@ func _exit_tree() -> void:
 			proximity_area.body_exited.disconnect(_on_proximity_exited)
 	if is_instance_valid(roll_interactable) and roll_interactable.interacted.is_connected(_on_roll_interacted):
 		roll_interactable.interacted.disconnect(_on_roll_interacted)
-	for zone in visuals.color_zones if is_instance_valid(visuals) else []:
-		var interactable := zone.get_parent().get_node_or_null("Interactable") as Interactable
-		if is_instance_valid(interactable):
-			for connection in interactable.interacted.get_connections():
-				if connection.callable.get_object() == self:
-					interactable.interacted.disconnect(connection.callable)
+	if is_instance_valid(visuals):
+		for zone in visuals.color_zones:
+			var interactable := zone.get_parent().get_node_or_null("Interactable") as Interactable
+			if is_instance_valid(interactable):
+				for connection in interactable.interacted.get_connections():
+					if connection.callable.get_object() == self:
+						interactable.interacted.disconnect(connection.callable)
+	if round_cancelled.is_connected(_on_round_cancelled):
+		round_cancelled.disconnect(_on_round_cancelled)
+	if round_auto_resolution_requested.is_connected(_on_auto_resolution_requested):
+		round_auto_resolution_requested.disconnect(_on_auto_resolution_requested)
 	super._exit_tree()
+
+## Keep physical chip stacks consistent with BaseTable's pre-start departure refunds.
+func exit_proximity(peer_id: int) -> Dictionary:
+	var result: Dictionary = super.exit_proximity(peer_id)
+	if bool(result.get("ok", false)) and state == TableState.OPEN:
+		_rebuild_chip_stacks_from_wagers()
+	return result
+
+func _rebuild_chip_stacks_from_wagers() -> void:
+	_bet_visual_totals.clear()
+	if is_instance_valid(visuals):
+		visuals.clear_chip_stacks()
+	for wager in get_round_wagers():
+		if str(wager.get("status", "")) != "reserved":
+			continue
+		var payload: Dictionary = wager.get("payload", {})
+		var peer_id := int(wager.get("peer_id", 0))
+		var color_index := int(payload.get("color_index", -1))
+		var record := _build_bet_presentation(peer_id, color_index, int(wager.get("stake", 0)), str(wager.get("wager_id", "")))
+		_apply_bet_presentation(record)
+
+func _on_round_cancelled(_table_id: String, _round_id: String, _refund_total: int) -> void:
+	_selected_wagers.clear()
+	if multiplayer.multiplayer_peer != null:
+		_rpc_clear_round_visuals.rpc()
+	_clear_round_visuals_local()
 
 ## Selection is only a keypad confirmation. No money is reserved until a color is clicked.
 func set_selected_wager(peer_id: int, amount: int) -> Dictionary:
