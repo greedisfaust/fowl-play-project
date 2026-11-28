@@ -156,7 +156,10 @@ func _handle_spin(peer_id: int) -> Dictionary:
 	_spin_locked = true
 	_play_spin_visual(record)
 	if multiplayer.multiplayer_peer != null:
-		_rpc_play_spin.rpc(record)
+		# Wallet replication is queued during open/reserve/lock. Queue the spin
+		# announcement after it so clients receive the final locked wager state
+		# before the reel animation starts.
+		call_deferred("_send_spin_rpc", record.duplicate(true))
 	spin_started.emit(record.duplicate(true))
 	return _success({"round_id": round_id, "wager_id": str(reserved.get("wager_id", "")), "stake": stake, "payout": payout, "line_wins": outcome["line_wins"]})
 
@@ -164,6 +167,11 @@ func _handle_spin(peer_id: int) -> Dictionary:
 func _reject_spin(peer_id: int, message: String) -> Dictionary:
 	report_player_feedback(peer_id, message, &"error")
 	return _failure(message)
+
+
+func _send_spin_rpc(record: Dictionary) -> void:
+	if multiplayer.multiplayer_peer != null:
+		_rpc_play_spin.rpc(record)
 
 
 @rpc("authority", "call_remote", "reliable")
