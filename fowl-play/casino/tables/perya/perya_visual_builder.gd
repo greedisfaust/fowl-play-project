@@ -294,7 +294,7 @@ func animate_dice(results: Array[int], duration: float = 2.25) -> void:
 		tween.set_parallel(true)
 		tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		var spin := Vector3(TAU * (2 + index), TAU * (3 + index), TAU * (2 + index))
-		tween.tween_property(die, "rotation", die.rotation + spin, total_duration * 0.78)
+		tween.tween_property(die, "rotation", die.rotation + spin, total_duration * 0.68)
 		tween.tween_property(die, "position:y", 0.48, total_duration * 0.32).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		tween.chain().set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
 		tween.tween_property(die, "position:y", 0.22, total_duration * 0.25)
