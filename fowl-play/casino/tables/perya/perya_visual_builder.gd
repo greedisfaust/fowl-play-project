@@ -20,6 +20,7 @@ var color_zones: Array[StaticBody3D] = []
 var roll_interactable: Interactable
 var _dice: Array[Node3D] = []
 var _dice_tweens: Array[Tween] = []
+var _dice_animation_serial: int = 0
 var _roll_light: OmniLight3D
 var _chip_stacks: Dictionary = {}
 var _stack_tweens: Dictionary = {}
@@ -372,6 +373,7 @@ func animate_dice(results: Array[int], duration: float = 2.25) -> void:
 	if results.size() != Rules.DICE_COUNT or _dice.size() != Rules.DICE_COUNT:
 		return
 	cancel_dice_animation()
+	var animation_serial := _dice_animation_serial
 	var total_duration := maxf(duration, 0.5)
 	if is_instance_valid(_roll_light):
 		var light_tween := create_tween()
@@ -402,9 +404,11 @@ func animate_dice(results: Array[int], duration: float = 2.25) -> void:
 		tween.parallel().tween_property(die, "scale", Vector3(1.07, 0.91, 1.07), 0.06)
 		tween.tween_property(die, "scale", Vector3.ONE, 0.13).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	await get_tree().create_timer(total_duration).timeout
-	_dice_tweens.clear()
+	if animation_serial == _dice_animation_serial:
+		_dice_tweens.clear()
 
 func cancel_dice_animation(final_dice: Array[int] = []) -> void:
+	_dice_animation_serial += 1
 	for tween_value: Tween in _dice_tweens:
 		if is_instance_valid(tween_value) and tween_value.is_running():
 			tween_value.kill()
