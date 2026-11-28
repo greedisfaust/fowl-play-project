@@ -132,6 +132,7 @@ func _handle_color_bet(peer_id: int, color_index: int) -> Dictionary:
 	})
 	if not bool(result.get("ok", false)):
 		return _reject(peer_id, str(result.get("reason", "The wallet rejected this bet.")))
+	_reset_open_round_inactivity()
 	var wager_id := str(result.get("wager_id", ""))
 	var record := _build_bet_presentation(peer_id, color_index, stake, wager_id)
 	_apply_bet_presentation(record)
