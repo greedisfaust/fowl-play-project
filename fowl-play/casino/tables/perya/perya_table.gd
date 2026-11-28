@@ -48,7 +48,7 @@ func _exit_tree() -> void:
 	if is_instance_valid(roll_interactable) and roll_interactable.interacted.is_connected(_on_roll_interacted):
 		roll_interactable.interacted.disconnect(_on_roll_interacted)
 	for zone in visuals.color_zones if is_instance_valid(visuals) else []:
-		var interactable := zone.get_node_or_null("Interactable") as Interactable
+		var interactable := zone.get_parent().get_node_or_null("Interactable") as Interactable
 		if is_instance_valid(interactable):
 			for connection in interactable.interacted.get_connections():
 				if connection.callable.get_object() == self:
