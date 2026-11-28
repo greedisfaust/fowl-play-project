@@ -9,6 +9,8 @@ var pending_wager_amount: int = 0
 var _status_header: String = "READY"
 var _status_detail: String = ""
 var _status_valid: bool = false
+var _refresh_queued: bool = false
+var _last_rendered_content: String = ""
 
 
 func set_pending_wager_amount(amount: int) -> void:
@@ -36,12 +38,22 @@ func set_status(header: String, detail: String = "", valid: bool = false) -> voi
 	refresh_display()
 
 
+## Coalesce multiple wallet/keypad signals into one display rebuild per frame.
 func refresh_display() -> void:
+	if _refresh_queued:
+		return
+	_refresh_queued = true
+	call_deferred("_flush_display_refresh")
+
+
+func _flush_display_refresh() -> void:
+	_refresh_queued = false
 	if not is_instance_valid(screen):
 		return
 	var screen_text: ScreenText = screen.get_screen_text()
 	if screen_text == null:
 		return
+
 	var limits: Dictionary = _get_limits()
 	var minimum: int = int(limits.get("minimum", profile.get_effective_minimum() if profile != null else 0))
 	var maximum: int = int(limits.get("maximum", profile.get_effective_maximum() if profile != null else 0))
@@ -50,26 +62,38 @@ func refresh_display() -> void:
 	var detail: String = _status_detail
 	var state_color: String = "#54e58b" if _status_valid else "#ff525c"
 	var title_color: String = "#e7d5ad"
-	screen_text.clear_screen()
+	var content: String = ""
+
+	if header == "READY" or header == "WAGER CHECK" or header == "WAGER SELECTED":
+		state_color = "#54e58b" if wager_valid else "#ff525c"
+		var wager_text: String = _format_money(pending_wager_amount) if pending_wager_amount > 0 else "--"
+		content = (
+			"[center][color=%s][font_size=124][b]CLUCKPOT[/b][/font_size][/color][/center]\n" % title_color
+			+ "[center][color=#f4eee2][font_size=108]MIN  $%s     MAX  $%s[/font_size][/color][/center]\n" % [_format_money(minimum), _format_money(maximum)]
+			+ "[center][color=%s][font_size=224][b]WAGER  $%s[/b][/font_size][/color][/center]\n" % [state_color, wager_text]
+			+ "[center][color=%s][font_size=84][b]%s[/b][/font_size][/color]" % [state_color, "VALID WAGER" if wager_valid else "INVALID / SET WAGER"]
+		)
+	else:
+		content = "[center][color=%s][font_size=136][b]%s[/b][/font_size][/color][/center]\n" % [title_color, _escape(header)]
+		if not detail.is_empty():
+			var detail_lines: PackedStringArray = detail.split("\n")
+			for line: String in detail_lines:
+				var safe_line: String = _escape(line)
+				var line_color: String = state_color if header.begins_with("WIN") or header.begins_with("GOLDEN") else "#f4eee2"
+				var font_size: int = 68 if line.begins_with("WAGER") or line.begins_with("STAKE") else 116
+				content += "[center][color=%s][font_size=%d][b]%s[/b][/font_size][/color][/center]\n" % [line_color, font_size, safe_line]
+
+	# Identical snapshots are common (wallet, table-state and keypad signals can
+	# all publish the same values); avoid needless RichTextLabel layout/redraw.
+	if content == _last_rendered_content:
+		return
+	_last_rendered_content = content
 	screen_text.scroll_active = false
 	screen_text.scroll_following = false
-	if header == "READY" or header == "WAGER CHECK" or header == "WAGER SELECTED":
-		header = "CLUCKPOT"
-		state_color = "#54e58b" if wager_valid else "#ff525c"
-		screen_text.append_text("[center][color=%s][font_size=124][b]CLUCKPOT[/b][/font_size][/color][/center]\n" % title_color)
-		screen_text.append_text("[center][color=#f4eee2][font_size=108]MIN  $%s     MAX  $%s[/font_size][/color][/center]\n" % [_format_money(minimum), _format_money(maximum)])
-		var wager_text: String = _format_money(pending_wager_amount) if pending_wager_amount > 0 else "--"
-		screen_text.append_text("[center][color=%s][font_size=224][b]WAGER  $%s[/b][/font_size][/color][/center]\n" % [state_color, wager_text])
-		screen_text.append_text("[center][color=%s][font_size=84][b]%s[/b][/font_size][/color]" % [state_color, "VALID WAGER" if wager_valid else "INVALID / SET WAGER"])
-		return
-	screen_text.append_text("[center][color=%s][font_size=136][b]%s[/b][/font_size][/color][/center]\n" % [title_color, _escape(header)])
-	if not detail.is_empty():
-		var detail_lines: PackedStringArray = detail.split("\n")
-		for line: String in detail_lines:
-			var safe_line: String = _escape(line)
-			var line_color: String = state_color if header.begins_with("WIN") or header.begins_with("GOLDEN") else "#f4eee2"
-			var font_size: int = 68 if line.begins_with("WAGER") or line.begins_with("STAKE") else 116
-			screen_text.append_text("[center][color=%s][font_size=%d][b]%s[/b][/font_size][/color][/center]\n" % [line_color, font_size, safe_line])
+	screen_text.clear_screen()
+	# Parse the complete BBCode document once rather than appending many fragments.
+	screen_text.append_text(content)
+	screen.request_update()
 
 
 func clear_network_snapshot() -> void:
