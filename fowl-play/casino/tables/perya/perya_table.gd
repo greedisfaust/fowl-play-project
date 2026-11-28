@@ -110,11 +110,12 @@ func _apply_chip_snapshot(records: Array[Dictionary]) -> void:
 		_apply_bet_presentation(record)
 
 func _on_round_cancelled(_table_id: String, _round_id: String, _refund_total: int) -> void:
+	var no_dice: Array[int] = []
 	_selected_wagers.clear()
 	_last_selected_peer_id = 0
 	if multiplayer.multiplayer_peer != null:
-		_rpc_clear_round_visuals.rpc([])
-	_clear_round_visuals_local([])
+		_rpc_clear_round_visuals.rpc(no_dice)
+	_clear_round_visuals_local(no_dice)
 
 ## Selection is only a keypad confirmation. No money is reserved until a color is clicked.
 func set_selected_wager(peer_id: int, amount: int) -> Dictionary:
