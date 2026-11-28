@@ -298,12 +298,12 @@ func _play_roll_and_settle(dice: Array[int], serial: int) -> void:
 		push_error("Perya settlement failed for %s: %s" % [current_round_id, str(settlement.get("reason", ""))])
 		return
 	for peer_value: Variant in player_totals.keys():
-		var peer_id := int(peer_value)
-		var totals: Dictionary = player_totals[peer_id]
-		var returned := int(totals["gross_return"])
+		var settled_peer_id := int(peer_value)
+		var player_result: Dictionary = player_totals[settled_peer_id]
+		var returned := int(player_result["gross_return"])
 		report_player_feedback(
-			peer_id,
-			"PERYA SETTLED  /  STAKED %s  /  RETURN %s" % [_format_money(int(totals["stake"])), _format_money(returned)],
+			settled_peer_id,
+			"PERYA SETTLED  /  STAKED %s  /  RETURN %s" % [_format_money(int(player_result["stake"])), _format_money(returned)],
 			&"success" if returned > 0 else &"warning"
 		)
 	var result_names := PackedStringArray()
