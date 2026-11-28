@@ -33,6 +33,11 @@ func _ready() -> void:
 	build()
 
 func build() -> void:
+	for tween_value: Variant in _stack_tweens.values():
+		var old_tween := tween_value as Tween
+		if is_instance_valid(old_tween) and old_tween.is_running():
+			old_tween.kill()
+	_stack_tweens.clear()
 	for child in get_children():
 		child.queue_free()
 	color_zones.clear()
@@ -285,6 +290,12 @@ func add_or_update_chip_stack(color_index: int, peer_id: int, nickname: String, 
 	tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.tween_property(stack, "scale", Vector3.ONE, 0.22)
 	_stack_tweens[key] = tween
+	tween.finished.connect(_on_stack_tween_finished.bind(key), CONNECT_ONE_SHOT)
+
+func _on_stack_tween_finished(key: String) -> void:
+	var completed_tween := _stack_tweens.get(key) as Tween
+	if is_instance_valid(completed_tween) and not completed_tween.is_running():
+		_stack_tweens.erase(key)
 
 func animate_color_selection(color_index: int) -> void:
 	if color_index < 0 or color_index >= color_zones.size():
