@@ -76,6 +76,7 @@ func _run() -> void:
 		table.set("_last_result_line", "LAST ROLL / RED x2")
 		table.call("_update_terminal_status")
 		_check(terminal_profile.game_description.contains("LAST ROLL"), "dice result feedback remains inside the shared betting terminal")
+		_check(terminal_profile.game_description.contains("1=2X") and terminal_profile.game_description.contains("3=4X"), "gross-return multipliers remain visible on the terminal")
 	var keypad_controller := table.get_node_or_null("BettingKeypad/BettingKeypadController")
 	_check(is_instance_valid(keypad_controller), "shared betting keypad controller is attached")
 	if is_instance_valid(keypad_controller):
