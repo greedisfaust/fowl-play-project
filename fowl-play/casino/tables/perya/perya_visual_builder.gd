@@ -362,7 +362,7 @@ func _face_up_rotation(color_index: int) -> Vector3:
 	return Vector3.ZERO
 
 func animate_dice(results: Array[int], duration: float = 2.25) -> void:
-	if results.size() != Rules.DICE_COUNT:
+	if results.size() != Rules.DICE_COUNT or _dice.size() != Rules.DICE_COUNT:
 		return
 	var total_duration := maxf(duration, 0.5)
 	if is_instance_valid(_roll_light):
@@ -371,16 +371,26 @@ func animate_dice(results: Array[int], duration: float = 2.25) -> void:
 		light_tween.tween_property(_roll_light, "light_energy", 1.1, total_duration * 0.72)
 	for index in range(Rules.DICE_COUNT):
 		var die := _dice[index]
+		var home_x := (float(index) - 1.0) * 0.48
 		var target_rotation := _face_up_rotation(results[index])
+		var spin := Vector3(TAU * (2 + index), TAU * (3 + index), TAU * (2 + index))
+		var side_shift := 0.075 if index != 1 else -0.075
 		var tween := create_tween()
+		# A slight stagger makes the dice feel hand-tumbled instead of mechanically synchronized.
+		tween.tween_interval(float(index) * 0.055)
 		tween.set_parallel(true)
 		tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-		var spin := Vector3(TAU * (2 + index), TAU * (3 + index), TAU * (2 + index))
-		tween.tween_property(die, "rotation", target_rotation + spin, total_duration * 0.68)
+		tween.tween_property(die, "rotation", target_rotation + spin, total_duration * 0.56)
 		tween.tween_property(die, "position:y", 0.48, total_duration * 0.28).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-		tween.chain().set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
-		tween.tween_property(die, "position:y", 0.22, total_duration * 0.24)
-		tween.tween_property(die, "rotation", target_rotation, total_duration * 0.20)
+		tween.tween_property(die, "position:x", home_x + side_shift, total_duration * 0.56)
+		# Two quick impacts and a squash give each die a more tactile landing.
+		tween.chain()
+		tween.tween_property(die, "position:y", 0.31, 0.09).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+		tween.tween_property(die, "position:y", 0.22, 0.11).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tween.parallel().tween_property(die, "rotation", target_rotation, 0.20).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tween.parallel().tween_property(die, "position:x", home_x, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tween.parallel().tween_property(die, "scale", Vector3(1.07, 0.91, 1.07), 0.06)
+		tween.tween_property(die, "scale", Vector3.ONE, 0.13).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	await get_tree().create_timer(total_duration).timeout
 
 func highlight_winning_color(color_index: int) -> void:
