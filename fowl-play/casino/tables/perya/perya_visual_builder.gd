@@ -19,6 +19,7 @@ const COLOR_NAMES: Array[String] = ["RED", "BLUE", "YELLOW", "GREEN", "WHITE", "
 var color_zones: Array[StaticBody3D] = []
 var roll_interactable: Interactable
 var _dice: Array[Node3D] = []
+var _dice_tweens: Array[Tween] = []
 var _roll_light: OmniLight3D
 var _chip_stacks: Dictionary = {}
 var _stack_tweens: Dictionary = {}
@@ -33,6 +34,7 @@ func _ready() -> void:
 	build()
 
 func build() -> void:
+	cancel_dice_animation()
 	for tween_value: Variant in _stack_tweens.values():
 		var old_tween := tween_value as Tween
 		if is_instance_valid(old_tween) and old_tween.is_running():
@@ -369,6 +371,7 @@ func _face_up_rotation(color_index: int) -> Vector3:
 func animate_dice(results: Array[int], duration: float = 2.25) -> void:
 	if results.size() != Rules.DICE_COUNT or _dice.size() != Rules.DICE_COUNT:
 		return
+	cancel_dice_animation()
 	var total_duration := maxf(duration, 0.5)
 	if is_instance_valid(_roll_light):
 		var light_tween := create_tween()
@@ -381,6 +384,7 @@ func animate_dice(results: Array[int], duration: float = 2.25) -> void:
 		var spin := Vector3(TAU * (2 + index), TAU * (3 + index), TAU * (2 + index))
 		var side_shift := 0.075 if index != 1 else -0.075
 		var tween := create_tween()
+		_dice_tweens.append(tween)
 		# A slight stagger makes the dice feel hand-tumbled instead of mechanically synchronized.
 		tween.tween_interval(float(index) * 0.055)
 		tween.chain()
@@ -398,6 +402,23 @@ func animate_dice(results: Array[int], duration: float = 2.25) -> void:
 		tween.parallel().tween_property(die, "scale", Vector3(1.07, 0.91, 1.07), 0.06)
 		tween.tween_property(die, "scale", Vector3.ONE, 0.13).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	await get_tree().create_timer(total_duration).timeout
+	_dice_tweens.clear()
+
+func cancel_dice_animation(final_dice: Array[int] = []) -> void:
+	for tween_value: Tween in _dice_tweens:
+		if is_instance_valid(tween_value) and tween_value.is_running():
+			tween_value.kill()
+	_dice_tweens.clear()
+	for index in range(_dice.size()):
+		var die := _dice[index]
+		if not is_instance_valid(die):
+			continue
+		var color_index := final_dice[index] if Rules.is_valid_dice(final_dice) else 0
+		die.rotation = _face_up_rotation(color_index)
+		die.position = Vector3((float(index) - 1.0) * 0.48, 0.22, 0.0)
+		die.scale = Vector3.ONE
+	if is_instance_valid(_roll_light):
+		_roll_light.light_energy = 1.1
 
 func highlight_winning_color(color_index: int) -> void:
 	if color_index < 0 or color_index >= color_zones.size():
