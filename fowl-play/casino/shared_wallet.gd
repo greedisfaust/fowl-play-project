@@ -124,6 +124,7 @@ func reserve_wager(peer_id: int, table_id: String, round_id: String, amount: int
 	if amount > _available_balance:
 		return _failure("Insufficient available shared funds.")
 	_available_balance -= amount
+	_reserved_total += amount
 	var wager_id: String = "W%08d" % _next_wager_sequence
 	_next_wager_sequence += 1
 	var wager: Dictionary = {
@@ -284,6 +285,7 @@ func settle_round(table_id: String, round_id: String, payouts: Dictionary) -> Di
 		var return_amount: int = int(payouts[wager_id])
 		var stake: int = int(wager["stake"])
 		_available_balance += return_amount
+		_reserved_total -= stake
 		wager["status"] = STATUS_SETTLED
 		wager["return_amount"] = return_amount
 		wager["net_result"] = return_amount - stake
