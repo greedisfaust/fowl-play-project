@@ -117,9 +117,20 @@ func _handle_spin(peer_id: int) -> Dictionary:
 	_spin_sequence += 1
 	var round_id: String = "cluckpot_%d_%06d" % [Time.get_ticks_usec(), sequence]
 	var outcome: Dictionary = Rules.roll_outcome(_rng)
-	# Re-evaluate from the authoritative three center symbols immediately before
-	# reserving the wager. Never trust a stale or externally supplied win list.
-	var verified_wins: Array[Dictionary] = Rules.evaluate_lines(outcome.get("symbols", []))
+	var visual_seed: int = maxi(1, _rng.randi())
+	var builder: CluckpotVisualBuilder = _visuals as CluckpotVisualBuilder
+	if not is_instance_valid(builder):
+		return _reject_spin(peer_id, "The reel assembly is unavailable.")
+	# Install the roll on the physical reel cells first, then read the symbols
+	# back from the exact Sprite3D faces visible at rest. Settlement is derived
+	# from that read-back, never from a parallel/stale outcome array.
+	for reel_index: int in range(3):
+		builder.set_reel_outcome(reel_index, outcome["symbols"][reel_index], visual_seed + reel_index * 1013)
+	var installed_symbols: Array = builder.get_visible_reel_symbols()
+	if installed_symbols.size() != 3:
+		return _reject_spin(peer_id, "The reel symbols could not be verified.")
+	outcome["symbols"] = installed_symbols
+	var verified_wins: Array[Dictionary] = Rules.evaluate_lines(installed_symbols)
 	outcome["line_wins"] = verified_wins
 	var payout: int = Rules.calculate_payout(stake, outcome)
 	var opened: Dictionary = _wallet.call("open_round", table_id, round_id)
@@ -149,7 +160,7 @@ func _handle_spin(peer_id: int) -> Dictionary:
 		"line_wins": outcome["line_wins"],
 		"payout": payout,
 		"spin_duration": spin_duration,
-		"visual_seed": maxi(1, _rng.randi()),
+		"visual_seed": visual_seed,
 		"sequence": sequence,
 	}
 	_active_spin = record
