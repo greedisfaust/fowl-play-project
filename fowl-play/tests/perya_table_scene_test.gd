@@ -34,6 +34,9 @@ func _run() -> void:
 						face_count += 1
 				_check(face_count == 6, "die %d has all six color faces" % (die_index + 1))
 	_check(is_instance_valid(table.get("roll_interactable")), "table controller binds the roll interaction")
+	_check(table.has_method("_rpc_request_selected_wager"), "client keypad selections are validated and routed through the host")
+	_check(table.has_method("_rpc_request_color_bet"), "client color wagers are validated and routed through the host")
+	_check(table.has_method("_rpc_request_start_roll"), "client roll requests are validated and routed through the host")
 	var proximity := table.get_node_or_null("ProximityArea") as Area3D
 	_check(is_instance_valid(proximity) and proximity.collision_mask == 16, "proximity sensor detects the healthy-player collision layer")
 	var display := table.get_node_or_null("BettingTerminalDisplay")
