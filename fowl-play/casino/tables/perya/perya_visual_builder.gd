@@ -212,6 +212,7 @@ func add_or_update_chip_stack(color_index: int, peer_id: int, nickname: String, 
 			rim.name = "PlayerColorRim_%d" % chip_index
 			rim.mesh = _chip_rim_mesh
 			rim.position.y = 0.045 + float(chip_index) * 0.032
+			rim.rotation.x = PI * 0.5
 			rim.material_override = rim_material
 			stack.add_child(rim)
 		var label := _make_text_mesh("%s  x%d" % [nickname.substr(0, 8).to_upper(), bet_count], 0.00135, Color("#fff1d0"))
