@@ -8,6 +8,7 @@ const MAX_DAYS: int = 10
 const CHICKEN_CROSS_SCENE: PackedScene = preload("res://casino/tables/chicken_cross/chicken_cross_table.tscn")
 const EGG_PLINKO_SCENE: PackedScene = preload("res://casino/tables/egg_plinko/egg_plinko_table.tscn")
 const CLUCKPOT_SCENE: PackedScene = preload("res://casino/tables/cluckpot/cluckpot_arcade.tscn")
+const PERYA_SCENE: PackedScene = preload("res://casino/tables/perya/perya_table.tscn")
 
 signal game_catalog_changed(registered_count: int, required_count: int)
 signal daily_selection_changed(day_number: int, game_ids: Array)
@@ -76,6 +77,14 @@ func _register_builtin_games() -> void:
 	var cluckpot_result: Dictionary = register_game(cluckpot)
 	if not bool(cluckpot_result.get("ok", false)):
 		_log("Could not register Cluckpot: %s" % str(cluckpot_result.get("reason", "")))
+
+	var perya: CasinoGameDefinition = CasinoGameDefinition.new()
+	perya.game_id = &"perya"
+	perya.display_name = "Perya Color Game"
+	perya.table_scene = PERYA_SCENE
+	var perya_result: Dictionary = register_game(perya)
+	if not bool(perya_result.get("ok", false)):
+		_log("Could not register Perya: %s" % str(perya_result.get("reason", "")))
 
 
 ## Registration is local static catalog setup, so every peer registers the same definitions.
