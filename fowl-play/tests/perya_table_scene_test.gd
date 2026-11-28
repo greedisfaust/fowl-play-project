@@ -49,7 +49,7 @@ func _run() -> void:
 			_check(stack.get_node_or_null("ChipStack") is MultiMeshInstance3D, "chip stack uses a MultiMesh")
 			_check(stack.get_node_or_null("PlayerColorRims") is MultiMeshInstance3D, "player-color rim uses a MultiMesh")
 		_check(occupied_slots.size() == 4, "non-consecutive peer IDs receive distinct chip stack positions")
-		for click_index in range(20):
+		for _click_index in range(20):
 			visuals.animate_color_selection(0)
 		var color_tweens: Dictionary = visuals.get("_color_tweens")
 		_check(color_tweens.size() == 1, "rapid clicks coalesce to one active animation per color")
