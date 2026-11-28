@@ -64,7 +64,6 @@ func set_selected_wager(peer_id: int, amount: int) -> Dictionary:
 	if multiplayer.multiplayer_peer != null:
 		_rpc_sync_selected_wager.rpc(peer_id, amount)
 	selected_wager_changed.emit(peer_id, amount)
-	report_player_feedback(peer_id, "CLUCKPOT WAGER SET  /  %s" % _format_money(amount), &"success")
 	return _success({"peer_id": peer_id, "selected_wager": amount, "limits": limits})
 
 
@@ -159,7 +158,6 @@ func _handle_spin(peer_id: int) -> Dictionary:
 	if multiplayer.multiplayer_peer != null:
 		_rpc_play_spin.rpc(record)
 	spin_started.emit(record.duplicate(true))
-	report_player_feedback(peer_id, "CLUCKPOT SPIN  /  %s" % _format_money(stake), &"success")
 	return _success({"round_id": round_id, "wager_id": str(reserved.get("wager_id", "")), "stake": stake, "payout": payout, "line_wins": outcome["line_wins"]})
 
 
@@ -280,9 +278,12 @@ func _finish_spin_visual(record: Dictionary) -> void:
 		push_error("Cluckpot settlement failed: %s" % str(settlement.get("reason", "")))
 		return
 	if payout > 0:
-		report_global_announcement("%s HIT CLUCKPOT  /  %s" % [str(record.get("nickname", "PLAYER")).to_upper(), _format_money(payout)], "CLUCKPOT", 2 if payout >= int(record.get("stake", 1)) * 20 else 1)
+		var player_name: String = str(record.get("nickname", "Player")).strip_edges()
+		var is_jackpot: bool = payout >= int(record.get("stake", 1)) * 20
+		var announcement: String = "%s hit a jackpot on Cluckpot, winning %s!" % [player_name, _format_money(payout)] if is_jackpot else "%s won %s on Cluckpot." % [player_name, _format_money(payout)]
+		report_global_announcement(announcement, "CLUCKPOT", 2 if is_jackpot else 1)
 	else:
-		report_player_feedback(int(record.get("peer_id", 0)), "NO WIN  /  TRY AGAIN", &"info")
+		report_player_feedback(int(record.get("peer_id", 0)), "No win this time. Better luck on the next spin.", &"info")
 	var settled: Dictionary = record.duplicate(true)
 	settled["status"] = "settled"
 	spin_settled.emit(settled, settlement.duplicate(true))
