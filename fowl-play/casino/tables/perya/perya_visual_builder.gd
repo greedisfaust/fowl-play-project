@@ -5,6 +5,7 @@ class_name PeryaVisualBuilder
 
 const Rules = preload("res://casino/tables/perya/perya_rules.gd")
 const Layers = preload("res://core/layers.gd")
+const TERMINAL_FONT: Font = preload("res://assets/fonts/JetBrainsMonoNL-Regular.ttf")
 const COLOR_VALUES: Array[Color] = [
 	Color("#e53935"), Color("#2878d0"), Color("#f5c842"),
 	Color("#35a765"), Color("#f2eee2"), Color("#ed65a5")
@@ -378,6 +379,7 @@ func _text(parent: Node3D, node_name: String, value: String, position: Vector3, 
 func _make_text_mesh(value: String, pixel_size: float, color: Color) -> MeshInstance3D:
 	var mesh := TextMesh.new()
 	mesh.text = value
+	mesh.font = TERMINAL_FONT
 	mesh.font_size = 28
 	mesh.pixel_size = pixel_size
 	mesh.depth = 0.0008
