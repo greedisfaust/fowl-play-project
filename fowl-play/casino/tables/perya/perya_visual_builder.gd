@@ -269,19 +269,7 @@ func add_or_update_chip_stack(color_index: int, peer_id: int, nickname: String, 
 		stack.add_child(amount)
 	else:
 		(amount.mesh as TextMesh).text = "$%s" % _format_money(total_stake)
-	# Assign stable, collision-free positions from the actual bettors on this color;
-	# peer IDs are network identifiers and are not guaranteed to be consecutive.
-	var peer_ids: Array[int] = []
-	var color_prefix := "%d:" % color_index
-	for stack_key_value: Variant in _chip_stacks.keys():
-		var stack_key := str(stack_key_value)
-		if stack_key.begins_with(color_prefix):
-			peer_ids.append(int(stack_key.get_slice(":", 1)))
-	peer_ids.sort()
-	var stack_slot := peer_ids.find(peer_id)
-	var slot_x := [-0.30, -0.10, 0.10, 0.30]
-	var target := Vector3(slot_x[mini(stack_slot, slot_x.size() - 1)], 0.0, 0.0)
-	stack.position = target
+	_reposition_color_stacks(color_index)
 	stack.scale = Vector3.ONE * 0.72
 	var previous_tween := _stack_tweens.get(key) as Tween
 	if is_instance_valid(previous_tween) and previous_tween.is_running():
@@ -291,6 +279,23 @@ func add_or_update_chip_stack(color_index: int, peer_id: int, nickname: String, 
 	tween.tween_property(stack, "scale", Vector3.ONE, 0.22)
 	_stack_tweens[key] = tween
 	tween.finished.connect(_on_stack_tween_finished.bind(key), CONNECT_ONE_SHOT)
+
+func _reposition_color_stacks(color_index: int) -> void:
+	# Reposition every stack when membership changes; network peer IDs are not
+	# guaranteed to arrive in ascending order or be consecutive.
+	var peer_ids: Array[int] = []
+	var color_prefix := "%d:" % color_index
+	for stack_key_value: Variant in _chip_stacks.keys():
+		var stack_key := str(stack_key_value)
+		if stack_key.begins_with(color_prefix):
+			peer_ids.append(int(stack_key.get_slice(":", 1)))
+	peer_ids.sort()
+	var slot_x := [-0.30, -0.10, 0.10, 0.30]
+	for slot_index in range(mini(peer_ids.size(), slot_x.size())):
+		var key := "%d:%d" % [color_index, peer_ids[slot_index]]
+		var player_stack := _chip_stacks.get(key) as Node3D
+		if is_instance_valid(player_stack):
+			player_stack.position.x = slot_x[slot_index]
 
 func _on_stack_tween_finished(key: String) -> void:
 	var completed_tween := _stack_tweens.get(key) as Tween
