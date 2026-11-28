@@ -49,6 +49,11 @@ func _run() -> void:
 			_check(stack.get_node_or_null("ChipStack") is MultiMeshInstance3D, "chip stack uses a MultiMesh")
 			_check(stack.get_node_or_null("PlayerColorRims") is MultiMeshInstance3D, "player-color rim uses a MultiMesh")
 		_check(occupied_slots.size() == 4, "non-consecutive peer IDs receive distinct chip stack positions")
+		for _ in range(20):
+			visuals.animate_color_selection(0)
+		var color_tweens: Dictionary = visuals.get("_color_tweens")
+		_check(color_tweens.size() == 1, "rapid clicks coalesce to one active animation per color")
+		visuals.call("_kill_color_tween", 0)
 		visuals.add_or_update_chip_stack(0, 9, "PLAYER 9", Color("#42a5f5"), 7, 700)
 		var aggregated_stack := stack_anchor.get_node("PlayerStack_9") as Node3D
 		var aggregated_chips := aggregated_stack.get_node("ChipStack") as MultiMeshInstance3D
