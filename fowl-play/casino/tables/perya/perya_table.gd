@@ -121,8 +121,8 @@ func set_selected_wager(peer_id: int, amount: int) -> Dictionary:
 		return _failure("Only the host can set the Perya wager amount.")
 	if not _is_near_table(peer_id):
 		return _failure("Move closer to Perya before selecting a wager.")
-	if state == TableState.RUNNING or state == TableState.RESOLVING:
-		return _failure("Wagers are locked until this dice round is finished.")
+	if state != TableState.IDLE and state != TableState.OPEN:
+		return _failure("Wagers are locked until this table is available again.")
 	var snapshot: Dictionary = _wallet.call("get_snapshot")
 	var available := maxi(int(snapshot.get("available_balance", 0)), 0)
 	if amount <= 0 or amount > available:
