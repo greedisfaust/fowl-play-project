@@ -34,7 +34,7 @@ The theoretical house edge is 17/216 = 7.8704%.
 - Every bet is a separate shared-wallet wager with bettor peer ID, color index, and selected stake.
 - The host locks the single table round before rolling and settles every locked wager exactly once from the same authoritative dice result.
 - Keypad chip-value selections, color bets, and roll requests are sent to the host for validation; accepted selections, dice results, and chip-stack presentation records are replicated to clients. Clients do not generate outcomes.
-- Pre-start departure refunds are reflected in the physical chip stacks. A casino day-end request settles an already-started round immediately from its fixed host result rather than waiting for presentation animation.
+- Pre-start departure refunds are reflected in the physical chip stacks. A casino day-end request settles an already-started round immediately from its fixed host result, cancels any in-flight dice tweens, and snaps the dice to the authoritative result rather than waiting for presentation animation.
 
 ## Performance
 - Chip cylinder/rim meshes and materials are reused; each player/color stack uses two MultiMesh instances and is aggregated rather than spawning one node per bet. Player stacks are laid out from actual peer IDs rather than assuming network IDs are consecutive.
