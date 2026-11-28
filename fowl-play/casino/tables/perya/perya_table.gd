@@ -291,6 +291,8 @@ func _rpc_begin_roll(dice: Array[int], serial: int) -> void:
 	if is_instance_valid(visuals):
 		visuals.animate_roll_button()
 		await visuals.animate_dice(_round_dice, 2.45)
+	if serial != _round_serial or not _rolling:
+		return
 	_show_result(_round_dice)
 
 func _play_roll_and_settle(dice: Array[int], serial: int) -> void:
