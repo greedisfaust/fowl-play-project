@@ -144,8 +144,6 @@ func handle_button_input(button_id: StringName, peer_id: int) -> Dictionary:
 			var confirmation: Dictionary = _confirm_pending_wager(peer_id)
 			_last_confirmation_status = "CONFIRMED %s" % _format_money(submitted_amount) if bool(confirmation.get("ok", false)) else "REJECTED: %s" % str(confirmation.get("reason", "unknown error"))
 			_publish_snapshot()
-			if is_instance_valid(_debug_hub):
-				_debug_hub.call("log", &"wallet", "Keypad confirmation for peer %d: %s" % [peer_id, _last_confirmation_status])
 			return confirmation
 		_:
 			return _failure("Unknown keypad button ID '%s'." % action)
@@ -308,8 +306,6 @@ func _on_button_activated(button_id: StringName, peer_id: int) -> void:
 	# by the wager-entry keypad.
 	if action in ["CROSS", "CASH_OUT", "CASHOUT"] or (selection_only and action == "PLINKO"):
 		return
-	if is_instance_valid(_debug_hub):
-		_debug_hub.call("log", &"wallet", "Received physical keypad input '%s' from peer %d." % [String(button_id), peer_id])
 	var result: Dictionary = handle_button_input(button_id, peer_id)
 	if action in ["CONFIRM", "ENTER", "OK", "SUBMIT"] and is_instance_valid(table):
 		var feedback_severity: StringName = &"success" if bool(result.get("ok", false)) else &"error"
