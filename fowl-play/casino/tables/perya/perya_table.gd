@@ -14,6 +14,7 @@ const IdentityScript = preload("res://core/player_identity.gd")
 var _network: Node
 var _rng := RandomNumberGenerator.new()
 var _selected_wagers: Dictionary = {}
+var _last_selected_peer_id: int = 0
 var _bet_visual_totals: Dictionary = {}
 var _round_dice: Array[int] = []
 var _rolling: bool = false
@@ -95,6 +96,7 @@ func _apply_chip_snapshot(records: Array[Dictionary]) -> void:
 
 func _on_round_cancelled(_table_id: String, _round_id: String, _refund_total: int) -> void:
 	_selected_wagers.clear()
+	_last_selected_peer_id = 0
 	if multiplayer.multiplayer_peer != null:
 		_rpc_clear_round_visuals.rpc()
 	_clear_round_visuals_local()
@@ -112,6 +114,7 @@ func set_selected_wager(peer_id: int, amount: int) -> Dictionary:
 	if amount <= 0 or amount > available:
 		return _failure("Choose an amount from $1 to your available wallet balance.")
 	_selected_wagers[peer_id] = amount
+	_last_selected_peer_id = peer_id
 	_rpc_sync_selected_wager.rpc(peer_id, amount) if multiplayer.multiplayer_peer != null else _rpc_sync_selected_wager(peer_id, amount)
 	_update_terminal_status()
 	return _success({"peer_id": peer_id, "selected_wager": amount, "available_balance": available})
@@ -119,12 +122,15 @@ func set_selected_wager(peer_id: int, amount: int) -> Dictionary:
 @rpc("authority", "call_remote", "reliable")
 func _rpc_sync_selected_wager(peer_id: int, amount: int) -> void:
 	_selected_wagers[peer_id] = amount
+	_last_selected_peer_id = peer_id
 	_update_terminal_status()
 
 func get_selected_wager(peer_id: int = 0) -> int:
 	return int(_selected_wagers.get(peer_id, 0))
 
 func get_shared_selected_wager() -> int:
+	if _selected_wagers.has(_last_selected_peer_id):
+		return int(_selected_wagers[_last_selected_peer_id])
 	if _selected_wagers.is_empty():
 		return 0
 	var peer_ids: Array = _selected_wagers.keys()
@@ -331,6 +337,7 @@ func _clear_round_visuals_local() -> void:
 	_rolling = false
 	_round_dice.clear()
 	_selected_wagers.clear()
+	_last_selected_peer_id = 0
 	_bet_visual_totals.clear()
 	if is_instance_valid(visuals):
 		visuals.clear_chip_stacks()
