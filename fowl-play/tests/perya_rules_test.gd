@@ -35,6 +35,14 @@ func _run() -> void:
 	_check(int(payouts.get("W3", -1)) == 0, "non-winning color loses its stake")
 	_check(int(payouts.get("W4", -1)) == 0, "another non-winning color is not refunded")
 	_check(Rules.calculate_round_payouts(wagers, [0, 1]).is_empty(), "invalid dice cannot produce payouts")
+	_check(Rules.COLOR_NAMES.size() == 6, "six betting colors are defined")
+	for color_index in range(Rules.COLOR_COUNT):
+		var total_gross_return := 0
+		for die_a in range(Rules.COLOR_COUNT):
+			for die_b in range(Rules.COLOR_COUNT):
+				for die_c in range(Rules.COLOR_COUNT):
+					total_gross_return += Rules.calculate_bet_return(1, [die_a, die_b, die_c], color_index)
+		_check(total_gross_return == 199, "%s has exact 199/216 return across all 216 dice outcomes" % Rules.COLOR_NAMES[color_index])
 	_check(is_equal_approx(Rules.theoretical_return_rate(), 199.0 / 216.0), "RTP is 92.1296%")
 	_check(is_equal_approx(Rules.theoretical_house_edge(), 17.0 / 216.0), "house edge is 7.8704%")
 
