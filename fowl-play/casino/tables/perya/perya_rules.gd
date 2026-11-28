@@ -32,6 +32,23 @@ static func calculate_gross_return(stake: int, match_count: int) -> int:
 static func calculate_bet_return(stake: int, dice: Array[int], color_index: int) -> int:
 	return calculate_gross_return(stake, count_matches(dice, color_index))
 
+## Builds one gross-return entry per locked wallet wager; repeated color bets stay independent.
+static func calculate_round_payouts(wagers: Array[Dictionary], dice: Array[int]) -> Dictionary:
+	if not is_valid_dice(dice):
+		return {}
+	var payouts: Dictionary = {}
+	for wager: Dictionary in wagers:
+		if str(wager.get("status", "")) != "locked":
+			continue
+		var wager_id: String = str(wager.get("wager_id", ""))
+		var stake: int = int(wager.get("stake", 0))
+		var payload: Dictionary = wager.get("payload", {})
+		var color_index: int = int(payload.get("color_index", -1))
+		if wager_id.is_empty() or payouts.has(wager_id) or stake <= 0 or color_index < 0 or color_index >= COLOR_COUNT:
+			return {}
+		payouts[wager_id] = calculate_bet_return(stake, dice, color_index)
+	return payouts
+
 static func theoretical_return_rate() -> float:
 	# P(k matches) = C(3,k) * (1/6)^k * (5/6)^(3-k).
 	# Gross multipliers are 0x, 2x, 3x and 4x.
