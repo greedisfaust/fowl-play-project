@@ -277,14 +277,39 @@ func _play_roll_and_settle(dice: Array[int], serial: int) -> void:
 	if serial != _round_serial or not _rolling:
 		return
 	_show_result(dice)
-	var payouts: Dictionary = Rules.calculate_round_payouts(get_round_wagers(), dice)
+	var round_wagers := get_round_wagers()
+	var payouts: Dictionary = Rules.calculate_round_payouts(round_wagers, dice)
 	if payouts.is_empty():
 		push_error("Perya refused to settle an empty or invalid locked wager set.")
 		return
+	var player_totals: Dictionary = {}
+	for wager in round_wagers:
+		var wager_id := str(wager.get("wager_id", ""))
+		if not payouts.has(wager_id):
+			continue
+		var peer_id := int(wager.get("peer_id", 0))
+		var totals: Dictionary = player_totals.get(peer_id, {"stake": 0, "gross_return": 0, "bet_count": 0})
+		totals["stake"] = int(totals["stake"]) + int(wager.get("stake", 0))
+		totals["gross_return"] = int(totals["gross_return"]) + int(payouts[wager_id])
+		totals["bet_count"] = int(totals["bet_count"]) + 1
+		player_totals[peer_id] = totals
 	var settlement := settle_round(payouts)
 	if not bool(settlement.get("ok", false)):
 		push_error("Perya settlement failed for %s: %s" % [current_round_id, str(settlement.get("reason", ""))])
 		return
+	for peer_value: Variant in player_totals.keys():
+		var peer_id := int(peer_value)
+		var totals: Dictionary = player_totals[peer_id]
+		var returned := int(totals["gross_return"])
+		report_player_feedback(
+			peer_id,
+			"PERYA SETTLED  /  STAKED %s  /  RETURN %s" % [_format_money(int(totals["stake"])), _format_money(returned)],
+			&"success" if returned > 0 else &"warning"
+		)
+	var result_names := PackedStringArray()
+	for color_index in dice:
+		result_names.append(Rules.COLOR_NAMES[color_index])
+	report_global_announcement("PERYA ROLL  /  %s" % "  •  ".join(result_names), "PERYA COLOR GAME", 1)
 	_rolling = false
 	_selected_wagers.clear()
 	_round_dice.clear()
@@ -411,7 +436,7 @@ func _update_terminal_status() -> void:
 	if not _last_result_line.is_empty():
 		detail += "\n" + _last_result_line
 	detail += "\nSELECT AMOUNT / CONFIRM / CLICK A COLOR\nPRESS START / ROLL WHEN READY"
-	screen.call("set_content", "PERYA  /  COLOR GAME", detail, "1 MATCH 2X  /  2 MATCHES 3X  /  3 MATCHES 4X")
+	screen.call("set_content", "PERYA  /  %s" % headline, detail, "1 MATCH 2X  /  2 MATCHES 3X  /  3 MATCHES 4X")
 
 func _format_money(amount: int) -> String:
 	var digits := str(maxi(amount, 0))
