@@ -327,6 +327,7 @@ func _text(parent: Node3D, node_name: String, value: String, position: Vector3, 
 	var label := _make_text_mesh(value, pixel_size, color)
 	label.name = node_name
 	label.position = position
+	label.rotation.x = -PI * 0.5
 	parent.add_child(label)
 
 func _make_text_mesh(value: String, pixel_size: float, color: Color) -> MeshInstance3D:
