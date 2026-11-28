@@ -117,19 +117,36 @@ func _on_round_cancelled(_table_id: String, _round_id: String, _refund_total: in
 
 ## Selection is only a keypad confirmation. No money is reserved until a color is clicked.
 func set_selected_wager(peer_id: int, amount: int) -> Dictionary:
+	if not multiplayer.is_server():
+		if multiplayer.multiplayer_peer == null:
+			return _failure("Only the host can set the Perya wager amount.")
+		_rpc_request_selected_wager.rpc_id(1, amount)
+		return _success({"pending": true, "selected_wager": amount})
+	return _handle_selected_wager(peer_id, amount)
+
+@rpc("any_peer", "call_remote", "reliable")
+func _rpc_request_selected_wager(amount: int) -> void:
+	if not multiplayer.is_server() or not _validate_remote_sender():
+		return
+	_handle_selected_wager(multiplayer.get_remote_sender_id(), amount)
+
+func _handle_selected_wager(peer_id: int, amount: int) -> Dictionary:
 	if not _is_authority():
 		return _failure("Only the host can set the Perya wager amount.")
 	if not _is_near_table(peer_id):
-		return _failure("Move closer to Perya before selecting a wager.")
+		return _reject(peer_id, "Move closer to Perya before selecting a wager.")
 	if state != TableState.IDLE and state != TableState.OPEN:
-		return _failure("Wagers are locked until this table is available again.")
+		return _reject(peer_id, "Wagers are locked until this table is available again.")
 	var snapshot: Dictionary = _wallet.call("get_snapshot")
 	var available := maxi(int(snapshot.get("available_balance", 0)), 0)
 	if amount <= 0 or amount > available:
-		return _failure("Choose an amount from $1 to your available wallet balance.")
+		return _reject(peer_id, "Choose an amount from $1 to your available wallet balance.")
 	_selected_wagers[peer_id] = amount
 	_last_selected_peer_id = peer_id
-	_rpc_sync_selected_wager.rpc(peer_id, amount) if multiplayer.multiplayer_peer != null else _rpc_sync_selected_wager(peer_id, amount)
+	if multiplayer.multiplayer_peer != null:
+		_rpc_sync_selected_wager.rpc(peer_id, amount)
+	else:
+		_rpc_sync_selected_wager(peer_id, amount)
 	_update_terminal_status()
 	return _success({"peer_id": peer_id, "selected_wager": amount, "available_balance": available})
 
