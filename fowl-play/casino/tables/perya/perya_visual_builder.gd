@@ -21,7 +21,7 @@ var _dice: Array[Node3D] = []
 var _dice_markers: Array[MeshInstance3D] = []
 var _chip_stacks: Dictionary = {}
 var _materials: Dictionary = {}
-var _tweens: Array[Tween] = []
+
 
 func _ready() -> void:
 	build()
