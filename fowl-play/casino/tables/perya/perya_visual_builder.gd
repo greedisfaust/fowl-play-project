@@ -218,6 +218,10 @@ func add_or_update_chip_stack(color_index: int, peer_id: int, nickname: String, 
 		label.name = "StackLabel"
 		label.position = Vector3(-0.16, 0.19, -0.12)
 		stack.add_child(label)
+	else:
+		var label := stack.get_node_or_null("StackLabel") as MeshInstance3D
+		if is_instance_valid(label) and label.mesh is TextMesh:
+			(label.mesh as TextMesh).text = "%s  x%d" % [nickname.substr(0, 8).to_upper(), bet_count]
 	for chip_index in range(4):
 		var chip := stack.get_node_or_null("Chip_%d" % chip_index) as MeshInstance3D
 		var rim := stack.get_node_or_null("PlayerColorRim_%d" % chip_index) as MeshInstance3D
@@ -225,15 +229,11 @@ func add_or_update_chip_stack(color_index: int, peer_id: int, nickname: String, 
 			chip.visible = chip_index < mini(bet_count, 4)
 		if is_instance_valid(rim):
 			rim.visible = chip_index < mini(bet_count, 4)
-	else:
-		var label := stack.get_node_or_null("StackLabel") as MeshInstance3D
-		if is_instance_valid(label) and label.mesh is TextMesh:
-			(label.mesh as TextMesh).text = "%s  x%d" % [nickname.substr(0, 8).to_upper(), bet_count]
 	var amount := stack.get_node_or_null("AmountLabel") as MeshInstance3D
 	if not is_instance_valid(amount):
 		amount = _make_text_mesh("$%s" % _format_money(total_stake), 0.0013, Color("#e6c77c"))
 		amount.name = "AmountLabel"
-		amount.position = Vector3(-0.16, 0.058, 0.02)
+		amount.position = Vector3(-0.16, 0.16, 0.02)
 		stack.add_child(amount)
 	else:
 		(amount.mesh as TextMesh).text = "$%s" % _format_money(total_stake)
