@@ -14,7 +14,7 @@ const COLOR_DARK: Array[Color] = [
 	Color("#781d20"), Color("#173d70"), Color("#78601c"),
 	Color("#1a5736"), Color("#77746a"), Color("#762d50")
 ]
-const COLOR_NAMES: Array[String] = Rules.COLOR_NAMES
+const COLOR_NAMES: Array[String] = ["RED", "BLUE", "YELLOW", "GREEN", "WHITE", "PINK"]
 
 var color_zones: Array[StaticBody3D] = []
 var roll_interactable: Interactable
