@@ -69,16 +69,27 @@ func exit_proximity(peer_id: int) -> Dictionary:
 	return result
 
 func _rebuild_chip_stacks_from_wagers() -> void:
-	_bet_visual_totals.clear()
-	if is_instance_valid(visuals):
-		visuals.clear_chip_stacks()
+	var records: Array[Dictionary] = []
 	for wager in get_round_wagers():
 		if str(wager.get("status", "")) != "reserved":
 			continue
 		var payload: Dictionary = wager.get("payload", {})
 		var peer_id := int(wager.get("peer_id", 0))
 		var color_index := int(payload.get("color_index", -1))
-		var record := _build_bet_presentation(peer_id, color_index, int(wager.get("stake", 0)), str(wager.get("wager_id", "")))
+		records.append(_build_bet_presentation(peer_id, color_index, int(wager.get("stake", 0)), str(wager.get("wager_id", ""))))
+	_apply_chip_snapshot(records)
+	if multiplayer.multiplayer_peer != null:
+		_rpc_sync_chip_snapshot.rpc(records)
+
+@rpc("authority", "call_remote", "reliable")
+func _rpc_sync_chip_snapshot(records: Array[Dictionary]) -> void:
+	_apply_chip_snapshot(records)
+
+func _apply_chip_snapshot(records: Array[Dictionary]) -> void:
+	_bet_visual_totals.clear()
+	if is_instance_valid(visuals):
+		visuals.clear_chip_stacks()
+	for record in records:
 		_apply_bet_presentation(record)
 
 func _on_round_cancelled(_table_id: String, _round_id: String, _refund_total: int) -> void:
