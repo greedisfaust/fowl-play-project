@@ -20,6 +20,7 @@ var roll_interactable: Interactable
 var _dice: Array[Node3D] = []
 var _dice_markers: Array[MeshInstance3D] = []
 var _chip_stacks: Dictionary = {}
+var _stack_tweens: Dictionary = {}
 var _materials: Dictionary = {}
 
 
