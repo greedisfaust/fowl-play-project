@@ -489,11 +489,11 @@ func _update_terminal_status() -> void:
 	var profile := terminal_display.get("profile") as BettingTerminalProfile
 	if is_instance_valid(profile):
 		if _rolling:
-			profile.game_description = "DICE ROLLING / ALL BETS LOCKED. WAIT FOR THE RESULT."
+			profile.game_description = "DICE ROLLING / ALL BETS LOCKED. MATCHES PAY 1=2X / 2=3X / 3=4X."
 		elif not _last_result_line.is_empty():
-			profile.game_description = "%s. LOSING COLOR BETS ARE NOT REFUNDED." % _last_result_line
+			profile.game_description = "%s. MATCHES PAY 1=2X / 2=3X / 3=4X. LOSING BETS ARE NOT REFUNDED." % _last_result_line
 		else:
-			profile.game_description = "SET CHIP VALUE / CONFIRM / CLICK ANY COLOR TO BET. START / ROLL LOCKS ALL BETS."
+			profile.game_description = "CONFIRM CHIP VALUE / CLICK A COLOR TO BET. START / ROLL LOCKS BETS. MATCHES: 1=2X / 2=3X / 3=4X."
 	if terminal_display.has_method("refresh_display"):
 		terminal_display.call("refresh_display")
 
