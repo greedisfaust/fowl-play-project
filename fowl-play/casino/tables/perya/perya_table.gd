@@ -248,6 +248,16 @@ func _play_roll_and_settle(dice: Array[int], serial: int) -> void:
 	_publish_keypad_snapshot()
 	_update_terminal_status()
 
+@rpc("authority", "call_remote", "reliable")
+func _rpc_clear_round_visuals() -> void:
+	_clear_round_visuals_local()
+
+func _clear_round_visuals_local() -> void:
+	_bet_visual_totals.clear()
+	if is_instance_valid(visuals):
+		visuals.clear_chip_stacks()
+	_update_terminal_status()
+
 func _show_result(dice: Array[int]) -> void:
 	var totals: Dictionary = {}
 	for color_index in dice:
