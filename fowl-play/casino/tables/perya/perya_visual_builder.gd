@@ -331,6 +331,14 @@ func _kill_color_tween(color_index: int) -> void:
 	if is_instance_valid(previous) and previous.is_running():
 		previous.kill()
 	_color_tweens.erase(color_index)
+	if color_index >= 0 and color_index < color_zones.size():
+		var tile := color_zones[color_index].get_parent() as Node3D
+		var inlay := tile.get_node_or_null("ColorInlay") as MeshInstance3D
+		if is_instance_valid(inlay):
+			inlay.scale = Vector3.ONE
+			var material := inlay.material_override as StandardMaterial3D
+			if is_instance_valid(material):
+				material.emission_energy_multiplier = 0.45
 
 func _on_color_tween_finished(color_index: int) -> void:
 	var completed := _color_tweens.get(color_index) as Tween
