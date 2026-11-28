@@ -20,6 +20,7 @@ var _debug_hub: Node = null
 var _run_active: bool = false
 var _initial_balance: int = 0
 var _available_balance: int = 0
+var _reserved_total: int = 0
 var _next_wager_sequence: int = 1
 var _wagers: Dictionary = {}
 var _rounds: Dictionary = {}
@@ -73,6 +74,7 @@ func reset_for_session_end() -> bool:
 	_run_active = false
 	_initial_balance = 0
 	_available_balance = 0
+	_reserved_total = 0
 	_next_wager_sequence = 1
 	_wagers.clear()
 	_rounds.clear()
@@ -163,6 +165,7 @@ func update_wager(wager_id: String, amount: int, payload: Dictionary = {}) -> Di
 	if difference > _available_balance:
 		return _failure("Insufficient available shared funds for the increase.")
 	_available_balance -= difference
+	_reserved_total += difference
 	wager["stake"] = amount
 	wager["payload"] = payload.duplicate(true)
 	_wagers[wager_id] = wager
@@ -239,6 +242,7 @@ func cancel_open_round(table_id: String, round_id: String) -> Dictionary:
 			continue
 		var amount: int = int(wager["stake"])
 		_available_balance += amount
+		_reserved_total -= amount
 		refunded_total += amount
 		wager["status"] = STATUS_REFUNDED
 		wager["refund_reason"] = "round_cancelled"
@@ -347,6 +351,11 @@ func _has_unsettled_wagers() -> bool:
 	return false
 
 func _get_reserved_total() -> int:
+	return _reserved_total
+
+
+## Rebuilds the cached total only when replacing the complete replicated ledger.
+func _calculate_reserved_total() -> int:
 	var total: int = 0
 	for wager_value: Variant in _wagers.values():
 		var wager: Dictionary = wager_value
@@ -410,6 +419,7 @@ func _rpc_apply_network_state(snapshot: Dictionary) -> void:
 	var incoming_rounds: Dictionary = rounds_value
 	_wagers = incoming_wagers.duplicate(true)
 	_rounds = incoming_rounds.duplicate(true)
+	_reserved_total = _calculate_reserved_total()
 	for wager_id_value: Variant in _wagers.keys():
 		var wager_id: String = str(wager_id_value)
 		var wager: Dictionary = _wagers[wager_id]
