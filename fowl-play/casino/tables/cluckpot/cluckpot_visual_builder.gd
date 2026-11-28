@@ -220,6 +220,29 @@ func set_reel_outcome(reel_index: int, column: Array, visual_seed: int = 0) -> v
 	set_symbol_icon(cells[1], str(column[2]))
 
 
+## Returns the three visible rows for each reel in top/center/bottom order.
+## Each value is read from the Sprite3D currently assigned to that physical cell.
+func get_visible_reel_symbols() -> Array:
+	var columns: Array = []
+	if reel_cells.size() != 3:
+		return columns
+	for reel_index: int in range(3):
+		var visible_cells: Array = reel_cells[reel_index]
+		if visible_cells.size() != 3:
+			return []
+		var column: Array[String] = []
+		for cell: Node3D in visible_cells:
+			var icon: Sprite3D = cell.get_node_or_null("SymbolIcon") as Sprite3D
+			if not is_instance_valid(icon) or not icon.has_meta("cluckpot_symbol"):
+				return []
+			var symbol: String = str(icon.get_meta("cluckpot_symbol"))
+			if not Rules.SYMBOLS.has(symbol):
+				return []
+			column.append(symbol)
+		columns.append(column)
+	return columns
+
+
 func set_symbol_icon(cell: Node3D, symbol: String) -> void:
 	var texture: Texture2D = SYMBOL_TEXTURES.get(symbol) as Texture2D
 	if texture == null:
@@ -240,6 +263,10 @@ func set_symbol_icon(cell: Node3D, symbol: String) -> void:
 		cell.add_child(icon)
 
 	icon.texture = texture
+	# Keep the symbol identity beside the exact Sprite3D texture used by the reel.
+	# The machine reads this back from the visible center cells before settlement,
+	# so the payout is based on the artwork actually installed on the payline.
+	icon.set_meta("cluckpot_symbol", symbol)
 	var texture_size := Vector2(texture.get_width(), texture.get_height())
 	icon.pixel_size = minf(0.30 / texture_size.x, 0.22 / texture_size.y)
 	icon.modulate = Color("#fff3d1") if symbol == "SEVEN" else Color.WHITE
