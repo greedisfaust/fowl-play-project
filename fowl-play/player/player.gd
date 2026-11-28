@@ -333,16 +333,17 @@ func _process(delta: float) -> void:
 		_update_first_person_camera_presentation(delta)
 	_combat_presentation.call("advance", delta)
 	var grounded_for_legs: bool = is_on_floor() if is_local_player else _remote_grounded
+	var skeleton_pose_current: bool = false
 	if rig != null:
-		rig.call("update_procedural_legs", velocity, grounded_for_legs, delta)
+		skeleton_pose_current = bool(rig.call("update_procedural_legs", velocity, grounded_for_legs, delta))
 	# The camera-attached Viewmodel hand is the pose source for remote-visible arms.
 	# Its authored wrist pivot sits 0.32 hand-local units behind the palm.
 	if rig != null and is_instance_valid(viewmodel_right_hand_pose_root):
 		var wrist_target_world: Vector3 = viewmodel_right_hand_pose_root.to_global(Vector3(0.0, 0.0, 0.32))
-		rig.call("update_procedural_right_arm", wrist_target_world, delta, true)
+		rig.call("update_procedural_right_arm", wrist_target_world, delta, skeleton_pose_current)
 	if rig != null and is_instance_valid(viewmodel_left_hand_pose_root):
 		var left_wrist_target_world: Vector3 = viewmodel_left_hand_pose_root.to_global(Vector3(0.0, 0.0, 0.32))
-		rig.call("update_procedural_left_arm", left_wrist_target_world, delta, true)
+		rig.call("update_procedural_left_arm", left_wrist_target_world, delta, skeleton_pose_current)
 	if is_local_player:
 		_send_elapsed += delta
 		if _send_elapsed >= 1.0 / TUNING.MOVE_SEND_HZ:
