@@ -22,6 +22,8 @@ var _dice_markers: Array[MeshInstance3D] = []
 var _chip_stacks: Dictionary = {}
 var _stack_tweens: Dictionary = {}
 var _materials: Dictionary = {}
+var _chip_mesh: CylinderMesh
+var _chip_rim_mesh: TorusMesh
 
 
 func _ready() -> void:
@@ -35,6 +37,16 @@ func build() -> void:
 	_dice_markers.clear()
 	_chip_stacks.clear()
 	_materials.clear()
+	_chip_mesh = CylinderMesh.new()
+	_chip_mesh.top_radius = 0.105
+	_chip_mesh.bottom_radius = 0.105
+	_chip_mesh.height = 0.045
+	_chip_mesh.radial_segments = 24
+	_chip_rim_mesh = TorusMesh.new()
+	_chip_rim_mesh.inner_radius = 0.082
+	_chip_rim_mesh.outer_radius = 0.105
+	_chip_rim_mesh.rings = 8
+	_chip_rim_mesh.ring_segments = 24
 	_build_table()
 	_build_color_board()
 	_build_dice_station()
@@ -187,32 +199,32 @@ func add_or_update_chip_stack(color_index: int, peer_id: int, nickname: String, 
 		stack.name = "PlayerStack_%d" % peer_id
 		anchor.add_child(stack)
 		_chip_stacks[key] = stack
-		var base := MeshInstance3D.new()
-		base.name = "Chip"
-		var mesh := CylinderMesh.new()
-		mesh.top_radius = 0.105
-		mesh.bottom_radius = 0.105
-		mesh.height = 0.045
-		mesh.radial_segments = 24
-		base.mesh = mesh
-		base.material_override = _mat(Color("#202833"), 0.8, 0.22)
-		stack.add_child(base)
-		var rim := MeshInstance3D.new()
-		rim.name = "PlayerColorRim"
-		var rim_mesh := TorusMesh.new()
-		rim_mesh.inner_radius = 0.082
-		rim_mesh.outer_radius = 0.105
-		rim_mesh.rings = 8
-		rim_mesh.ring_segments = 24
-		rim.mesh = rim_mesh
-		rim.position.y = 0.026
+		var chip_material := _mat(Color("#202833"), 0.8, 0.22)
 		var rim_material := _mat(player_color, 0.24, 0.25, player_color, 1.15)
-		rim.material_override = rim_material
-		stack.add_child(rim)
+		for chip_index in range(4):
+			var chip := MeshInstance3D.new()
+			chip.name = "Chip_%d" % chip_index
+			chip.mesh = _chip_mesh
+			chip.material_override = chip_material
+			chip.position.y = 0.0225 + float(chip_index) * 0.032
+			stack.add_child(chip)
+			var rim := MeshInstance3D.new()
+			rim.name = "PlayerColorRim_%d" % chip_index
+			rim.mesh = _chip_rim_mesh
+			rim.position.y = 0.045 + float(chip_index) * 0.032
+			rim.material_override = rim_material
+			stack.add_child(rim)
 		var label := _make_text_mesh("%s  x%d" % [nickname.substr(0, 8).to_upper(), bet_count], 0.00135, Color("#fff1d0"))
 		label.name = "StackLabel"
-		label.position = Vector3(-0.16, 0.055, -0.12)
+		label.position = Vector3(-0.16, 0.19, -0.12)
 		stack.add_child(label)
+	for chip_index in range(4):
+		var chip := stack.get_node_or_null("Chip_%d" % chip_index) as MeshInstance3D
+		var rim := stack.get_node_or_null("PlayerColorRim_%d" % chip_index) as MeshInstance3D
+		if is_instance_valid(chip):
+			chip.visible = chip_index < mini(bet_count, 4)
+		if is_instance_valid(rim):
+			rim.visible = chip_index < mini(bet_count, 4)
 	else:
 		var label := stack.get_node_or_null("StackLabel") as MeshInstance3D
 		if is_instance_valid(label) and label.mesh is TextMesh:
