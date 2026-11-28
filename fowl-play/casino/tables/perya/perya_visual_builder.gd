@@ -101,7 +101,7 @@ func _build_color_board() -> void:
 		interactable.name = "Interactable"
 		interactable.prompt_text = "BET ON %s" % COLOR_NAMES[index]
 		interactable.set_meta("perya_color_index", index)
-		zone.add_child(interactable)
+		tile.add_child(interactable)
 		tile.add_child(zone)
 		color_zones.append(zone)
 		# Dedicated shallow recess for each color's player chip stacks.
