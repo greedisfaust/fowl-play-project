@@ -237,6 +237,11 @@ func add_or_update_chip_stack(color_index: int, peer_id: int, nickname: String, 
 	_stack_tweens[key] = tween
 
 func clear_chip_stacks() -> void:
+	for tween_value: Variant in _stack_tweens.values():
+		var stack_tween := tween_value as Tween
+		if is_instance_valid(stack_tween) and stack_tween.is_running():
+			stack_tween.kill()
+	_stack_tweens.clear()
 	for value: Variant in _chip_stacks.values():
 		var stack := value as Node
 		if is_instance_valid(stack):
