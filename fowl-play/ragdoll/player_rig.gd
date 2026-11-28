@@ -602,7 +602,6 @@ func update_procedural_legs(world_velocity: Vector3, grounded: bool, delta: floa
 	skeleton.force_update_all_bone_transforms()
 	var local_velocity: Vector3 = global_basis.inverse() * world_velocity
 	_leg_controller.call("update", delta, local_velocity, grounded, vertical_velocity, landing_weight)
-	skeleton.force_update_all_bone_transforms()
 	var left_foot_world: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(_left_foot_bone_index).origin)
 	var right_foot_world: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(_right_foot_bone_index).origin)
 	var left_hip_world: Vector3 = skeleton.to_global(skeleton.get_bone_global_pose(_left_thigh_bone_index).origin)
