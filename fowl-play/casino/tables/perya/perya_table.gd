@@ -30,7 +30,7 @@ func _ready() -> void:
 		proximity_area.body_exited.connect(_on_proximity_exited)
 	if is_instance_valid(visuals):
 		for zone in visuals.color_zones:
-			var interactable := zone.get_node_or_null("Interactable") as Interactable
+			var interactable := zone.get_parent().get_node_or_null("Interactable") as Interactable
 			if is_instance_valid(interactable):
 				interactable.interacted.connect(_on_color_interacted.bind(int(interactable.get_meta("perya_color_index", -1))))
 	if is_instance_valid(roll_interactable):
