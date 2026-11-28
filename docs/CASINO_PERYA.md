@@ -4,7 +4,7 @@ Status: table scene, controller, visual builder, terminal profile, casino regist
 
 ## Physical table and interaction
 - Six betting spaces—red, blue, yellow, green, white, and pink—are arranged on the left side of the table.
-- A gold-trimmed, open-front three-die cage and result area occupy the right side.
+- A gold-trimmed, open-front three-die cage and result area occupy the right side. Each physical die has all six Perya colors on its faces and tumbles to a landing pose with the host-selected result facing up.
 - Players enter an amount on the physical betting keypad and press CONFIRM. This only selects their chip value; it does not reserve money or place a bet.
 - After selecting an amount, players click any color space to place a separate wager of that amount on that color. Repeated clicks create additional independent wagers. Players may change the selected amount and bet on any color again.
 - A placed wager reserves its stake immediately. The only amount restriction is the player's remaining shared-wallet balance; Perya does not impose a profile maximum or extra per-color wager cap.
@@ -26,7 +26,7 @@ The theoretical house edge is 17/216 = 7.8704%.
 ## Presentation
 - Color pads use the shared Interactable focus outline and animate on selection.
 - Chip stacks pop into place and update in place rather than spawning an unbounded object per wager.
-- The roll control depresses, all three dice tumble and bounce to their host-selected colors, and every winning color receives a short pulse.
+- The roll control depresses and the cage glow rises as all three six-color dice tumble and bounce to their host-selected landing faces. Winning colors receive a short pulse.
 - The terminal retains the latest dice result and explains the wager flow and gross-return multipliers.
 
 ## Multiplayer and authority
@@ -37,6 +37,6 @@ The theoretical house edge is 17/216 = 7.8704%.
 - Pre-start departure refunds are reflected in the physical chip stacks. A casino day-end request settles an already-started round immediately from its fixed host result rather than waiting for presentation animation.
 
 ## Performance
-- Chip cylinder/rim meshes and materials are reused; visual stacks are aggregated by player and color.
+- Chip cylinder/rim meshes and materials are reused; each player/color stack uses two MultiMesh instances and is aggregated rather than spawning one node per bet.
 - Static table geometry is built once. Only three dice, selected color surfaces, and active chip stacks animate.
 - No per-frame polling is used for betting, terminal, or chip state.
