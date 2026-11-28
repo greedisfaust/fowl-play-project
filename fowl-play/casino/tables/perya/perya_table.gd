@@ -271,8 +271,8 @@ func _rpc_begin_roll(dice: Array[int], serial: int) -> void:
 		await visuals.animate_dice(_round_dice, 2.45)
 	_show_result(_round_dice)
 
-func _play_roll_and_settle(dice: Array[int], serial: int) -> void:
-	if is_instance_valid(visuals):
+func _play_roll_and_settle(dice: Array[int], serial: int, skip_animation: bool = false) -> void:
+	if not skip_animation and is_instance_valid(visuals):
 		await visuals.animate_dice(dice, 2.45)
 	if serial != _round_serial or not _rolling:
 		return
@@ -350,9 +350,10 @@ func _show_result(dice: Array[int]) -> void:
 		world_screen.call("set_content", "PERYA  /  RESULT", body, "LOSING COLOR BETS ARE NOT REFUNDED")
 
 func _on_auto_resolution_requested(_table_id: String, _round_id: String, _reason: String) -> void:
-	if _is_authority() and _rolling:
-		# The authoritative dice are already fixed. Normal animation completion settles every locked stake.
-		return
+	if _is_authority() and _rolling and Rules.is_valid_dice(_round_dice):
+		# Day-end cleanup cannot wait on presentation. Settle the already-fixed host result now;
+		# the regular animation coroutine observes _rolling=false and exits without double-paying.
+		_play_roll_and_settle(_round_dice.duplicate(), _round_serial, true)
 
 func _on_color_interacted(actor: Node, action: StringName, color_index: int) -> void:
 	if action != &"use" or not is_instance_valid(actor):
