@@ -226,17 +226,10 @@ func _play_roll_and_settle(dice: Array[int], serial: int) -> void:
 	if serial != _round_serial or not _rolling:
 		return
 	_show_result(dice)
-	var payouts: Dictionary = {}
-	var round_wagers := get_round_wagers()
-	for wager in round_wagers:
-		if str(wager.get("status", "")) != "locked":
-			continue
-		var wager_id := str(wager.get("wager_id", ""))
-		var payload: Dictionary = wager.get("payload", {})
-		var color_index := int(payload.get("color_index", -1))
-		var stake := int(wager.get("stake", 0))
-		var matches := Rules.count_matches(dice, color_index)
-		payouts[wager_id] = Rules.calculate_gross_return(stake, matches)
+	var payouts: Dictionary = Rules.calculate_round_payouts(get_round_wagers(), dice)
+	if payouts.is_empty():
+		push_error("Perya refused to settle an empty or invalid locked wager set.")
+		return
 	var settlement := settle_round(payouts)
 	if not bool(settlement.get("ok", false)):
 		push_error("Perya settlement failed for %s: %s" % [current_round_id, str(settlement.get("reason", ""))])
