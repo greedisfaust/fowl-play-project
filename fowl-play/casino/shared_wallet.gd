@@ -104,7 +104,6 @@ func open_round(table_id: String, round_id: String) -> Dictionary:
 		return _failure("This table round ID has already been used.")
 	_rounds[key] = {"table_id": table_id, "round_id": round_id, "state": ROUND_OPEN, "wager_ids": []}
 	round_changed.emit(table_id, round_id, ROUND_OPEN)
-	_log_wallet("Opened round %s/%s." % [table_id, round_id])
 	_publish_network_state()
 	return _success({"table_id": table_id, "round_id": round_id, "state": ROUND_OPEN})
 
@@ -141,7 +140,6 @@ func reserve_wager(peer_id: int, table_id: String, round_id: String, amount: int
 	round_data["wager_ids"] = wager_ids
 	_rounds[_round_key(table_id, round_id)] = round_data
 	wager_changed.emit(wager_id, STATUS_RESERVED)
-	_log_wallet("Reserved %d for %s (peer %d)." % [amount, wager_id, peer_id])
 	_emit_wallet_changed()
 	return _success({"wager_id": wager_id, "available_balance": _available_balance})
 
@@ -218,7 +216,6 @@ func lock_round(table_id: String, round_id: String) -> Dictionary:
 	round_data["state"] = ROUND_LOCKED
 	_rounds[key] = round_data
 	round_changed.emit(table_id, round_id, ROUND_LOCKED)
-	_log_wallet("Locked %d wagers in %s/%s." % [locked_count, table_id, round_id])
 	_publish_network_state()
 	return _success({"locked_count": locked_count})
 
