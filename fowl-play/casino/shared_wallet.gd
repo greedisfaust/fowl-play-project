@@ -57,6 +57,7 @@ func begin_run(initial_balance: int) -> Dictionary:
 		return _failure("Cannot reset the wallet while wagers are still active.")
 	_initial_balance = initial_balance
 	_available_balance = initial_balance
+	_reserved_total = 0
 	_next_wager_sequence = 1
 	_wagers.clear()
 	_rounds.clear()
@@ -188,6 +189,7 @@ func withdraw_wager(wager_id: String) -> Dictionary:
 		return _failure("The wager's round is no longer open.")
 	var amount: int = int(wager["stake"])
 	_available_balance += amount
+	_reserved_total -= amount
 	wager["status"] = STATUS_REFUNDED
 	wager["refund_reason"] = "manual_withdrawal"
 	_wagers[wager_id] = wager
