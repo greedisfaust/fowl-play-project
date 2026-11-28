@@ -351,10 +351,10 @@ func _update_terminal_status() -> void:
 		return
 	var bet_count := 0
 	var total := 0
-	for wager in get_round_wagers():
-		if str(wager.get("status", "")) == "reserved":
-			bet_count += 1
-			total += int(wager.get("stake", 0))
+	for totals_value: Variant in _bet_visual_totals.values():
+		var totals: Dictionary = totals_value
+		bet_count += int(totals.get("count", 0))
+		total += int(totals.get("stake", 0))
 	var headline := "BETTING OPEN" if state == TableState.OPEN else ("DICE IN MOTION" if _rolling else "PLACE YOUR BETS")
 	var detail := "ACTIVE BETS  %d\nTOTAL STAKED  %s\nSELECT AMOUNT / CONFIRM / CLICK A COLOR\nPRESS START / ROLL WHEN READY" % [bet_count, _format_money(total)]
 	screen.call("set_content", "PERYA  /  COLOR GAME", detail, "1 MATCH 2X  /  2 MATCHES 3X  /  3 MATCHES 4X")
