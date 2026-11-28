@@ -380,7 +380,8 @@ func _update_procedural_arm_chain(
 	forearm_index: int,
 	hand_index: int,
 	wrist_target_world: Vector3,
-	delta: float
+	delta: float,
+	skeleton_pose_current: bool = false
 ) -> bool:
 	if upper_index < 0 or forearm_index < 0 or hand_index < 0:
 		return false
@@ -388,7 +389,8 @@ func _update_procedural_arm_chain(
 		return false
 	if not wrist_target_world.is_finite():
 		return false
-	skeleton.force_update_all_bone_transforms()
+	if not skeleton_pose_current:
+		skeleton.force_update_all_bone_transforms()
 	var shoulder_local: Vector3 = skeleton.get_bone_global_pose(upper_index).origin
 	var shoulder_world: Vector3 = skeleton.to_global(shoulder_local)
 	var upper_rest_offset: Vector3 = skeleton.get_bone_rest(forearm_index).origin
@@ -772,13 +774,14 @@ func _apply_combined_body_pose() -> bool:
 	skeleton.force_update_all_bone_transforms()
 	return true
 
-func update_procedural_right_arm(wrist_target_world: Vector3, delta: float) -> bool:
+func update_procedural_right_arm(wrist_target_world: Vector3, delta: float, skeleton_pose_current: bool = false) -> bool:
 	var applied: bool = _update_procedural_arm_chain(
 		_right_viewmodel_upper_arm_bone_index,
 		_right_viewmodel_forearm_bone_index,
 		_right_viewmodel_hand_bone_index,
 		wrist_target_world,
-		delta
+		delta,
+		skeleton_pose_current
 	)
 	if not applied:
 		_set_right_arm_ik_active(false)
@@ -787,13 +790,14 @@ func update_procedural_right_arm(wrist_target_world: Vector3, delta: float) -> b
 	_set_right_arm_ik_active(true)
 	return true
 
-func update_procedural_left_arm(wrist_target_world: Vector3, delta: float) -> bool:
+func update_procedural_left_arm(wrist_target_world: Vector3, delta: float, skeleton_pose_current: bool = false) -> bool:
 	var applied: bool = _update_procedural_arm_chain(
 		_left_viewmodel_upper_arm_bone_index,
 		_left_viewmodel_forearm_bone_index,
 		_left_viewmodel_hand_bone_index,
 		wrist_target_world,
-		delta
+		delta,
+		skeleton_pose_current
 	)
 	if not applied:
 		_set_left_arm_ik_active(false)
