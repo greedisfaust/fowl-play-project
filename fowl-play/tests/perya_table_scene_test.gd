@@ -21,6 +21,10 @@ func _run() -> void:
 	if is_instance_valid(visuals):
 		_check(visuals.color_zones.size() == 6, "exactly six physical color betting pads are built")
 		_check(is_instance_valid(visuals.roll_interactable), "physical START / ROLL interaction is built")
+		visuals.cancel_dice_animation([1, 2, 3])
+		var first_die := table.get_node("Visuals/PeryaAssembly/DiceCage/Die_1") as Node3D
+		_check(is_equal_approx(first_die.rotation.x, PI), "early cleanup snaps the first die to its final host result")
+		_check(is_equal_approx(first_die.position.y, 0.22), "early cleanup restores the die to its cage resting height")
 		for zone in visuals.color_zones:
 			_check(zone.collision_layer == 2, "color pad uses the shared device collision layer")
 			_check(is_instance_valid(zone.get_parent().get_node_or_null("Interactable")), "each color pad has a focusable Interactable")
