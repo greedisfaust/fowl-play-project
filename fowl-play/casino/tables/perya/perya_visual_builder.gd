@@ -257,7 +257,6 @@ func animate_dice(results: Array[int], duration: float = 2.25) -> void:
 		tween.chain().set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
 		tween.tween_property(die, "position:y", 0.22, total_duration * 0.25)
 		tween.tween_property(die, "rotation", Vector3.ZERO, total_duration * 0.18)
-		_tweens.append(tween)
 	await get_tree().create_timer(total_duration).timeout
 
 func highlight_winning_color(color_index: int) -> void:
