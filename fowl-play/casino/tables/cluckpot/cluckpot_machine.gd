@@ -277,8 +277,14 @@ func _reel_stop_pulse(reel_index: int) -> void:
 func _finish_spin_visual(record: Dictionary) -> void:
 	if str(_active_spin.get("round_id", "")) != str(record.get("round_id", "")):
 		return
+	# Final settlement guard: rebuild the win list and payout from the exact
+	# symbol matrix carried by this spin record. Never settle a cached payout.
+	var verified_wins: Array[Dictionary] = Rules.evaluate_lines(record.get("symbols", []))
+	var verified_payout: int = Rules.calculate_payout(int(record.get("stake", 0)), {"line_wins": verified_wins})
+	record["line_wins"] = verified_wins
+	record["payout"] = verified_payout
 	last_spin_result = record.duplicate(true)
-	var payout: int = int(record.get("payout", 0))
+	var payout: int = verified_payout
 	var jackpot: bool = payout >= int(record.get("stake", 0)) * 20 and payout > 0
 	var result_text: String = "TRY AGAIN"
 	if payout > 0:
