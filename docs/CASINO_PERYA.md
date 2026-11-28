@@ -39,4 +39,5 @@ The theoretical house edge is 17/216 = 7.8704%.
 ## Performance
 - Chip cylinder/rim meshes and materials are reused; each player/color stack uses two MultiMesh instances and is aggregated rather than spawning one node per bet. Player stacks are laid out from actual peer IDs rather than assuming network IDs are consecutive.
 - Static table geometry is built once. Only three dice, selected color surfaces, and active chip stacks animate.
+- Repeated clicks coalesce to one active animation per color; completed chip-stack tweens are released, and dice tweens are cancelled safely during early settlement.
 - No per-frame polling is used for betting, terminal, or chip state.
