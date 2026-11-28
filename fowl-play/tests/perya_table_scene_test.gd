@@ -21,10 +21,21 @@ func _run() -> void:
 	if is_instance_valid(visuals):
 		_check(visuals.color_zones.size() == 6, "exactly six physical color betting pads are built")
 		_check(is_instance_valid(visuals.roll_interactable), "physical START / ROLL interaction is built")
-		_check(is_instance_valid(table.get_node_or_null("Visuals/PeryaAssembly/DiceCage/Die_1")), "first physical die exists")
-		_check(is_instance_valid(table.get_node_or_null("Visuals/PeryaAssembly/DiceCage/Die_2")), "second physical die exists")
-		_check(is_instance_valid(table.get_node_or_null("Visuals/PeryaAssembly/DiceCage/Die_3")), "third physical die exists")
+		for zone in visuals.color_zones:
+			_check(zone.collision_layer == 2, "color pad uses the shared device collision layer")
+			_check(is_instance_valid(zone.get_parent().get_node_or_null("Interactable")), "each color pad has a focusable Interactable")
+		for die_index in range(3):
+			var die := table.get_node_or_null("Visuals/PeryaAssembly/DiceCage/Die_%d" % (die_index + 1)) as Node3D
+			_check(is_instance_valid(die), "physical die %d exists" % (die_index + 1))
+			if is_instance_valid(die):
+				var face_count := 0
+				for face in die.get_children():
+					if str(face.name).begins_with("Face_"):
+						face_count += 1
+				_check(face_count == 6, "die %d has all six color faces" % (die_index + 1))
 	_check(is_instance_valid(table.get("roll_interactable")), "table controller binds the roll interaction")
+	var proximity := table.get_node_or_null("ProximityArea") as Area3D
+	_check(is_instance_valid(proximity) and proximity.collision_mask == 16, "proximity sensor detects the healthy-player collision layer")
 	var display := table.get_node_or_null("BettingTerminalDisplay")
 	_check(is_instance_valid(display), "shared betting terminal controller exists")
 	if is_instance_valid(display):
