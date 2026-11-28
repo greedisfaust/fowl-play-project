@@ -39,6 +39,7 @@ func _ready() -> void:
 		roll_interactable.interacted.connect(_on_roll_interacted)
 	round_auto_resolution_requested.connect(_on_auto_resolution_requested)
 	round_cancelled.connect(_on_round_cancelled)
+	_prepare_terminal_profile()
 	_setup_betting_keypad()
 	_update_terminal_status()
 
@@ -467,32 +468,37 @@ func _publish_keypad_snapshot() -> void:
 	if is_instance_valid(controller) and controller.has_method("_publish_snapshot"):
 		controller.call("_publish_snapshot")
 
-func _update_terminal_status() -> void:
-	if is_instance_valid(terminal_display) and terminal_display.has_method("refresh_display"):
-		terminal_display.call("refresh_display")
-	var screen := get_node_or_null("SlimWorldScreen/WorldScreen")
-	if not is_instance_valid(screen) or not screen.has_method("set_content"):
+func _prepare_terminal_profile() -> void:
+	if not is_instance_valid(terminal_display):
 		return
-	var bet_count := 0
-	var total := 0
-	for totals_value: Variant in _bet_visual_totals.values():
-		var totals: Dictionary = totals_value
-		bet_count += int(totals.get("count", 0))
-		total += int(totals.get("stake", 0))
-	var headline := "DICE IN MOTION" if _rolling else ("BETTING OPEN" if state == TableState.OPEN or not _bet_visual_totals.is_empty() else "PLACE YOUR BETS")
+	var profile := terminal_display.get("profile") as BettingTerminalProfile
+	if is_instance_valid(profile):
+		# Each physical table owns its live copy; changing the result line must not
+		# mutate a shared .tres resource used by another Perya instance.
+		terminal_display.set("profile", profile.duplicate(true))
+
+func _update_terminal_status() -> void:
 	if is_instance_valid(visuals):
-		visuals.set_roll_ready(bet_count > 0 and not _rolling, _rolling)
+		var has_bets := not _bet_visual_totals.is_empty()
+		visuals.set_roll_ready(has_bets and not _rolling, _rolling)
 		for color_index in range(visuals.color_zones.size()):
 			var zone := visuals.color_zones[color_index]
 			var interactable := zone.get_parent().get_node_or_null("Interactable") as Interactable
 			if is_instance_valid(interactable):
 				interactable.enabled = not _rolling
 				interactable.prompt_text = "BETS LOCKED" if _rolling else "BET ON %s" % Rules.COLOR_NAMES[color_index]
-	var detail := "ACTIVE BETS  %d\nTOTAL STAKED  %s" % [bet_count, _format_money(total)]
-	if not _last_result_line.is_empty():
-		detail += "\n" + _last_result_line
-	detail += "\nSELECT AMOUNT / CONFIRM / CLICK A COLOR\nPRESS START / ROLL WHEN READY"
-	screen.call("set_content", "PERYA  /  %s" % headline, detail, "1 MATCH 2X  /  2 MATCHES 3X  /  3 MATCHES 4X")
+	if not is_instance_valid(terminal_display):
+		return
+	var profile := terminal_display.get("profile") as BettingTerminalProfile
+	if is_instance_valid(profile):
+		if _rolling:
+			profile.game_description = "DICE ROLLING / ALL BETS LOCKED. WAIT FOR THE RESULT."
+		elif not _last_result_line.is_empty():
+			profile.game_description = "%s. LOSING COLOR BETS ARE NOT REFUNDED." % _last_result_line
+		else:
+			profile.game_description = "SET CHIP VALUE / CONFIRM / CLICK ANY COLOR TO BET. START / ROLL LOCKS ALL BETS."
+	if terminal_display.has_method("refresh_display"):
+		terminal_display.call("refresh_display")
 
 func _format_money(amount: int) -> String:
 	var digits := str(maxi(amount, 0))
