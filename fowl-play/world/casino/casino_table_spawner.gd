@@ -9,7 +9,7 @@ class_name CasinoTableSpawner
 @export_node_path("Node3D") var spawned_tables_path: NodePath = ^"SpawnedTables"
 @export var spawn_on_ready: bool = true
 @export var allow_single_chicken_cross_test_table: bool = true
-@export_enum("chicken_cross", "egg_plinko", "cluckpot") var development_test_game_id: String = "cluckpot"
+@export_enum("chicken_cross", "egg_plinko", "cluckpot", "perya") var development_test_game_id: String = "perya"
 
 var _spawned_slot_ids: Dictionary = {}
 var _spawned_day_number: int = 0
