@@ -23,6 +23,7 @@ var _available_balance: int = 0
 var _next_wager_sequence: int = 1
 var _wagers: Dictionary = {}
 var _rounds: Dictionary = {}
+var _network_state_publish_queued: bool = false
 
 func _ready() -> void:
 	_debug_hub = get_node_or_null("/root/DebugHub")
@@ -368,6 +369,19 @@ func _emit_wallet_changed() -> void:
 ## The host mirrors the complete wager ledger to clients so every HUD and table display
 ## reads the same shared wallet. Clients receive state only; all mutations stay host-side.
 func _publish_network_state() -> void:
+	if multiplayer.multiplayer_peer is OfflineMultiplayerPeer or not multiplayer.is_server():
+		return
+	# Wallet mutations within one synchronous gameplay action (open, reserve,
+	# lock) should replicate only their final state. The deferred flush also
+	# prevents repeatedly deep-copying the ever-growing historical ledger.
+	if _network_state_publish_queued:
+		return
+	_network_state_publish_queued = true
+	call_deferred("_flush_network_state")
+
+
+func _flush_network_state() -> void:
+	_network_state_publish_queued = false
 	if multiplayer.multiplayer_peer is OfflineMultiplayerPeer or not multiplayer.is_server():
 		return
 	rpc("_rpc_apply_network_state", {
