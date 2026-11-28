@@ -247,7 +247,7 @@ func add_or_update_chip_stack(color_index: int, peer_id: int, nickname: String, 
 		rims.material_override = rim_material
 		rims.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		stack.add_child(rims)
-		var label := _make_text_mesh("%s  x%d" % [nickname.substr(0, 8).to_upper(), bet_count], 0.00135, Color("#fff1d0"))
+		var label := _make_text_mesh("%s  x%d" % [nickname.substr(0, 5).to_upper(), bet_count], 0.00135, Color("#fff1d0"))
 		label.name = "StackLabel"
 		label.position = Vector3(-0.16, 0.19, -0.12)
 		stack.add_child(label)
