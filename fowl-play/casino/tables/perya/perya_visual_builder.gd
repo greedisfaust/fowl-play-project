@@ -220,7 +220,7 @@ func add_or_update_chip_stack(color_index: int, peer_id: int, nickname: String, 
 		rim_multimesh.transform_format = MultiMesh.TRANSFORM_3D
 		rim_multimesh.mesh = _chip_rim_mesh
 		rim_multimesh.instance_count = 4
-		var rim_basis := Basis(Vector3.RIGHT, PI * 0.5)
+		var rim_basis := Basis.IDENTITY
 		for chip_index in range(4):
 			chip_multimesh.set_instance_transform(
 				chip_index,
@@ -264,7 +264,18 @@ func add_or_update_chip_stack(color_index: int, peer_id: int, nickname: String, 
 		stack.add_child(amount)
 	else:
 		(amount.mesh as TextMesh).text = "$%s" % _format_money(total_stake)
-	var target := Vector3(-0.30 + float(posmod(peer_id - 1, 4)) * 0.20, 0.0, 0.0)
+	# Assign stable, collision-free positions from the actual bettors on this color;
+	# peer IDs are network identifiers and are not guaranteed to be consecutive.
+	var peer_ids: Array[int] = []
+	var color_prefix := "%d:" % color_index
+	for stack_key_value: Variant in _chip_stacks.keys():
+		var stack_key := str(stack_key_value)
+		if stack_key.begins_with(color_prefix):
+			peer_ids.append(int(stack_key.get_slice(":", 1)))
+	peer_ids.sort()
+	var stack_slot := peer_ids.find(peer_id)
+	var slot_x := [-0.30, -0.10, 0.10, 0.30]
+	var target := Vector3(slot_x[mini(stack_slot, slot_x.size() - 1)], 0.0, 0.0)
 	stack.position = target
 	stack.scale = Vector3.ONE * 0.72
 	var previous_tween := _stack_tweens.get(key) as Tween
