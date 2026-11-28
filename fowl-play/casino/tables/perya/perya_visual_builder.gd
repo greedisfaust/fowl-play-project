@@ -149,6 +149,7 @@ func _build_dice_station() -> void:
 		cube.size = Vector3(0.34, 0.34, 0.34)
 		body.mesh = cube
 		body.material_override = _mat(Color("#eee9dc"), 0.08, 0.3)
+		body.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		die.add_child(body)
 		var marker := MeshInstance3D.new()
 		marker.name = "TopColor"
@@ -157,6 +158,7 @@ func _build_dice_station() -> void:
 		marker.mesh = marker_mesh
 		marker.position.y = 0.177
 		marker.material_override = _mat(COLOR_VALUES[0], 0.1, 0.25, COLOR_VALUES[0], 0.8)
+		marker.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		die.add_child(marker)
 		_dice.append(die)
 		_dice_markers.append(marker)
@@ -402,6 +404,7 @@ func _make_text_mesh(value: String, pixel_size: float, color: Color) -> MeshInst
 	var instance := MeshInstance3D.new()
 	instance.mesh = mesh
 	instance.material_override = material
+	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	return instance
 
 func _format_money(amount: int) -> String:
