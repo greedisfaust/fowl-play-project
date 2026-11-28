@@ -158,6 +158,7 @@ func _handle_color_bet(peer_id: int, color_index: int) -> Dictionary:
 	if not _is_near_table(peer_id):
 		return _reject(peer_id, "Move closer to the Perya table to place a bet.")
 	if state == TableState.IDLE:
+		_last_result_line = ""
 		var opened := open_round(peer_id)
 		if not bool(opened.get("ok", false)):
 			return _reject(peer_id, str(opened.get("reason", "Could not open betting.")))
