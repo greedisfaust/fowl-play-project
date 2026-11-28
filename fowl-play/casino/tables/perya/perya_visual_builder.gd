@@ -230,7 +230,6 @@ func add_or_update_chip_stack(color_index: int, peer_id: int, nickname: String, 
 	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.tween_property(stack, "scale", Vector3.ONE, 0.22)
-	_tweens.append(tween)
 
 func clear_chip_stacks() -> void:
 	for value: Variant in _chip_stacks.values():
