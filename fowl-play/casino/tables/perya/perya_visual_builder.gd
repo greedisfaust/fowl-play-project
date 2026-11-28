@@ -172,7 +172,7 @@ func _build_roll_control() -> void:
 	roll_interactable = Interactable.new()
 	roll_interactable.name = "Interactable"
 	roll_interactable.prompt_text = "START / ROLL THE DICE"
-	body.add_child(roll_interactable)
+	control.add_child(roll_interactable)
 
 func add_or_update_chip_stack(color_index: int, peer_id: int, nickname: String, player_color: Color, bet_count: int, total_stake: int) -> void:
 	if color_index < 0 or color_index >= color_zones.size() or peer_id <= 0:
