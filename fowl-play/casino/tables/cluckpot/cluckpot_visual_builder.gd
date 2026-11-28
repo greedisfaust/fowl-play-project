@@ -30,7 +30,10 @@ var _symbol_rng := RandomNumberGenerator.new()
 
 
 func _ready() -> void:
-	_rebuild()
+	# The runtime parent configures machine_number and builds this child once.
+	# Keep editor previews self-building without duplicating the cabinet at runtime.
+	if Engine.is_editor_hint():
+		_rebuild()
 
 
 func _rebuild() -> void:
@@ -163,8 +166,11 @@ func build(parent: Node3D, number: int = 1) -> void:
 		var screen: WorldScreen = screen_scene.instantiate() as WorldScreen
 		screen.name = "WagerWorldScreen"
 		screen.display_size = Vector2(1.55, 0.58)
-		screen.pixels_per_unit = 2048
+		# 1280 px/unit keeps the wide wager readout crisp while cutting its
+		# render target from ~3.77 MP to ~1.47 MP per machine.
+		screen.pixels_per_unit = 1280
 		screen.max_viewport_dimension = 4096
+		screen.render_on_demand = true
 		screen.text_scale = 1.0
 		screen.font_size_ratio = 0.14
 		screen.content_padding_ratio = 0.04
@@ -173,11 +179,16 @@ func build(parent: Node3D, number: int = 1) -> void:
 		screen.position = Vector3(0, 2.49, 0.72)
 		screen.rotation.x = deg_to_rad(-3.0)
 		cabinet.add_child(screen)
+		var screen_viewport: SubViewport = screen.get_node_or_null("SubViewport") as SubViewport
+		if is_instance_valid(screen_viewport):
+			# Font antialiasing remains enabled; 2D MSAA is unnecessary for glyphs.
+			screen_viewport.msaa_2d = Viewport.MSAA_DISABLED
 		var display := screen.get_screen_text()
 		if display != null:
 			display.terminal_font_size = 112
 			display.content_padding_ratio = 0.04
 			display.show_layout(ScreenText.LAYOUT_WARNING, "CLUCKPOT", "MIN  $100     MAX  $5,000\nWAGER  --", "INVALID / SET WAGER")
+			screen.request_update()
 
 	# Cabinet light accents.
 	var body := StaticBody3D.new()
