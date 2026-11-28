@@ -23,6 +23,8 @@ func _ready() -> void:
 	super._ready()
 	_network = get_node_or_null("/root/Network")
 	_rng.randomize()
+	if not is_instance_valid(roll_interactable) and is_instance_valid(visuals):
+		roll_interactable = visuals.roll_interactable
 	if is_instance_valid(proximity_area):
 		proximity_area.body_entered.connect(_on_proximity_entered)
 		proximity_area.body_exited.connect(_on_proximity_exited)
