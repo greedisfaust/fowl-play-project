@@ -19,13 +19,14 @@ const COLOR_NAMES: Array[String] = ["RED", "BLUE", "YELLOW", "GREEN", "WHITE", "
 var color_zones: Array[StaticBody3D] = []
 var roll_interactable: Interactable
 var _dice: Array[Node3D] = []
-var _dice_markers: Array[MeshInstance3D] = []
 var _roll_light: OmniLight3D
 var _chip_stacks: Dictionary = {}
 var _stack_tweens: Dictionary = {}
 var _materials: Dictionary = {}
 var _chip_mesh: CylinderMesh
 var _chip_rim_mesh: TorusMesh
+var _die_body_mesh: BoxMesh
+var _die_face_mesh: BoxMesh
 
 
 func _ready() -> void:
@@ -36,7 +37,6 @@ func build() -> void:
 		child.queue_free()
 	color_zones.clear()
 	_dice.clear()
-	_dice_markers.clear()
 	_roll_light = null
 	_chip_stacks.clear()
 	_materials.clear()
@@ -50,6 +50,10 @@ func build() -> void:
 	_chip_rim_mesh.outer_radius = 0.105
 	_chip_rim_mesh.rings = 8
 	_chip_rim_mesh.ring_segments = 24
+	_die_body_mesh = BoxMesh.new()
+	_die_body_mesh.size = Vector3(0.34, 0.34, 0.34)
+	_die_face_mesh = BoxMesh.new()
+	_die_face_mesh.size = Vector3(0.23, 0.012, 0.23)
 	_build_table()
 	_build_color_board()
 	_build_dice_station()
@@ -147,23 +151,17 @@ func _build_dice_station() -> void:
 		station.add_child(die)
 		var body := MeshInstance3D.new()
 		body.name = "DieBody"
-		var cube := BoxMesh.new()
-		cube.size = Vector3(0.34, 0.34, 0.34)
-		body.mesh = cube
+		body.mesh = _die_body_mesh
 		body.material_override = _mat(Color("#eee9dc"), 0.08, 0.3)
 		body.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		die.add_child(body)
-		var marker := MeshInstance3D.new()
-		marker.name = "TopColor"
-		var marker_mesh := BoxMesh.new()
-		marker_mesh.size = Vector3(0.23, 0.012, 0.23)
-		marker.mesh = marker_mesh
-		marker.position.y = 0.177
-		marker.material_override = _mat(COLOR_VALUES[0], 0.1, 0.25, COLOR_VALUES[0], 0.8)
-		marker.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		die.add_child(marker)
+		_add_die_face(die, 0, Vector3(0, 0.177, 0), Vector3.ZERO)
+		_add_die_face(die, 1, Vector3(0, -0.177, 0), Vector3(PI, 0, 0))
+		_add_die_face(die, 2, Vector3(0, 0, 0.177), Vector3(-PI * 0.5, 0, 0))
+		_add_die_face(die, 3, Vector3(0, 0, -0.177), Vector3(PI * 0.5, 0, 0))
+		_add_die_face(die, 4, Vector3(0.177, 0, 0), Vector3(0, 0, -PI * 0.5))
+		_add_die_face(die, 5, Vector3(-0.177, 0, 0), Vector3(0, 0, PI * 0.5))
 		_dice.append(die)
-		_dice_markers.append(marker)
 	_roll_light = OmniLight3D.new()
 	_roll_light.name = "RollGlow"
 	_roll_light.position = Vector3(0, 0.42, 0.34)
@@ -321,6 +319,26 @@ func clear_chip_stacks() -> void:
 			stack.queue_free()
 	_chip_stacks.clear()
 
+func _add_die_face(die: Node3D, color_index: int, position: Vector3, rotation: Vector3) -> void:
+	var face := MeshInstance3D.new()
+	face.name = "Face_%s" % COLOR_NAMES[color_index]
+	face.mesh = _die_face_mesh
+	face.position = position
+	face.rotation = rotation
+	face.material_override = _mat(COLOR_VALUES[color_index], 0.12, 0.28, COLOR_VALUES[color_index], 0.8)
+	face.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	die.add_child(face)
+
+func _face_up_rotation(color_index: int) -> Vector3:
+	match color_index:
+		0: return Vector3.ZERO
+		1: return Vector3(PI, 0, 0)
+		2: return Vector3(-PI * 0.5, 0, 0)
+		3: return Vector3(PI * 0.5, 0, 0)
+		4: return Vector3(0, 0, PI * 0.5)
+		5: return Vector3(0, 0, -PI * 0.5)
+	return Vector3.ZERO
+
 func animate_dice(results: Array[int], duration: float = 2.25) -> void:
 	if results.size() != Rules.DICE_COUNT:
 		return
@@ -331,18 +349,16 @@ func animate_dice(results: Array[int], duration: float = 2.25) -> void:
 		light_tween.tween_property(_roll_light, "light_energy", 1.1, total_duration * 0.72)
 	for index in range(Rules.DICE_COUNT):
 		var die := _dice[index]
-		var marker := _dice_markers[index]
-		var target_color := COLOR_VALUES[results[index]]
-		marker.material_override = _mat(target_color, 0.1, 0.24, target_color, 1.2)
+		var target_rotation := _face_up_rotation(results[index])
 		var tween := create_tween()
 		tween.set_parallel(true)
 		tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		var spin := Vector3(TAU * (2 + index), TAU * (3 + index), TAU * (2 + index))
-		tween.tween_property(die, "rotation", die.rotation + spin, total_duration * 0.68)
+		tween.tween_property(die, "rotation", target_rotation + spin, total_duration * 0.68)
 		tween.tween_property(die, "position:y", 0.48, total_duration * 0.28).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		tween.chain().set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
 		tween.tween_property(die, "position:y", 0.22, total_duration * 0.24)
-		tween.tween_property(die, "rotation", Vector3.ZERO, total_duration * 0.20)
+		tween.tween_property(die, "rotation", target_rotation, total_duration * 0.20)
 	await get_tree().create_timer(total_duration).timeout
 
 func highlight_winning_color(color_index: int) -> void:
