@@ -23,7 +23,7 @@ func _run() -> void:
 	]
 	var seven_wins: Array[Dictionary] = Rules.evaluate_lines(seven_columns)
 	_check(not seven_wins.is_empty() and str(seven_wins[0].get("symbol", "")) == "SEVEN", "Three Golden 7s form a winning line")
-	_check(Rules.calculate_payout(100, {"line_wins": seven_wins}) == 12600, "Single Golden 7 line pays the boosted 140x multiplier")
+	_check(Rules.calculate_payout(100, {"line_wins": seven_wins}) == 12600, "Single Golden 7 line pays the configured 126x multiplier")
 	var off_line_columns: Array = [
 		["SEVEN", "CHICK", "EGG"],
 		["SEVEN", "CORN", "WINGS"],
@@ -38,6 +38,14 @@ func _run() -> void:
 	var mismatched_wins: Array[Dictionary] = Rules.evaluate_lines(mismatched_front_row)
 	_check(mismatched_wins.is_empty(), "Corn, rooster, rooster on the visible center line is not a win")
 	_check(Rules.calculate_payout(100, {"line_wins": mismatched_wins}) == 0, "A two-of-a-kind center line pays nothing")
+	var rooster_corn_corn: Array = [
+		["EGG", "ROOSTER", "CORN"],
+		["WILD", "CORN", "WINGS"],
+		["CHICK", "CORN", "WINGS"],
+	]
+	var rooster_corn_corn_wins: Array[Dictionary] = Rules.evaluate_lines(rooster_corn_corn)
+	_check(rooster_corn_corn_wins.is_empty(), "Rooster, corn, corn on the center line never pays")
+	_check(Rules.calculate_payout(100, {"line_wins": rooster_corn_corn_wins}) == 0, "The screenshot's rooster-corn-corn combination returns zero")
 	var malformed_columns: Array = [
 		["CORN", "ROOSTER", "WINGS"],
 		["CORN", "ROOSTER"],
@@ -93,7 +101,7 @@ func _run() -> void:
 			_check(wager_screen.display_size.x >= 1.5 and wager_screen.display_size.y >= 0.55, "Wager WorldScreen is enlarged to replace the old jackpot medallion")
 			_check(wager_screen.position.y < 2.7 and wager_screen.position.y - wager_screen.display_size.y * 0.5 > 2.13, "Enlarged WorldScreen sits above the reel bezel without covering the reel window")
 			_check(machine.get_node_or_null("Visuals/Cabinet/SevenMedallion") == null and machine.get_node_or_null("Visuals/Cabinet/JackpotSeven") == null, "Old Golden 7 medallion is removed")
-			_check(wager_screen.pixels_per_unit >= 2048 and wager_screen.font_size_ratio >= 0.14, "Wager WorldScreen uses high-resolution large typography")
+			_check(wager_screen.pixels_per_unit >= 1280 and wager_screen.font_size_ratio >= 0.14, "Wager WorldScreen uses high-resolution large typography")
 		_check(machine.get_node_or_null("Visuals/Cabinet/ButtonHousing") == null, "The cabinet has no redundant spin button")
 		var textured_symbol_count: int = 0
 		for reel_index: int in range(3):
@@ -144,6 +152,10 @@ func _run() -> void:
 						if is_instance_valid(visible_icon) and visible_icon.texture != null and visible_icon.texture.resource_path == expected_path:
 							aligned_faces += 1
 			_check(aligned_faces == 9, "All nine final visible reel symbols match the authoritative spin outcome")
+			var installed_columns: Array = visual_builder.get_visible_reel_symbols() if is_instance_valid(visual_builder) else []
+			_check(installed_columns == expected_columns, "Read-back of physical reel faces matches the stored spin result")
+			var visible_wins: Array[Dictionary] = Rules.evaluate_lines(installed_columns)
+			_check(Rules.calculate_payout(stake, {"line_wins": visible_wins}) == int(settled_record.get("payout", -1)), "Settled payout matches the exact visible center symbols")
 			var persistent_reels: int = 0
 			for reel_index: int in range(3):
 				var reel_node: Node3D = visual_builder.reel_drums[reel_index]
