@@ -248,6 +248,27 @@ func add_or_update_chip_stack(color_index: int, peer_id: int, nickname: String, 
 	tween.tween_property(stack, "scale", Vector3.ONE, 0.22)
 	_stack_tweens[key] = tween
 
+func animate_color_selection(color_index: int) -> void:
+	if color_index < 0 or color_index >= color_zones.size():
+		return
+	var tile := color_zones[color_index].get_parent() as Node3D
+	var inlay := tile.get_node_or_null("ColorInlay") as MeshInstance3D
+	if not is_instance_valid(inlay):
+		return
+	var tween := create_tween()
+	tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(inlay, "scale", Vector3(1.035, 1.0, 1.035), 0.10)
+	tween.tween_property(inlay, "scale", Vector3.ONE, 0.16)
+
+func animate_roll_button() -> void:
+	var cap := get_node_or_null("PeryaAssembly/RollControl/StartButtonCap") as MeshInstance3D
+	if not is_instance_valid(cap):
+		return
+	var tween := create_tween()
+	tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(cap, "position:y", 0.045, 0.07)
+	tween.tween_property(cap, "position:y", 0.105, 0.18).set_trans(Tween.TRANS_BACK)
+
 func clear_chip_stacks() -> void:
 	for tween_value: Variant in _stack_tweens.values():
 		var stack_tween := tween_value as Tween
