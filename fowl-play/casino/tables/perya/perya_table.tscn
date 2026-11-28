@@ -1,0 +1,42 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://casino/tables/perya/perya_table.gd" id="1_table"]
+[ext_resource type="Script" path="res://casino/tables/perya/perya_visual_builder.gd" id="2_visual"]
+[ext_resource type="Script" path="res://casino/terminals/display/betting_terminal_display.gd" id="3_display"]
+[ext_resource type="Resource" path="res://casino/tables/perya/perya_terminal_profile.tres" id="4_profile"]
+[ext_resource type="PackedScene" path="res://environment/kit/slim_world_screen.tscn" id="5_screen"]
+[ext_resource type="PackedScene" path="res://casino/terminals/components/betting_keypad.tscn" id="6_keypad"]
+
+[node name="PeryaTable" type="Node3D"]
+script = ExtResource("1_table")
+table_id = "perya_main"
+game_id = "perya"
+max_participants = 4
+proximity_area = NodePath("ProximityArea")
+visuals = NodePath("Visuals")
+terminal_display = NodePath("BettingTerminalDisplay")
+roll_interactable = NodePath("Visuals/PeryaAssembly/RollControl/RollButtonBody/Interactable")
+
+[node name="Visuals" type="Node3D" parent="."]
+script = ExtResource("2_visual")
+
+[node name="ProximityArea" type="Area3D" parent="."]
+position = Vector3(0, 1.0, 0.1)
+collision_layer = 0
+collision_mask = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ProximityArea"]
+shape = SubResource("SphereShape3D_proximity")
+
+[node name="SlimWorldScreen" parent="." instance=ExtResource("5_screen")]
+position = Vector3(0.0, 2.65, -1.25)
+
+[node name="BettingKeypad" parent="." instance=ExtResource("6_keypad")]
+position = Vector3(-1.85, 1.22, 1.35)
+rotation = Vector3(1.1519173, 0.2617994, 0.0)
+
+[node name="BettingTerminalDisplay" type="Node" parent="."]
+script = ExtResource("3_display")
+table = NodePath("..")
+screen_text = NodePath("../SlimWorldScreen/WorldScreen/SubViewport/ScreenText")
+profile = ExtResource("4_profile")
