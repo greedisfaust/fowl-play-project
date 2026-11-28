@@ -1,15 +1,16 @@
 # Perya — Filipino Color Game
 
-Status: rules agreed; implementation in progress.
+Status: table scene, controller, visual builder, terminal profile, casino registration, and payout checks implemented; Godot runtime verification remains pending.
 
 ## Physical table and interaction
-- Six betting colors: red, blue, yellow, green, white, and pink.
-- Six betting spaces sit on the left side of the table; a transparent three-die cage and result tray sit on the right.
-- Players use the physical betting keypad to enter an amount and press CONFIRM. Confirmation only selects the amount; it does not reserve money or place a bet.
-- After selecting an amount, players click any color space to place a separate wager of that amount on that color. Repeated clicks place additional wagers. Players can change the selected amount and place more bets on any color.
-- Each placed bet is represented by a physical chip. Chips have a neutral casino finish with a clear player-identity colored rim/outline and remain individually attributable in the shared wallet.
-- The START / ROLL control locks all bets and begins the shared three-die roll. No bets can be placed or changed after start.
-- Losing-color bets are lost; they are not refunded. Winning-color bets settle independently.
+- Six betting spaces—red, blue, yellow, green, white, and pink—are arranged on the left side of the table.
+- A gold-trimmed, open-front three-die cage and result area occupy the right side.
+- Players enter an amount on the physical betting keypad and press CONFIRM. This only selects their chip value; it does not reserve money or place a bet.
+- After selecting an amount, players click any color space to place a separate wager of that amount on that color. Repeated clicks create additional independent wagers. Players may change the selected amount and bet on any color again.
+- A placed wager reserves its stake immediately. The only amount restriction is the player's remaining shared-wallet balance; Perya does not impose a profile maximum or extra per-color wager cap.
+- The felt shows one compact physical chip stack per player per color. Each stack uses the player's identity-color rim, a visible chip count, and an aggregate stake label. Individual bets remain separate in the shared wallet for attribution and settlement.
+- The START / ROLL button locks every wager and begins the shared three-die roll. The keypad selection and all color spaces are locked until settlement.
+- Losing-color wagers receive 0x and are not refunded. Winning-color wagers settle independently.
 
 ## Payouts
 Payouts are gross returns, including the original stake:
@@ -22,13 +23,20 @@ For one selected color, each die independently has a 1/6 chance of matching. The
 (75*2 + 15*3 + 1*4) / 216 = 199/216 = 92.1296%.
 The theoretical house edge is 17/216 = 7.8704%.
 
+## Presentation
+- Color pads use the shared Interactable focus outline and animate on selection.
+- Chip stacks pop into place and update in place rather than spawning an unbounded object per wager.
+- The roll control depresses, all three dice tumble and bounce to their host-selected colors, and every winning color receives a short pulse.
+- The terminal retains the latest dice result and explains the wager flow and gross-return multipliers.
+
 ## Multiplayer and authority
-- Host generates all three dice results and validates every bet.
+- The host generates all three dice results and validates every bet.
 - Every bet is a separate shared-wallet wager with bettor peer ID, color index, and selected stake.
 - The host locks the single table round before rolling and settles every locked wager exactly once from the same authoritative dice result.
-- Dice results and chip placement records are replicated to clients; clients do not generate outcomes.
+- Dice results, selected chip values, and chip-stack presentation records are replicated to clients; clients do not generate outcomes.
+- Pre-start departure refunds are reflected in the physical chip stacks. A casino day-end request settles an already-started round immediately from its fixed host result rather than waiting for presentation animation.
 
 ## Performance
-- Reuse shared chip meshes/materials where possible.
-- Keep one authoritative dice result and avoid per-frame polling for terminal or chip state.
-- Keep dice animation limited to the three dice; avoid particle-heavy effects.
+- Chip cylinder/rim meshes and materials are reused; visual stacks are aggregated by player and color.
+- Static table geometry is built once. Only three dice, selected color surfaces, and active chip stacks animate.
+- No per-frame polling is used for betting, terminal, or chip state.
