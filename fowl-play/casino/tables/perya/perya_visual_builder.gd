@@ -228,9 +228,13 @@ func add_or_update_chip_stack(color_index: int, peer_id: int, nickname: String, 
 	var target := Vector3(-0.26 + float(posmod(peer_id, 3)) * 0.26, 0.0, 0.0)
 	stack.position = target
 	stack.scale = Vector3.ONE * 0.72
+	var previous_tween := _stack_tweens.get(key) as Tween
+	if is_instance_valid(previous_tween) and previous_tween.is_running():
+		previous_tween.kill()
 	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.tween_property(stack, "scale", Vector3.ONE, 0.22)
+	_stack_tweens[key] = tween
 
 func clear_chip_stacks() -> void:
 	for value: Variant in _chip_stacks.values():
