@@ -294,6 +294,8 @@ func _rpc_clear_round_visuals() -> void:
 	_clear_round_visuals_local()
 
 func _clear_round_visuals_local() -> void:
+	_rolling = false
+	_round_dice.clear()
 	_selected_wagers.clear()
 	_bet_visual_totals.clear()
 	if is_instance_valid(visuals):
