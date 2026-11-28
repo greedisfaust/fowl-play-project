@@ -45,6 +45,12 @@ func _run() -> void:
 			_check(stack.get_node_or_null("ChipStack") is MultiMeshInstance3D, "chip stack uses a MultiMesh")
 			_check(stack.get_node_or_null("PlayerColorRims") is MultiMeshInstance3D, "player-color rim uses a MultiMesh")
 		_check(occupied_slots.size() == 4, "non-consecutive peer IDs receive distinct chip stack positions")
+		visuals.add_or_update_chip_stack(0, 9, "PLAYER 9", Color("#42a5f5"), 7, 700)
+		var aggregated_stack := stack_anchor.get_node("PlayerStack_9") as Node3D
+		var aggregated_chips := aggregated_stack.get_node("ChipStack") as MultiMeshInstance3D
+		var stack_label := aggregated_stack.get_node("StackLabel") as MeshInstance3D
+		_check(aggregated_chips.multimesh.instance_count == 4 and aggregated_chips.multimesh.visible_instance_count == 4, "large bet counts remain bounded to four rendered chip instances")
+		_check((stack_label.mesh as TextMesh).text.ends_with("x7"), "chip stack label retains the full wager count")
 	_check(table.has_method("_rpc_request_selected_wager"), "client keypad selections are validated and routed through the host")
 	_check(table.has_method("_rpc_request_color_bet"), "client color wagers are validated and routed through the host")
 	_check(table.has_method("_rpc_request_start_roll"), "client roll requests are validated and routed through the host")
