@@ -375,6 +375,10 @@ func _rpc_clear_round_visuals(final_dice: Array[int]) -> void:
 
 func _clear_round_visuals_local(final_dice: Array[int] = []) -> void:
 	_rolling = false
+	# A day-end can settle before a remote client's roll animation finishes.
+	# Preserve the host's final result even when that client's animation is cancelled early.
+	if Rules.is_valid_dice(final_dice) and _last_result_line.is_empty():
+		_show_result(final_dice)
 	if is_instance_valid(visuals):
 		visuals.cancel_dice_animation(final_dice)
 	_round_dice.clear()
