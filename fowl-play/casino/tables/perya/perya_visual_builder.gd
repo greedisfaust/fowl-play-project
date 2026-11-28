@@ -280,9 +280,11 @@ func highlight_winning_color(color_index: int) -> void:
 		material.emission_enabled = true
 		material.emission = COLOR_VALUES[color_index]
 		material.emission_energy_multiplier = 2.2
-	var tween := create_tween().set_loops(3)
-	tween.tween_property(inlay, "scale", Vector3(1.04, 1, 1.04), 0.18)
-	tween.tween_property(inlay, "scale", Vector3.ONE, 0.18)
+	var tween := create_tween()
+	for _pulse_index in range(3):
+		tween.tween_property(inlay, "scale", Vector3(1.04, 1, 1.04), 0.18)
+		tween.tween_property(inlay, "scale", Vector3.ONE, 0.18)
+	tween.tween_callback(func() -> void: material.emission_energy_multiplier = 0.45)
 
 func _mat(color: Color, metallic: float, roughness: float, emission: Color = Color.BLACK, energy: float = 0.0) -> StandardMaterial3D:
 	var key := "%s:%s:%s:%s" % [color.to_html(), str(metallic), str(roughness), str(energy)]
