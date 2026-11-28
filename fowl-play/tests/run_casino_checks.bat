@@ -40,6 +40,10 @@ echo.
 echo Running Chicken Cross table checks...
 "%GODOT%" --headless --path "%PROJECT%" --script res://tests/chicken_cross_table_test.gd
 if errorlevel 1 goto failed
+echo Running Perya rules checks...
+"%GODOT%" --headless --path "%PROJECT%" --script res://tests/perya_rules_test.gd
+if errorlevel 1 goto failed
+echo.
 echo ALL CASINO CHECKS PASSED
 pause
 exit /b 0
