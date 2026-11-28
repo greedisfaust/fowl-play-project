@@ -24,6 +24,7 @@ var _dice_animation_serial: int = 0
 var _roll_light: OmniLight3D
 var _chip_stacks: Dictionary = {}
 var _stack_tweens: Dictionary = {}
+var _color_tweens: Dictionary = {}
 var _materials: Dictionary = {}
 var _chip_mesh: CylinderMesh
 var _chip_rim_mesh: TorusMesh
@@ -41,6 +42,11 @@ func build() -> void:
 		if is_instance_valid(old_tween) and old_tween.is_running():
 			old_tween.kill()
 	_stack_tweens.clear()
+	for tween_value: Variant in _color_tweens.values():
+		var old_color_tween := tween_value as Tween
+		if is_instance_valid(old_color_tween) and old_color_tween.is_running():
+			old_color_tween.kill()
+	_color_tweens.clear()
 	for child in get_children():
 		child.queue_free()
 	color_zones.clear()
@@ -312,10 +318,24 @@ func animate_color_selection(color_index: int) -> void:
 	var inlay := tile.get_node_or_null("ColorInlay") as MeshInstance3D
 	if not is_instance_valid(inlay):
 		return
+	_kill_color_tween(color_index)
 	var tween := create_tween()
+	_color_tweens[color_index] = tween
 	tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.tween_property(inlay, "scale", Vector3(1.035, 1.0, 1.035), 0.10)
 	tween.tween_property(inlay, "scale", Vector3.ONE, 0.16)
+	tween.finished.connect(_on_color_tween_finished.bind(color_index), CONNECT_ONE_SHOT)
+
+func _kill_color_tween(color_index: int) -> void:
+	var previous := _color_tweens.get(color_index) as Tween
+	if is_instance_valid(previous) and previous.is_running():
+		previous.kill()
+	_color_tweens.erase(color_index)
+
+func _on_color_tween_finished(color_index: int) -> void:
+	var completed := _color_tweens.get(color_index) as Tween
+	if is_instance_valid(completed) and not completed.is_running():
+		_color_tweens.erase(color_index)
 
 func set_roll_ready(ready: bool, rolling: bool = false) -> void:
 	var cap := get_node_or_null("PeryaAssembly/RollControl/StartButtonCap") as MeshInstance3D
@@ -432,15 +452,19 @@ func highlight_winning_color(color_index: int) -> void:
 	if not is_instance_valid(inlay):
 		return
 	var material := inlay.material_override as StandardMaterial3D
-	if is_instance_valid(material):
-		material.emission_enabled = true
-		material.emission = COLOR_VALUES[color_index]
-		material.emission_energy_multiplier = 2.2
+	if not is_instance_valid(material):
+		return
+	_kill_color_tween(color_index)
+	material.emission_enabled = true
+	material.emission = COLOR_VALUES[color_index]
+	material.emission_energy_multiplier = 2.2
 	var tween := create_tween()
+	_color_tweens[color_index] = tween
 	for _pulse_index in range(3):
 		tween.tween_property(inlay, "scale", Vector3(1.04, 1, 1.04), 0.18)
 		tween.tween_property(inlay, "scale", Vector3.ONE, 0.18)
 	tween.tween_callback(func() -> void: material.emission_energy_multiplier = 0.45)
+	tween.finished.connect(_on_color_tween_finished.bind(color_index), CONNECT_ONE_SHOT)
 
 func _mat(color: Color, metallic: float, roughness: float, emission: Color = Color.BLACK, energy: float = 0.0) -> StandardMaterial3D:
 	var key := "%s:%s:%s:%s" % [color.to_html(), str(metallic), str(roughness), str(energy)]
