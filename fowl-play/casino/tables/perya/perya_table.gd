@@ -256,6 +256,7 @@ func _rpc_clear_round_visuals() -> void:
 	_clear_round_visuals_local()
 
 func _clear_round_visuals_local() -> void:
+	_selected_wagers.clear()
 	_bet_visual_totals.clear()
 	if is_instance_valid(visuals):
 		visuals.clear_chip_stacks()
