@@ -482,6 +482,12 @@ func _update_terminal_status() -> void:
 	var headline := "DICE IN MOTION" if _rolling else ("BETTING OPEN" if state == TableState.OPEN or not _bet_visual_totals.is_empty() else "PLACE YOUR BETS")
 	if is_instance_valid(visuals):
 		visuals.set_roll_ready(bet_count > 0 and not _rolling, _rolling)
+		for color_index in range(visuals.color_zones.size()):
+			var zone := visuals.color_zones[color_index]
+			var interactable := zone.get_parent().get_node_or_null("Interactable") as Interactable
+			if is_instance_valid(interactable):
+				interactable.enabled = not _rolling
+				interactable.prompt_text = "BETS LOCKED" if _rolling else "BET ON %s" % Rules.COLOR_NAMES[color_index]
 	var detail := "ACTIVE BETS  %d\nTOTAL STAKED  %s" % [bet_count, _format_money(total)]
 	if not _last_result_line.is_empty():
 		detail += "\n" + _last_result_line
