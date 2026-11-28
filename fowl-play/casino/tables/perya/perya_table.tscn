@@ -10,7 +10,7 @@
 [sub_resource type="SphereShape3D" id="SphereShape3D_proximity"]
 radius = 3.4
 
-[node name="PeryaTable" type="Node3D"]
+[node name="PeryaTable" type="Node3D" node_paths=PackedStringArray("proximity_area", "visuals", "terminal_display")]
 script = ExtResource("1_table")
 table_id = "perya_main"
 game_id = "perya"
@@ -37,7 +37,7 @@ position = Vector3(0.0, 2.65, -1.25)
 position = Vector3(-1.85, 1.22, 1.35)
 rotation = Vector3(1.1519173, 0.2617994, 0.0)
 
-[node name="BettingTerminalDisplay" type="Node" parent="."]
+[node name="BettingTerminalDisplay" type="Node" parent="." node_paths=PackedStringArray("table", "screen_text")]
 script = ExtResource("3_display")
 table = NodePath("..")
 screen_text = NodePath("../SlimWorldScreen/WorldScreen/SubViewport/ScreenText")
