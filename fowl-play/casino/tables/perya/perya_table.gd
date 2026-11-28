@@ -400,8 +400,11 @@ func _update_terminal_status() -> void:
 		var totals: Dictionary = totals_value
 		bet_count += int(totals.get("count", 0))
 		total += int(totals.get("stake", 0))
-	var headline := "BETTING OPEN" if state == TableState.OPEN else ("DICE IN MOTION" if _rolling else "PLACE YOUR BETS")
-	var detail := "ACTIVE BETS  %d\nTOTAL STAKED  %s\nSELECT AMOUNT / CONFIRM / CLICK A COLOR\nPRESS START / ROLL WHEN READY" % [bet_count, _format_money(total)]
+	var headline := "DICE IN MOTION" if _rolling else ("BETTING OPEN" if state == TableState.OPEN or not _bet_visual_totals.is_empty() else "PLACE YOUR BETS")
+	var detail := "ACTIVE BETS  %d\nTOTAL STAKED  %s" % [bet_count, _format_money(total)]
+	if not _last_result_line.is_empty():
+		detail += "\n" + _last_result_line
+	detail += "\nSELECT AMOUNT / CONFIRM / CLICK A COLOR\nPRESS START / ROLL WHEN READY"
 	screen.call("set_content", "PERYA  /  COLOR GAME", detail, "1 MATCH 2X  /  2 MATCHES 3X  /  3 MATCHES 4X")
 
 func _format_money(amount: int) -> String:
