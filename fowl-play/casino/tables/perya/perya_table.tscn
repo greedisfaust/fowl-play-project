@@ -7,6 +7,9 @@
 [ext_resource type="PackedScene" path="res://environment/kit/slim_world_screen.tscn" id="5_screen"]
 [ext_resource type="PackedScene" path="res://casino/terminals/components/betting_keypad.tscn" id="6_keypad"]
 
+[sub_resource type="SphereShape3D" id="SphereShape3D_proximity"]
+radius = 3.4
+
 [node name="PeryaTable" type="Node3D"]
 script = ExtResource("1_table")
 table_id = "perya_main"
