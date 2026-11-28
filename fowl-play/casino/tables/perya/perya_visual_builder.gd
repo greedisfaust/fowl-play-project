@@ -378,6 +378,7 @@ func animate_dice(results: Array[int], duration: float = 2.25) -> void:
 		var tween := create_tween()
 		# A slight stagger makes the dice feel hand-tumbled instead of mechanically synchronized.
 		tween.tween_interval(float(index) * 0.055)
+		tween.chain()
 		tween.set_parallel(true)
 		tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		tween.tween_property(die, "rotation", target_rotation + spin, total_duration * 0.56)
